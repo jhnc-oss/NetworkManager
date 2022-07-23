@@ -341,6 +341,15 @@ construct_ip_items(GPtrArray *items, int addr_family, GVariant *ip_config, const
          * Historic reasons. */
         _items_add_printf(items, "%sIP%c_NUM_ROUTES=%u", prefix, four_or_six, nroutes);
     }
+
+    val = g_variant_lookup_value(ip_config, "method", G_VARIANT_TYPE_STRING);
+    if (val) {
+        _items_add_key(items,
+                       prefix,
+                       addr_family == AF_INET ? "IP4_METHOD" : "IP6_METHOD",
+                       g_variant_get_string(val, NULL));
+        g_variant_unref(val);
+    }
 }
 
 static void

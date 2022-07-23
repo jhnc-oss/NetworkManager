@@ -581,6 +581,9 @@ typedef struct _NMDevicePrivate {
     bool v4_route_table_initialized : 1;
     bool v6_route_table_initialized : 1;
 
+    char *v4_method;
+    char *v6_method;
+
     bool l3config_merge_flags_has : 1;
 
     bool v4_route_table_all_sync_before : 1;
@@ -5704,7 +5707,7 @@ concheck_update_state(NMDevice           *self,
         _dev_l3_register_l3cds(self, priv->l3cfg, TRUE, NM_TERNARY_DEFAULT);
 }
 
-static const char *
+const char *
 nm_device_get_effective_ip_config_method(NMDevice *self, int addr_family)
 {
     NMDeviceClass *klass;
@@ -12101,6 +12104,23 @@ activate_stage3_ip_config(NMDevice *self)
 
     activate_stage3_ip_config_for_addr_family(self, AF_INET, ipv4_method);
     activate_stage3_ip_config_for_addr_family(self, AF_INET6, ipv6_method);
+
+    /* Notify dispatcher when method changed */
+    if (priv->v4_method && !nm_streq(ipv4_method, priv->v4_method)) {
+        _LOGD_ip(AF_INET, "method changed to '%s'", ipv4_method);
+        nm_dispatcher_call_device(NM_DISPATCHER_ACTION_METHOD_CHANGE, self, NULL, NULL, NULL, NULL);
+    } else if (priv->v6_method && !nm_streq(ipv6_method, priv->v6_method)) {
+        _LOGD_ip(AF_INET6, "method changed to '%s'", ipv6_method);
+        nm_dispatcher_call_device(NM_DISPATCHER_ACTION_METHOD_CHANGE, self, NULL, NULL, NULL, NULL);
+    }
+
+    if (priv->v4_method)
+        g_free(priv->v4_method);
+    priv->v4_method = g_strdup(ipv4_method);
+
+    if (priv->v6_method)
+        g_free(priv->v6_method);
+    priv->v6_method = g_strdup(ipv6_method);
 }
 
 void

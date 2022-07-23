@@ -542,6 +542,8 @@ NMDeviceState nm_device_get_state(NMDevice *device);
 
 gboolean nm_device_get_enabled(NMDevice *device);
 
+const char *nm_device_get_effective_ip_config_method(NMDevice *self, int addr_family);
+
 void nm_device_set_enabled(NMDevice *device, gboolean enabled);
 
 NMRfkillType nm_device_get_rfkill_type(NMDevice *device);
