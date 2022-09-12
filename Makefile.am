@@ -4495,7 +4495,6 @@ EXTRA_DIST += \
 	src/core/tests/config/NetworkManager-warn.conf \
 	src/core/tests/config/NetworkManager.state \
 	src/core/tests/config/bad.conf \
-	src/core/tests/config/global-dns-invalid.conf \
 	src/core/tests/config/conf.d/00-overrides.conf \
 	src/core/tests/config/conf.d/10-more.conf \
 	src/core/tests/config/conf.d/20-config-enable-1.conf \
