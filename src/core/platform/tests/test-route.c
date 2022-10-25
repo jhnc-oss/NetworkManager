@@ -2160,6 +2160,133 @@ test_mptcp(gconstpointer test_data)
 
 /*****************************************************************************/
 
+static void
+test_ipv6_replace(gconstpointer test_data)
+{
+    const int   TEST_IDX = GPOINTER_TO_INT(test_data);
+    const int   ifindex  = DEVICE_IFINDEX;
+    NMPlatform *platform = NM_PLATFORM_GET;
+
+    g_assert(NM_IS_LINUX_PLATFORM(platform));
+    g_assert_cmpint(nm_platform_link_get_ifindex(platform, DEVICE_NAME), ==, ifindex);
+
+    nmtstp_ip6_address_add(platform,
+                           -1,
+                           ifindex,
+                           nmtst_inet6_from_string("1:2:3:4::100"),
+                           64,
+                           in6addr_any,
+                           NM_PLATFORM_LIFETIME_PERMANENT,
+                           NM_PLATFORM_LIFETIME_PERMANENT,
+                           0);
+
+    if (TEST_IDX == 2) {
+        nmtstp_run_command_check("ip route append 5:1::1/128 dev %s", DEVICE_NAME);
+    }
+    nmtstp_run_command_check("ip route append 5:1::1/128 nexthop via 1:2:3:4::1 dev %s",
+                             DEVICE_NAME);
+    nmtstp_run_command_check("ip route append 5:1::1/128 nexthop via 1:2:3:4::2 dev %s",
+                             DEVICE_NAME);
+    nmtstp_run_command_check("ip route append 5:1::1/128 nexthop via 1:2:3:4::3 dev %s",
+                             DEVICE_NAME);
+    if (TEST_IDX == 3) {
+        nmtstp_run_command_check("ip route append 5:1::1/128 dev %s", DEVICE_NAME);
+    }
+
+    nmtstp_assert_platform(platform);
+
+    system("ip -6 route");
+
+    nmtstp_run_command_check("ip route change 5:1::1/128 nexthop via 1:2:3:4::5 dev %s",
+                             DEVICE_NAME);
+
+    nm_platform_process_events(platform);
+
+    system("ip -6 route");
+#if 0
+    nmtstp_ip6_route_add(NM_PLATFORM_GET,
+                         ifindex,
+                         NM_IP_CONFIG_SOURCE_USER,
+                         *nmtst_inet6_from_string(),
+                         plen,
+                         INADDR_ANY,
+                         0,
+                         metric,
+                         mss);
+#endif
+}
+
+/*****************************************************************************/
+
+static void
+test_cache_consistency(gconstpointer test_data)
+{
+    NMPlatform *platform = NM_PLATFORM_GET;
+    const int   N_RUN    = 100;
+    int         i_run;
+
+    for (i_run = 0; i_run < N_RUN; i_run++) {
+        int         is_if1;
+        int         ifindex;
+        const char *ifname;
+        int         IS_IPv4;
+        const char *op;
+        const char *prefix;
+        const char *args;
+
+        is_if1  = nmtst_get_rand_bool();
+        IS_IPv4 = nmtst_get_rand_bool();
+        op      = nmtst_rand_select_str("flush", "add", "change", "append", "prepend", "replace");
+
+        ifindex = is_if1 ? NMTSTP_ENV1_IFINDEX : NMTSTP_ENV1_IFINDEX2;
+        ifname  = is_if1 ? DEVICE_NAME : DEVICE_NAME2;
+
+        g_assert_cmpint(ifindex, ==, nm_platform_link_get_ifindex(platform, ifname));
+
+        if (nm_streq(op, "flush")) {
+            if (!nmtst_get_rand_one_case_in(10)) {
+                /* flush more seldom. */
+                continue;
+            }
+            nmtstp_run_command_check("ip -%c route flush dev %s", IS_IPv4 ? '4' : '6', ifname);
+            goto done;
+        }
+
+        if (IS_IPv4) {
+            prefix = nmtst_rand_select_str("192.168.4.0/24",
+                                           "192.168.5.0/24",
+                                           "192.168.5.5/32",
+                                           "default");
+            args   = nmtst_rand_select_str("");
+        } else {
+            prefix =
+                nmtst_rand_select_str("a:b:c:d::/64", "a:b:c:e::/64", "a:b:c:f::/64", "default");
+            args = nmtst_rand_select_str("");
+        }
+
+        /* We ignore errors. The reason is that operations like "change" might fail if
+         * the route doesn't exist. That's fine for our test. We just do randomly things
+         * and some of them will stick. */
+        nmtstp_run_command("ip -%c route %s %s dev %s %s",
+                           IS_IPv4 ? '4' : '6',
+                           op,
+                           prefix,
+                           ifname,
+                           args);
+
+done:
+        nm_platform_process_events(platform);
+
+        system("ip -4 route");
+        system("ip -6 route");
+
+        if (nmtst_get_rand_one_case_in(5))
+            nmtstp_assert_platform(platform);
+    }
+}
+
+/*****************************************************************************/
+
 NMTstpSetupFunc const _nmtstp_setup_platform_func = SETUP;
 
 void
@@ -2171,9 +2298,12 @@ _nmtstp_init_tests(int *argc, char ***argv)
 void
 _nmtstp_setup_tests(void)
 {
-#define add_test_func(testpath, test_func) nmtstp_env1_add_test_func(testpath, test_func, TRUE, FALSE)
+#define add_test_func(testpath, test_func) \
+    nmtstp_env1_add_test_func(testpath, test_func, TRUE, FALSE)
 #define add_test_func_data(testpath, test_func, arg) \
     nmtstp_env1_add_test_func_data(testpath, test_func, arg, TRUE, FALSE)
+#define add_test_func_data_with_if2(testpath, test_func, arg) \
+    nmtstp_env1_add_test_func_data(testpath, test_func, arg, TRUE, TRUE)
 
     add_test_func("/route/ip4", test_ip4_route);
     add_test_func("/route/ip6", test_ip6_route);
@@ -2205,5 +2335,15 @@ _nmtstp_setup_tests(void)
     if (nmtstp_is_root_test()) {
         add_test_func_data("/route/mptcp/1", test_mptcp, GINT_TO_POINTER(1));
         add_test_func_data("/route/mptcp/2", test_mptcp, GINT_TO_POINTER(2));
+    }
+    if (nmtstp_is_root_test()) {
+        add_test_func_data("/route/ipv6_replace/1", test_ipv6_replace, GINT_TO_POINTER(1));
+        add_test_func_data("/route/ipv6_replace/2", test_ipv6_replace, GINT_TO_POINTER(2));
+        add_test_func_data("/route/ipv6_replace/3", test_ipv6_replace, GINT_TO_POINTER(3));
+    }
+    if (nmtstp_is_root_test()) {
+        add_test_func_data_with_if2("/route/test_cache_consistency/1",
+                                    test_cache_consistency,
+                                    GINT_TO_POINTER(1));
     }
 }

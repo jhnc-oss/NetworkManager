@@ -733,6 +733,67 @@ nmtstp_run_command(const char *format, ...)
 
 /*****************************************************************************/
 
+static int
+_assert_platform_sort_objs(gconstpointer ptr_a, gconstpointer ptr_b)
+{
+    const NMPObject *a = *((const NMPObject *const *) ptr_a);
+    const NMPObject *b = *((const NMPObject *const *) ptr_b);
+
+    g_assert(NMP_OBJECT_IS_VALID(a));
+    g_assert(NMP_OBJECT_IS_VALID(b));
+    g_assert(NMP_OBJECT_GET_TYPE(a) == NMP_OBJECT_GET_TYPE(b));
+
+    return 0;
+}
+
+void
+nmtstp_assert_platform(NMPlatform *platform)
+{
+    static const NMPObjectType obj_types[] = {
+        NMP_OBJECT_TYPE_IP4_ADDRESS,
+        NMP_OBJECT_TYPE_IP6_ADDRESS,
+        NMP_OBJECT_TYPE_IP4_ROUTE,
+        NMP_OBJECT_TYPE_IP6_ROUTE,
+        NMP_OBJECT_TYPE_LINK,
+    };
+    gs_unref_object NMPlatform *platform2 = NULL;
+    int                         i_obj_types;
+
+    g_assert(NM_IS_LINUX_PLATFORM(platform));
+
+    _LOGD("assert-platform: start");
+
+    nm_platform_process_events(platform);
+
+    platform2 = nm_linux_platform_new(TRUE, nmtst_get_rand_bool(), nmtst_get_rand_bool());
+    g_assert(NM_IS_LINUX_PLATFORM(platform2));
+
+    for (i_obj_types = 0; i_obj_types < (int) G_N_ELEMENTS(obj_types); i_obj_types++) {
+        const NMPObjectType          obj_type = obj_types[i_obj_types];
+        gs_unref_ptrarray GPtrArray *arr1     = NULL;
+        gs_unref_ptrarray GPtrArray *arr2     = NULL;
+        NMPLookup                    lookup;
+        gboolean                     check_unordered = TRUE;
+
+        nmp_lookup_init_obj_type(&lookup, obj_type);
+
+        arr1 = nm_platform_lookup_clone(platform, &lookup, NULL, NULL) ?: g_ptr_array_new();
+        arr2 = nm_platform_lookup_clone(platform2, &lookup, NULL, NULL) ?: g_ptr_array_new();
+
+        if (check_unordered) {
+            /* We need to sort the two lists. */
+            g_ptr_array_sort(arr1, _assert_platform_sort_objs);
+            g_ptr_array_sort(arr2, _assert_platform_sort_objs);
+        }
+    }
+
+    g_clear_object(&platform2);
+
+    _LOGD("assert-platform: done");
+}
+
+/*****************************************************************************/
+
 typedef struct {
     GMainLoop *loop;
     guint      signal_counts;
