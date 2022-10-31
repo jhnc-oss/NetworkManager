@@ -13,6 +13,7 @@
 #include <linux/if.h>
 #include <linux/rtnetlink.h>
 
+#include "libnm-glib-aux/nm-ptr-array.h"
 #include "libnm-platform/nm-platform-utils.h"
 #include "libnm-platform/nm-platform-private.h"
 #include "libnm-platform/nmp-object.h"
@@ -1097,15 +1098,15 @@ ip_route_add(NMPlatform *platform, NMPNlmFlags flags, NMPObject *obj_stack)
     NMDedupMultiIter                iter;
     nm_auto_nmpobj NMPObject       *obj = NULL;
     NMPCacheOpsType                 cache_op;
-    const NMPObject                *o           = NULL;
-    nm_auto_nmpobj const NMPObject *obj_old     = NULL;
-    nm_auto_nmpobj const NMPObject *obj_new     = NULL;
-    nm_auto_nmpobj const NMPObject *obj_replace = NULL;
-    NMPCache                       *cache       = nm_platform_get_cache(platform);
-    gboolean                        has_gateway = FALSE;
-    NMPlatformIPRoute              *r           = NULL;
-    NMPlatformIP4Route             *r4          = NULL;
-    NMPlatformIP6Route             *r6          = NULL;
+    const NMPObject                *o             = NULL;
+    nm_auto_nmpobj const NMPObject *obj_old       = NULL;
+    nm_auto_nmpobj const NMPObject *obj_new       = NULL;
+    nm_auto_ptrarray NMPtrArray    *objs_replaced = NULL;
+    NMPCache                       *cache         = nm_platform_get_cache(platform);
+    gboolean                        has_gateway   = FALSE;
+    NMPlatformIPRoute              *r             = NULL;
+    NMPlatformIP4Route             *r4            = NULL;
+    NMPlatformIP6Route             *r6            = NULL;
     int                             addr_family;
     gboolean                        has_same_weak_id;
     gboolean                        only_dirty;
@@ -1228,15 +1229,21 @@ ip_route_add(NMPlatform *platform, NMPNlmFlags flags, NMPObject *obj_stack)
     }
 
     /* we manipulate the cache the same was as NMLinuxPlatform does it. */
-    cache_op   = nmp_cache_update_netlink_route(cache,
+    cache_op = nmp_cache_update_netlink_route(cache,
                                               obj,
                                               FALSE,
                                               nlmsgflags,
                                               FALSE,
                                               &obj_old,
                                               &obj_new,
-                                              &obj_replace,
+                                              &objs_replaced,
                                               NULL);
+
+    if (objs_replaced) {
+        nm_assert(objs_replaced->len == 1);
+        obj_replace = objs_replaced->ptrs[0];
+    }
+
     only_dirty = FALSE;
     if (cache_op != NMP_CACHE_OPS_UNCHANGED) {
         if (obj_replace) {

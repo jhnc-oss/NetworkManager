@@ -951,15 +951,21 @@ NMPCacheOpsType nmp_cache_update_netlink(NMPCache         *cache,
                                          gboolean          is_dump,
                                          const NMPObject **out_obj_old,
                                          const NMPObject **out_obj_new);
-NMPCacheOpsType nmp_cache_update_netlink_route(NMPCache         *cache,
-                                               NMPObject        *obj_hand_over,
-                                               gboolean          is_dump,
-                                               guint16           nlmsgflags,
-                                               gboolean          ignore_route,
-                                               const NMPObject **out_obj_old,
-                                               const NMPObject **out_obj_new,
-                                               const NMPObject **out_obj_replace,
-                                               gboolean         *out_resync_required);
+
+struct _NMPtrArray;
+
+NMPCacheOpsType nmp_cache_update_netlink_route(NMPCache               *cache,
+                                               NMPObject              *obj_hand_over,
+                                               const NMPObject *const *objs_arr,
+                                               gsize                   n_objs_arr,
+                                               gboolean                is_dump,
+                                               guint16                 nlmsgflags,
+                                               gboolean                ignore_route,
+                                               const NMPObject       **out_obj_old,
+                                               const NMPObject       **out_obj_new,
+                                               struct _NMPtrArray    **out_objs_replaced,
+                                               gboolean               *out_resync_required);
+
 NMPCacheOpsType nmp_cache_update_link_udev(NMPCache           *cache,
                                            int                 ifindex,
                                            struct udev_device *udevice,

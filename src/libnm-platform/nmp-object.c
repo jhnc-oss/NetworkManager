@@ -13,6 +13,7 @@
 #include <libudev.h>
 
 #include "libnm-glib-aux/nm-secret-utils.h"
+#include "libnm-glib-aux/nm-ptr-array.h"
 #include "libnm-platform/nm-platform-utils.h"
 #include "libnm-platform/wifi/nm-wifi-utils.h"
 #include "libnm-platform/wpan/nm-wpan-utils.h"
@@ -2947,15 +2948,17 @@ nmp_cache_update_netlink(NMPCache         *cache,
 }
 
 NMPCacheOpsType
-nmp_cache_update_netlink_route(NMPCache         *cache,
-                               NMPObject        *obj_hand_over,
-                               gboolean          is_dump,
-                               guint16           nlmsgflags,
-                               gboolean          ignore_route,
-                               const NMPObject **out_obj_old,
-                               const NMPObject **out_obj_new,
-                               const NMPObject **out_obj_replace,
-                               gboolean         *out_resync_required)
+nmp_cache_update_netlink_route(NMPCache               *cache,
+                               NMPObject              *obj_hand_over,
+                               const NMPObject *const *objs_arr,
+                               gsize                   n_objs_arr,
+                               gboolean                is_dump,
+                               guint16                 nlmsgflags,
+                               gboolean                ignore_route,
+                               const NMPObject       **out_obj_old,
+                               const NMPObject       **out_obj_new,
+                               NMPtrArray            **out_objs_replaced,
+                               gboolean               *out_resync_required)
 {
     NMDedupMultiIter             iter;
     const NMDedupMultiEntry     *entry_old;
@@ -3057,19 +3060,22 @@ update_done:
     case NLM_F_REPLACE:
         /* ip route change */
 
-        /* get the first element (but skip @obj_new). */
-        nm_dedup_multi_iter_init(&iter, head_entry);
-        if (!nm_dedup_multi_iter_next(&iter))
-            nm_assert_not_reached();
-        if (iter.current == entry_cur) {
+        if (NMP_OBJECT_GET_TYPE(entry_cur->obj) == NMP_OBJECT_TYPE_IP4_ROUTE) {
+            /* Handle IPv4 route. We just replace the first element in the
+             * sorted list (but skip @obj_new). */
+            nm_dedup_multi_iter_init(&iter, head_entry);
             if (!nm_dedup_multi_iter_next(&iter))
                 nm_assert_not_reached();
+            if (iter.current == entry_cur) {
+                if (!nm_dedup_multi_iter_next(&iter))
+                    nm_assert_not_reached();
+            }
+            entry_replace = iter.current;
+
+            nm_assert(entry_replace && entry_cur != entry_replace);
+
+            nm_dedup_multi_entry_reorder(entry_cur, entry_replace, FALSE);
         }
-        entry_replace = iter.current;
-
-        nm_assert(entry_replace && entry_cur != entry_replace);
-
-        nm_dedup_multi_entry_reorder(entry_cur, entry_replace, FALSE);
         break;
     case NLM_F_CREATE | NLM_F_APPEND:
         /* ip route append */
@@ -3086,7 +3092,12 @@ update_done:
     }
 
 out:
-    NM_SET_OUT(out_obj_replace, nmp_object_ref(nm_dedup_multi_entry_get_obj(entry_replace)));
+    if (out_objs_replaced) {
+        *out_objs_replaced = nm_ptr_array_new_1(
+            (GDestroyNotify) nmp_object_unref,
+            0,
+            (gpointer) nmp_object_ref(nm_dedup_multi_entry_get_obj(entry_replace)));
+    }
     NM_SET_OUT(out_resync_required, resync_required);
     return ops_type;
 }

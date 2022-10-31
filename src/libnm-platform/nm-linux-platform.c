@@ -38,6 +38,7 @@
 #include "libnm-glib-aux/nm-io-utils.h"
 #include "libnm-glib-aux/nm-secret-utils.h"
 #include "libnm-glib-aux/nm-time-utils.h"
+#include "libnm-glib-aux/nm-ptr-array.h"
 #include "libnm-log-core/nm-logging.h"
 #include "libnm-platform/nm-netlink.h"
 #include "libnm-platform/nm-platform-utils.h"
@@ -7766,11 +7767,12 @@ _rtnl_handle_msg(NMPlatform *platform, const struct nl_msg_lite *msg)
 
         case RTM_NEWROUTE:
         {
-            nm_auto_nmpobj const NMPObject *obj_replace     = NULL;
-            gboolean                        resync_required = FALSE;
-            gboolean                        only_dirty      = FALSE;
-            gboolean                        is_ipv6;
-            gboolean                        ignore_route;
+            nm_auto_ptrarray NMPtrArray *objs_replaced   = NULL;
+            const NMPObject             *obj_replace     = NULL;
+            gboolean                     resync_required = FALSE;
+            gboolean                     only_dirty      = FALSE;
+            gboolean                     ignore_route;
+            gboolean                     is_ipv6;
 
             /* IPv4 routes that are a response to RTM_GETROUTE must have
              * the cloned flag while IPv6 routes don't have to. */
@@ -7813,15 +7815,28 @@ _rtnl_handle_msg(NMPlatform *platform, const struct nl_msg_lite *msg)
              * from our cache. */
             ignore_route = ip_route_ignored_protocol(NMP_OBJECT_CAST_IP_ROUTE(obj));
 
+            /* We also need to pass all the "n_objs", at least for the very first "obj"
+             * in the list. "n_objs" is only positive for IPv6 routes with multiple hops.
+             *
+             * This is because "msghdr->nlmsg_flags" can indicate that routes were replaced
+             * (NLM_F_REPLACE, `ip route replace`). */
             cache_op = nmp_cache_update_netlink_route(cache,
                                                       obj,
+                                                      (const NMPObject *const *) objs,
+                                                      i == 0 n_objs,
                                                       is_dump,
                                                       msghdr->nlmsg_flags,
                                                       ignore_route,
                                                       &obj_old,
                                                       &obj_new,
-                                                      &obj_replace,
+                                                      &objs_replaced,
                                                       &resync_required);
+
+            if (objs_replaced) {
+                nm_assert(objs_replaced->len == 1);
+                obj_replace = objs_replaced->ptrs[0];
+            }
+
             if (cache_op != NMP_CACHE_OPS_UNCHANGED) {
                 if (obj_replace) {
                     const NMDedupMultiEntry *entry_replace;
