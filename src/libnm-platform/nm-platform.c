@@ -8240,11 +8240,13 @@ nm_platform_ip4_route_hash_update(const NMPlatformIP4Route *obj,
                                                       obj->lock_mtu,
                                                       obj->lock_mss));
             if (cmp_type == NM_PLATFORM_IP_ROUTE_CMP_TYPE_ID) {
+                const guint8 w = NM_MAX(obj->weight, 1u);
+
                 nm_hash_update_vals(h,
                                     obj->ifindex,
                                     nm_platform_ip4_route_get_n_nexthops(obj),
                                     obj->gateway,
-                                    (guint8) NM_MAX(obj->weight, 1u));
+                                    w);
             }
         }
         break;
@@ -8259,7 +8261,7 @@ nm_platform_ip4_route_hash_update(const NMPlatformIP4Route *obj,
             obj->metric,
             nm_platform_ip4_route_get_n_nexthops(obj),
             obj->gateway,
-            (guint8) NM_MAX(obj->weight, 1u),
+            (guint8) MAX(obj->weight, 1u),
             nmp_utils_ip_config_source_round_trip_rtprot(obj->rt_source),
             _ip_route_scope_inv_get_normalized(obj),
             obj->tos,
