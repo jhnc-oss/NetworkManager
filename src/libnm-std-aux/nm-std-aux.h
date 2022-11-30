@@ -223,7 +223,7 @@ _nm_assert_fail_internal(const char  *assertion,
 #endif
 
 #ifndef NDEBUG
-#define _NM_ASSERT_FAIL_ENABLED 1
+#define _NM_ASSERT_FAIL_ENABLED 0
 #define _nm_assert_fail(msg)    __assert_fail((msg), __FILE__, __LINE__, __func__)
 #else
 #define _NM_ASSERT_FAIL_ENABLED 1
