@@ -18,7 +18,8 @@
 
 #include "nm-test-utils-core.h"
 
-#define DEVICE_NAME "nm-test-device"
+#define DEVICE_NAME  "nm-test-device"
+#define DEVICE_NAME2 "nm-test-device2"
 
 /*****************************************************************************/
 
@@ -528,35 +529,41 @@ void nmtstp_link_delete(NMPlatform *platform,
 /*****************************************************************************/
 
 extern int NMTSTP_ENV1_IFINDEX;
+extern int NMTSTP_ENV1_IFINDEX2;
 extern int NMTSTP_ENV1_EX;
 
 static inline void
 _nmtstp_env1_wrapper_setup(const NmtstTestData *test_data)
 {
     int     *p_ifindex;
+    int     *p_ifindex2;
     gpointer p_ifup;
-
-    nmtst_test_data_unpack(test_data, &p_ifindex, NULL, NULL, NULL, &p_ifup);
-
-    g_assert(p_ifindex && *p_ifindex == -1);
 
     _LOGT("TEST[%s]: setup", test_data->testpath);
 
-    nmtstp_link_delete(NM_PLATFORM_GET, -1, -1, DEVICE_NAME, FALSE);
+    nmtst_test_data_unpack(test_data, &p_ifindex, &p_ifindex2, NULL, NULL, NULL, &p_ifup);
 
-    g_assert(NMTST_NM_ERR_SUCCESS(nm_platform_link_dummy_add(NM_PLATFORM_GET, DEVICE_NAME, NULL)));
-
-    *p_ifindex = nm_platform_link_get_ifindex(NM_PLATFORM_GET, DEVICE_NAME);
-    g_assert_cmpint(*p_ifindex, >, 0);
     g_assert_cmpint(NMTSTP_ENV1_IFINDEX, ==, -1);
+    g_assert_cmpint(NMTSTP_ENV1_IFINDEX2, ==, -1);
 
+    g_assert(p_ifindex && *p_ifindex == -1);
+    g_assert(!p_ifindex2 || *p_ifindex2 == -1);
+
+    *p_ifindex = nmtstp_link_dummy_add(NULL, -1, DEVICE_NAME)->ifindex;
     if (GPOINTER_TO_INT(p_ifup))
-        g_assert(nm_platform_link_change_flags(NM_PLATFORM_GET, *p_ifindex, IFF_UP, TRUE) >= 0);
+        nmtstp_link_set_updown(NULL, -1, *p_ifindex, TRUE);
+
+    if (p_ifindex2) {
+        *p_ifindex2 = nmtstp_link_dummy_add(NULL, -1, DEVICE_NAME2)->ifindex;
+        if (GPOINTER_TO_INT(p_ifup))
+            nmtstp_link_set_updown(NULL, -1, *p_ifindex2, TRUE);
+    }
 
     nm_platform_process_events(NM_PLATFORM_GET);
 
-    NMTSTP_ENV1_IFINDEX = *p_ifindex;
-    NMTSTP_ENV1_EX      = nmtstp_run_command_check_external_global();
+    NMTSTP_ENV1_IFINDEX  = *p_ifindex;
+    NMTSTP_ENV1_IFINDEX2 = p_ifindex2 ? *p_ifindex2 : -1;
+    NMTSTP_ENV1_EX       = nmtstp_run_command_check_external_global();
 }
 
 static inline void
@@ -567,7 +574,7 @@ _nmtstp_env1_wrapper_run(gconstpointer user_data)
     GTestFunc            test_func;
     gconstpointer        d;
 
-    nmtst_test_data_unpack(test_data, NULL, &test_func, &test_func_data, &d, NULL);
+    nmtst_test_data_unpack(test_data, NULL, NULL, &test_func, &test_func_data, &d, NULL);
 
     _LOGT("TEST[%s]: run", test_data->testpath);
     if (test_func)
@@ -580,54 +587,70 @@ static inline void
 _nmtstp_env1_wrapper_teardown(const NmtstTestData *test_data)
 {
     int *p_ifindex;
-
-    nmtst_test_data_unpack(test_data, &p_ifindex, NULL, NULL, NULL, NULL);
-
-    g_assert_cmpint(NMTSTP_ENV1_IFINDEX, ==, *p_ifindex);
-    NMTSTP_ENV1_IFINDEX = -1;
+    int *p_ifindex2;
 
     _LOGT("TEST[%s]: teardown", test_data->testpath);
 
-    g_assert_cmpint(*p_ifindex, ==, nm_platform_link_get_ifindex(NM_PLATFORM_GET, DEVICE_NAME));
-    g_assert(nm_platform_link_delete(NM_PLATFORM_GET, *p_ifindex));
+    nmtst_test_data_unpack(test_data, &p_ifindex, &p_ifindex2, NULL, NULL, NULL, NULL);
+
+    g_assert(p_ifindex && *p_ifindex > 0);
+    g_assert_cmpint(NMTSTP_ENV1_IFINDEX, ==, *p_ifindex);
+
+    g_assert(!p_ifindex2 || *p_ifindex2 > 0);
+    if (p_ifindex2)
+        g_assert_cmpint(NMTSTP_ENV1_IFINDEX2, ==, *p_ifindex2);
+
+    NMTSTP_ENV1_IFINDEX  = -1;
+    NMTSTP_ENV1_IFINDEX2 = -1;
+
+    nmtstp_link_delete(NULL, -1, *p_ifindex, DEVICE_NAME, TRUE);
+
+    if (p_ifindex2)
+        nmtstp_link_delete(NULL, -1, *p_ifindex2, DEVICE_NAME2, TRUE);
 
     nm_platform_process_events(NM_PLATFORM_GET);
 
     _LOGT("TEST[%s]: finished", test_data->testpath);
 
     *p_ifindex = -1;
+    if (p_ifindex2)
+        *p_ifindex2 = -1;
 }
 
 /* add test function, that set's up a particular environment, consisting
  * of a dummy device with ifindex NMTSTP_ENV1_IFINDEX. */
-#define _nmtstp_env1_add_test_func_full(testpath, test_func, test_data_func, arg, ifup) \
-    nmtst_add_test_func_full(testpath,                                                  \
-                             _nmtstp_env1_wrapper_run,                                  \
-                             _nmtstp_env1_wrapper_setup,                                \
-                             _nmtstp_env1_wrapper_teardown,                             \
-                             ({                                                         \
-                                 static int _ifindex = -1;                              \
-                                 &_ifindex;                                             \
-                             }),                                                        \
-                             ({                                                         \
-                                 GTestFunc _test_func = (test_func);                    \
-                                 _test_func;                                            \
-                             }),                                                        \
-                             ({                                                         \
-                                 GTestDataFunc _test_func = (test_data_func);           \
-                                 _test_func;                                            \
-                             }),                                                        \
-                             (arg),                                                     \
-                             ({                                                         \
-                                 gboolean _ifup = (ifup);                               \
-                                 GINT_TO_POINTER(_ifup);                                \
+#define _nmtstp_env1_add_test_func_full(testpath, test_func, test_data_func, arg, ifup, with_if2) \
+    nmtst_add_test_func_full(testpath,                                                            \
+                             _nmtstp_env1_wrapper_run,                                            \
+                             _nmtstp_env1_wrapper_setup,                                          \
+                             _nmtstp_env1_wrapper_teardown,                                       \
+                             ({                                                                   \
+                                 static int _ifindex = -1;                                        \
+                                 &_ifindex;                                                       \
+                             }),                                                                  \
+                             ({                                                                   \
+                                 static int _ifindex2 = -1;                                       \
+                                 (with_if2) ? &_ifindex2 : NULL;                                  \
+                             }),                                                                  \
+                             ({                                                                   \
+                                 GTestFunc _test_func = (test_func);                              \
+                                 _test_func;                                                      \
+                             }),                                                                  \
+                             ({                                                                   \
+                                 GTestDataFunc _test_func = (test_data_func);                     \
+                                 _test_func;                                                      \
+                             }),                                                                  \
+                             (arg),                                                               \
+                             ({                                                                   \
+                                 gboolean _ifup = (ifup);                                         \
+                                 GINT_TO_POINTER(!!_ifup);                                        \
                              }))
 
-#define nmtstp_env1_add_test_func_data(testpath, test_func, arg, ifup) \
-    _nmtstp_env1_add_test_func_full(testpath, NULL, test_func, arg, ifup)
+#define nmtstp_env1_add_test_func_data(testpath, test_func, arg, ifup, with_if2) \
+    _nmtstp_env1_add_test_func_full(testpath, NULL, test_func, arg, ifup, with_if2)
 
-#define nmtstp_env1_add_test_func(testpath, test_func, ifup) \
-    _nmtstp_env1_add_test_func_full(testpath, test_func, NULL, NULL, ifup)
+#define nmtstp_env1_add_test_func(testpath, test_func, ifup, with_if2) \
+    _nmtstp_env1_add_test_func_full(testpath, test_func, NULL, NULL, ifup, with_if2)
 
 /*****************************************************************************/
 
