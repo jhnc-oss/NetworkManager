@@ -330,6 +330,17 @@ fill_device_props(NMDevice        *device,
         dump_proxy_to_props(l3cd, proxy_builder);
     }
 
+    g_variant_builder_add(
+        ip4_builder,
+        "{sv}",
+        "method",
+        g_variant_new_string(nm_device_get_effective_ip_config_method(device, AF_INET)));
+    g_variant_builder_add(
+        ip6_builder,
+        "{sv}",
+        "method",
+        g_variant_new_string(nm_device_get_effective_ip_config_method(device, AF_INET6)));
+
     dhcp_config = nm_device_get_dhcp_config(device, AF_INET);
     if (dhcp_config)
         *dhcp4_props = nm_g_variant_ref(nm_dhcp_config_get_options(dhcp_config));
@@ -456,19 +467,20 @@ dispatcher_done_cb(GObject *source, GAsyncResult *result, gpointer user_data)
     dispatcher_call_id_free(call_id);
 }
 
-static const char *action_table[] = {[NM_DISPATCHER_ACTION_HOSTNAME]      = NMD_ACTION_HOSTNAME,
-                                     [NM_DISPATCHER_ACTION_PRE_UP]        = NMD_ACTION_PRE_UP,
-                                     [NM_DISPATCHER_ACTION_UP]            = NMD_ACTION_UP,
-                                     [NM_DISPATCHER_ACTION_PRE_DOWN]      = NMD_ACTION_PRE_DOWN,
-                                     [NM_DISPATCHER_ACTION_DOWN]          = NMD_ACTION_DOWN,
-                                     [NM_DISPATCHER_ACTION_VPN_PRE_UP]    = NMD_ACTION_VPN_PRE_UP,
-                                     [NM_DISPATCHER_ACTION_VPN_UP]        = NMD_ACTION_VPN_UP,
-                                     [NM_DISPATCHER_ACTION_VPN_PRE_DOWN]  = NMD_ACTION_VPN_PRE_DOWN,
-                                     [NM_DISPATCHER_ACTION_VPN_DOWN]      = NMD_ACTION_VPN_DOWN,
-                                     [NM_DISPATCHER_ACTION_DHCP_CHANGE_4] = NMD_ACTION_DHCP4_CHANGE,
-                                     [NM_DISPATCHER_ACTION_DHCP_CHANGE_6] = NMD_ACTION_DHCP6_CHANGE,
-                                     [NM_DISPATCHER_ACTION_CONNECTIVITY_CHANGE] =
-                                         NMD_ACTION_CONNECTIVITY_CHANGE};
+static const char *action_table[] = {
+    [NM_DISPATCHER_ACTION_HOSTNAME]            = NMD_ACTION_HOSTNAME,
+    [NM_DISPATCHER_ACTION_PRE_UP]              = NMD_ACTION_PRE_UP,
+    [NM_DISPATCHER_ACTION_UP]                  = NMD_ACTION_UP,
+    [NM_DISPATCHER_ACTION_PRE_DOWN]            = NMD_ACTION_PRE_DOWN,
+    [NM_DISPATCHER_ACTION_DOWN]                = NMD_ACTION_DOWN,
+    [NM_DISPATCHER_ACTION_VPN_PRE_UP]          = NMD_ACTION_VPN_PRE_UP,
+    [NM_DISPATCHER_ACTION_VPN_UP]              = NMD_ACTION_VPN_UP,
+    [NM_DISPATCHER_ACTION_VPN_PRE_DOWN]        = NMD_ACTION_VPN_PRE_DOWN,
+    [NM_DISPATCHER_ACTION_VPN_DOWN]            = NMD_ACTION_VPN_DOWN,
+    [NM_DISPATCHER_ACTION_DHCP_CHANGE_4]       = NMD_ACTION_DHCP4_CHANGE,
+    [NM_DISPATCHER_ACTION_DHCP_CHANGE_6]       = NMD_ACTION_DHCP6_CHANGE,
+    [NM_DISPATCHER_ACTION_CONNECTIVITY_CHANGE] = NMD_ACTION_CONNECTIVITY_CHANGE,
+    [NM_DISPATCHER_ACTION_METHOD_CHANGE]       = NMD_ACTION_METHOD_CHANGE};
 
 static const char *
 action_to_string(NMDispatcherAction action)

@@ -164,6 +164,12 @@
           The network connectivity state has changed (no connectivity, went online, etc).
         </para></listitem>
       </varlistentry>
+      <varlistentry>
+        <term><varname>method-change</varname></term>
+        <listitem><para>
+          The IP method of the connection has changed (manual, shared, etc).
+        </para></listitem>
+      </varlistentry>
     </variablelist>
     <para>
       The environment contains more information about the interface and the connection.
@@ -267,6 +273,12 @@
           <term><varname>IP4_DOMAINS</varname></term>
           <listitem><para>
             The variable contains a space-separated list of the search domains.
+          </para></listitem>
+        </varlistentry>
+        <varlistentry>
+          <term><varname>IP4_METHOD</varname></term>
+          <listitem><para>
+            The variable contains the IP connection method as a string.
           </para></listitem>
         </varlistentry>
         <varlistentry>
