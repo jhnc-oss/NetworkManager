@@ -7570,6 +7570,74 @@ available_connections_check_delete_unrealized(NMDevice *self)
 }
 
 /**
+ * nm_device_down():
+ * @self: the #NMDevice
+ * @error: location to store error, or %NULL
+ *
+ * Change state of the device to down
+ *
+ * Returns: %TRUE on success, %FALSE on error
+ */
+gboolean
+nm_device_down(NMDevice *self, GError **error)
+{
+    NMDevicePrivate *priv;
+
+    g_return_val_if_fail(NM_IS_DEVICE(self), FALSE);
+
+    if (!nm_device_is_real(self)) {
+        g_set_error_literal(error,
+                            NM_DEVICE_ERROR,
+                            NM_DEVICE_ERROR_NOT_SOFTWARE,
+                            "This device is not realized");
+        return FALSE;
+    }
+
+    priv = NM_DEVICE_GET_PRIVATE(self);
+
+    g_return_val_if_fail(priv->iface != NULL, FALSE);
+    g_return_val_if_fail(priv->real, FALSE);
+
+    nm_device_take_down(self, FALSE);
+
+    return TRUE;
+}
+
+/**
+ * nm_device_up():
+ * @self: the #NMDevice
+ * @error: location to store error, or %NULL
+ *
+ * Change state of the device to up
+ *
+ * Returns: %TRUE on success, %FALSE on error
+ */
+gboolean
+nm_device_up(NMDevice *self, GError **error)
+{
+    NMDevicePrivate *priv;
+
+    g_return_val_if_fail(NM_IS_DEVICE(self), FALSE);
+
+    if (!nm_device_is_real(self)) {
+        g_set_error_literal(error,
+                            NM_DEVICE_ERROR,
+                            NM_DEVICE_ERROR_NOT_SOFTWARE,
+                            "This device is not realized");
+        return FALSE;
+    }
+
+    priv = NM_DEVICE_GET_PRIVATE(self);
+
+    g_return_val_if_fail(priv->iface != NULL, FALSE);
+    g_return_val_if_fail(priv->real, FALSE);
+
+    nm_device_take_up(self);
+
+    return TRUE;
+}
+
+/**
  * nm_device_unrealize():
  * @self: the #NMDevice
  * @remove_resources: if %TRUE, remove backing resources
@@ -13331,6 +13399,110 @@ impl_device_disconnect(NMDBusObject                      *obj,
 }
 
 static void
+down_cb(NMDevice              *self,
+        GDBusMethodInvocation *context,
+        NMAuthSubject         *subject,
+        GError                *error,
+        gpointer               user_data)
+{
+    GError *local = NULL;
+
+    if (error) {
+        g_dbus_method_invocation_return_gerror(context, error);
+        nm_audit_log_device_op(NM_AUDIT_OP_DEVICE_DOWN, self, FALSE, NULL, subject, error->message);
+        return;
+    }
+
+    /* Authorized */
+    nm_audit_log_device_op(NM_AUDIT_OP_DEVICE_DOWN, self, TRUE, NULL, subject, NULL);
+    if (nm_device_down(self, &local))
+        g_dbus_method_invocation_return_value(context, NULL);
+    else
+        g_dbus_method_invocation_take_error(context, local);
+}
+
+static void
+impl_device_down(NMDBusObject                      *obj,
+                 const NMDBusInterfaceInfoExtended *interface_info,
+                 const NMDBusMethodInfoExtended    *method_info,
+                 GDBusConnection                   *dbus_connection,
+                 const char                        *sender,
+                 GDBusMethodInvocation             *invocation,
+                 GVariant                          *parameters)
+{
+    NMDevice *self = NM_DEVICE(obj);
+
+    if (!nm_device_is_real(self)) {
+        g_dbus_method_invocation_return_error_literal(invocation,
+                                                      NM_DEVICE_ERROR,
+                                                      NM_DEVICE_ERROR_NOT_ALLOWED,
+                                                      "This device is not realized");
+        return;
+    }
+
+    nm_device_auth_request(self,
+                           invocation,
+                           NULL,
+                           NM_AUTH_PERMISSION_NETWORK_CONTROL,
+                           TRUE,
+                           NULL,
+                           down_cb,
+                           NULL);
+}
+
+static void
+up_cb(NMDevice              *self,
+      GDBusMethodInvocation *context,
+      NMAuthSubject         *subject,
+      GError                *error,
+      gpointer               user_data)
+{
+    GError *local = NULL;
+
+    if (error) {
+        g_dbus_method_invocation_return_gerror(context, error);
+        nm_audit_log_device_op(NM_AUDIT_OP_DEVICE_UP, self, FALSE, NULL, subject, error->message);
+        return;
+    }
+
+    /* Authorized */
+    nm_audit_log_device_op(NM_AUDIT_OP_DEVICE_UP, self, TRUE, NULL, subject, NULL);
+    if (nm_device_up(self, &local))
+        g_dbus_method_invocation_return_value(context, NULL);
+    else
+        g_dbus_method_invocation_take_error(context, local);
+}
+
+static void
+impl_device_up(NMDBusObject                      *obj,
+               const NMDBusInterfaceInfoExtended *interface_info,
+               const NMDBusMethodInfoExtended    *method_info,
+               GDBusConnection                   *dbus_connection,
+               const char                        *sender,
+               GDBusMethodInvocation             *invocation,
+               GVariant                          *parameters)
+{
+    NMDevice *self = NM_DEVICE(obj);
+
+    if (!nm_device_is_real(self)) {
+        g_dbus_method_invocation_return_error_literal(invocation,
+                                                      NM_DEVICE_ERROR,
+                                                      NM_DEVICE_ERROR_NOT_ALLOWED,
+                                                      "This device is not realized");
+        return;
+    }
+
+    nm_device_auth_request(self,
+                           invocation,
+                           NULL,
+                           NM_AUTH_PERMISSION_NETWORK_CONTROL,
+                           TRUE,
+                           NULL,
+                           up_cb,
+                           NULL);
+}
+
+static void
 delete_cb(NMDevice              *self,
           GDBusMethodInvocation *context,
           NMAuthSubject         *subject,
@@ -14148,6 +14320,31 @@ nm_device_take_down(NMDevice *self, gboolean block)
             _LOGW(LOGD_PLATFORM, "device not down after timeout!");
         else
             _LOGD(LOGD_PLATFORM, "device not down immediately");
+    }
+}
+
+void
+nm_device_take_up(NMDevice *self)
+{
+    int      ifindex;
+    gboolean device_is_up;
+
+    g_return_if_fail(NM_IS_DEVICE(self));
+
+    ifindex = nm_device_get_ip_ifindex(self);
+    _LOGD(LOGD_PLATFORM, "taking up device %d", ifindex);
+    if (ifindex <= 0) {
+        /* devices without ifindex are always up. */
+        return;
+    }
+
+    if (!nm_platform_link_change_flags(nm_device_get_platform(self), ifindex, IFF_UP, TRUE))
+        return;
+
+    device_is_up = nm_device_is_up(self);
+
+    if (!device_is_up) {
+        _LOGD(LOGD_PLATFORM, "device not up immediately");
     }
 }
 
@@ -17982,6 +18179,10 @@ static const NMDBusInterfaceInfoExtended interface_info_device = {
                 .handle = impl_device_get_applied_connection, ),
             NM_DEFINE_DBUS_METHOD_INFO_EXTENDED(NM_DEFINE_GDBUS_METHOD_INFO_INIT("Disconnect", ),
                                                 .handle = impl_device_disconnect, ),
+            NM_DEFINE_DBUS_METHOD_INFO_EXTENDED(NM_DEFINE_GDBUS_METHOD_INFO_INIT("Down", ),
+                                                .handle = impl_device_down, ),
+            NM_DEFINE_DBUS_METHOD_INFO_EXTENDED(NM_DEFINE_GDBUS_METHOD_INFO_INIT("Up", ),
+                                                .handle = impl_device_up, ),
             NM_DEFINE_DBUS_METHOD_INFO_EXTENDED(NM_DEFINE_GDBUS_METHOD_INFO_INIT("Delete", ),
                                                 .handle = impl_device_delete, ), ),
         .signals    = NM_DEFINE_GDBUS_SIGNAL_INFOS(&signal_info_state_changed, ),
