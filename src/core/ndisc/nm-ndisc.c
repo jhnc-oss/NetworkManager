@@ -161,8 +161,9 @@ nm_ndisc_data_to_l3cd(NMDedupMultiIndex        *multi_idx,
             .table_any     = TRUE,
             .table_coerced = 0,
             .metric_any    = TRUE,
-            .metric        = 0,
-            .rt_pref       = ndisc_route->preference,
+            /* Non-on_link routes get a small penalty */
+            .metric  = ndisc_route->on_link ? 0 : 5,
+            .rt_pref = ndisc_route->preference,
         };
         nm_assert((NMIcmpv6RouterPref) r.rt_pref == ndisc_route->preference);
 
@@ -658,8 +659,17 @@ nm_ndisc_add_route(NMNDisc *ndisc, const NMNDiscRoute *new_item, gint64 now_msec
     for (i = 0; i < rdata->routes->len;) {
         NMNDiscRoute *item = &nm_g_array_index(rdata->routes, NMNDiscRoute, i);
 
-        if (IN6_ARE_ADDR_EQUAL(&item->network, &new_item->network)
-            && item->plen == new_item->plen) {
+        /*
+         * It is possible that two entries in rdata->routes have
+         * the same prefix as well as the same prefix length.
+         * One of them, however, refers to the on-link prefix,
+         * and the other one to a route from the route information field.
+         * Moreover, they might have different route preferences.
+         * Hence, if both routes differ in the on-link flag,
+         * comparison is aborted, and both routes are added.
+         */
+        if (IN6_ARE_ADDR_EQUAL(&item->network, &new_item->network) && item->plen == new_item->plen
+            && item->on_link == new_item->on_link) {
             if (new_item->expiry_msec <= now_msec) {
                 g_array_remove_index(rdata->routes, i);
                 return TRUE;
