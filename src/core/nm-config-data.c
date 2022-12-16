@@ -1122,13 +1122,15 @@ load_global_dns(GKeyFile *keyfile, gboolean internal)
     char              *group, *domain_prefix;
     gs_strfreev char **groups = NULL;
     int                g, i, j, domain_prefix_len;
-    gboolean           default_found = FALSE;
     char             **strv;
 
-    group =
-        internal ? NM_CONFIG_KEYFILE_GROUP_INTERN_GLOBAL_DNS : NM_CONFIG_KEYFILE_GROUP_GLOBAL_DNS;
-    domain_prefix     = internal ? NM_CONFIG_KEYFILE_GROUPPREFIX_INTERN_GLOBAL_DNS_DOMAIN
-                                 : NM_CONFIG_KEYFILE_GROUPPREFIX_GLOBAL_DNS_DOMAIN;
+    if (internal) {
+        group         = NM_CONFIG_KEYFILE_GROUP_INTERN_GLOBAL_DNS;
+        domain_prefix = NM_CONFIG_KEYFILE_GROUPPREFIX_INTERN_GLOBAL_DNS_DOMAIN;
+    } else {
+        group         = NM_CONFIG_KEYFILE_GROUP_GLOBAL_DNS;
+        domain_prefix = NM_CONFIG_KEYFILE_GROUPPREFIX_GLOBAL_DNS_DOMAIN;
+    }
     domain_prefix_len = strlen(domain_prefix);
 
     if (!nm_config_keyfile_has_global_dns_config(keyfile, internal))
@@ -1225,17 +1227,6 @@ load_global_dns(GKeyFile *keyfile, gboolean internal)
         domain->options = options;
 
         g_hash_table_insert(dns_config->domains, strdup(name), domain);
-
-        if (name[0] == '*' && name[1] == '\0')
-            default_found = TRUE;
-    }
-
-    if (!default_found) {
-        nm_log_dbg(LOGD_CORE,
-                   "%s global DNS configuration is missing default domain, ignore it",
-                   internal ? "internal" : "user");
-        nm_global_dns_config_free(dns_config);
-        return NULL;
     }
 
     dns_config->internal = internal;
@@ -1424,17 +1415,6 @@ nm_global_dns_config_from_dbus(const GValue *value, GError **error)
             }
         }
         g_variant_unref(val);
-    }
-
-    /* An empty value is valid and clears the internal configuration */
-    if (!nm_global_dns_config_is_empty(dns_config)
-        && !nm_global_dns_config_lookup_domain(dns_config, "*")) {
-        g_set_error_literal(error,
-                            NM_MANAGER_ERROR,
-                            NM_MANAGER_ERROR_FAILED,
-                            "Global DNS configuration is missing the default domain");
-        nm_global_dns_config_free(dns_config);
-        return NULL;
     }
 
     global_dns_config_seal_domains(dns_config);
