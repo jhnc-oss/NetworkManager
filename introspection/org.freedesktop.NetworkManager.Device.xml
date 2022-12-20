@@ -392,6 +392,20 @@
     <method name="Delete"/>
 
     <!--
+        Down:
+
+       Change the state of the device to DOWN
+    -->
+    <method name="Down"/>
+
+    <!--
+        Down:
+
+       Change the state of the device to UP
+    -->
+    <method name="Up"/>
+
+    <!--
         StateChanged:
         @new_state: (<link linkend="NMDeviceState">NMDeviceState</link>) The new state of the device.
         @old_state: (<link linkend="NMDeviceState">NMDeviceState</link>) The previous state of the device.

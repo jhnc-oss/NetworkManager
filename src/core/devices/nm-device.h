@@ -665,6 +665,8 @@ gboolean nm_device_create_and_realize(NMDevice     *self,
                                       NMConnection *connection,
                                       NMDevice     *parent,
                                       GError      **error);
+gboolean nm_device_down(NMDevice *device, GError **error);
+gboolean nm_device_up(NMDevice *device, GError **error);
 gboolean nm_device_unrealize(NMDevice *device, gboolean remove_resources, GError **error);
 
 void nm_device_update_from_platform_link(NMDevice *self, const NMPlatformLink *plink);

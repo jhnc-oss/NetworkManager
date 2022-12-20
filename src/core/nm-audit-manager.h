@@ -42,6 +42,8 @@ typedef struct _NMAuditManagerClass NMAuditManagerClass;
 
 #define NM_AUDIT_OP_DEVICE_AUTOCONNECT "device-autoconnect"
 #define NM_AUDIT_OP_DEVICE_DISCONNECT  "device-disconnect"
+#define NM_AUDIT_OP_DEVICE_DOWN        "device-down"
+#define NM_AUDIT_OP_DEVICE_UP          "device-up"
 #define NM_AUDIT_OP_DEVICE_DELETE      "device-delete"
 #define NM_AUDIT_OP_DEVICE_MANAGED     "device-managed"
 #define NM_AUDIT_OP_DEVICE_REAPPLY     "device-reapply"
