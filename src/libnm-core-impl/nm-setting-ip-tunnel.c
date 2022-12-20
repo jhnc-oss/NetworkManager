@@ -437,7 +437,7 @@ verify(NMSetting *setting, NMConnection *connection, GError **error)
             g_set_error_literal(error,
                                 NM_CONNECTION_ERROR,
                                 NM_CONNECTION_ERROR_INVALID_PROPERTY,
-                                _("tunnel keys can only be specified for GRE tunnels"));
+                                _("tunnel keys can only be specified for GRE and VTI tunnels"));
             return FALSE;
         }
     }
