@@ -41,6 +41,10 @@ G_BEGIN_DECLS
 #define NM_SETTING_GSM_MTU                          "mtu"
 #define NM_SETTING_GSM_INITIAL_EPS_BEARER_CONFIGURE "initial-eps-bearer-configure"
 #define NM_SETTING_GSM_INITIAL_EPS_BEARER_APN       "initial-eps-bearer-apn"
+#define NM_SETTING_GSM_APN_TYPE                     "apn-type"
+#define NM_SETTING_GSM_MMSC                         "mmsc"
+#define NM_SETTING_GSM_MMS_PROXY                    "mms-proxy"
+#define NM_SETTING_GSM_MMS_PORT                     "mms-port"
 
 /* Deprecated */
 #define NM_SETTING_GSM_NUMBER "number"
@@ -73,6 +77,19 @@ NM_AVAILABLE_IN_1_44
 gboolean nm_setting_gsm_get_initial_eps_config(NMSettingGsm *setting);
 NM_AVAILABLE_IN_1_44
 const char *nm_setting_gsm_get_initial_eps_apn(NMSettingGsm *setting);
+
+NM_AVAILABLE_IN_1_44
+guint32     nm_setting_gsm_get_num_apn_types(NMSettingGsm *setting);
+const char *nm_setting_gsm_get_apn_type(NMSettingGsm *setting, guint32 idx);
+gboolean    nm_setting_gsm_add_apn_type(NMSettingGsm *setting, const char *apn_type);
+void        nm_setting_gsm_remove_apn_type(NMSettingGsm *setting, guint32 idx);
+gboolean    nm_setting_gsm_remove_apn_type_by_value(NMSettingGsm *setting, const char *apn_type);
+NM_AVAILABLE_IN_1_44
+const char *nm_setting_gsm_get_mmsc(NMSettingGsm *setting);
+NM_AVAILABLE_IN_1_44
+const char *nm_setting_gsm_get_mms_proxy(NMSettingGsm *setting);
+NM_AVAILABLE_IN_1_44
+guint32 nm_setting_gsm_get_mms_port(NMSettingGsm *setting);
 
 NM_DEPRECATED_IN_1_16
 const char *nm_setting_gsm_get_number(NMSettingGsm *setting);

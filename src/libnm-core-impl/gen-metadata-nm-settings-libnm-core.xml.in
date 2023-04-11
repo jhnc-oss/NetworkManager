@@ -1308,6 +1308,10 @@
                   dbus-type="s"
                   gprop-type="gchararray"
                   />
+        <property name="apn-type"
+                  dbus-type="as"
+                  gprop-type="GStrv"
+                  />
         <property name="auto-config"
                   dbus-type="b"
                   gprop-type="gboolean"
@@ -1327,6 +1331,18 @@
         <property name="initial-eps-bearer-configure"
                   dbus-type="b"
                   gprop-type="gboolean"
+                  />
+        <property name="mms-port"
+                  dbus-type="u"
+                  gprop-type="guint"
+                  />
+        <property name="mms-proxy"
+                  dbus-type="s"
+                  gprop-type="gchararray"
+                  />
+        <property name="mmsc"
+                  dbus-type="s"
+                  gprop-type="gchararray"
                   />
         <property name="mtu"
                   dbus-type="u"

@@ -38,25 +38,33 @@ NM_GOBJECT_PROPERTIES_DEFINE_BASE(PROP_AUTO_CONFIG,
                                   PROP_SIM_OPERATOR_ID,
                                   PROP_MTU,
                                   PROP_INITIAL_EPS_CONFIG,
-                                  PROP_INITIAL_EPS_APN, );
+                                  PROP_INITIAL_EPS_APN,
+                                  PROP_APN_TYPE,
+                                  PROP_MMSC,
+                                  PROP_MMS_PROXY,
+                                  PROP_MMS_PORT, );
 
 typedef struct {
-    char   *number;
-    char   *username;
-    char   *password;
-    char   *device_id;
-    char   *sim_id;
-    char   *sim_operator_id;
-    char   *apn;
-    char   *network_id;
-    char   *pin;
-    char   *initial_eps_apn;
-    guint   password_flags;
-    guint   pin_flags;
-    guint32 mtu;
-    bool    auto_config;
-    bool    home_only;
-    bool    initial_eps_config;
+    char       *number;
+    char       *username;
+    char       *password;
+    char       *device_id;
+    char       *sim_id;
+    char       *sim_operator_id;
+    char       *apn;
+    char       *network_id;
+    char       *pin;
+    char       *initial_eps_apn;
+    NMValueStrv apn_type;
+    char       *mmsc;
+    char       *mms_proxy;
+    guint       password_flags;
+    guint       pin_flags;
+    guint32     mms_port;
+    guint32     mtu;
+    bool        auto_config;
+    bool        home_only;
+    bool        initial_eps_config;
 } NMSettingGsmPrivate;
 
 /**
@@ -320,6 +328,169 @@ nm_setting_gsm_get_initial_eps_apn(NMSettingGsm *setting)
     g_return_val_if_fail(NM_IS_SETTING_GSM(setting), NULL);
 
     return NM_SETTING_GSM_GET_PRIVATE(setting)->initial_eps_apn;
+}
+
+/**
+ * nm_setting_gsm_get_num_apn_types:
+ * @setting: the #NMSettingGsm
+ *
+ * Returns: the number of configured APN types
+ *
+ * Since: 1.44
+ **/
+guint32
+nm_setting_gsm_get_num_apn_types(NMSettingGsm *setting)
+{
+    g_return_val_if_fail(NM_IS_SETTING_GSM(setting), FALSE);
+
+    return nm_g_array_len(NM_SETTING_GSM_GET_PRIVATE(setting)->apn_type.arr);
+}
+
+/**
+ * nm_setting_gsm_get_apn_type:
+ * @setting: the #NMSettingGsm
+ * @idx: index number of the APN type to return
+ *
+ * Returns: the APN type at index @i
+ *
+ * Since: 1.44
+ **/
+const char *
+nm_setting_gsm_get_apn_type(NMSettingGsm *setting, guint32 idx)
+{
+    NMSettingGsmPrivate *priv = NM_SETTING_GSM_GET_PRIVATE(setting);
+    guint                apn_type_len;
+
+    g_return_val_if_fail(NM_IS_SETTING_GSM(setting), NULL);
+
+    apn_type_len = nm_g_array_len(priv->apn_type.arr);
+    if (idx >= apn_type_len) {
+        /* access one past the length is OK. */
+        g_return_val_if_fail(idx == apn_type_len, NULL);
+        return NULL;
+    }
+
+    return nm_strvarray_get_idx(priv->apn_type.arr, idx);
+}
+
+/**
+ * nm_setting_gsm_add_apn_type:
+ * @setting: the #NMSettingGsm
+ * @apn_type: the APN type to add
+ *
+ * Returns: %TRUE if the APN type was added; %FALSE if the type exists
+ *
+ * Since: 1.44
+ **/
+gboolean
+nm_setting_gsm_add_apn_type(NMSettingGsm *setting, const char *apn_type)
+{
+    NMSettingGsmPrivate *priv = NM_SETTING_GSM_GET_PRIVATE(setting);
+
+    g_return_val_if_fail(NM_IS_SETTING_GSM(setting), FALSE);
+    g_return_val_if_fail(apn_type != NULL, FALSE);
+
+    if (nm_strvarray_find_first(priv->apn_type.arr, apn_type) >= 0)
+        return FALSE;
+
+    nm_strvarray_add(nm_strvarray_ensure(&priv->apn_type.arr), apn_type);
+    /* _notify(setting, PROP_APN_TYPE); */
+    return TRUE;
+}
+
+/**
+ * nm_setting_gsm_remove_apn_type:
+ * @setting: the #NMSettingGsm
+ * @idx: index number of the APN type to remove
+ *
+ * Removes the APN type at index @idx.
+ *
+ * Since: 1.44
+ **/
+void
+nm_setting_gsm_remove_apn_type(NMSettingGsm *setting, guint32 idx)
+{
+    NMSettingGsmPrivate *priv = NM_SETTING_GSM_GET_PRIVATE(setting);
+
+    g_return_if_fail(NM_IS_SETTING_GSM(setting));
+    g_return_if_fail(idx < nm_g_array_len(priv->apn_type.arr));
+
+    g_array_remove_index(priv->apn_type.arr, idx);
+    /* _notify(setting, PROP_APN_TYPE); */
+}
+
+/**
+ * nm_setting_gsm_remove_apn_type_by_value:
+ * @setting: the #NMSettingGsm
+ * @apn_type: the APN type to remove
+ *
+ * Removes the APN type @apn_type.
+ *
+ * Returns: %TRUE if the APN type was found and removed; %FALSE if it was not.
+ *
+ * Since: 1.44
+ **/
+gboolean
+nm_setting_gsm_remove_apn_type_by_value(NMSettingGsm *setting, const char *apn_type)
+{
+    NMSettingGsmPrivate *priv = NM_SETTING_GSM_GET_PRIVATE(setting);
+
+    g_return_val_if_fail(NM_IS_SETTING_GSM(setting), FALSE);
+    g_return_val_if_fail(apn_type != NULL, FALSE);
+
+    if (nm_strvarray_remove_first(priv->apn_type.arr, apn_type)) {
+        /* _notify(setting, PROP_APN_TYPE); */
+        return TRUE;
+    }
+    return FALSE;
+}
+
+/**
+ * nm_setting_gsm_get_mmsc:
+ * @setting: the #NMSettingGsm
+ *
+ * Returns: the #NMSettingGsm:mmsc property of the setting
+ *
+ * Since: 1.44
+ **/
+const char *
+nm_setting_gsm_get_mmsc(NMSettingGsm *setting)
+{
+    g_return_val_if_fail(NM_IS_SETTING_GSM(setting), NULL);
+
+    return NM_SETTING_GSM_GET_PRIVATE(setting)->mmsc;
+}
+
+/**
+ * nm_setting_gsm_get_mms_proxy:
+ * @setting: the #NMSettingGsm
+ *
+ * Returns: the #NMSettingGsm:mms-proxy property of the setting
+ *
+ * Since: 1.44
+ **/
+const char *
+nm_setting_gsm_get_mms_proxy(NMSettingGsm *setting)
+{
+    g_return_val_if_fail(NM_IS_SETTING_GSM(setting), NULL);
+
+    return NM_SETTING_GSM_GET_PRIVATE(setting)->mms_proxy;
+}
+
+/**
+ * nm_setting_gsm_get_mms_port:
+ * @setting: the #NMSettingGsm
+ *
+ * Returns: the #NMSettingGsm:mms-port property of the setting
+ *
+ * Since: 1.44
+ **/
+guint32
+nm_setting_gsm_get_mms_port(NMSettingGsm *setting)
+{
+    g_return_val_if_fail(NM_IS_SETTING_GSM(setting), 0);
+
+    return NM_SETTING_GSM_GET_PRIVATE(setting)->mms_port;
 }
 
 static gboolean
@@ -837,6 +1008,74 @@ nm_setting_gsm_class_init(NMSettingGsmClass *klass)
                                               NM_SETTING_PARAM_NONE,
                                               NMSettingGsmPrivate,
                                               initial_eps_apn);
+
+    /**
+     * NMSettingGsm:apn-type:
+     *
+     * A list of types GPRS Access Point Name can be use for.
+     * Each list element may be one of "default", "supl", or "mms".
+     * The purpose of an APN is determined based on the value of
+     * apn-type.  If not set, apn-type defaults to "default".
+     *
+     * Since: 1.44
+     **/
+    _nm_setting_property_define_direct_strv(properties_override,
+                                            obj_properties,
+                                            NM_SETTING_GSM_APN_TYPE,
+                                            PROP_APN_TYPE,
+                                            NM_SETTING_PARAM_NONE,
+                                            NMSettingGsmPrivate,
+                                            apn_type);
+
+    /**
+     * NMSettingGsm:mmsc:
+     *
+     * Multimedia Messaging Service Centre.  This can be a URI
+     * or an IP address.
+     *
+     * Since: 1.44
+     **/
+    _nm_setting_property_define_direct_string(properties_override,
+                                              obj_properties,
+                                              NM_SETTING_GSM_MMSC,
+                                              PROP_MMSC,
+                                              NM_SETTING_PARAM_NONE,
+                                              NMSettingGsmPrivate,
+                                              mmsc,
+                                              .direct_set_string_strip = TRUE);
+    /**
+     * NMSettingGsm:mms-proxy:
+     *
+     * Multimedia Messaging Service Proxy.  This can be a URI
+     * or an IP address excluding the port.
+     *
+     * Since: 1.44
+     **/
+    _nm_setting_property_define_direct_string(properties_override,
+                                              obj_properties,
+                                              NM_SETTING_GSM_MMS_PROXY,
+                                              PROP_MMS_PROXY,
+                                              NM_SETTING_PARAM_NONE,
+                                              NMSettingGsmPrivate,
+                                              mms_proxy,
+                                              .direct_set_string_strip = TRUE);
+    /**
+     * NMSettingGsm:mms-port:
+     *
+     * The proxy port to be used with NMSettingGsm:mms-proxy.
+     *
+     * Since: 1.44
+     **/
+    _nm_setting_property_define_direct_uint32(properties_override,
+                                              obj_properties,
+                                              NM_SETTING_GSM_MMS_PORT,
+                                              PROP_MMS_PORT,
+                                              0,
+                                              G_MAXUINT16,
+                                              0,
+                                              0,
+                                              NMSettingGsmPrivate,
+                                              mms_port);
 
     /* Ignore incoming deprecated properties */
     _nm_properties_override_dbus(properties_override,
