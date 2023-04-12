@@ -57,11 +57,11 @@ variables:
   #
   # This is done by running `ci-fairy generate-template` and possibly bumping
   # ".default_tag".
-  ALPINE_TAG:  '2023-04-11.0-c319e2a8ce5b'
-  CENTOS_TAG:  '2023-04-11.0-3322a2e54777'
-  DEBIAN_TAG:  '2023-04-11.0-b529fd8eba83'
-  FEDORA_TAG:  '2023-04-11.0-3322a2e54777'
-  UBUNTU_TAG:  '2023-04-11.0-b529fd8eba83'
+  ALPINE_TAG:  '2023-04-11.0-afef6bb801ad'
+  CENTOS_TAG:  '2023-04-11.0-be3884d3de9a'
+  DEBIAN_TAG:  '2023-04-11.0-c6da653a7725'
+  FEDORA_TAG:  '2023-04-11.0-be3884d3de9a'
+  UBUNTU_TAG:  '2023-04-11.0-c6da653a7725'
 
   ALPINE_EXEC: 'bash .gitlab-ci/alpine-install.sh'
   CENTOS_EXEC: 'bash .gitlab-ci/fedora-install.sh'
@@ -116,6 +116,7 @@ fedora:36@container-prep:
     FDO_DISTRIBUTION_VERSION: '36'
     FDO_DISTRIBUTION_TAG: $FEDORA_TAG
     FDO_DISTRIBUTION_EXEC: $FEDORA_EXEC
+  when: manual
 
 fedora:38@container-prep:
   extends:
@@ -126,6 +127,7 @@ fedora:38@container-prep:
     FDO_DISTRIBUTION_VERSION: '38'
     FDO_DISTRIBUTION_TAG: $FEDORA_TAG
     FDO_DISTRIBUTION_EXEC: $FEDORA_EXEC
+  when: manual
 
 fedora:30@container-prep:
   extends:
@@ -136,6 +138,7 @@ fedora:30@container-prep:
     FDO_DISTRIBUTION_VERSION: '30'
     FDO_DISTRIBUTION_TAG: $FEDORA_TAG
     FDO_DISTRIBUTION_EXEC: $FEDORA_EXEC
+  when: manual
 
 fedora:31@container-prep:
   extends:
@@ -146,6 +149,7 @@ fedora:31@container-prep:
     FDO_DISTRIBUTION_VERSION: '31'
     FDO_DISTRIBUTION_TAG: $FEDORA_TAG
     FDO_DISTRIBUTION_EXEC: $FEDORA_EXEC
+  when: manual
 
 fedora:32@container-prep:
   extends:
@@ -156,6 +160,7 @@ fedora:32@container-prep:
     FDO_DISTRIBUTION_VERSION: '32'
     FDO_DISTRIBUTION_TAG: $FEDORA_TAG
     FDO_DISTRIBUTION_EXEC: $FEDORA_EXEC
+  when: manual
 
 fedora:33@container-prep:
   extends:
@@ -166,6 +171,7 @@ fedora:33@container-prep:
     FDO_DISTRIBUTION_VERSION: '33'
     FDO_DISTRIBUTION_TAG: $FEDORA_TAG
     FDO_DISTRIBUTION_EXEC: $FEDORA_EXEC
+  when: manual
 
 fedora:34@container-prep:
   extends:
@@ -176,6 +182,7 @@ fedora:34@container-prep:
     FDO_DISTRIBUTION_VERSION: '34'
     FDO_DISTRIBUTION_TAG: $FEDORA_TAG
     FDO_DISTRIBUTION_EXEC: $FEDORA_EXEC
+  when: manual
 
 fedora:35@container-prep:
   extends:
@@ -186,6 +193,7 @@ fedora:35@container-prep:
     FDO_DISTRIBUTION_VERSION: '35'
     FDO_DISTRIBUTION_TAG: $FEDORA_TAG
     FDO_DISTRIBUTION_EXEC: $FEDORA_EXEC
+  when: manual
 
 ubuntu:18.04@container-prep:
   extends:
@@ -196,6 +204,7 @@ ubuntu:18.04@container-prep:
     FDO_DISTRIBUTION_VERSION: '18.04'
     FDO_DISTRIBUTION_TAG: $UBUNTU_TAG
     FDO_DISTRIBUTION_EXEC: $UBUNTU_EXEC
+  when: manual
 
 ubuntu:20.04@container-prep:
   extends:
@@ -206,6 +215,7 @@ ubuntu:20.04@container-prep:
     FDO_DISTRIBUTION_VERSION: '20.04'
     FDO_DISTRIBUTION_TAG: $UBUNTU_TAG
     FDO_DISTRIBUTION_EXEC: $UBUNTU_EXEC
+  when: manual
 
 ubuntu:22.04@container-prep:
   extends:
@@ -216,6 +226,7 @@ ubuntu:22.04@container-prep:
     FDO_DISTRIBUTION_VERSION: '22.04'
     FDO_DISTRIBUTION_TAG: $UBUNTU_TAG
     FDO_DISTRIBUTION_EXEC: $UBUNTU_EXEC
+  when: manual
 
 ubuntu:devel@container-prep:
   extends:
@@ -226,6 +237,7 @@ ubuntu:devel@container-prep:
     FDO_DISTRIBUTION_VERSION: 'devel'
     FDO_DISTRIBUTION_TAG: $UBUNTU_TAG
     FDO_DISTRIBUTION_EXEC: $UBUNTU_EXEC
+  when: manual
 
 ubuntu:rolling@container-prep:
   extends:
@@ -236,6 +248,7 @@ ubuntu:rolling@container-prep:
     FDO_DISTRIBUTION_VERSION: 'rolling'
     FDO_DISTRIBUTION_TAG: $UBUNTU_TAG
     FDO_DISTRIBUTION_EXEC: $UBUNTU_EXEC
+  when: manual
 
 debian:10@container-prep:
   extends:
@@ -246,6 +259,7 @@ debian:10@container-prep:
     FDO_DISTRIBUTION_VERSION: '10'
     FDO_DISTRIBUTION_TAG: $DEBIAN_TAG
     FDO_DISTRIBUTION_EXEC: $DEBIAN_EXEC
+  when: manual
 
 debian:11@container-prep:
   extends:
@@ -256,6 +270,7 @@ debian:11@container-prep:
     FDO_DISTRIBUTION_VERSION: '11'
     FDO_DISTRIBUTION_TAG: $DEBIAN_TAG
     FDO_DISTRIBUTION_EXEC: $DEBIAN_EXEC
+  when: manual
 
 debian:sid@container-prep:
   extends:
@@ -266,6 +281,7 @@ debian:sid@container-prep:
     FDO_DISTRIBUTION_VERSION: 'sid'
     FDO_DISTRIBUTION_TAG: $DEBIAN_TAG
     FDO_DISTRIBUTION_EXEC: $DEBIAN_EXEC
+  when: manual
 
 debian:9@container-prep:
   extends:
@@ -276,6 +292,7 @@ debian:9@container-prep:
     FDO_DISTRIBUTION_VERSION: '9'
     FDO_DISTRIBUTION_TAG: $DEBIAN_TAG
     FDO_DISTRIBUTION_EXEC: $DEBIAN_EXEC
+  when: manual
 
 debian:testing@container-prep:
   extends:
@@ -286,6 +303,7 @@ debian:testing@container-prep:
     FDO_DISTRIBUTION_VERSION: 'testing'
     FDO_DISTRIBUTION_TAG: $DEBIAN_TAG
     FDO_DISTRIBUTION_EXEC: $DEBIAN_EXEC
+  when: manual
 
 centos:7.5.1804@container-prep:
   extends:
@@ -296,6 +314,7 @@ centos:7.5.1804@container-prep:
     FDO_DISTRIBUTION_VERSION: '7.5.1804'
     FDO_DISTRIBUTION_TAG: $CENTOS_TAG
     FDO_DISTRIBUTION_EXEC: $CENTOS_EXEC
+  when: manual
 
 centos:7.9.2009@container-prep:
   extends:
@@ -306,6 +325,7 @@ centos:7.9.2009@container-prep:
     FDO_DISTRIBUTION_VERSION: '7.9.2009'
     FDO_DISTRIBUTION_TAG: $CENTOS_TAG
     FDO_DISTRIBUTION_EXEC: $CENTOS_EXEC
+  when: manual
 
 centos:8.1.1911@container-prep:
   extends:
@@ -316,6 +336,7 @@ centos:8.1.1911@container-prep:
     FDO_DISTRIBUTION_VERSION: '8.1.1911'
     FDO_DISTRIBUTION_TAG: $CENTOS_TAG
     FDO_DISTRIBUTION_EXEC: $CENTOS_EXEC
+  when: manual
 
 centos:8.3.2011@container-prep:
   extends:
@@ -326,6 +347,7 @@ centos:8.3.2011@container-prep:
     FDO_DISTRIBUTION_VERSION: '8.3.2011'
     FDO_DISTRIBUTION_TAG: $CENTOS_TAG
     FDO_DISTRIBUTION_EXEC: $CENTOS_EXEC
+  when: manual
 
 centos:7.6.1810@container-prep:
   extends:
@@ -336,6 +358,7 @@ centos:7.6.1810@container-prep:
     FDO_DISTRIBUTION_VERSION: '7.6.1810'
     FDO_DISTRIBUTION_TAG: $CENTOS_TAG
     FDO_DISTRIBUTION_EXEC: $CENTOS_EXEC
+  when: manual
 
 centos:7.7.1908@container-prep:
   extends:
@@ -346,6 +369,7 @@ centos:7.7.1908@container-prep:
     FDO_DISTRIBUTION_VERSION: '7.7.1908'
     FDO_DISTRIBUTION_TAG: $CENTOS_TAG
     FDO_DISTRIBUTION_EXEC: $CENTOS_EXEC
+  when: manual
 
 centos:7.8.2003@container-prep:
   extends:
@@ -356,6 +380,7 @@ centos:7.8.2003@container-prep:
     FDO_DISTRIBUTION_VERSION: '7.8.2003'
     FDO_DISTRIBUTION_TAG: $CENTOS_TAG
     FDO_DISTRIBUTION_EXEC: $CENTOS_EXEC
+  when: manual
 
 centos:8.2.2004@container-prep:
   extends:
@@ -366,6 +391,7 @@ centos:8.2.2004@container-prep:
     FDO_DISTRIBUTION_VERSION: '8.2.2004'
     FDO_DISTRIBUTION_TAG: $CENTOS_TAG
     FDO_DISTRIBUTION_EXEC: $CENTOS_EXEC
+  when: manual
 
 alpine:latest@container-prep:
   extends:
@@ -376,6 +402,7 @@ alpine:latest@container-prep:
     FDO_DISTRIBUTION_VERSION: 'latest'
     FDO_DISTRIBUTION_TAG: $ALPINE_TAG
     FDO_DISTRIBUTION_EXEC: $ALPINE_EXEC
+  when: manual
 
 #################################################################
 #                                                               #
