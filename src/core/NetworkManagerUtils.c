@@ -1497,8 +1497,7 @@ nm_utils_ip_addresses_to_dbus(int                          addr_family,
             g_variant_builder_add(&addr_builder,
                                   "{sv}",
                                   "flags",
-                                  g_variant_new_uint32(address->ax.n_ifa_flags));
-                                  
+                                  g_variant_new_uint32(address->ax.n_ifa_flags));             
             p = NULL;
             if (IS_IPv4) {
                 if (address->a4.peer_address != address->a4.address)
