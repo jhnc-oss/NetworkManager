@@ -1545,6 +1545,10 @@ nm_utils_ip_addresses_to_dbus(int                          addr_family,
                                   "{sv}",
                                   "prefix",
                                   g_variant_new_uint32(address->ax.plen));
+            g_variant_builder_add(&addr_builder,
+                                  "{sv}",
+                                  "flags",
+                                  g_variant_new_uint32(address->ax.n_ifa_flags));
 
             p = NULL;
             if (IS_IPv4) {
