@@ -42,7 +42,14 @@ nm_libexecdir = join_paths(nm_prefix, get_option('libexecdir'))
 nm_localedir = join_paths(nm_prefix, get_option('localedir'))
 nm_localstatedir = join_paths(nm_prefix, get_option('localstatedir'))
 nm_mandir = join_paths(nm_prefix, get_option('mandir'))
-nm_runstatedir = join_paths(nm_localstatedir, 'run')
+
+fhs3_rundir_opt = get_option('fhs3_rundir')
+if fhs3_rundir_opt
+  nm_runstatedir = join_paths(nm_prefix, 'run')
+else
+  nm_runstatedir = join_paths(nm_localstatedir, 'run')
+endif
+
 nm_sbindir = join_paths(nm_prefix, get_option('sbindir'))
 nm_sysconfdir = join_paths(nm_prefix, get_option('sysconfdir'))
 
@@ -1002,7 +1009,7 @@ config_extra_h.set_quoted('NMVPNDIR',          nm_vpndir)
 config_extra_h.set_quoted('NM_BUILD_BUILDDIR', build_root)
 config_extra_h.set_quoted('NM_BUILD_SRCDIR',   source_root)
 if enable_ppp
-    config_extra_h.set_quoted('PPPD_PLUGIN_DIR', pppd_plugin_dir)
+  config_extra_h.set_quoted('PPPD_PLUGIN_DIR', pppd_plugin_dir)
 endif
 config_extra_h.set_quoted('PREFIX',            nm_prefix)
 config_extra_h.set_quoted('RUNSTATEDIR',       nm_runstatedir)
