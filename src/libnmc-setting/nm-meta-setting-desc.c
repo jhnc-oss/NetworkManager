@@ -1077,12 +1077,11 @@ _get_fcn_gobject_secret_flags(ARGS_GET_FCN)
 static gconstpointer
 _get_fcn_gobject_enum(ARGS_GET_FCN)
 {
-    GType                                gtype            = 0;
-    nm_auto_unref_gtypeclass GTypeClass *gtype_class      = NULL;
-    nm_auto_unref_gtypeclass GTypeClass *gtype_prop_class = NULL;
-    const NMUtilsEnumValueInfo          *value_infos      = NULL;
-    gboolean                             has_gtype        = FALSE;
-    nm_auto_unset_gvalue GValue          gval             = G_VALUE_INIT;
+    GType                                gtype       = 0;
+    nm_auto_unref_gtypeclass GTypeClass *gtype_class = NULL;
+    const NMUtilsEnumValueInfo          *value_infos = NULL;
+    gboolean                             has_gtype   = FALSE;
+    nm_auto_unset_gvalue GValue          gval        = G_VALUE_INIT;
     gint64                               v;
     gboolean                             format_numeric             = FALSE;
     gboolean                             format_numeric_hex         = FALSE;
@@ -1147,45 +1146,29 @@ _get_fcn_gobject_enum(ARGS_GET_FCN)
     pspec = g_object_class_find_property(G_OBJECT_GET_CLASS(setting), property_info->property_name);
     g_return_val_if_fail(pspec, NULL);
 
+    if (!has_gtype)
+        gtype = pspec->value_type;
+    g_return_val_if_fail(G_TYPE_IS_ENUM(gtype) || G_TYPE_IS_FLAGS(gtype), NULL);
+
     g_value_init(&gval, pspec->value_type);
     g_object_get_property(G_OBJECT(setting), property_info->property_name, &gval);
     NM_SET_OUT(out_is_default, g_param_value_defaults(pspec, &gval));
 
-    if (pspec->value_type == G_TYPE_INT
-        || (G_TYPE_IS_CLASSED(pspec->value_type)
-            && G_IS_ENUM_CLASS(
-                (gtype_prop_class ?: (gtype_prop_class = g_type_class_ref(pspec->value_type)))))) {
-        if (pspec->value_type == G_TYPE_INT) {
-            if (!has_gtype)
-                g_return_val_if_reached(NULL);
-            v = g_value_get_int(&gval);
-        } else
-            v = g_value_get_enum(&gval);
-    } else if (pspec->value_type == G_TYPE_UINT
-               || (G_TYPE_IS_CLASSED(pspec->value_type)
-                   && G_IS_FLAGS_CLASS(
-                       (gtype_prop_class
-                            ?: (gtype_prop_class = g_type_class_ref(pspec->value_type)))))) {
-        if (pspec->value_type == G_TYPE_UINT) {
-            if (!has_gtype)
-                g_return_val_if_reached(NULL);
-            v = g_value_get_uint(&gval);
-        } else
-            v = g_value_get_flags(&gval);
-    } else
+    if (pspec->value_type == G_TYPE_INT) {
+        g_return_val_if_fail(has_gtype, NULL);
+        v = g_value_get_int(&gval);
+    } else if (pspec->value_type == G_TYPE_UINT) {
+        g_return_val_if_fail(has_gtype, NULL);
+        v = g_value_get_uint(&gval);
+    } else if (G_TYPE_IS_ENUM(pspec->value_type)) {
+        g_return_val_if_fail(!has_gtype || gtype == pspec->value_type, NULL);
+        v = g_value_get_enum(&gval);
+    } else if (G_TYPE_IS_FLAGS(pspec->value_type)) {
+        g_return_val_if_fail(!has_gtype || gtype == pspec->value_type, NULL);
+        v = g_value_get_flags(&gval);
+    } else {
         g_return_val_if_reached(NULL);
-
-    if (!has_gtype) {
-        gtype       = pspec->value_type;
-        gtype_class = g_steal_pointer(&gtype_prop_class);
     }
-
-    nm_assert(({
-        nm_auto_unref_gtypeclass GTypeClass *t = NULL;
-
-        (G_TYPE_IS_CLASSED(gtype) && (t = g_type_class_ref(gtype))
-         && (G_IS_ENUM_CLASS(t) || G_IS_FLAGS_CLASS(t)));
-    }));
 
     if (format_numeric && !format_text) {
         s = format_numeric_hex
@@ -1561,18 +1544,14 @@ _set_fcn_gobject_enum(ARGS_SET_FCN)
     }
 
     gtype_prop = _gobject_property_get_gtype(G_OBJECT(setting), property_info->property_name);
-
-    if (has_gtype && NM_IN_SET(gtype_prop, G_TYPE_INT, G_TYPE_UINT) && G_TYPE_IS_CLASSED(gtype)
-        && (gtype_prop_class = g_type_class_ref(gtype))
-        && ((is_flags = G_IS_FLAGS_CLASS(gtype_prop_class)) || G_IS_ENUM_CLASS(gtype_prop_class))) {
-        /* valid */
-    } else if (!has_gtype && G_TYPE_IS_CLASSED(gtype_prop)
-               && (gtype_prop_class = g_type_class_ref(gtype_prop))
-               && ((is_flags = G_IS_FLAGS_CLASS(gtype_prop_class))
-                   || G_IS_ENUM_CLASS(gtype_prop_class))) {
+    if (has_gtype)
+        g_return_val_if_fail(NM_IN_SET(gtype_prop, G_TYPE_INT, G_TYPE_UINT, gtype), FALSE);
+    else
         gtype = gtype_prop;
-    } else
-        g_return_val_if_reached(FALSE);
+
+    g_return_val_if_fail(G_TYPE_IS_FLAGS(gtype) || G_TYPE_IS_ENUM(gtype), FALSE);
+    gtype_prop_class = g_type_class_ref(gtype);
+    is_flags         = G_TYPE_IS_FLAGS(gtype);
 
     if (!_nm_utils_enum_from_str_full(
             gtype,
