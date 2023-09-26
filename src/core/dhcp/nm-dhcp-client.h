@@ -149,6 +149,9 @@ typedef struct {
      * For DHCPv6 this is always TRUE. */
     bool use_fqdn : 1;
 
+    /* Whether to send the client identifier (DHCPv4 only) */
+    bool send_client_id : 1;
+
     union {
         struct {
             /* The address from the previous lease */

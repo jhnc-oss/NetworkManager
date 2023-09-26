@@ -2017,7 +2017,10 @@ _prop_get_connection_mud_url(NMDevice *self, NMSettingConnection *s_con)
 }
 
 static GBytes *
-_prop_get_ipv4_dhcp_client_id(NMDevice *self, NMConnection *connection, GBytes *hwaddr)
+_prop_get_ipv4_dhcp_client_id(NMDevice     *self,
+                              NMConnection *connection,
+                              GBytes       *hwaddr,
+                              gboolean     *out_send_client_id)
 {
     NMSettingIPConfig *s_ip4;
     const char        *client_id;
@@ -2029,6 +2032,8 @@ _prop_get_ipv4_dhcp_client_id(NMDevice *self, NMConnection *connection, GBytes *
     gsize              hwaddr_len;
     GBytes            *result;
     gs_free char      *logstr1 = NULL;
+
+    NM_SET_OUT(out_send_client_id, TRUE);
 
     s_ip4     = nm_connection_get_setting_ip4_config(connection);
     client_id = nm_setting_ip4_config_get_dhcp_client_id(NM_SETTING_IP4_CONFIG(s_ip4));
@@ -2046,6 +2051,12 @@ _prop_get_ipv4_dhcp_client_id(NMDevice *self, NMConnection *connection, GBytes *
     if (!client_id) {
         _LOGD(LOGD_DEVICE | LOGD_DHCP4 | LOGD_IP4,
               "ipv4.dhcp-client-id: no explicit client-id configured");
+        return NULL;
+    }
+
+    if (nm_streq(client_id, "none")) {
+        _LOGD(LOGD_DEVICE | LOGD_DHCP4 | LOGD_IP4, "ipv4.dhcp-client-id: set to \"none\"");
+        NM_SET_OUT(out_send_client_id, FALSE);
         return NULL;
     }
 
@@ -10706,8 +10717,10 @@ _dev_ipdhcpx_start(NMDevice *self, int addr_family)
         const char *const     *reject_servers;
         const char            *hostname;
         gboolean               hostname_is_fqdn;
+        gboolean               send_client_id;
 
-        client_id = _prop_get_ipv4_dhcp_client_id(self, connection, hwaddr);
+        client_id = _prop_get_ipv4_dhcp_client_id(self, connection, hwaddr, &send_client_id);
+
         vendor_class_identifier =
             _prop_get_ipv4_dhcp_vendor_class_identifier(self, NM_SETTING_IP4_CONFIG(s_ip));
         reject_servers = nm_setting_ip_config_get_dhcp_reject_servers(s_ip, NULL);
@@ -10734,6 +10747,7 @@ _dev_ipdhcpx_start(NMDevice *self, int addr_family)
             .hostname                = hostname,
             .hostname_flags          = _prop_get_ipvx_dhcp_hostname_flags(self, AF_INET),
             .client_id               = client_id,
+            .send_client_id          = send_client_id,
             .mud_url                 = _prop_get_connection_mud_url(self, s_con),
             .timeout                 = no_lease_timeout_sec,
             .anycast_address         = _device_get_dhcp_anycast_address(self),
