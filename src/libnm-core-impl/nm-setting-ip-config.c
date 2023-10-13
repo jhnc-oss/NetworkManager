@@ -3140,7 +3140,11 @@ nm_ip_routing_rule_from_dbus(GVariant *variant, gboolean strict, GError **error)
                                           : 0u);
     }
 
-    if (variants[RR_DBUS_ATTR_FROM] || variants[RR_DBUS_ATTR_FROM_LEN]) {
+    if (variants[RR_DBUS_ATTR_FROM_LEN]
+        || (variants[RR_DBUS_ATTR_FROM]
+            && !NM_IN_STRSET(g_variant_get_string(variants[RR_DBUS_ATTR_FROM], NULL),
+                             "0.0.0.0",
+                             "::"))) {
         nm_ip_routing_rule_set_from(
             self,
             variants[RR_DBUS_ATTR_FROM] ? g_variant_get_string(variants[RR_DBUS_ATTR_FROM], NULL)
@@ -3149,7 +3153,11 @@ nm_ip_routing_rule_from_dbus(GVariant *variant, gboolean strict, GError **error)
                                             : 0u);
     }
 
-    if (variants[RR_DBUS_ATTR_TO] || variants[RR_DBUS_ATTR_TO_LEN]) {
+    if (variants[RR_DBUS_ATTR_TO_LEN]
+        || (variants[RR_DBUS_ATTR_TO]
+            && !NM_IN_STRSET(g_variant_get_string(variants[RR_DBUS_ATTR_TO], NULL),
+                             "0.0.0.0",
+                             "::"))) {
         nm_ip_routing_rule_set_to(
             self,
             variants[RR_DBUS_ATTR_TO] ? g_variant_get_string(variants[RR_DBUS_ATTR_TO], NULL)
