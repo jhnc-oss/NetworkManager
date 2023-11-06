@@ -310,8 +310,13 @@ active_connection_get_state_ord(NMActiveConnection *active)
     state = nm_active_connection_get_state(active);
 
     for (i = 0; i < (int) G_N_ELEMENTS(ordered_states); i++) {
-        if (state == ordered_states[i])
+        if (state == ordered_states[i]) {
+            i *= 2;
+            if (!NM_FLAGS_HAS(nm_active_connection_get_state_flags(active),
+                              NM_ACTIVATION_STATE_FLAG_EXTERNAL))
+                i++;
             return i;
+        }
     }
 
     return -1;
