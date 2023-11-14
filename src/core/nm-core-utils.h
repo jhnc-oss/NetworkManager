@@ -164,20 +164,20 @@ typedef void (*NMUtilsKillChildAsyncCb)(pid_t    pid,
                                         gboolean success,
                                         int      child_status,
                                         void    *user_data);
-void     nm_utils_kill_child_async(pid_t                   pid,
-                                   int                     sig,
-                                   NMLogDomain             log_domain,
-                                   const char             *log_name,
-                                   guint32                 wait_before_kill_msec,
-                                   NMUtilsKillChildAsyncCb callback,
-                                   void                   *user_data);
-gboolean nm_utils_kill_child_sync(pid_t       pid,
-                                  int         sig,
-                                  NMLogDomain log_domain,
-                                  const char *log_name,
-                                  int        *child_status,
-                                  guint32     wait_before_kill_msec,
-                                  guint32     sleep_duration_msec);
+void         nm_utils_kill_child_async(pid_t                   pid,
+                                       int                     sig,
+                                       NMLogDomain             log_domain,
+                                       const char             *log_name,
+                                       guint32                 wait_before_kill_msec,
+                                       NMUtilsKillChildAsyncCb callback,
+                                       void                   *user_data);
+gboolean     nm_utils_kill_child_sync(pid_t       pid,
+                                      int         sig,
+                                      NMLogDomain log_domain,
+                                      const char *log_name,
+                                      int        *child_status,
+                                      guint32     wait_before_kill_msec,
+                                      guint32     sleep_duration_msec);
 
 const char *nm_utils_find_helper(const char *progname, const char *try_first, GError **error);
 
@@ -313,6 +313,7 @@ NMUtilsStableType nm_utils_stable_id_parse(const char *stable_id,
                                            const char *hwaddr,
                                            const char *bootid,
                                            const char *uuid,
+                                           GBytes     *ssid,
                                            char      **out_generated);
 
 char *nm_utils_stable_id_random(void);

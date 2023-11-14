@@ -3396,6 +3396,7 @@ nm_utils_stable_id_parse(const char *stable_id,
                          const char *hwaddr,
                          const char *bootid,
                          const char *uuid,
+                         GBytes     *ssid,
                          char      **out_generated)
 {
     nm_auto_str_buf NMStrBuf str = NM_STR_BUF_INIT_A(NM_UTILS_GET_NEXT_REALLOC_SIZE_232, FALSE);
@@ -3481,7 +3482,28 @@ nm_utils_stable_id_parse(const char *stable_id,
             _stable_id_append(&str, deviceid);
         else if (CHECK_PREFIX("${MAC}"))
             _stable_id_append(&str, hwaddr);
-        else if (g_str_has_prefix(&stable_id[i], "${RANDOM}")) {
+        else if (CHECK_PREFIX("${NETWORK_SSID}")) {
+            gs_free char *s = NULL;
+
+            if (ssid) {
+                gs_free char *s_copy = NULL;
+                const char   *s_cnst;
+
+                s_cnst = nm_utils_buf_utf8safe_escape_bytes(ssid,
+                                                            NM_UTILS_STR_UTF8_SAFE_FLAG_ESCAPE_CTRL,
+                                                            &s_copy);
+
+                s = g_strjoin("", "s:", s_cnst, NULL);
+            } else {
+                /* If we have no SSID, we fallback to the connection's UUID.
+                 *
+                 * As always, give it a separate prefix, so that an SSID and a UUID fallback
+                 * never result in the same output. */
+                s = g_strjoin("", "c:", uuid, NULL);
+            }
+
+            _stable_id_append(&str, s);
+        } else if (g_str_has_prefix(&stable_id[i], "${RANDOM}")) {
             /* RANDOM makes not so much sense for cloned-mac-address
              * as the result is similar to specifying "cloned-mac-address=random".
              * It makes however sense for RFC 7217 Stable Privacy IPv6 addresses
