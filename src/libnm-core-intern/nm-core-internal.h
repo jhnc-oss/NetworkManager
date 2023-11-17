@@ -1084,6 +1084,7 @@ char **_nm_utils_ip4_dns_from_variant(GVariant *value, bool strict, GError **err
 GPtrArray *_nm_utils_ip4_routes_from_variant(GVariant *value, bool strict, GError **error);
 
 GPtrArray *_nm_utils_ip4_addresses_from_variant(GVariant *value,
+                                                GVariant *labels,
                                                 char    **out_gateway,
                                                 bool      strict,
                                                 GError  **error);
