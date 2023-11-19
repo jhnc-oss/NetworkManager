@@ -581,6 +581,10 @@ gboolean nm_l3_config_data_get_ndisc_retrans_timer_msec(const NML3ConfigData *se
                                                         guint32              *out_val);
 gboolean nm_l3_config_data_set_ndisc_retrans_timer_msec(NML3ConfigData *self, guint32 val);
 
+const char *nm_l3_config_data_get_default_url(const NML3ConfigData *self);
+
+gboolean nm_l3_config_data_set_default_url(NML3ConfigData *self, const char *default_url);
+
 struct _NMDhcpLease *nm_l3_config_data_get_dhcp_lease(const NML3ConfigData *self, int addr_family);
 
 gboolean

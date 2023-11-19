@@ -161,6 +161,8 @@ struct _NML3ConfigData {
     bool ndisc_hop_limit_set : 1;
     bool ndisc_reachable_time_msec_set : 1;
     bool ndisc_retrans_timer_msec_set : 1;
+
+    NMRefString *default_url;
 };
 
 /*****************************************************************************/
@@ -2077,6 +2079,22 @@ nm_l3_config_data_set_ndisc_retrans_timer_msec(NML3ConfigData *self, guint32 val
     self->ndisc_retrans_timer_msec_set = TRUE;
     self->ndisc_retrans_timer_msec_val = val;
     return TRUE;
+}
+
+const char *
+nm_l3_config_data_get_default_url(const NML3ConfigData *self)
+{
+    nm_assert(_NM_IS_L3_CONFIG_DATA(self, TRUE));
+    
+    return nm_ref_string_get_str(self->default_url);
+}
+
+gboolean
+nm_l3_config_data_set_default_url(NML3ConfigData *self, const char *default_url)
+{
+    nm_assert(_NM_IS_L3_CONFIG_DATA(self, FALSE));
+    //TODO: check url for RFC 3986 format
+    return nm_ref_string_reset_str(&self->default_url, default_url);
 }
 
 /*****************************************************************************/
