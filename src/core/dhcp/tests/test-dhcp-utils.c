@@ -710,16 +710,13 @@ test_client_id_from_string(void)
 static void
 test_default_url(void)
 {
-    gs_unref_hashtable GHashTable           *options              = NULL;
-    nm_auto_unref_l3cd const NML3ConfigData *l3cd                 = NULL;
-    const char                              *expected_default_url = "http://status.client";
-    static Option                            data[]               = {
-        {"default_url", "http://status.client"}
-        };
-    const char *const  *default_url;
+    gs_unref_hashtable GHashTable *options = NULL;
+    nm_auto_unref_l3cd const NML3ConfigData *l3cd = NULL;
+    const char *expected_default_url = "http://status.client";
+    const char *default_url = NULL;
 
     options = fill_table(generic_options, NULL);
-    options = fill_table(data, options);
+    g_hash_table_insert(options, "default_url", "http://status.client");
     l3cd    = _ip4_config_from_options(1, "eth0", options);
 
     g_assert_cmpint(nm_l3_config_data_get_num_addresses(l3cd, AF_INET), ==, 1);
