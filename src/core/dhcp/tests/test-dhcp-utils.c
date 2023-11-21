@@ -707,6 +707,27 @@ test_client_id_from_string(void)
     COMPARE_ID(endcolon, TRUE, endcolon, strlen(endcolon));
 }
 
+static void
+test_default_url(void)
+{
+    gs_unref_hashtable GHashTable           *options              = NULL;
+    nm_auto_unref_l3cd const NML3ConfigData *l3cd                 = NULL;
+    const char                              *expected_default_url = "http://status.client";
+    static Option                            data[]               = {
+        {"default_url", "http://status.client"}
+        };
+    const char *const  *default_url;
+
+    options = fill_table(generic_options, NULL);
+    options = fill_table(data, options);
+    l3cd    = _ip4_config_from_options(1, "eth0", options);
+
+    g_assert_cmpint(nm_l3_config_data_get_num_addresses(l3cd, AF_INET), ==, 1);
+    default_url = nm_l3_config_data_get_default_url(l3cd);
+    g_assert(default_url);
+    g_assert_cmpstr(default_url, ==, expected_default_url);
+}
+
 /*****************************************************************************/
 
 static void
@@ -783,6 +804,7 @@ main(int argc, char **argv)
     g_test_add_func("/dhcp/client-id-from-string", test_client_id_from_string);
     g_test_add_func("/dhcp/vendor-option-metered", test_vendor_option_metered);
     g_test_add_func("/dhcp/parse-search-list", test_parse_search_list);
+    g_test_add_func("/dhcp/test-default-url", test_default_url);
     g_test_add_data_func("/dhcp/test_dhcp_opt_list/IPv4", GINT_TO_POINTER(0), test_dhcp_opt_list);
     g_test_add_data_func("/dhcp/test_dhcp_opt_list/IPv6", GINT_TO_POINTER(1), test_dhcp_opt_list);
 
