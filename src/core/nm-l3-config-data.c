@@ -631,6 +631,21 @@ _route_valid(int addr_family, gconstpointer r)
     return NM_IS_IPv4(addr_family) ? _route_valid_4(r) : _route_valid_6(r);
 }
 
+#define ALPHA "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
+#define DIGIT "0123456789"
+#define URI_UNRESERVED ALPHA DIGIT "-._~"
+#define URI_RESERVED ":/?#[]@!$&'()*+,;="
+
+static gboolean
+_uri_valid(const char *uri)
+{
+  if (!uri)
+    return FALSE;
+  // check uri in RFC3981 charset
+  return uri[strspn(uri, URI_RESERVED URI_UNRESERVED)] == '\0';
+
+}
+
 static gboolean
 _NM_IS_L3_CONFIG_DATA(const NML3ConfigData *self, gboolean allow_sealed)
 {
@@ -2093,7 +2108,13 @@ gboolean
 nm_l3_config_data_set_default_url(NML3ConfigData *self, const char *default_url)
 {
     nm_assert(_NM_IS_L3_CONFIG_DATA(self, FALSE));
-    //TODO: check url for RFC 3986 format
+
+    if (!default_url)
+      return FALSE;
+
+    if (!_uri_valid(default_url))
+      return FALSE;
+
     return nm_ref_string_reset_str(&self->default_url, default_url);
 }
 
