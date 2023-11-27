@@ -328,6 +328,9 @@ receive_ra(struct ndp *ndp, struct ndp_msg *msg, gpointer user_data)
         }
     }
 
+    /* Captive Portal */
+    //TODO: get captive portal option from libndp
+
     nm_ndisc_ra_received(ndisc, now_msec, changed);
     return 0;
 }

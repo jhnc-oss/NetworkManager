@@ -30,7 +30,8 @@ guint nm_fake_ndisc_add_ra(NMFakeNDisc     *self,
                            guint            seconds,
                            NMNDiscDHCPLevel dhcp_level,
                            int              hop_limit,
-                           guint32          mtu);
+                           guint32          mtu,
+                           char             *captive_portal);
 
 void nm_fake_ndisc_add_gateway(NMFakeNDisc       *self,
                                guint              ra_id,
