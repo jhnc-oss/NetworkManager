@@ -56,6 +56,7 @@ NM_GOBJECT_PROPERTIES_DEFINE(NMSettingConnection,
                              PROP_READ_ONLY,
                              PROP_ZONE,
                              PROP_MASTER,
+                             PROP_CONTROLLER,
                              PROP_SLAVE_TYPE,
                              PROP_AUTOCONNECT_SLAVES,
                              PROP_SECONDARIES,
@@ -80,7 +81,7 @@ typedef struct {
     char       *stable_id;
     char       *interface_name;
     char       *type;
-    char       *master;
+    char       *controller;
     char       *slave_type;
     char       *zone;
     char       *mud_url;
@@ -709,13 +710,33 @@ nm_setting_connection_get_zone(NMSettingConnection *setting)
  *
  * Returns: interface name of the master device or UUID of the master
  * connection.
+ *
+ * Deprecated: 1.46. Use nm_setting_connection_get_controller() instead which
+ * is just an alias.
  */
 const char *
 nm_setting_connection_get_master(NMSettingConnection *setting)
 {
+    return nm_setting_connection_get_controller(setting);
+}
+
+/**
+ * nm_setting_connection_get_controller:
+ * @setting: the #NMSettingConnection
+ *
+ * Returns the #NMSettingConnection:controller property of the connection.
+ *
+ * Returns: interface name of the controller device or UUID of the controller
+ * connection.
+ *
+ * Since: 1.46
+ */
+const char *
+nm_setting_connection_get_controller(NMSettingConnection *setting)
+{
     g_return_val_if_fail(NM_IS_SETTING_CONNECTION(setting), NULL);
 
-    return NM_SETTING_CONNECTION_GET_PRIVATE(setting)->master;
+    return NM_SETTING_CONNECTION_GET_PRIVATE(setting)->controller;
 }
 
 /**
@@ -1099,7 +1120,7 @@ _nm_connection_detect_slave_type_full(NMSettingConnection *s_con,
     }
 
     if (is_slave) {
-        if (!priv->master) {
+        if (!priv->controller) {
             g_set_error(error,
                         NM_CONNECTION_ERROR,
                         NM_CONNECTION_ERROR_MISSING_PROPERTY,
@@ -1116,7 +1137,7 @@ _nm_connection_detect_slave_type_full(NMSettingConnection *s_con,
             normerr_slave_setting_type = slave_setting_type;
     } else {
         nm_assert(!slave_type);
-        if (priv->master) {
+        if (priv->controller) {
             NMSetting *s_port;
 
             if (connection
@@ -2281,7 +2302,22 @@ nm_setting_connection_class_init(NMSettingConnectionClass *klass)
                                               NM_SETTING_PARAM_FUZZY_IGNORE
                                                   | NM_SETTING_PARAM_INFERRABLE,
                                               NMSettingConnectionPrivate,
-                                              master);
+                                              controller,
+                                              .is_deprecated = TRUE);
+
+    /**
+     * NMSettingConnection:controller:
+     *
+     * Interface name of the controller device or UUID of the controller connection.
+     **/
+    _nm_setting_property_define_direct_string(properties_override,
+                                              obj_properties,
+                                              NM_SETTING_CONNECTION_CONTROLLER,
+                                              PROP_CONTROLLER,
+                                              NM_SETTING_PARAM_FUZZY_IGNORE
+                                                  | NM_SETTING_PARAM_INFERRABLE,
+                                              NMSettingConnectionPrivate,
+                                              controller);
 
     /**
      * NMSettingConnection:slave-type:

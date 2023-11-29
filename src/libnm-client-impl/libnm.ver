@@ -1949,4 +1949,5 @@ global:
 	nm_access_point_get_bandwidth;
 	nm_ethtool_optname_is_channels;
 	nm_ethtool_optname_is_eee;
+	nm_setting_connection_get_controller;
 } libnm_1_44_0;
