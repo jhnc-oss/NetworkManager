@@ -4554,7 +4554,7 @@ enable_type_settings_and_options(NmCli *nmc, NMConnection *con, GError **error)
     g_return_val_if_fail(s_con, FALSE);
 
     if (nm_setting_connection_get_slave_type(s_con))
-        enable_options(NM_SETTING_CONNECTION_SETTING_NAME, NM_SETTING_CONNECTION_MASTER, NULL);
+        enable_options(NM_SETTING_CONNECTION_SETTING_NAME, NM_SETTING_CONNECTION_CONTROLLER, NULL);
 
     if (NM_IN_STRSET(nm_setting_connection_get_connection_type(s_con),
                      NM_SETTING_BLUETOOTH_SETTING_NAME,
@@ -4916,7 +4916,7 @@ _meta_abstract_get_option_info(const NMMetaAbstractInfo *abstract_info)
                     set_connection_iface,
                     NULL),
         OPTION_INFO(CONNECTION,
-                    NM_SETTING_CONNECTION_MASTER,
+                    NM_SETTING_CONNECTION_CONTROLLER,
                     "master",
                     set_connection_controller,
                     NULL),
@@ -8850,7 +8850,7 @@ editor_init_new_connection(NmCli *nmc, NMConnection *connection, const char *por
         g_object_set(s_con,
                      NM_SETTING_CONNECTION_TYPE,
                      NM_SETTING_WIRED_SETTING_NAME,
-                     NM_SETTING_CONNECTION_MASTER,
+                     NM_SETTING_CONNECTION_CONTROLLER,
                      dev_ifname ?: "eth0",
                      NM_SETTING_CONNECTION_SLAVE_TYPE,
                      port_type,
