@@ -191,6 +191,15 @@ NM_TERNARY_TO_OPTION_BOOL(NMTernary v)
 
 NMSetting **_nm_connection_get_settings_arr(NMConnection *connection);
 
+/**
+ * NMSettingParseFlags:
+ * @NM_SETTING_PARSE_FLAGS_NONE: no special handling
+ * @NM_SETTING_PARSE_FLAGS_STRICT: in case of error, abort and return error
+ * @NM_SETTING_PARSE_FLAGS_BEST_EFFORT: ignore errors (in practice we always
+ *   ignore errors if %NM_SETTING_PARSE_FLAGS_STRICT is not set, without
+ *   checking %NM_SETTING_PARSE_FLAGS_BEST_EFFORT)
+ * @NM_SETTING_PARSE_FLAGS_NORMALIZE: normalize the connection after loading it
+ */
 typedef enum /*< skip >*/ {
     NM_SETTING_PARSE_FLAGS_NONE        = 0,
     NM_SETTING_PARSE_FLAGS_STRICT      = 1LL << 0,
@@ -725,6 +734,9 @@ typedef struct {
         NMSetting *setting, GVariant *connection_dict, GVariant *value,          \
         NMSettingParseFlags parse_flags, NMTernary *out_is_modified, GError **error
 
+    /* If there might be errors, see #NMSettingParseFlags to understand the
+     * different parsing modes (strict/best effort).
+     */
     gboolean (*from_dbus_fcn)(_NM_SETT_INFO_PROP_FROM_DBUS_FCN_ARGS _nm_nil);
 
 #define _NM_SETT_INFO_PROP_MISSING_FROM_DBUS_FCN_ARGS                    \
