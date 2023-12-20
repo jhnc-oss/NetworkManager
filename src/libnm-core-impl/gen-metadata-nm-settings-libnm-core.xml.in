@@ -1554,6 +1554,10 @@
                   dbus-type="s"
                   gprop-type="gchararray"
                   />
+        <property name="dhcp-dscp"
+                  dbus-type="s"
+                  gprop-type="gchararray"
+                  />
         <property name="dhcp-fqdn"
                   dbus-type="s"
                   gprop-type="gchararray"
@@ -1684,6 +1688,10 @@
         <property name="dad-timeout"
                   dbus-type="i"
                   gprop-type="gint"
+                  />
+        <property name="dhcp-dscp"
+                  dbus-type="s"
+                  gprop-type="gchararray"
                   />
         <property name="dhcp-duid"
                   dbus-type="s"
