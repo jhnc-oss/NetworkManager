@@ -165,11 +165,12 @@ int packet_sendto_udp(int sockfd,
                       size_t *n_transmittedp,
                       const struct sockaddr_in *src_paddr,
                       const struct packet_sockaddr_ll *dest_haddr,
-                      const struct sockaddr_in *dest_paddr) {
+                      const struct sockaddr_in *dest_paddr,
+                      int dscp) {
         struct iphdr ip_hdr = {
                 .version = IPVERSION,
                 .ihl = sizeof(ip_hdr) / 4, /* Length of header in multiples of four bytes */
-                .tos = IPTOS_CLASS_CS6, /* Class Selector for network control */
+                .tos = (dscp >= 0 ? dscp : IPTOS_CLASS_CS6), /* Class Selector for network control */
                 .tot_len = htons(sizeof(struct iphdr) + sizeof(struct udphdr) + n_buf),
                 .frag_off = htons(IP_DF), /* Do not fragment */
                 .ttl = IPDEFTTL,

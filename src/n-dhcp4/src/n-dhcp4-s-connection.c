@@ -202,6 +202,7 @@ int n_dhcp4_s_connection_send_reply(NDhcp4SConnection *connection,
                                                  header->chaddr,
                                                  header->hlen,
                                                  &(struct in_addr){header->yiaddr},
+                                                 -1,
                                                  message);
                 if (r)
                         return r;

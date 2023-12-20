@@ -118,6 +118,7 @@ int n_dhcp4_client_probe_config_dup(NDhcp4ClientProbeConfig *config,
         dup->init_reboot = config->init_reboot;
         dup->requested_ip = config->requested_ip;
         dup->ms_start_delay = config->ms_start_delay;
+        dup->dscp = config->dscp;
 
         for (unsigned int i = 0; i < config->n_request_parameters; ++i)
                 dup->request_parameters[dup->n_request_parameters++] = config->request_parameters[i];
@@ -188,6 +189,21 @@ _c_public_ void n_dhcp4_client_probe_config_set_inform_only(NDhcp4ClientProbeCon
  */
 _c_public_ void n_dhcp4_client_probe_config_set_init_reboot(NDhcp4ClientProbeConfig *config, bool init_reboot) {
         config->init_reboot = init_reboot;
+}
+
+/**
+ * n_dhcp4_client_probe_config_set_dscp() - set the IP DSCP value
+ * @config:                     configuration to operate on
+ * @dscp:                       value to set
+ *
+ * This sets the DSCP property of the configuration object. If this
+ * is a value greater than or equal to zero, the DS field of the IP
+ * header will be set to the given value. The two ECN bits should be zero.
+ * If the given value is negative, the DS field will be set to the default
+ * value representing class CS6.
+ */
+_c_public_ void n_dhcp4_client_probe_config_set_dscp(NDhcp4ClientProbeConfig *config, int dscp) {
+        config->dscp = dscp;
 }
 
 /**

@@ -263,6 +263,7 @@ struct NDhcp4ClientProbeOption {
 struct NDhcp4ClientProbeConfig {
         bool inform_only;
         bool init_reboot;
+        int dscp;
         struct in_addr requested_ip;
         unsigned short int entropy[3];
         uint64_t ms_start_delay;        /* max ms to wait before starting probe */
@@ -273,6 +274,7 @@ struct NDhcp4ClientProbeConfig {
 
 #define N_DHCP4_CLIENT_PROBE_CONFIG_NULL(_x) {                                  \
                 .ms_start_delay = N_DHCP4_CLIENT_START_DELAY_RFC2131,           \
+                .dscp = -1                                                      \
         }
 
 struct NDhcp4CEventNode {
@@ -536,7 +538,8 @@ int n_dhcp4_c_socket_packet_new(int *sockfdp, int ifindex);
 int n_dhcp4_c_socket_udp_new(int *sockfdp,
                              int ifindex,
                              const struct in_addr *client_addr,
-                             const struct in_addr *server_addr);
+                             const struct in_addr *server_addr,
+                             int dscp);
 int n_dhcp4_s_socket_packet_new(int *sockfdp);
 int n_dhcp4_s_socket_udp_new(int *sockfdp, int ifindex);
 
@@ -544,6 +547,7 @@ int n_dhcp4_c_socket_packet_send(int sockfd,
                                  int ifindex,
                                  const unsigned char *dest_haddr,
                                  unsigned char halen,
+                                 int dscp,
                                  NDhcp4Outgoing *message);
 int n_dhcp4_c_socket_udp_send(int sockfd, NDhcp4Outgoing *message);
 int n_dhcp4_c_socket_udp_broadcast(int sockfd, NDhcp4Outgoing *message);
@@ -553,6 +557,7 @@ int n_dhcp4_s_socket_packet_send(int sockfd,
                                  const unsigned char *dest_haddr,
                                  unsigned char halen,
                                  const struct in_addr *dest_inaddr,
+                                 int dscp,
                                  NDhcp4Outgoing *message);
 int n_dhcp4_s_socket_udp_send(int sockfd,
                               const struct in_addr *inaddr_src,
