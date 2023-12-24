@@ -73,6 +73,9 @@ const char **nm_setting_vpn_get_secret_keys(NMSettingVpn *setting, guint *out_le
 NM_AVAILABLE_IN_1_2
 guint32 nm_setting_vpn_get_timeout(NMSettingVpn *setting);
 
+NM_AVAILABLE_IN_1_52
+gboolean nm_connection_is_valid_secondary(NMConnection *connection);
+
 G_END_DECLS
 
 #endif /* __NM_SETTING_VPN_H__ */
