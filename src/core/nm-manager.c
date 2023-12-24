@@ -484,23 +484,6 @@ _version_info_get(void)
 /*****************************************************************************/
 
 static gboolean
-_connection_is_vpn(NMConnection *connection)
-{
-    const char *type;
-
-    type = nm_connection_get_connection_type(connection);
-    if (type)
-        return nm_streq(type, NM_SETTING_VPN_SETTING_NAME);
-
-    /* we have an incomplete (invalid) connection at hand. That can only
-     * happen during AddAndActivate. Determine whether it's VPN type based
-     * on the existence of a [vpn] section. */
-    return !!nm_connection_get_setting_vpn(connection);
-}
-
-/*****************************************************************************/
-
-static gboolean
 concheck_enabled(NMManager *self, gboolean *out_changed)
 {
     NMManagerPrivate *priv = NM_MANAGER_GET_PRIVATE(self);
@@ -6083,8 +6066,8 @@ _new_active_connection(NMManager             *self,
     nm_assert((!incompl_conn) ^ (!sett_conn));
     nm_assert(NM_IS_AUTH_SUBJECT(subject));
     nm_assert(is_vpn
-              == _connection_is_vpn(sett_conn ? nm_settings_connection_get_connection(sett_conn)
-                                              : incompl_conn));
+              == nm_connection_is_vpn_plugin(
+                  sett_conn ? nm_settings_connection_get_connection(sett_conn) : incompl_conn));
     nm_assert(is_vpn || NM_IS_DEVICE(device));
     nm_assert(!nm_streq0(specific_object, "/"));
     nm_assert(!applied || NM_IS_CONNECTION(applied));
@@ -6308,12 +6291,12 @@ nm_manager_activate_connection(NMManager             *self,
     NMManagerPrivate   *priv;
     NMActiveConnection *active;
     AsyncOpData        *async_op_data;
-    gboolean            is_vpn;
+    gboolean            is_any_vpn;
 
     g_return_val_if_fail(NM_IS_MANAGER(self), NULL);
     g_return_val_if_fail(NM_IS_SETTINGS_CONNECTION(sett_conn), NULL);
-    is_vpn = _connection_is_vpn(nm_settings_connection_get_connection(sett_conn));
-    g_return_val_if_fail(is_vpn || NM_IS_DEVICE(device), NULL);
+    is_any_vpn = nm_connection_is_vpn_plugin(nm_settings_connection_get_connection(sett_conn));
+    g_return_val_if_fail(is_any_vpn || NM_IS_DEVICE(device), NULL);
     g_return_val_if_fail(!error || !*error, NULL);
     nm_assert(!nm_streq0(specific_object, "/"));
 
@@ -6347,7 +6330,7 @@ nm_manager_activate_connection(NMManager             *self,
     }
 
     active = _new_active_connection(self,
-                                    is_vpn,
+                                    is_any_vpn,
                                     sett_conn,
                                     NULL,
                                     applied,
@@ -6400,9 +6383,9 @@ validate_activation_request(NMManager             *self,
                             gboolean              *out_is_vpn,
                             GError               **error)
 {
-    NMDevice                      *device  = NULL;
-    gboolean                       is_vpn  = FALSE;
-    gs_unref_object NMAuthSubject *subject = NULL;
+    NMDevice                      *device     = NULL;
+    gboolean                       is_any_vpn = FALSE;
+    gs_unref_object NMAuthSubject *subject    = NULL;
 
     nm_assert(!sett_conn || NM_IS_SETTINGS_CONNECTION(sett_conn));
     nm_assert(!connection || NM_IS_CONNECTION(connection));
@@ -6432,7 +6415,7 @@ validate_activation_request(NMManager             *self,
                                              error))
         return NULL;
 
-    is_vpn = _connection_is_vpn(connection);
+    is_any_vpn = nm_connection_is_any_vpn(connection);
 
     if (*out_device) {
         device = *out_device;
@@ -6449,7 +6432,7 @@ validate_activation_request(NMManager             *self,
                                 "Device not found");
             return NULL;
         }
-    } else if (!is_vpn) {
+    } else if (!is_any_vpn) {
         gs_free_error GError *local = NULL;
 
         device = nm_manager_get_best_device_for_connection(self,
@@ -6488,10 +6471,10 @@ validate_activation_request(NMManager             *self,
         }
     }
 
-    nm_assert(is_vpn || NM_IS_DEVICE(device));
+    nm_assert(is_any_vpn || NM_IS_DEVICE(device));
 
     *out_device = device;
-    *out_is_vpn = is_vpn;
+    *out_is_vpn = is_any_vpn;
     return g_steal_pointer(&subject);
 }
 
@@ -9067,10 +9050,9 @@ get_property(GObject *object, guint prop_id, GValue *value, GParamSpec *pspec)
     case PROP_CHECKPOINTS:
         g_value_take_boxed(
             value,
-            priv->checkpoint_mgr
-                ? nm_strv_make_deep_copied(
-                      nm_checkpoint_manager_get_checkpoint_paths(priv->checkpoint_mgr, NULL))
-                : NULL);
+            priv->checkpoint_mgr ? nm_strv_make_deep_copied(
+                nm_checkpoint_manager_get_checkpoint_paths(priv->checkpoint_mgr, NULL))
+                                 : NULL);
         break;
     default:
         G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
