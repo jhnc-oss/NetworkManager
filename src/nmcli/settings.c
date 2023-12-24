@@ -378,13 +378,13 @@ _set_fcn_precheck_connection_secondaries(NMClient   *client,
             con = nmc_find_connection(connections, "uuid", *iter, NULL, FALSE);
             if (!con) {
                 nmc_printerr(_("Warning: %s is not an UUID of any existing connection profile\n"),
-                             *iter);
-            } else {
+                          *iter);
+	    } else {
                 /* Currently, NM only supports VPN connections as secondaries */
-                if (!nm_connection_is_type(con, NM_SETTING_VPN_SETTING_NAME)) {
-                    g_set_error(error, 1, 0, _("'%s' is not a VPN connection profile"), *iter);
+                if (!nm_connection_is_valid_secondary(con)) {
+                    g_set_error(error, 1, 0, _("'%s' is not a valid secondary profile"), *iter);
                     return FALSE;
-                }
+				}
             }
         } else {
             con = nmc_find_connection(connections, "id", *iter, NULL, FALSE);
@@ -392,10 +392,9 @@ _set_fcn_precheck_connection_secondaries(NMClient   *client,
                 g_set_error(error, 1, 0, _("'%s' is not a name of any existing profile"), *iter);
                 return FALSE;
             }
-
-            /* Currently, NM only supports VPN connections as secondaries */
-            if (!nm_connection_is_type(con, NM_SETTING_VPN_SETTING_NAME)) {
-                g_set_error(error, 1, 0, _("'%s' is not a VPN connection profile"), *iter);
+            /* Currently, NM only supports VPN connections, including Wireguard, as secondaries */
+            if (!nm_connection_is_valid_secondary(con)) {
+                g_set_error(error, 1, 0, _("'%s' is not a valid secondary profile"), *iter);
                 return FALSE;
             }
 
