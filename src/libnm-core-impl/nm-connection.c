@@ -2778,6 +2778,31 @@ nm_connection_is_type(NMConnection *connection, const char *type)
     return nm_streq0(type, nm_connection_get_connection_type(connection));
 }
 
+/**
+ * nm_setting_is_vpn:
+ *
+ * @connection: the #NMConnection
+ *
+ * Checks whether the given connection is a valid VPN connection.
+ * This could either be any plugin implementing the VPN interface or
+ * a Wireguard connection.
+ *
+ * Returns: %TRUE if the connection is a valid 'VPN'.
+*/
+gboolean
+nm_connection_is_vpn(NMConnection *connection, gboolean incl_all)
+{
+    const char *type = nm_connection_get_connection_type(connection);
+    if (type)
+        return nm_streq(type, NM_SETTING_VPN_SETTING_NAME)
+               || (incl_all && nm_streq(type, NM_SETTING_WIREGUARD_SETTING_NAME));
+
+    /* we have an incomplete (invalid) connection at hand. That can only
+     * happen during AddAndActivate. Determine whether it's VPN type based
+     * on the existence of a [vpn] section. */
+    return !!nm_connection_get_setting_vpn(connection);
+}
+
 int
 _nm_setting_sort_for_nm_assert(NMSetting *a, NMSetting *b)
 {

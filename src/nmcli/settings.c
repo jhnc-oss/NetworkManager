@@ -380,7 +380,7 @@ _set_fcn_precheck_connection_secondaries(NMClient   *client,
                           *iter);
             } else {
                 /* Currently, NM only supports VPN connections as secondaries */
-                if (!nm_connection_is_type(con, NM_SETTING_VPN_SETTING_NAME)) {
+                if (!nm_connection_is_vpn_a(con)) {
                     g_set_error(error, 1, 0, _("'%s' is not a VPN connection profile"), *iter);
                     return FALSE;
                 }
@@ -393,7 +393,7 @@ _set_fcn_precheck_connection_secondaries(NMClient   *client,
             }
 
             /* Currently, NM only supports VPN connections as secondaries */
-            if (!nm_connection_is_type(con, NM_SETTING_VPN_SETTING_NAME)) {
+            if (!nm_connection_is_vpn_a(con)) {
                 g_set_error(error, 1, 0, _("'%s' is not a VPN connection profile"), *iter);
                 return FALSE;
             }
