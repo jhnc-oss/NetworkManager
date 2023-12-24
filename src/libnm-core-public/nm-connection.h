@@ -240,11 +240,15 @@ NMSettingVpn              *nm_connection_get_setting_vpn(NMConnection *connectio
 NMSettingWimax            *nm_connection_get_setting_wimax(NMConnection *connection);
 NMSettingAdsl             *nm_connection_get_setting_adsl(NMConnection *connection);
 NMSettingWired            *nm_connection_get_setting_wired(NMConnection *connection);
+NMSettingVpn              *nm_connection_get_setting_wireguard(NMConnection *connection);
 NMSettingWireless         *nm_connection_get_setting_wireless(NMConnection *connection);
 NMSettingWirelessSecurity *nm_connection_get_setting_wireless_security(NMConnection *connection);
 NMSettingVlan             *nm_connection_get_setting_vlan(NMConnection *connection);
 NM_AVAILABLE_IN_1_2
 NMSettingVxlan *nm_connection_get_setting_vxlan(NMConnection *connection);
+
+NM_AVAILABLE_IN_1_52
+gboolean nm_connection_is_valid_secondary(NMConnection *connection);
 
 G_END_DECLS
 
