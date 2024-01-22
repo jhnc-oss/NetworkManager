@@ -894,19 +894,42 @@ _nm_properties_override(GArray *properties_override, const NMSettInfoProperty *p
 
 /*****************************************************************************/
 
-#define _nm_setting_property_define_direct_enum(properties_override,                             \
-                                                obj_properties,                                  \
-                                                prop_name,                                       \
-                                                prop_id,                                         \
-                                                gtype_enum,                                      \
-                                                default_value,                                   \
-                                                param_flags,                                     \
-                                                private_struct_type,                             \
-                                                private_struct_field,                            \
-                                                ... /* extra NMSettInfoProperty fields */)       \
-    G_STMT_START                                                                                 \
-    {                                                                                            \
-        GParamSpec *_param_spec;                                                                 \
+#define _nm_setting_property_define_direct_enum(properties_override,                       \
+                                                obj_properties,                            \
+                                                prop_name,                                 \
+                                                prop_id,                                   \
+                                                gtype_enum,                                \
+                                                default_value,                             \
+                                                param_flags,                               \
+                                                private_struct_type,                       \
+                                                private_struct_field,                      \
+                                                ... /* extra NMSettInfoProperty fields */) \
+    _nm_setting_property_define_direct_enum_full((properties_override),                    \
+                                                 (obj_properties),                         \
+                                                 prop_name,                                \
+                                                 (prop_id),                                \
+                                                 (gtype_enum),                             \
+                                                 default_value,                            \
+                                                 (param_flags),                            \
+                                                 &nm_sett_info_propert_type_direct_enum,   \
+                                                 private_struct_type,                      \
+                                                 private_struct_field,                     \
+                                                 __VA_ARGS__)
+
+#define _nm_setting_property_define_direct_enum_full(properties_override,                        \
+                                                     obj_properties,                             \
+                                                     prop_name,                                  \
+                                                     prop_id,                                    \
+                                                     gtype_enum,                                 \
+                                                     default_value,                              \
+                                                     param_flags,                                \
+                                                     property_type,                              \
+                                                     private_struct_type,                        \
+                                                     private_struct_field,                       \
+                                                     ... /* extra NMSettInfoProperty fields */)  \
+    ({                                                                                           \
+        GParamSpec                  *_param_spec;                                                \
+        const NMSettInfoPropertType *_property_type = (property_type);                           \
                                                                                                  \
         G_STATIC_ASSERT(                                                                         \
             !NM_FLAGS_ANY((param_flags),                                                         \
@@ -926,12 +949,11 @@ _nm_properties_override(GArray *properties_override, const NMSettInfoProperty *p
         _nm_properties_override_gobj(                                                            \
             (properties_override),                                                               \
             _param_spec,                                                                         \
-            &nm_sett_info_propert_type_direct_enum,                                              \
+            _property_type,                                                                      \
             .direct_offset =                                                                     \
                 NM_STRUCT_OFFSET_ENSURE_TYPE(int, private_struct_type, private_struct_field),    \
             __VA_ARGS__);                                                                        \
-    }                                                                                            \
-    G_STMT_END
+    })
 
 /*****************************************************************************/
 
