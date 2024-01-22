@@ -2580,6 +2580,7 @@ nm_setting_connection_class_init(NMSettingConnectionClass *klass)
                                             NM_TYPE_SETTING_CONNECTION_AUTOCONNECT_SLAVES,
                                             NM_SETTING_CONNECTION_AUTOCONNECT_SLAVES_DEFAULT,
                                             NM_SETTING_PARAM_FUZZY_IGNORE,
+                                            NULL,
                                             NMSettingConnectionPrivate,
                                             autoconnect_slaves);
 
@@ -2656,6 +2657,7 @@ nm_setting_connection_class_init(NMSettingConnectionClass *klass)
                                             NM_TYPE_METERED,
                                             NM_METERED_UNKNOWN,
                                             NM_SETTING_PARAM_REAPPLY_IMMEDIATELY,
+                                            NULL,
                                             NMSettingConnectionPrivate,
                                             metered);
 
