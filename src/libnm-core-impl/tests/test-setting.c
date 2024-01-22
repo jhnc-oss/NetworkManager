@@ -4664,10 +4664,10 @@ test_setting_metadata(void)
             } else if (sip->property_type->direct_type == NM_VALUE_TYPE_ENUM) {
                 const GParamSpecEnum *pspec;
 
-                g_assert(sip->property_type == &nm_sett_info_propert_type_direct_enum);
                 g_assert(g_variant_type_equal(sip->property_type->dbus_type, "i"));
-                g_assert(sip->property_type->to_dbus_fcn
-                         == _nm_setting_property_to_dbus_fcn_direct);
+                g_assert(NM_IN_SET(sip->property_type->to_dbus_fcn,
+                                   _nm_setting_property_to_dbus_fcn_direct,
+                                   _nm_setting_connection_autoconnect_ports_to_dbus));
                 g_assert(sip->param_spec);
                 g_assert(g_type_is_a(sip->param_spec->value_type, G_TYPE_ENUM));
                 g_assert(sip->param_spec->value_type != G_TYPE_ENUM);
@@ -4856,6 +4856,8 @@ check_done:;
                                        _nm_setting_connection_master_from_dbus,
                                        _nm_setting_connection_slave_type_from_dbus,
                                        _nm_setting_connection_port_type_from_dbus,
+                                       _nm_setting_connection_autoconnect_ports_from_dbus,
+                                       _nm_setting_connection_autoconnect_slaves_from_dbus,
                                        _nm_setting_property_from_dbus_fcn_direct));
                 }
             }
@@ -4879,7 +4881,8 @@ check_done:;
                                    _nm_setting_property_to_dbus_fcn_direct,
                                    _nm_setting_property_to_dbus_fcn_direct_mac_address,
                                    _nm_setting_connection_controller_to_dbus,
-                                   _nm_setting_connection_port_type_to_dbus));
+                                   _nm_setting_connection_port_type_to_dbus,
+                                   _nm_setting_connection_autoconnect_ports_to_dbus));
             } else if (sip->property_type->compare_fcn == _nm_setting_property_compare_fcn_ignore) {
                 if (NM_IN_SET(sip->property_type,
                               &nm_sett_info_propert_type_deprecated_ignore_i,
