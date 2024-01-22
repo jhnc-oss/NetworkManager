@@ -51,6 +51,7 @@ G_BEGIN_DECLS
 #define NM_SETTING_CONNECTION_SLAVE_TYPE            "slave-type"
 #define NM_SETTING_CONNECTION_PORT_TYPE             "port-type"
 #define NM_SETTING_CONNECTION_AUTOCONNECT_SLAVES    "autoconnect-slaves"
+#define NM_SETTING_CONNECTION_AUTOCONNECT_PORTS     "autoconnect-ports"
 #define NM_SETTING_CONNECTION_SECONDARIES           "secondaries"
 #define NM_SETTING_CONNECTION_GATEWAY_PING_TIMEOUT  "gateway-ping-timeout"
 #define NM_SETTING_CONNECTION_METERED               "metered"
@@ -77,12 +78,34 @@ G_BEGIN_DECLS
  * should be activated when master is activated.
  *
  * Since: 1.2
+ *
+ * Deprecated: 1.46
  */
+NM_DEPRECATED_IN_1_46
 typedef enum {
     NM_SETTING_CONNECTION_AUTOCONNECT_SLAVES_DEFAULT = -1,
     NM_SETTING_CONNECTION_AUTOCONNECT_SLAVES_NO      = 0,
     NM_SETTING_CONNECTION_AUTOCONNECT_SLAVES_YES     = 1,
 } NMSettingConnectionAutoconnectSlaves;
+
+/**
+ * NMSettingConnectionAutoconnectPorts:
+ * @NM_SETTING_CONNECTION_AUTOCONNECT_PORTS_DEFAULT: default value
+ * @NM_SETTING_CONNECTION_AUTOCONNECT_PORTS_NO: ports are not brought up when
+ *   controller is activated
+ * @NM_SETTING_CONNECTION_AUTOCONNECT_PORTS_YES: ports are brought up when
+ *   controller is activated
+ *
+ * #NMSettingConnectionAutoconnectPorts values indicate whether port connections
+ * should be activated when controller is activated.
+ *
+ * Since: 1.46
+ */
+typedef enum {
+    NM_SETTING_CONNECTION_AUTOCONNECT_PORTS_DEFAULT = -1,
+    NM_SETTING_CONNECTION_AUTOCONNECT_PORTS_NO      = 0,
+    NM_SETTING_CONNECTION_AUTOCONNECT_PORTS_YES     = 1,
+} NMSettingConnectionAutoconnectPorts;
 
 /**
  * NMSettingConnectionLldp:
@@ -211,8 +234,13 @@ NM_AVAILABLE_IN_1_46
 const char *nm_setting_connection_get_port_type(NMSettingConnection *setting);
 
 NM_AVAILABLE_IN_1_2
+NM_DEPRECATED_IN_1_46
 NMSettingConnectionAutoconnectSlaves
 nm_setting_connection_get_autoconnect_slaves(NMSettingConnection *setting);
+
+NM_AVAILABLE_IN_1_46
+NMSettingConnectionAutoconnectPorts
+nm_setting_connection_get_autoconnect_ports(NMSettingConnection *setting);
 
 guint32     nm_setting_connection_get_num_secondaries(NMSettingConnection *setting);
 const char *nm_setting_connection_get_secondary(NMSettingConnection *setting, guint32 idx);
