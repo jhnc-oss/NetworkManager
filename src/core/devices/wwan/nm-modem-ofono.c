@@ -1403,6 +1403,7 @@ static void
 context_properties_cb(GDBusProxy *proxy, GAsyncResult *result, gpointer user_data)
 {
     NMModemOfono              *self       = user_data;
+    NMModemOfonoPrivate       *priv       = NM_MODEM_OFONO_GET_PRIVATE(self);
     gs_free_error GError      *error      = NULL;
     gs_unref_variant GVariant *properties = NULL;
     gs_unref_variant GVariant *settings   = NULL;
@@ -1410,6 +1411,8 @@ context_properties_cb(GDBusProxy *proxy, GAsyncResult *result, gpointer user_dat
     gboolean                   active;
 
     properties = g_dbus_proxy_call_finish(proxy, result, &error);
+    if (g_error_matches(error, G_IO_ERROR, G_IO_ERROR_CANCELLED))
+        return;
 
     if (!properties) {
         _LOGW("ofono: connection failed: no context properties returned %s", error->message);
@@ -1444,7 +1447,7 @@ context_properties_cb(GDBusProxy *proxy, GAsyncResult *result, gpointer user_dat
                           g_variant_new("(sv)", "Active", g_variant_new("b", TRUE)),
                           G_DBUS_CALL_FLAGS_NONE,
                           20000,
-                          NULL,
+                          priv->connect_cancellable,
                           (GAsyncReadyCallback) stage1_prepare_done,
                           self);
     }
