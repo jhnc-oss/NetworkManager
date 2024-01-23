@@ -1192,9 +1192,14 @@ stage1_prepare_done(GObject *source, GAsyncResult *result, gpointer user_data)
     nm_clear_pointer(&priv->connect_properties, g_hash_table_destroy);
 
     if (error) {
-        if (!g_strstr_len(error->message,
-                          NM_STRLEN(OFONO_ERROR_IN_PROGRESS),
-                          OFONO_ERROR_IN_PROGRESS)) {
+        gs_free gchar *remote_error = g_dbus_error_get_remote_error(error);
+
+        if (!remote_error || !g_str_equal(remote_error, OFONO_ERROR_IN_PROGRESS)) {
+            if (remote_error)
+                g_dbus_error_strip_remote_error(error);
+
+            _LOGW("activating oFono context failed: %s", error->message);
+
             nm_clear_g_cancellable(&priv->connect_cancellable);
             nm_clear_g_source_inst(&priv->connect_timeout_source);
             nm_modem_emit_prepare_result(NM_MODEM(self), FALSE, NM_DEVICE_STATE_REASON_MODEM_BUSY);
