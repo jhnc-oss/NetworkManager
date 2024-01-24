@@ -5333,14 +5333,14 @@ find_slaves(NMManager            *manager,
 static gboolean
 should_connect_slaves(NMConnection *connection, NMDevice *device)
 {
-    NMSettingConnection                 *s_con;
-    NMSettingConnectionAutoconnectSlaves val;
+    NMSettingConnection                *s_con;
+    NMSettingConnectionAutoconnectPorts val;
 
     s_con = nm_connection_get_setting_connection(connection);
     g_assert(s_con);
 
-    val = nm_setting_connection_get_autoconnect_slaves(s_con);
-    if (val != NM_SETTING_CONNECTION_AUTOCONNECT_SLAVES_DEFAULT)
+    val = nm_setting_connection_get_autoconnect_ports(s_con);
+    if (val != NM_SETTING_CONNECTION_AUTOCONNECT_PORTS_DEFAULT)
         goto out;
 
     val =
@@ -5352,9 +5352,9 @@ should_connect_slaves(NMConnection *connection, NMDevice *device)
                                                     -1);
 
 out:
-    if (val == NM_SETTING_CONNECTION_AUTOCONNECT_SLAVES_NO)
+    if (val == NM_SETTING_CONNECTION_AUTOCONNECT_PORTS_NO)
         return FALSE;
-    if (val == NM_SETTING_CONNECTION_AUTOCONNECT_SLAVES_YES)
+    if (val == NM_SETTING_CONNECTION_AUTOCONNECT_PORTS_YES)
         return TRUE;
     return FALSE;
 }
