@@ -443,6 +443,10 @@ stop(NMDhcpClient *client, gboolean release)
     NMDhcpSystemdPrivate *priv = NM_DHCP_SYSTEMD_GET_PRIVATE(self);
     int                   r    = 0;
 
+    r = sd_dhcp6_client_set_send_release(priv->client6, release);
+    if (r)
+        _LOGT("failed to send RELEASE message");
+
     NM_DHCP_CLIENT_CLASS(nm_dhcp_systemd_parent_class)->stop(client, release);
 
     _LOGT("dhcp-client6: stop");

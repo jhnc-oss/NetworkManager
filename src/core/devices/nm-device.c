@@ -10759,7 +10759,7 @@ _dev_ipdhcpx_cleanup(NMDevice *self, int addr_family, gboolean full_cleanup, gbo
     if (priv->ipdhcp_data_x[IS_IPv4].client) {
         nm_clear_g_signal_handler(priv->ipdhcp_data_x[IS_IPv4].client,
                                   &priv->ipdhcp_data_x[IS_IPv4].notify_sigid);
-        nm_dhcp_client_stop(priv->ipdhcp_data_x[IS_IPv4].client, release);
+        nm_dhcp_client_stop(priv->ipdhcp_data_x[IS_IPv4].client, release, full_cleanup);
         g_clear_object(&priv->ipdhcp_data_x[IS_IPv4].client);
     }
 
@@ -10896,6 +10896,7 @@ _dev_ipdhcpx_start(NMDevice *self, int addr_family)
     int                    ifindex;
     const char            *str;
     gboolean               request_broadcast;
+    gboolean               send_dhcp_release = FALSE;
     const char            *fail_reason;
 
     if (priv->ipdhcp_data_x[IS_IPv4].state == NM_DEVICE_IP_STATE_NONE)
@@ -10961,6 +10962,15 @@ _dev_ipdhcpx_start(NMDevice *self, int addr_family)
 
     no_lease_timeout_sec = _prop_get_ipvx_dhcp_timeout(self, addr_family);
 
+    if (nm_setting_ip_config_get_dhcp_send_release(s_ip) == NM_TERNARY_TRUE)
+        send_dhcp_release = TRUE;
+    else if (nm_setting_ip_config_get_dhcp_send_release(s_ip) == NM_TERNARY_DEFAULT)
+        send_dhcp_release =
+            nm_config_data_get_value_boolean(NM_CONFIG_GET_DATA,
+                                             NM_CONFIG_KEYFILE_GROUP_MAIN,
+                                             NM_CONFIG_KEYFILE_KEY_MAIN_DHCP_SEND_RELEASE,
+                                             FALSE);
+
     if (IS_IPv4) {
         NMDhcpClientConfig     config;
         gs_unref_bytes GBytes *bcast_hwaddr            = NULL;
@@ -11005,6 +11015,7 @@ _dev_ipdhcpx_start(NMDevice *self, int addr_family)
             .vendor_class_identifier = vendor_class_identifier,
             .use_fqdn                = hostname_is_fqdn,
             .reject_servers          = reject_servers,
+            .send_release            = send_dhcp_release,
             .v4 =
                 {
                     .request_broadcast = request_broadcast,
@@ -11039,6 +11050,7 @@ _dev_ipdhcpx_start(NMDevice *self, int addr_family)
             .mud_url         = _prop_get_connection_mud_url(self, s_con),
             .timeout         = no_lease_timeout_sec,
             .anycast_address = _device_get_dhcp_anycast_address(self),
+            .send_release    = send_dhcp_release,
             .v6 =
                 {
                     .enforce_duid  = enforce_duid,

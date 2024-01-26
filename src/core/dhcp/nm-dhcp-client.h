@@ -149,6 +149,10 @@ typedef struct {
      * For DHCPv6 this is always TRUE. */
     bool use_fqdn : 1;
 
+    /* Whether to send the RELEASE message when shutting down or
+     * closing the network service. */
+    bool send_release : 1;
+
     union {
         struct {
             /* The address from the previous lease */
@@ -237,7 +241,7 @@ pid_t nm_dhcp_client_get_pid(NMDhcpClient *self);
 
 const NML3ConfigData *nm_dhcp_client_get_lease(NMDhcpClient *self);
 
-void nm_dhcp_client_stop(NMDhcpClient *self, gboolean force_release);
+void nm_dhcp_client_stop(NMDhcpClient *self, gboolean force_release, gboolean addresses_removed);
 
 /* Backend helpers for subclasses */
 void nm_dhcp_client_stop_existing(const char *pid_file, const char *binary_name);

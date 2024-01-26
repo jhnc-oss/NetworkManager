@@ -25,6 +25,7 @@
 #define NM_CONFIG_KEYFILE_KEY_MAIN_CONFIGURE_AND_QUIT          "configure-and-quit"
 #define NM_CONFIG_KEYFILE_KEY_MAIN_DEBUG                       "debug"
 #define NM_CONFIG_KEYFILE_KEY_MAIN_DHCP                        "dhcp"
+#define NM_CONFIG_KEYFILE_KEY_MAIN_DHCP_SEND_RELEASE           "dhcp-send-release"
 #define NM_CONFIG_KEYFILE_KEY_MAIN_DNS                         "dns"
 #define NM_CONFIG_KEYFILE_KEY_MAIN_FIREWALL_BACKEND            "firewall-backend"
 #define NM_CONFIG_KEYFILE_KEY_MAIN_HOSTNAME_MODE               "hostname-mode"

@@ -1454,9 +1454,10 @@ out:
 }
 
 void
-nm_dhcp_client_stop(NMDhcpClient *self, gboolean force_release)
+nm_dhcp_client_stop(NMDhcpClient *self, gboolean force_release, gboolean addresses_removed)
 {
     NMDhcpClientPrivate *priv;
+    gboolean             release;
     pid_t                old_pid = 0;
 
     g_return_if_fail(NM_IS_DHCP_CLIENT(self));
@@ -1484,9 +1485,13 @@ nm_dhcp_client_stop(NMDhcpClient *self, gboolean force_release)
     priv->l3cfg_notify.wait_ipv6_dad    = FALSE;
     l3_cfg_notify_check_connected(self);
 
+    /* RELEASE message is only sent if user configured it and addresses are
+     * removed, or we forced it on the function call */
+    release = force_release || (priv->config.send_release && addresses_removed);
+
     /* Kill the DHCP client */
     old_pid = priv->pid;
-    NM_DHCP_CLIENT_GET_CLASS(self)->stop(self, force_release);
+    NM_DHCP_CLIENT_GET_CLASS(self)->stop(self, release);
     if (old_pid > 0)
         _LOGI("canceled DHCP transaction, DHCP client pid %d", old_pid);
     else
@@ -1961,7 +1966,7 @@ dispose(GObject *object)
     NMDhcpClient        *self = NM_DHCP_CLIENT(object);
     NMDhcpClientPrivate *priv = NM_DHCP_CLIENT_GET_PRIVATE(self);
 
-    nm_dhcp_client_stop(self, FALSE);
+    nm_dhcp_client_stop(self, FALSE, FALSE);
 
     watch_cleanup(self);
 

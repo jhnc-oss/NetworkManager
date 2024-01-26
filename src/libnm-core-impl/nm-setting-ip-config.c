@@ -4003,7 +4003,8 @@ NM_GOBJECT_PROPERTIES_DEFINE(NMSettingIPConfig,
                              PROP_DHCP_IAID,
                              PROP_DHCP_REJECT_SERVERS,
                              PROP_AUTO_ROUTE_EXT_GW,
-                             PROP_REPLACE_LOCAL_RULE, );
+                             PROP_REPLACE_LOCAL_RULE,
+                             PROP_DHCP_SEND_RELEASE, );
 
 G_DEFINE_ABSTRACT_TYPE(NMSettingIPConfig, nm_setting_ip_config, NM_TYPE_SETTING)
 
@@ -5443,6 +5444,22 @@ nm_setting_ip_config_get_replace_local_rule(NMSettingIPConfig *setting)
     return NM_SETTING_IP_CONFIG_GET_PRIVATE(setting)->replace_local_rule;
 }
 
+/**
+ * nm_setting_ip_config_get_dhcp_send_release:
+ * @setting: the #NMSettingIPConfig
+ *
+ * Returns: the #NMSettingIPConfig:dhcp-send-release property of the setting
+ *
+ * Since: 1.46
+ **/
+NMTernary
+nm_setting_ip_config_get_dhcp_send_release(NMSettingIPConfig *setting)
+{
+    g_return_val_if_fail(NM_IS_SETTING_IP_CONFIG(setting), NM_TERNARY_DEFAULT);
+
+    return NM_SETTING_IP_CONFIG_GET_PRIVATE(setting)->dhcp_send_release;
+}
+
 static gboolean
 verify_label(const char *label)
 {
@@ -6113,6 +6130,13 @@ _nm_sett_info_property_override_create_array_ip_config(int addr_family)
         &nm_sett_info_propert_type_direct_enum,
         .direct_offset =
             NM_STRUCT_OFFSET_ENSURE_TYPE(int, NMSettingIPConfigPrivate, replace_local_rule));
+
+    _nm_properties_override_gobj(
+        properties_override,
+        obj_properties[PROP_DHCP_SEND_RELEASE],
+        &nm_sett_info_propert_type_direct_enum,
+        .direct_offset =
+            NM_STRUCT_OFFSET_ENSURE_TYPE(int, NMSettingIPConfigPrivate, dhcp_send_release));
 
     _nm_properties_override_gobj(
         properties_override,
@@ -6842,6 +6866,22 @@ nm_setting_ip_config_class_init(NMSettingIPConfigClass *klass)
      */
     obj_properties[PROP_REPLACE_LOCAL_RULE] =
         g_param_spec_enum(NM_SETTING_IP_CONFIG_REPLACE_LOCAL_RULE,
+                          "",
+                          "",
+                          NM_TYPE_TERNARY,
+                          NM_TERNARY_DEFAULT,
+                          G_PARAM_READWRITE | G_PARAM_EXPLICIT_NOTIFY | G_PARAM_STATIC_STRINGS);
+
+    /**
+     * NMSettingIPConfig:dhcp-send-release:
+     *
+     * Connections will default to do not send DHCP RELEASE message upon
+     * removing the IP addresses configured unless this is set to %TRUE.
+     *
+     * Since: 1.46
+     */
+    obj_properties[PROP_DHCP_SEND_RELEASE] =
+        g_param_spec_enum(NM_SETTING_IP_CONFIG_DHCP_SEND_RELEASE,
                           "",
                           "",
                           NM_TYPE_TERNARY,

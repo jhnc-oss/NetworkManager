@@ -848,6 +848,7 @@ static const ConfigGroup config_groups[] = {
                              NM_CONFIG_KEYFILE_KEY_MAIN_CONFIGURE_AND_QUIT,
                              NM_CONFIG_KEYFILE_KEY_MAIN_DEBUG,
                              NM_CONFIG_KEYFILE_KEY_MAIN_DHCP,
+                             NM_CONFIG_KEYFILE_KEY_MAIN_DHCP_SEND_RELEASE,
                              NM_CONFIG_KEYFILE_KEY_MAIN_DNS,
                              NM_CONFIG_KEYFILE_KEY_MAIN_FIREWALL_BACKEND,
                              NM_CONFIG_KEYFILE_KEY_MAIN_HOSTNAME_MODE,

@@ -181,6 +181,13 @@ plugins-=remove-me
         <literal>internal</literal>.</para></listitem>
       </varlistentry>
       <varlistentry>
+        <term><varname>dhcp-send-release</varname></term>
+        <listitem><para>This key specifies if the DHCP client
+        will send a RELEASE message to DHCP server when the IP
+        addresses are removed. The default value is 0.
+        </para></listitem>
+      </varlistentry>
+      <varlistentry>
         <term><varname>no-auto-default</varname></term>
         <listitem><para>Specify devices for which
         NetworkManager shouldn't create default wired connection
