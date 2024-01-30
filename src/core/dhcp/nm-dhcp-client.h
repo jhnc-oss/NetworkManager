@@ -237,7 +237,7 @@ pid_t nm_dhcp_client_get_pid(NMDhcpClient *self);
 
 const NML3ConfigData *nm_dhcp_client_get_lease(NMDhcpClient *self);
 
-void nm_dhcp_client_stop(NMDhcpClient *self, gboolean release);
+void nm_dhcp_client_stop(NMDhcpClient *self, gboolean force_release);
 
 /* Backend helpers for subclasses */
 void nm_dhcp_client_stop_existing(const char *pid_file, const char *binary_name);

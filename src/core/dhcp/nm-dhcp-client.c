@@ -1454,7 +1454,7 @@ out:
 }
 
 void
-nm_dhcp_client_stop(NMDhcpClient *self, gboolean release)
+nm_dhcp_client_stop(NMDhcpClient *self, gboolean force_release)
 {
     NMDhcpClientPrivate *priv;
     pid_t                old_pid = 0;
@@ -1486,7 +1486,7 @@ nm_dhcp_client_stop(NMDhcpClient *self, gboolean release)
 
     /* Kill the DHCP client */
     old_pid = priv->pid;
-    NM_DHCP_CLIENT_GET_CLASS(self)->stop(self, release);
+    NM_DHCP_CLIENT_GET_CLASS(self)->stop(self, force_release);
     if (old_pid > 0)
         _LOGI("canceled DHCP transaction, DHCP client pid %d", old_pid);
     else
