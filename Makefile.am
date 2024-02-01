@@ -5389,6 +5389,8 @@ src_nm_cloud_setup_libnm_cloud_setup_core_a_SOURCES = \
 	src/nm-cloud-setup/nmcs-provider-azure.h \
 	src/nm-cloud-setup/nmcs-provider-aliyun.c \
 	src/nm-cloud-setup/nmcs-provider-aliyun.h \
+	src/nm-cloud-setup/nmcs-provider-oci.c \
+    src/nm-cloud-setup/nmcs-provider-oci.h \
 	$(NULL)
 
 src_nm_cloud_setup_libnm_cloud_setup_core_a_CPPFLAGS = \
