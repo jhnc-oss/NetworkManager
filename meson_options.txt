@@ -24,6 +24,7 @@ option('config_logging_backend_default', type: 'combo', choices: ['default', 'sy
 option('config_wifi_backend_default', type: 'combo', choices: ['default', 'wpa_supplicant', 'iwd'], value: 'default', description: 'Default value for wifi.backend')
 option('hostname_persist', type: 'combo', choices: ['default', 'suse', 'gentoo', 'slackware'], value: 'default', description: 'Hostname persist method')
 option('libaudit', type: 'combo', choices: ['yes', 'yes-disabled-by-default', 'no'], value: 'yes', description: 'Build with audit daemon support. yes-disabled-by-default enables support, but disables it unless explicitly configured via NetworkManager.conf')
+option('fhs3_rundir', type: 'boolean', value: false, description: 'Use /run, instead of /var/run, as the parent directory for NM\'s runtime non-persistent data folder (default is /var/run)')
 
 # features
 option('wext', type: 'boolean', value: true, description: 'Enable or disable Linux Wireless Extensions')
