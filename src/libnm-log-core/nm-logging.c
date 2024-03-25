@@ -927,40 +927,6 @@ nm_logging_syslog_enabled(void)
 }
 
 void
-nm_logging_init_pre(const char *syslog_identifier, char *prefix_take)
-{
-    /* this function may be called zero or one times, and only
-     * - on the main thread
-     * - not after nm_logging_init(). */
-
-    NM_ASSERT_ON_MAIN_THREAD();
-
-    if (gl.imm.init_pre_done)
-        g_return_if_reached();
-
-    if (gl.imm.init_done)
-        g_return_if_reached();
-
-    if (!_syslog_identifier_valid_domain(syslog_identifier))
-        g_return_if_reached();
-
-    if (!prefix_take || !prefix_take[0])
-        g_return_if_reached();
-
-    G_LOCK(log);
-
-    gl.mut.init_pre_done = TRUE;
-
-    gl.mut.syslog_identifier = g_strdup_printf("SYSLOG_IDENTIFIER=%s", syslog_identifier);
-    nm_assert(_syslog_identifier_assert(gl.imm.syslog_identifier));
-
-    /* we pass the allocated string on and never free it. */
-    gl.mut.prefix = prefix_take;
-
-    G_UNLOCK(log);
-}
-
-void
 nm_logging_init(const char *logging_backend, gboolean debug)
 {
     gboolean   fetch_monotonic_timestamp = FALSE;
