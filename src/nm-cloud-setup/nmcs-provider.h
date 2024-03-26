@@ -58,6 +58,7 @@ typedef struct {
 static inline gboolean
 nmcs_provider_get_config_iface_data_is_valid(const NMCSProviderGetConfigIfaceData *config_data)
 {
+    printf("config iface idx: %lu, ipv4 flag: %d, subnet flag: %d",config_data->iface_idx, config_data->has_ipv4s, config_data->has_cidr);	
     return config_data && config_data->iface_idx >= 0
            && ((config_data->has_ipv4s && config_data->has_cidr)
                || nm_g_ptr_array_len(config_data->iproutes) > 0);
