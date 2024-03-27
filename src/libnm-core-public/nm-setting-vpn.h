@@ -24,7 +24,8 @@ G_BEGIN_DECLS
 #define NM_SETTING_VPN_GET_CLASS(obj) \
     (G_TYPE_INSTANCE_GET_CLASS((obj), NM_TYPE_SETTING_VPN, NMSettingVpnClass))
 
-#define NM_SETTING_VPN_SETTING_NAME "vpn"
+#define NM_SETTING_VPN_SETTING_NAME       "vpn"
+#define NM_SETTING_WIREGUARD_SETTING_NAME "wireguard"
 
 #define NM_SETTING_VPN_SERVICE_TYPE "service-type"
 #define NM_SETTING_VPN_USER_NAME    "user-name"
@@ -72,6 +73,10 @@ const char **nm_setting_vpn_get_secret_keys(NMSettingVpn *setting, guint *out_le
 
 NM_AVAILABLE_IN_1_2
 guint32 nm_setting_vpn_get_timeout(NMSettingVpn *setting);
+
+gboolean nm_connection_is_vpn(NMConnection *connection, gboolean incl_all);
+#define nm_connection_is_vpn_a(x) nm_connection_is_vpn((x), true)
+#define nm_connection_is_vpn_plugin(x) nm_connection_is_vpn((x), false)
 
 G_END_DECLS
 
