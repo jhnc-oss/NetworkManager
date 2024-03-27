@@ -200,6 +200,7 @@ nm_ndisc_data_to_l3cd(NMDedupMultiIndex        *multi_idx,
     nm_l3_config_data_set_ndisc_hop_limit(l3cd, rdata->hop_limit);
     nm_l3_config_data_set_ndisc_reachable_time_msec(l3cd, rdata->reachable_time_ms);
     nm_l3_config_data_set_ndisc_retrans_timer_msec(l3cd, rdata->retrans_timer_ms);
+    nm_l3_config_data_set_default_url(l3cd, rdata->captive_portal);
 
     nm_l3_config_data_set_ip6_mtu(l3cd, rdata->mtu);
     if (token)
@@ -1308,7 +1309,7 @@ nm_ndisc_dad_failed(NMNDisc *ndisc, GArray *addresses, gboolean emit_changed_sig
     return changed ? NM_NDISC_CONFIG_ADDRESSES : NM_NDISC_CONFIG_NONE;
 }
 
-#define CONFIG_MAP_MAX_STR 7
+#define CONFIG_MAP_MAX_STR 8
 
 static void
 config_map_to_string(NMNDiscConfigMap map, char *p)
@@ -1325,6 +1326,8 @@ config_map_to_string(NMNDiscConfigMap map, char *p)
         *p++ = 'S';
     if (map & NM_NDISC_CONFIG_DNS_DOMAINS)
         *p++ = 'D';
+    if (map & NM_NDISC_CONFIG_CAPTIVE_PORTAL)
+        *p++ = 'C';
     *p = '\0';
 }
 
@@ -1358,6 +1361,8 @@ _config_changed_log(NMNDisc *ndisc, NMNDiscConfigMap changed)
         _LOGD("  reachable time : %u", (guint) rdata->public.reachable_time_ms);
     if (rdata->public.retrans_timer_ms)
         _LOGD("  retrans timer  : %u", (guint) rdata->public.retrans_timer_ms);
+    if (rdata->public.captive_portal)
+        _LOGD("  captive portal : %s", rdata->public.captive_portal);
 
     for (i = 0; i < rdata->gateways->len; i++) {
         const NMNDiscGateway *gateway = &nm_g_array_index(rdata->gateways, NMNDiscGateway, i);
