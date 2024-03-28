@@ -11,6 +11,7 @@
 #endif
 
 #include "nm-setting.h"
+#include <linux/ethtool.h>
 
 G_BEGIN_DECLS
 
@@ -31,6 +32,9 @@ gboolean nm_ethtool_optname_is_channels(const char *optname);
 
 NM_AVAILABLE_IN_1_46
 gboolean nm_ethtool_optname_is_eee(const char *optname);
+
+NM_AVAILABLE_IN_1_48
+gboolean nm_ethtool_optname_is_fec(const char *optname);
 
 /*****************************************************************************/
 
