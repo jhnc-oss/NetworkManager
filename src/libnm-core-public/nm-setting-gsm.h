@@ -41,6 +41,8 @@ G_BEGIN_DECLS
 #define NM_SETTING_GSM_MTU                          "mtu"
 #define NM_SETTING_GSM_INITIAL_EPS_BEARER_CONFIGURE "initial-eps-bearer-configure"
 #define NM_SETTING_GSM_INITIAL_EPS_BEARER_APN       "initial-eps-bearer-apn"
+#define NM_SETTING_GSM_INITIAL_EPS_BEARER_USERNAME  "initial-eps-bearer-username"
+#define NM_SETTING_GSM_INITIAL_EPS_BEARER_PASSWORD  "initial-eps-bearer-password"
 
 /* Deprecated */
 #define NM_SETTING_GSM_NUMBER "number"
@@ -73,6 +75,9 @@ NM_AVAILABLE_IN_1_44
 gboolean nm_setting_gsm_get_initial_eps_config(NMSettingGsm *setting);
 NM_AVAILABLE_IN_1_44
 const char *nm_setting_gsm_get_initial_eps_apn(NMSettingGsm *setting);
+
+const char *nm_setting_gsm_get_initial_eps_username(NMSettingGsm *setting);
+const char *nm_setting_gsm_get_initial_eps_password(NMSettingGsm *setting);
 
 NM_DEPRECATED_IN_1_16
 const char *nm_setting_gsm_get_number(NMSettingGsm *setting);
