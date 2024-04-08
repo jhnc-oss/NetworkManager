@@ -279,6 +279,30 @@ char *nm_range_to_str(const NMRange *range);
 NM_AVAILABLE_IN_1_42
 NMRange *nm_range_from_str(const char *str, GError **error);
 
+/**
+ * NMSettingEthtoolFecMode:
+ * @NM_SETTING_ETHTOOL_FEC_MODE_NONE: FEC mode configuration is not supported.
+ * @NM_SETTING_ETHTOOL_FEC_MODE_AUTO: Select default/best FEC mode automatically.
+ * @NM_SETTING_ETHTOOL_FEC_MODE_OFF: No FEC mode.
+ * @NM_SETTING_ETHTOOL_FEC_MODE_RS: Reed-Solomon FEC Mode.
+ * @NM_SETTING_ETHTOOL_FEC_MODE_BASER: Base-R/Reed-Solomon FEC Mode.
+ * @NM_SETTING_ETHTOOL_FEC_MODE_LLRS: Low Latency Reed Solomon FEC Mode.
+ *
+ * These flags modify the ethtool FEC(Forward Error Correction) mode.
+ *
+ **/
+typedef enum {
+    NM_SETTING_ETHTOOL_FEC_MODE_NONE  = 0x00000001,
+    NM_SETTING_ETHTOOL_FEC_MODE_AUTO  = 0x00000002,
+    NM_SETTING_ETHTOOL_FEC_MODE_OFF   = 0x00000004,
+    NM_SETTING_ETHTOOL_FEC_MODE_RS    = 0x00000008,
+    NM_SETTING_ETHTOOL_FEC_MODE_BASER = 0x00000010,
+    NM_SETTING_ETHTOOL_FEC_MODE_LLRS  = 0x00000020,
+    /* Note: When adding flag, please also update verify() of
+     * src/libnm-core-impl/nm-setting-ethtool.c
+     */
+} NMSettingEthtoolFecMode;
+
 G_END_DECLS
 
 #endif /* __NM_SETTING_H__ */

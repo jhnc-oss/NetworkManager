@@ -121,6 +121,21 @@ nm_ethtool_optname_is_pause(const char *optname)
 {
     return optname && nm_ethtool_id_is_pause(nm_ethtool_id_get_by_name(optname));
 }
+/**
+ * nm_ethtool_optname_is_fec:
+ * @optname: (nullable): the option name to check
+ *
+ * Checks whether @optname is a valid option name for a fec setting.
+ *
+ * Returns: %TRUE, if @optname is valid
+ *
+ * Since: 1.32
+ */
+gboolean
+nm_ethtool_optname_is_fec(const char *optname)
+{
+    return optname && nm_ethtool_id_is_fec(nm_ethtool_id_get_by_name(optname));
+}
 
 /*****************************************************************************/
 
@@ -309,6 +324,7 @@ verify(NMSetting *setting, NMConnection *connection, GError **error)
     NMTernary          pause_autoneg = NM_TERNARY_DEFAULT;
     NMTernary          pause_tx      = NM_TERNARY_DEFAULT;
     NMTernary          pause_rx      = NM_TERNARY_DEFAULT;
+    guint32            fec_mode      = NM_SETTING_ETHTOOL_FEC_MODE_NONE;
 
     len = _nm_setting_option_get_all(setting, &optnames, &variants);
 
@@ -356,6 +372,8 @@ verify(NMSetting *setting, NMConnection *connection, GError **error)
             pause_rx = g_variant_get_boolean(variant);
         else if (NM_IN_SET(ethtool_id, NM_ETHTOOL_ID_PAUSE_TX))
             pause_tx = g_variant_get_boolean(variant);
+        else if (NM_IN_SET(ethtool_id, NM_ETHTOOL_ID_FEC_MODE))
+            fec_mode = g_variant_get_uint32(variant);
     }
 
     if (pause_rx != NM_TERNARY_DEFAULT || pause_tx != NM_TERNARY_DEFAULT) {
@@ -368,6 +386,21 @@ verify(NMSetting *setting, NMConnection *connection, GError **error)
                            "%s.%s: ",
                            NM_SETTING_ETHTOOL_SETTING_NAME,
                            NM_ETHTOOL_OPTNAME_PAUSE_AUTONEG);
+            return FALSE;
+        }
+    }
+
+    if (fec_mode != NM_SETTING_ETHTOOL_FEC_MODE_NONE) {
+        if (fec_mode >= ((1 << (ETHTOOL_FEC_LLRS_BIT + 1)) - 1)) {
+            g_set_error_literal(
+                error,
+                NM_CONNECTION_ERROR,
+                NM_CONNECTION_ERROR_INVALID_PROPERTY,
+                _("invalid fec-mode, only accept combinations of NMSettingEthtoolFecMode values"));
+            g_prefix_error(error,
+                           "%s.%s: ",
+                           NM_SETTING_ETHTOOL_SETTING_NAME,
+                           NM_ETHTOOL_OPTNAME_FEC_MODE);
             return FALSE;
         }
     }
