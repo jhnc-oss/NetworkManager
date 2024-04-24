@@ -6081,6 +6081,7 @@ static const NMMetaPropertyInfo *const property_infos_GSM[] = {
         .property_type =                &_pt_gobject_string,
     ),
     PROPERTY_INFO_WITH_DESC (NM_SETTING_GSM_INITIAL_EPS_BEARER_PASSWORD,
+        .is_secret =                    TRUE,
         .property_type =                &_pt_gobject_string,
     ),
     NULL

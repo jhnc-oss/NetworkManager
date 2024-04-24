@@ -884,7 +884,7 @@ nm_setting_gsm_class_init(NMSettingGsmClass *klass)
      *
      * For LTE modems, this sets the username for the initial EPS bearer that is set
      * up when attaching to the network.  Setting this parameter implies
-     * initial-eps-bearer-username to be TRUE.
+     * initial-eps-bearer-configure to be TRUE.
      **/
     _nm_setting_property_define_direct_string(properties_override,
                                               obj_properties,
@@ -900,13 +900,13 @@ nm_setting_gsm_class_init(NMSettingGsmClass *klass)
      *
      * For LTE modems, this sets the password for the initial EPS bearer that is set
      * up when attaching to the network.  Setting this parameter implies
-     * initial-eps-bearer-username to be TRUE.
+     * initial-eps-bearer-configure to be TRUE.
      **/
     _nm_setting_property_define_direct_string(properties_override,
                                               obj_properties,
                                               NM_SETTING_GSM_INITIAL_EPS_BEARER_PASSWORD,
                                               PROP_INITIAL_EPS_PASSWORD,
-                                              NM_SETTING_PARAM_NONE,
+                                              NM_SETTING_PARAM_SECRET,
                                               NMSettingGsmPrivate,
                                               initial_eps_password,
                                               .direct_string_allow_empty = TRUE);

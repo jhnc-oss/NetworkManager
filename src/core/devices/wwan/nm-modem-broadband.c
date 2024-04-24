@@ -700,7 +700,7 @@ connect_context_step(NMModemBroadband *self)
                     /* do nothing */
                     break;
                 }
-                if (apn)
+                if (apn){
                     mm_bearer_properties_set_apn(config, apn);
                     mm_bearer_properties_set_user(config, username);
                     mm_bearer_properties_set_password(config, password);
@@ -725,7 +725,7 @@ connect_context_step(NMModemBroadband *self)
                     else if (noauth_enabled == TRUE) {
                         mm_bearer_properties_set_allowed_auth(config, MM_BEARER_ALLOWED_AUTH_NONE);
                     }
-                    
+                }   
                 /*
                  * Setting the initial EPS bearer settings is a no-op in
                  * ModemManager if the desired configuration is already active.
