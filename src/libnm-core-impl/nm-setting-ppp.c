@@ -667,7 +667,7 @@ nm_setting_ppp_class_init(NMSettingPppClass *klass)
                                                NM_SETTING_PARAM_NONE,
                                                NMSettingPppPrivate,
                                                initial_eps_refuse_mschap);
-                                               
+
     /**
      * NMSettingPpp:initial-eps-bearer-refuse-mschapv2:
      *

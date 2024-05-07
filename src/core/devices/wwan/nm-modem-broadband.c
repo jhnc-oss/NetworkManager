@@ -671,13 +671,14 @@ connect_context_step(NMModemBroadband *self)
             const char   *username  = nm_setting_gsm_get_initial_eps_username(s_gsm);
             const char   *password  = nm_setting_gsm_get_initial_eps_password(s_gsm);
 
-            NMSettingPpp *s_ppp     = nm_connection_get_setting_ppp(ctx->connection);
-            gboolean      noauth_enabled          = nm_setting_ppp_get_initial_eps_noauth(s_ppp);
-            gboolean      refuse_pap_enabled      = nm_setting_ppp_get_initial_eps_refuse_pap(s_ppp);
-            gboolean      refuse_chap_enabled     = nm_setting_ppp_get_initial_eps_refuse_chap(s_ppp);
-            gboolean      refuse_mschap_enabled   = nm_setting_ppp_get_initial_eps_refuse_mschap(s_ppp);
-            gboolean      refuse_mschapv2_enabled = nm_setting_ppp_get_initial_eps_refuse_mschapv2(s_ppp);
-            gboolean      refuse_eap_enabled      = nm_setting_ppp_get_initial_eps_refuse_eap(s_ppp);
+            NMSettingPpp *s_ppp               = nm_connection_get_setting_ppp(ctx->connection);
+            gboolean      noauth_enabled      = nm_setting_ppp_get_initial_eps_noauth(s_ppp);
+            gboolean      refuse_pap_enabled  = nm_setting_ppp_get_initial_eps_refuse_pap(s_ppp);
+            gboolean      refuse_chap_enabled = nm_setting_ppp_get_initial_eps_refuse_chap(s_ppp);
+            gboolean refuse_mschap_enabled    = nm_setting_ppp_get_initial_eps_refuse_mschap(s_ppp);
+            gboolean refuse_mschapv2_enabled =
+                nm_setting_ppp_get_initial_eps_refuse_mschapv2(s_ppp);
+            gboolean refuse_eap_enabled = nm_setting_ppp_get_initial_eps_refuse_eap(s_ppp);
 
             /* assume do_config is true if an APN is set */
             if (apn || do_config) {
@@ -700,32 +701,32 @@ connect_context_step(NMModemBroadband *self)
                     /* do nothing */
                     break;
                 }
-                if (apn){
+                if (apn) {
                     mm_bearer_properties_set_apn(config, apn);
                     mm_bearer_properties_set_user(config, username);
                     mm_bearer_properties_set_password(config, password);
 
-                    if(noauth_enabled == FALSE){
-                        if(refuse_pap_enabled == FALSE) {
-                            mm_bearer_properties_set_allowed_auth(config, MM_BEARER_ALLOWED_AUTH_PAP);
-                        } 
-                        else if (refuse_chap_enabled == FALSE) {
-                            mm_bearer_properties_set_allowed_auth(config, MM_BEARER_ALLOWED_AUTH_CHAP);
+                    if (noauth_enabled == FALSE) {
+                        if (refuse_pap_enabled == FALSE) {
+                            mm_bearer_properties_set_allowed_auth(config,
+                                                                  MM_BEARER_ALLOWED_AUTH_PAP);
+                        } else if (refuse_chap_enabled == FALSE) {
+                            mm_bearer_properties_set_allowed_auth(config,
+                                                                  MM_BEARER_ALLOWED_AUTH_CHAP);
+                        } else if (refuse_mschap_enabled == FALSE) {
+                            mm_bearer_properties_set_allowed_auth(config,
+                                                                  MM_BEARER_ALLOWED_AUTH_MSCHAP);
+                        } else if (refuse_mschapv2_enabled == FALSE) {
+                            mm_bearer_properties_set_allowed_auth(config,
+                                                                  MM_BEARER_ALLOWED_AUTH_MSCHAPV2);
+                        } else if (refuse_pap_enabled == FALSE) {
+                            mm_bearer_properties_set_allowed_auth(config,
+                                                                  MM_BEARER_ALLOWED_AUTH_EAP);
                         }
-                        else if (refuse_mschap_enabled == FALSE) {
-                            mm_bearer_properties_set_allowed_auth(config, MM_BEARER_ALLOWED_AUTH_MSCHAP);
-                        }
-                        else if (refuse_mschapv2_enabled == FALSE) {
-                            mm_bearer_properties_set_allowed_auth(config, MM_BEARER_ALLOWED_AUTH_MSCHAPV2);
-                        }
-                        else if (refuse_pap_enabled == FALSE) {
-                            mm_bearer_properties_set_allowed_auth(config, MM_BEARER_ALLOWED_AUTH_EAP);
-                        }
-                    }
-                    else if (noauth_enabled == TRUE) {
+                    } else if (noauth_enabled == TRUE) {
                         mm_bearer_properties_set_allowed_auth(config, MM_BEARER_ALLOWED_AUTH_NONE);
                     }
-                }   
+                }
                 /*
                  * Setting the initial EPS bearer settings is a no-op in
                  * ModemManager if the desired configuration is already active.

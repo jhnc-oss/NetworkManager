@@ -38,7 +38,7 @@ NM_GOBJECT_PROPERTIES_DEFINE_BASE(PROP_AUTO_CONFIG,
                                   PROP_SIM_OPERATOR_ID,
                                   PROP_MTU,
                                   PROP_INITIAL_EPS_CONFIG,
-                                  PROP_INITIAL_EPS_APN, 
+                                  PROP_INITIAL_EPS_APN,
                                   PROP_INITIAL_EPS_USERNAME,
                                   PROP_INITIAL_EPS_PASSWORD, );
 
