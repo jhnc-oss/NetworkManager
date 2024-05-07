@@ -706,25 +706,24 @@ connect_context_step(NMModemBroadband *self)
                     mm_bearer_properties_set_user(config, username);
                     mm_bearer_properties_set_password(config, password);
 
-                    if (noauth_enabled == FALSE) {
-                        if (refuse_pap_enabled == FALSE) {
-                            mm_bearer_properties_set_allowed_auth(config,
-                                                                  MM_BEARER_ALLOWED_AUTH_PAP);
-                        } else if (refuse_chap_enabled == FALSE) {
-                            mm_bearer_properties_set_allowed_auth(config,
-                                                                  MM_BEARER_ALLOWED_AUTH_CHAP);
-                        } else if (refuse_mschap_enabled == FALSE) {
-                            mm_bearer_properties_set_allowed_auth(config,
-                                                                  MM_BEARER_ALLOWED_AUTH_MSCHAP);
-                        } else if (refuse_mschapv2_enabled == FALSE) {
-                            mm_bearer_properties_set_allowed_auth(config,
-                                                                  MM_BEARER_ALLOWED_AUTH_MSCHAPV2);
-                        } else if (refuse_pap_enabled == FALSE) {
-                            mm_bearer_properties_set_allowed_auth(config,
-                                                                  MM_BEARER_ALLOWED_AUTH_EAP);
-                        }
-                    } else if (noauth_enabled == TRUE) {
-                        mm_bearer_properties_set_allowed_auth(config, MM_BEARER_ALLOWED_AUTH_NONE);
+                    if (noauth_enabled) {
+                        mm_bearer_properties_set_allowed_auth(config, 
+                                                                MM_BEARER_ALLOWED_AUTH_NONE);
+                    } else if (!refuse_pap_enabled) {
+                        mm_bearer_properties_set_allowed_auth(config,
+                                                                MM_BEARER_ALLOWED_AUTH_PAP);
+                    } else if (!refuse_chap_enabled) {
+                        mm_bearer_properties_set_allowed_auth(config,
+                                                                MM_BEARER_ALLOWED_AUTH_CHAP);
+                    } else if (!refuse_mschap_enabled) {
+                        mm_bearer_properties_set_allowed_auth(config,
+                                                                MM_BEARER_ALLOWED_AUTH_MSCHAP);
+                    } else if (!refuse_mschapv2_enabled) {
+                        mm_bearer_properties_set_allowed_auth(config,
+                                                                MM_BEARER_ALLOWED_AUTH_MSCHAPV2);
+                    } else if (!refuse_eap_enabled) {
+                        mm_bearer_properties_set_allowed_auth(config,
+                                                                MM_BEARER_ALLOWED_AUTH_EAP);
                     }
                 }
                 /*

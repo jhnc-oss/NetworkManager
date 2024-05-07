@@ -609,7 +609,6 @@ nm_setting_ppp_class_init(NMSettingPppClass *klass)
      *
      * For LTE modems, this disables EAP authentication method for the initial EPS bearer that is set
      * up when attaching to the network. 
-     * If %TRUE, the EAP authentication method will not be used.
      **/
     _nm_setting_property_define_direct_boolean(properties_override,
                                                obj_properties,
@@ -625,7 +624,6 @@ nm_setting_ppp_class_init(NMSettingPppClass *klass)
      *
      * For LTE modems, this disables PAP authentication method for the initial EPS bearer that is set
      * up when attaching to the network. 
-     * If %TRUE, the PAP authentication method will not be used.
      **/
     _nm_setting_property_define_direct_boolean(properties_override,
                                                obj_properties,
@@ -641,7 +639,6 @@ nm_setting_ppp_class_init(NMSettingPppClass *klass)
      *
      * For LTE modems, this disables CHAP authentication method for the initial EPS bearer that is set
      * up when attaching to the network. 
-     * If %TRUE, the CHAP authentication method will not be used.
      **/
     _nm_setting_property_define_direct_boolean(properties_override,
                                                obj_properties,
@@ -657,7 +654,6 @@ nm_setting_ppp_class_init(NMSettingPppClass *klass)
      *
      * For LTE modems, this disables MSCHAP authentication method for the initial EPS bearer that is set
      * up when attaching to the network. 
-     * If %TRUE, the MSCHAP authentication method will not be used.
      **/
     _nm_setting_property_define_direct_boolean(properties_override,
                                                obj_properties,
@@ -673,7 +669,6 @@ nm_setting_ppp_class_init(NMSettingPppClass *klass)
      *
      * For LTE modems, this disables MSCHAPV2 authentication method for the initial EPS bearer that is set
      * up when attaching to the network. 
-     * If %TRUE, the MSCHAPV2 authentication method will not be used.
      **/
     _nm_setting_property_define_direct_boolean(properties_override,
                                                obj_properties,
