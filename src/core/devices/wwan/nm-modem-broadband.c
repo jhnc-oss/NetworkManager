@@ -707,23 +707,19 @@ connect_context_step(NMModemBroadband *self)
                     mm_bearer_properties_set_password(config, password);
 
                     if (noauth_enabled) {
-                        mm_bearer_properties_set_allowed_auth(config, 
-                                                                MM_BEARER_ALLOWED_AUTH_NONE);
+                        mm_bearer_properties_set_allowed_auth(config, MM_BEARER_ALLOWED_AUTH_NONE);
                     } else if (!refuse_pap_enabled) {
-                        mm_bearer_properties_set_allowed_auth(config,
-                                                                MM_BEARER_ALLOWED_AUTH_PAP);
+                        mm_bearer_properties_set_allowed_auth(config, MM_BEARER_ALLOWED_AUTH_PAP);
                     } else if (!refuse_chap_enabled) {
-                        mm_bearer_properties_set_allowed_auth(config,
-                                                                MM_BEARER_ALLOWED_AUTH_CHAP);
+                        mm_bearer_properties_set_allowed_auth(config, MM_BEARER_ALLOWED_AUTH_CHAP);
                     } else if (!refuse_mschap_enabled) {
                         mm_bearer_properties_set_allowed_auth(config,
-                                                                MM_BEARER_ALLOWED_AUTH_MSCHAP);
+                                                              MM_BEARER_ALLOWED_AUTH_MSCHAP);
                     } else if (!refuse_mschapv2_enabled) {
                         mm_bearer_properties_set_allowed_auth(config,
-                                                                MM_BEARER_ALLOWED_AUTH_MSCHAPV2);
+                                                              MM_BEARER_ALLOWED_AUTH_MSCHAPV2);
                     } else if (!refuse_eap_enabled) {
-                        mm_bearer_properties_set_allowed_auth(config,
-                                                                MM_BEARER_ALLOWED_AUTH_EAP);
+                        mm_bearer_properties_set_allowed_auth(config, MM_BEARER_ALLOWED_AUTH_EAP);
                     }
                 }
                 /*
