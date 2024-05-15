@@ -56,6 +56,7 @@ typedef struct {
     char   *initial_eps_username;
     char   *initial_eps_password;
     guint   password_flags;
+    guint   initial_eps_password_flags;
     guint   pin_flags;
     guint32 mtu;
     bool    auto_config;
@@ -910,6 +911,18 @@ nm_setting_gsm_class_init(NMSettingGsmClass *klass)
                                               NMSettingGsmPrivate,
                                               initial_eps_password,
                                               .direct_string_allow_empty = TRUE);
+
+    /**
+     * NMSettingGsm:initial-eps-bearer-password-flags:
+     *
+     * Flags indicating how to handle the #NMSettingGsm:initial-eps-bearer-password property.
+     **/
+    _nm_setting_property_define_direct_secret_flags(properties_override,
+                                                    obj_properties,
+                                                    NM_SETTING_GSM_INITIAL_EPS_BEARER_PASSWORD_FLAGS,
+                                                    PROP_INITIAL_EPS_PASSWORD_FLAGS,
+                                                    NMSettingGsmPrivate,
+                                                    initial_eps_password_flags);
 
     /* Ignore incoming deprecated properties */
     _nm_properties_override_dbus(properties_override,

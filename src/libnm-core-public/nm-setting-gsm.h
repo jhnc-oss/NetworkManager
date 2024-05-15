@@ -43,6 +43,7 @@ G_BEGIN_DECLS
 #define NM_SETTING_GSM_INITIAL_EPS_BEARER_APN       "initial-eps-bearer-apn"
 #define NM_SETTING_GSM_INITIAL_EPS_BEARER_USERNAME  "initial-eps-bearer-username"
 #define NM_SETTING_GSM_INITIAL_EPS_BEARER_PASSWORD  "initial-eps-bearer-password"
+#define NM_SETTING_GSM_INITIAL_EPS_BEARER_PASSWORD_FLAGS "initial-eps-bearer-password-flags"
 
 /* Deprecated */
 #define NM_SETTING_GSM_NUMBER "number"
