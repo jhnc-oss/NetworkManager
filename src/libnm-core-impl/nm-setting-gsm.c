@@ -917,12 +917,13 @@ nm_setting_gsm_class_init(NMSettingGsmClass *klass)
      *
      * Flags indicating how to handle the #NMSettingGsm:initial-eps-bearer-password property.
      **/
-    _nm_setting_property_define_direct_secret_flags(properties_override,
-                                                    obj_properties,
-                                                    NM_SETTING_GSM_INITIAL_EPS_BEARER_PASSWORD_FLAGS,
-                                                    PROP_INITIAL_EPS_PASSWORD_FLAGS,
-                                                    NMSettingGsmPrivate,
-                                                    initial_eps_password_flags);
+    _nm_setting_property_define_direct_secret_flags(
+        properties_override,
+        obj_properties,
+        NM_SETTING_GSM_INITIAL_EPS_BEARER_PASSWORD_FLAGS,
+        PROP_INITIAL_EPS_PASSWORD_FLAGS,
+        NMSettingGsmPrivate,
+        initial_eps_password_flags);
 
     /* Ignore incoming deprecated properties */
     _nm_properties_override_dbus(properties_override,
