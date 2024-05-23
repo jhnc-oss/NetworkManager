@@ -40,7 +40,8 @@ NM_GOBJECT_PROPERTIES_DEFINE_BASE(PROP_AUTO_CONFIG,
                                   PROP_INITIAL_EPS_CONFIG,
                                   PROP_INITIAL_EPS_APN,
                                   PROP_INITIAL_EPS_USERNAME,
-                                  PROP_INITIAL_EPS_PASSWORD, );
+                                  PROP_INITIAL_EPS_PASSWORD,
+                                  PROP_INITIAL_EPS_PASSWORD_FLAGS, );
 
 typedef struct {
     char   *number;

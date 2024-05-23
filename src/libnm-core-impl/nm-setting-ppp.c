@@ -590,7 +590,7 @@ nm_setting_ppp_class_init(NMSettingPppClass *klass)
      * NMSettingPpp:initial-eps-bearer-noauth:
      *
      * For LTE modems, this sets NOAUTH authentication method for the initial EPS bearer that is set
-     * up when attaching to the network. 
+     * up when attaching to the network.
      * If %TRUE, do not require the other side (usually the PPP server) to
      * authenticate itself to the client.  If %FALSE, require authentication
      * from the remote side.  In almost all cases, this should be %TRUE.
@@ -608,7 +608,7 @@ nm_setting_ppp_class_init(NMSettingPppClass *klass)
      * NMSettingPpp:initial-eps-bearer-refuse-eap:
      *
      * For LTE modems, this disables EAP authentication method for the initial EPS bearer that is set
-     * up when attaching to the network. 
+     * up when attaching to the network.
      **/
     _nm_setting_property_define_direct_boolean(properties_override,
                                                obj_properties,
@@ -623,7 +623,7 @@ nm_setting_ppp_class_init(NMSettingPppClass *klass)
      * NMSettingPpp:initial-eps-bearer-refuse-pap:
      *
      * For LTE modems, this disables PAP authentication method for the initial EPS bearer that is set
-     * up when attaching to the network. 
+     * up when attaching to the network.
      **/
     _nm_setting_property_define_direct_boolean(properties_override,
                                                obj_properties,
@@ -638,7 +638,7 @@ nm_setting_ppp_class_init(NMSettingPppClass *klass)
      * NMSettingPpp:initial-eps-bearer-refuse-chap:
      *
      * For LTE modems, this disables CHAP authentication method for the initial EPS bearer that is set
-     * up when attaching to the network. 
+     * up when attaching to the network.
      **/
     _nm_setting_property_define_direct_boolean(properties_override,
                                                obj_properties,
@@ -653,7 +653,7 @@ nm_setting_ppp_class_init(NMSettingPppClass *klass)
      * NMSettingPpp:initial-eps-bearer-refuse-mschap:
      *
      * For LTE modems, this disables MSCHAP authentication method for the initial EPS bearer that is set
-     * up when attaching to the network. 
+     * up when attaching to the network.
      **/
     _nm_setting_property_define_direct_boolean(properties_override,
                                                obj_properties,
@@ -668,7 +668,7 @@ nm_setting_ppp_class_init(NMSettingPppClass *klass)
      * NMSettingPpp:initial-eps-bearer-refuse-mschapv2:
      *
      * For LTE modems, this disables MSCHAPV2 authentication method for the initial EPS bearer that is set
-     * up when attaching to the network. 
+     * up when attaching to the network.
      **/
     _nm_setting_property_define_direct_boolean(properties_override,
                                                obj_properties,
