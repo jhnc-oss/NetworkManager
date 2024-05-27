@@ -101,7 +101,7 @@ struct _NMTeamSettingData {
             gint32           runner_tx_balancer_interval;
             bool             runner_active;
             bool             runner_fast_rate;
-        } master;
+        } controller;
         struct {
             gint32 queue_id;
             gint32 prio;
@@ -216,13 +216,14 @@ guint32 nm_team_setting_value_link_watchers_set_list(NMTeamSetting              
 
 /*****************************************************************************/
 
-guint32 nm_team_setting_value_master_runner_tx_hash_add(NMTeamSetting *self, const char *txhash);
+guint32 nm_team_setting_value_controller_runner_tx_hash_add(NMTeamSetting *self,
+                                                            const char    *txhash);
 
-guint32 nm_team_setting_value_master_runner_tx_hash_remove(NMTeamSetting *self, guint idx);
+guint32 nm_team_setting_value_controller_runner_tx_hash_remove(NMTeamSetting *self, guint idx);
 
-guint32 nm_team_setting_value_master_runner_tx_hash_set_list(NMTeamSetting     *self,
-                                                             const char *const *arr,
-                                                             guint              len);
+guint32 nm_team_setting_value_controller_runner_tx_hash_set_list(NMTeamSetting     *self,
+                                                                 const char *const *arr,
+                                                                 guint              len);
 
 /*****************************************************************************/
 
