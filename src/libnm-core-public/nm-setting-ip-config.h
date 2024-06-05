@@ -414,13 +414,13 @@ typedef enum /*< flags >*/ {
 /**
  * NMSettingIPConfigDhcpUseRoutes:
  * @NM_SETTING_IP_CONFIG_DHCP_USE_ROUTES_DEFAULT: use the default value
- * @NM_SETTING_IP_CONFIG_DHCP_USE_ROUTES_YES: use the "routes" DHCP options
- * @NM_SETTING_IP_CONFIG_DHCP_USE_ROUTES_NO: don't use the "routes" DHCP options
- * @NM_SETTING_IP_CONFIG_DHCP_USE_ROUTES_GATEWAY: use the "routes" DHCP options
- *   if they specify a default gateway (0.0.0.0/0).
+ * @NM_SETTING_IP_CONFIG_DHCP_USE_ROUTES_YES: use routes from DHCP
+ * @NM_SETTING_IP_CONFIG_DHCP_USE_ROUTES_NO: ignore routes from DHCP
+ * @NM_SETTING_IP_CONFIG_DHCP_USE_ROUTES_GATEWAY: only use routes that specify
+ *   a default gateway
  *
  * #NMSettingIPConfigDhcpUseRoutes specifies whether to use the routes provided
- * by DHCP options. It is currently implemented only for IPv4.
+ * via DHCP. It is currently implemented only for IPv4.
  *
  * Since: 1.50
  */
