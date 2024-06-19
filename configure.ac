@@ -577,7 +577,17 @@ fi
 if test "$with_ebpf" = "yes" -a "$have_ebpf" = "no"; then
 	AC_MSG_ERROR([--with-ebpf=yes requires eBPF kernel header])
 fi
+if test "$with_ebpf" = "yes"; then
+	AC_DEFINE(WITH_EBPF, 1, [Define to 1 if you are building with eBPF support])
+else
+	AC_DEFINE(WITH_EBPF, 0, [Define to 1 if you are building with eBPF support])
+fi
 AM_CONDITIONAL(WITH_EBPF, test "${have_ebpf}" = "yes")
+
+if test "$have_ebpf" = "yes"; then
+	SERVICE_EXTRA_CAPABILITIES="$SERVICE_EXTRA_CAPABILITIES CAP_BPF"
+fi
+AC_SUBST(SERVICE_EXTRA_CAPABILITIES)
 
 # SELinux support
 AC_ARG_WITH(selinux,
