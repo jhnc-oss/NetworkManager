@@ -3908,9 +3908,20 @@ _new_from_nl_addr(const struct nlmsghdr *nlh, gboolean id_only)
     return g_steal_pointer(&obj);
 }
 
+/* Keep in sync with ip_route_is_tracked() */
+static const guint8 ip_route_tracked_protocols[] = {
+    RTPROT_REDIRECT,
+    RTPROT_KERNEL,
+    RTPROT_BOOT,
+    RTPROT_STATIC,
+    RTPROT_RA,
+    RTPROT_DHCP,
+};
+
 static gboolean
 ip_route_is_tracked(guint8 proto, guint8 type)
 {
+    /* Keep in sync with ip_route_tracked_protocols[] */
     if (proto > RTPROT_STATIC && !NM_IN_SET(proto, RTPROT_DHCP, RTPROT_RA)) {
         /* We ignore certain rtm_protocol, because NetworkManager would only ever
          * configure certain protocols. Other routes are not configured by NetworkManager
@@ -7899,13 +7910,11 @@ do_request_all_no_delayed_actions(NMPlatform *platform, DelayedActionType action
     FOR_EACH_DELAYED_ACTION (iflags, action_type) {
         RefreshAllType        refresh_all_type = delayed_action_type_to_refresh_all_type(iflags);
         const RefreshAllInfo *refresh_all_info = refresh_all_type_get_info(refresh_all_type);
-        nm_auto_nlmsg struct nl_msg *nlmsg     = NULL;
-        int                         *out_refresh_all_in_progress;
+        int                  *out_refresh_all_in_progress;
 
         out_refresh_all_in_progress =
             &priv->delayed_action.refresh_all_in_progress[refresh_all_type];
         nm_assert(*out_refresh_all_in_progress >= 0);
-        *out_refresh_all_in_progress += 1;
 
         /* clear any delayed action that request a refresh of this object type. */
         priv->delayed_action.flags &= ~iflags;
@@ -7924,28 +7933,75 @@ do_request_all_no_delayed_actions(NMPlatform *platform, DelayedActionType action
             }
         }
 
-        event_handler_read_netlink(platform, refresh_all_info->protocol, FALSE);
+        /* Routes are handled specially because we want to request only routes
+         * for protocols we track. The reason is that there might be millions of
+         * BGP routes we don't track and it would be very inefficient to dump them
+         * all. Therefore, perform separate dumps, each for a specific protocol we
+         * track. */
+        if (NM_IN_SET(refresh_all_type,
+                      REFRESH_ALL_TYPE_RTNL_IP4_ROUTES,
+                      REFRESH_ALL_TYPE_RTNL_IP6_ROUTES)) {
+            struct rtmsg rtm = {
+                .rtm_family = refresh_all_info->addr_family_for_dump,
+            };
+            guint i;
 
-        if (refresh_all_info->protocol == NMP_NETLINK_ROUTE) {
-            nlmsg = _nl_msg_new_dump_rtnl(refresh_all_info->obj_type,
-                                          refresh_all_info->addr_family_for_dump);
+            for (i = 0; i < G_N_ELEMENTS(ip_route_tracked_protocols); i++) {
+                nm_auto_nlmsg struct nl_msg *nlmsg = NULL;
+
+                /* If we try to request a new dump while the previous is still
+                 * in progress, kernel returns -EBUSY. Complete the previous
+                 * dump by reading from the socket. */
+                event_handler_read_netlink(platform, refresh_all_info->protocol, FALSE);
+
+                nlmsg = nlmsg_alloc_new(0, RTM_GETROUTE, NLM_F_DUMP);
+                if (!nlmsg)
+                    goto next_after_fail;
+
+                rtm.rtm_protocol = ip_route_tracked_protocols[i];
+
+                if (nlmsg_append_struct(nlmsg, &rtm) < 0)
+                    g_return_if_fail(FALSE);
+
+                *out_refresh_all_in_progress += 1;
+
+                if (_netlink_send_nlmsg(platform,
+                                        refresh_all_info->protocol,
+                                        nlmsg,
+                                        NULL,
+                                        NULL,
+                                        DELAYED_ACTION_RESPONSE_TYPE_REFRESH_ALL_IN_PROGRESS,
+                                        out_refresh_all_in_progress)
+                    < 0)
+                    goto next_after_fail;
+            }
         } else {
-            nm_assert(refresh_all_type == REFRESH_ALL_TYPE_GENL_FAMILIES);
-            nlmsg = _nl_msg_new_dump_genl_families();
+            nm_auto_nlmsg struct nl_msg *nlmsg = NULL;
+
+            *out_refresh_all_in_progress += 1;
+            event_handler_read_netlink(platform, refresh_all_info->protocol, FALSE);
+
+            if (refresh_all_info->protocol == NMP_NETLINK_ROUTE) {
+                nlmsg = _nl_msg_new_dump_rtnl(refresh_all_info->obj_type,
+                                              refresh_all_info->addr_family_for_dump);
+            } else {
+                nm_assert(refresh_all_type == REFRESH_ALL_TYPE_GENL_FAMILIES);
+                nlmsg = _nl_msg_new_dump_genl_families();
+            }
+
+            if (!nlmsg)
+                goto next_after_fail;
+
+            if (_netlink_send_nlmsg(platform,
+                                    refresh_all_info->protocol,
+                                    nlmsg,
+                                    NULL,
+                                    NULL,
+                                    DELAYED_ACTION_RESPONSE_TYPE_REFRESH_ALL_IN_PROGRESS,
+                                    out_refresh_all_in_progress)
+                < 0)
+                goto next_after_fail;
         }
-
-        if (!nlmsg)
-            goto next_after_fail;
-
-        if (_netlink_send_nlmsg(platform,
-                                refresh_all_info->protocol,
-                                nlmsg,
-                                NULL,
-                                NULL,
-                                DELAYED_ACTION_RESPONSE_TYPE_REFRESH_ALL_IN_PROGRESS,
-                                out_refresh_all_in_progress)
-            < 0)
-            goto next_after_fail;
 
         continue;
 next_after_fail:
