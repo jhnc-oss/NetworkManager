@@ -1592,7 +1592,7 @@ _prop_get_connection_lldp(NMDevice *self)
 }
 
 static NMSettingIP4LinkLocal
-_prop_get_ipv4_link_local(NMDevice *self)
+_prop_get_ipv4_link_local(NMDevice *self, bool raw_value)
 {
     NMSettingIP4Config   *s_ip4;
     NMSettingIP4LinkLocal link_local;
@@ -1606,6 +1606,9 @@ _prop_get_ipv4_link_local(NMDevice *self)
 
     link_local = nm_setting_ip4_config_get_link_local(s_ip4);
 
+    if (raw_value)
+        return link_local;
+
     if (link_local == NM_SETTING_IP4_LL_DEFAULT) {
         /* For connections without a ipv4.link-local property configured the global configuration
            might defines the default value for ipv4.link-local. */
@@ -1613,7 +1616,7 @@ _prop_get_ipv4_link_local(NMDevice *self)
                                                                  NM_CON_DEFAULT("ipv4.link-local"),
                                                                  self,
                                                                  NM_SETTING_IP4_LL_AUTO,
-                                                                 NM_SETTING_IP4_LL_ENABLED,
+                                                                 NM_SETTING_IP4_LL_UNTIL_DHCP,
                                                                  NM_SETTING_IP4_LL_DEFAULT);
         if (link_local == NM_SETTING_IP4_LL_DEFAULT) {
             /* If there is no global configuration for ipv4.link-local assume auto */
@@ -1634,6 +1637,13 @@ _prop_get_ipv4_link_local(NMDevice *self)
     if (link_local == NM_SETTING_IP4_LL_AUTO) {
         link_local = nm_streq(nm_setting_ip_config_get_method((NMSettingIPConfig *) s_ip4),
                               NM_SETTING_IP4_CONFIG_METHOD_LINK_LOCAL)
+                         ? NM_SETTING_IP4_LL_ENABLED
+                         : NM_SETTING_IP4_LL_DISABLED;
+    }
+
+    if (link_local == NM_SETTING_IP4_LL_UNTIL_DHCP) {
+        link_local = nm_streq(nm_setting_ip_config_get_method((NMSettingIPConfig *) s_ip4),
+                              NM_SETTING_IP4_CONFIG_METHOD_AUTO)
                          ? NM_SETTING_IP4_LL_ENABLED
                          : NM_SETTING_IP4_LL_DISABLED;
     }
@@ -10921,6 +10931,12 @@ _dev_ipdhcpx_set_state(NMDevice *self, int addr_family, NMDeviceIPState state)
                      nm_device_ip_state_to_string(state),
                      nm_device_ip_state_to_string(priv->ipdhcp_data_x[IS_IPv4].state));
         priv->ipdhcp_data_x[IS_IPv4].state = state;
+        if (IS_IPv4 && _prop_get_ipv4_link_local(self, true) == NM_SETTING_IP4_LL_UNTIL_DHCP) {
+            if (state == NM_DEVICE_IP_STATE_READY)
+                _dev_ipllx_cleanup(self, addr_family);
+            else
+                _dev_ipll4_start(self);
+        }
     }
 }
 
@@ -12737,7 +12753,7 @@ activate_stage3_ip_config_for_addr_family(NMDevice *self, int addr_family, const
         goto out_devip;
 
     if (IS_IPv4) {
-        if (_prop_get_ipv4_link_local(self) == NM_SETTING_IP4_LL_ENABLED)
+        if (_prop_get_ipv4_link_local(self, false) == NM_SETTING_IP4_LL_ENABLED)
             _dev_ipll4_start(self);
 
         if (nm_streq(method, NM_SETTING_IP4_CONFIG_METHOD_AUTO))
