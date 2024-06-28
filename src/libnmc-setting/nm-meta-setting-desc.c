@@ -11,6 +11,7 @@
 #include <arpa/inet.h>
 #include <linux/if_ether.h>
 #include <linux/if_infiniband.h>
+#include <linux/ethtool.h>
 
 #include "libnm-core-aux-intern/nm-common-macros.h"
 #include "libnm-glib-aux/nm-enum-utils.h"
@@ -23,9 +24,40 @@
 #include "libnmc-base/nm-client-utils.h"
 #include "nm-meta-setting-access.h"
 
+const GFlagsValue VALID_FEC_MODES[] = {
+    {
+        ETHTOOL_FEC_AUTO,
+        "auto",
+        NULL,
+    },
+    {
+        ETHTOOL_FEC_OFF,
+        "off",
+        NULL,
+    },
+    {
+        ETHTOOL_FEC_RS,
+        "rs",
+        NULL,
+    },
+    {
+        ETHTOOL_FEC_BASER,
+        "baser",
+        NULL,
+    },
+    {
+        ETHTOOL_FEC_LLRS,
+        "baser",
+        NULL,
+    },
+};
+
 /*****************************************************************************/
 
 static char *secret_flags_to_string(guint32 flags, NMMetaAccessorGetType get_type);
+
+static char    *fec_int_to_string(uint32_t flags);
+static gboolean string_list_to_fec_int(const char *flags_str, uint32_t *fec_mode, GError **error);
 
 #define ALL_SECRET_FLAGS                                              \
     (NM_SETTING_SECRET_FLAG_NONE | NM_SETTING_SECRET_FLAG_AGENT_OWNED \
@@ -4459,6 +4491,18 @@ _get_fcn_ethtool(ARGS_GET_FCN)
         if (get_type == NM_META_ACCESSOR_GET_TYPE_PRETTY)
             s = gettext(s);
         return s;
+    case NM_ETHTOOL_TYPE_FEC:
+        if (!nm_setting_option_get_uint32(setting, nm_ethtool_data[ethtool_id]->optname, &u32)) {
+            NM_SET_OUT(out_is_default, TRUE);
+            return NULL;
+        }
+        s = fec_int_to_string(u32);
+        if (s == NULL) {
+            NM_SET_OUT(out_is_default, TRUE);
+        }
+        if (get_type == NM_META_ACCESSOR_GET_TYPE_PRETTY)
+            s = gettext(s);
+        return s;
     case NM_ETHTOOL_TYPE_UNKNOWN:
         nm_assert_not_reached();
     }
@@ -4472,6 +4516,7 @@ _set_fcn_ethtool(ARGS_SET_FCN)
     NMEthtoolID ethtool_id = property_info->property_typ_data->subtype.ethtool.ethtool_id;
     gint64      i64;
     NMTernary   t;
+    uint32_t    fec_mode = 0;
 
     if (_SET_FCN_DO_RESET_DEFAULT(property_info, modifier, value))
         goto do_unset;
@@ -4512,6 +4557,13 @@ _set_fcn_ethtool(ARGS_SET_FCN)
 
         nm_setting_option_set_boolean(setting, nm_ethtool_data[ethtool_id]->optname, !!t);
         return TRUE;
+    case NM_ETHTOOL_TYPE_FEC:
+        if (string_list_to_fec_int(value, &fec_mode, error)) {
+            nm_setting_option_set_uint32(setting, NM_ETHTOOL_OPTNAME_FEC_MODE, fec_mode);
+            return TRUE;
+        } else {
+            return FALSE;
+        }
     case NM_ETHTOOL_TYPE_UNKNOWN:
         nm_assert_not_reached();
     }
@@ -5956,6 +6008,16 @@ static const NMMetaPropertyInfo *const property_infos_ETHTOOL[] = {
     PROPERTY_INFO_ETHTOOL (CHANNELS_TX),
     PROPERTY_INFO_ETHTOOL (CHANNELS_OTHER),
     PROPERTY_INFO_ETHTOOL (CHANNELS_COMBINED),
+    PROPERTY_INFO (NM_ETHTOOL_OPTNAME_FEC_MODE,
+                   "The Forward Error Correction(FEC) encoding modes to set. "
+                   "Not all devices support all options. "
+                   "May be any combinations of auto, off, rs, baser, llrs "
+                   "or any arbitrary unsigned 32 bites integer",
+                   .property_type = &_pt_ethtool,
+                   .property_typ_data =
+                   DEFINE_PROPERTY_TYP_DATA_SUBTYPE
+                      (ethtool, .ethtool_id = NM_ETHTOOL_ID_FEC_MODE)
+                   ),
     NULL,
 };
 
@@ -9330,3 +9392,83 @@ const NMMetaType nm_meta_type_property_info = {
 const NMMetaType nm_meta_type_nested_property_info = {
     .type_name = "nested_property_info",
 };
+
+/* Since we support arbitrary uint32_t, we cannot use flag_values_to_string() here */
+static char *
+fec_int_to_string(uint32_t value)
+{
+    GString           *ret;
+    uint32_t           remain = value;
+    size_t             i;
+    const GFlagsValue *flag;
+
+    if (value == 0)
+        return NULL;
+
+    ret = g_string_new(NULL);
+
+    for (i = 0; i < G_N_ELEMENTS(VALID_FEC_MODES); ++i) {
+        flag = &VALID_FEC_MODES[i];
+        if (value & flag->value) {
+            remain -= flag->value;
+            g_string_append_printf(ret, "%s,", flag->value_name);
+        }
+    }
+    if (remain > 0) {
+        g_string_append_printf(ret, "0x%" G_GINT32_MODIFIER "x", remain);
+    } else {
+        /* chop off trailing ',' */
+        g_string_truncate(ret, ret->len - 1);
+    }
+    return g_string_free(ret, FALSE);
+}
+
+static gboolean
+string_to_fec_int(const char *flag_str, uint32_t *fec_mode, GError **error)
+{
+    size_t             i;
+    const GFlagsValue *flag;
+
+    for (i = 0; i < sizeof(VALID_FEC_MODES) / sizeof(VALID_FEC_MODES[0]); ++i) {
+        flag = &VALID_FEC_MODES[i];
+        if (nm_streq(flag_str, flag->value_name)) {
+            *fec_mode = flag->value;
+            return TRUE;
+        }
+    }
+
+    nm_utils_error_set(error,
+                       NM_UTILS_ERROR_INVALID_ARGUMENT,
+                       _("'%s' is not valid; use any combination of "
+                         "'auto', 'off', 'rs', 'baser', 'llrs'"),
+                       flag_str);
+    *fec_mode = 0;
+    return FALSE;
+}
+
+// Since we support arbitrary uint32_t, we cannot use flag_values_to_string()
+// here
+static gboolean
+string_list_to_fec_int(const char *flags_str, uint32_t *fec_mode, GError **error)
+{
+    gs_free const char **value_strs      = NULL;
+    gsize                value_len       = 0;
+    uint32_t             single_fec_mode = 0;
+    gsize                i;
+
+    nm_assert(error);
+    nm_assert(fec_mode);
+
+    *fec_mode = 0;
+
+    value_strs = _value_strsplit(flags_str, VALUE_STRSPLIT_MODE_MULTILIST, &value_len);
+
+    for (i = 0; i < value_len; ++i) {
+        if (string_to_fec_int(value_strs[i], &single_fec_mode, error)) {
+            *fec_mode += single_fec_mode;
+        } else {
+            return FALSE;
+        }
+    }
+    return TRUE;
+}

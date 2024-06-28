@@ -22,6 +22,7 @@
 #include <linux/rtnetlink.h>
 #include <linux/if_ether.h>
 #include <linux/if_infiniband.h>
+#include <linux/ethtool.h>
 #include <libudev.h>
 
 #include "libnm-std-aux/unaligned.h"
@@ -308,6 +309,7 @@ typedef struct {
     NMEthtoolPauseState    *pause;
     NMEthtoolChannelsState *channels;
     NMEthtoolEEEState      *eee;
+    uint32_t                fec_mode;
 } EthtoolState;
 
 typedef enum {
@@ -2557,6 +2559,19 @@ _ethtool_features_reset(NMDevice *self, NMPlatform *platform, EthtoolState *etht
 }
 
 static void
+_ethtool_fec_reset(NMDevice *self, NMPlatform *platform, EthtoolState *ethtool_state)
+{
+    gs_free NMEthtoolFeatureStates *features = NULL;
+
+    if (!nm_platform_ethtool_set_fec_mode(platform,
+                                          ethtool_state->ifindex,
+                                          ethtool_state->fec_mode))
+        _LOGW(LOGD_DEVICE, "ethtool: failure resetting FEC");
+    else
+        _LOGD(LOGD_DEVICE, "ethtool: FEC reset to auto");
+}
+
+static void
 _ethtool_features_set(NMDevice         *self,
                       NMPlatform       *platform,
                       EthtoolState     *ethtool_state,
@@ -2585,6 +2600,56 @@ _ethtool_features_set(NMDevice         *self,
         _LOGD(LOGD_DEVICE, "ethtool: offload features successfully set");
 
     ethtool_state->features = g_steal_pointer(&features);
+}
+
+static void
+_ethtool_fec_set(NMDevice         *self,
+                 NMPlatform       *platform,
+                 EthtoolState     *ethtool_state,
+                 NMSettingEthtool *s_ethtool)
+{
+    uint32_t       old_fec_mode;
+    uint32_t       fec_mode = ETHTOOL_FEC_NONE;
+    GHashTable    *hash;
+    GHashTableIter iter;
+    const char    *name;
+    GVariant      *variant;
+
+    nm_assert(NM_IS_DEVICE(self));
+    nm_assert(NM_IS_PLATFORM(platform));
+    nm_assert(NM_IS_SETTING_ETHTOOL(s_ethtool));
+    nm_assert(ethtool_state);
+    nm_assert(!ethtool_state->fec_mode);
+
+    hash = _nm_setting_option_hash(NM_SETTING(s_ethtool), FALSE);
+    if (!hash)
+        return;
+
+    g_hash_table_iter_init(&iter, hash);
+    while (g_hash_table_iter_next(&iter, (gpointer *) &name, (gpointer *) &variant)) {
+        NMEthtoolID ethtool_id = nm_ethtool_id_get_by_name(name);
+
+        if (!nm_ethtool_id_is_fec(ethtool_id))
+            continue;
+
+        nm_assert(g_variant_is_of_type(variant, G_VARIANT_TYPE_UINT32));
+        fec_mode = g_variant_get_uint32(variant);
+    }
+
+    nm_platform_ethtool_get_fec_mode(platform, ethtool_state->ifindex, &old_fec_mode);
+
+    // The ETHTOOL_FEC_NONE is query only value, hence do nothing.
+    if (!fec_mode || fec_mode == ETHTOOL_FEC_NONE) {
+        ethtool_state->fec_mode = old_fec_mode;
+        return;
+    }
+
+    if (!nm_platform_ethtool_set_fec_mode(platform, ethtool_state->ifindex, fec_mode))
+        _LOGW(LOGD_DEVICE, "ethtool: failure setting FEC %d", fec_mode);
+    else {
+        _LOGD(LOGD_DEVICE, "ethtool: FEC %d successfully set", fec_mode);
+        ethtool_state->fec_mode = old_fec_mode;
+    }
 }
 
 static void
@@ -3068,6 +3133,7 @@ _ethtool_state_reset(NMDevice *self)
     _ethtool_pause_reset(self, platform, ethtool_state);
     _ethtool_channels_reset(self, platform, ethtool_state);
     _ethtool_eee_reset(self, platform, ethtool_state);
+    _ethtool_fec_reset(self, platform, ethtool_state);
 }
 
 static void
@@ -3104,6 +3170,7 @@ _ethtool_state_set(NMDevice *self)
     _ethtool_pause_set(self, platform, ethtool_state, s_ethtool);
     _ethtool_channels_set(self, platform, ethtool_state, s_ethtool);
     _ethtool_eee_set(self, platform, ethtool_state, s_ethtool);
+    _ethtool_fec_set(self, platform, ethtool_state, s_ethtool);
 
     if (ethtool_state->features || ethtool_state->coalesce || ethtool_state->ring
         || ethtool_state->pause || ethtool_state->channels || ethtool_state->eee)
