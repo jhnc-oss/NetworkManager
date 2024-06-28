@@ -162,7 +162,8 @@ test_simple_changed(NMNDisc              *ndisc,
                         NM_NDISC_CONFIG_DHCP_LEVEL | NM_NDISC_CONFIG_GATEWAYS
                             | NM_NDISC_CONFIG_ADDRESSES | NM_NDISC_CONFIG_ROUTES
                             | NM_NDISC_CONFIG_DNS_SERVERS | NM_NDISC_CONFIG_DNS_DOMAINS
-                            | NM_NDISC_CONFIG_HOP_LIMIT | NM_NDISC_CONFIG_MTU);
+                            | NM_NDISC_CONFIG_HOP_LIMIT | NM_NDISC_CONFIG_MTU
+                            | NM_NDISC_CONFIG_CAPTIVE_PORTAL);
         g_assert_cmpint(rdata->dhcp_level, ==, NM_NDISC_DHCP_LEVEL_OTHERCONF);
         match_gateway(rdata,
                       0,
@@ -200,7 +201,7 @@ test_simple(void)
     };
     guint id;
 
-    id = nm_fake_ndisc_add_ra(ndisc, 1, NM_NDISC_DHCP_LEVEL_OTHERCONF, 4, 1500);
+    id = nm_fake_ndisc_add_ra(ndisc, 1, NM_NDISC_DHCP_LEVEL_OTHERCONF, 4, 1500, "http://status.client");
     g_assert(id);
 
     nm_fake_ndisc_add_gateway(ndisc, id, "fe80::1", now_msec + 10000, NM_ICMPV6_ROUTER_PREF_MEDIUM);
@@ -249,7 +250,8 @@ test_everything_changed(NMNDisc              *ndisc,
                         NM_NDISC_CONFIG_DHCP_LEVEL | NM_NDISC_CONFIG_GATEWAYS
                             | NM_NDISC_CONFIG_ADDRESSES | NM_NDISC_CONFIG_ROUTES
                             | NM_NDISC_CONFIG_DNS_SERVERS | NM_NDISC_CONFIG_DNS_DOMAINS
-                            | NM_NDISC_CONFIG_HOP_LIMIT | NM_NDISC_CONFIG_MTU);
+                            | NM_NDISC_CONFIG_HOP_LIMIT | NM_NDISC_CONFIG_MTU
+                            | NM_NDISC_CONFIG_CAPTIVE_PORTAL);
         match_gateway(rdata,
                       0,
                       "fe80::1",
@@ -314,7 +316,7 @@ test_everything(void)
     };
     guint id;
 
-    id = nm_fake_ndisc_add_ra(ndisc, 1, NM_NDISC_DHCP_LEVEL_NONE, 4, 1500);
+    id = nm_fake_ndisc_add_ra(ndisc, 1, NM_NDISC_DHCP_LEVEL_NONE, 4, 1500, "http://status.client");
     g_assert(id);
     nm_fake_ndisc_add_gateway(ndisc, id, "fe80::1", now_msec + 10000, NM_ICMPV6_ROUTER_PREF_MEDIUM);
     nm_fake_ndisc_add_prefix(ndisc,
@@ -329,7 +331,7 @@ test_everything(void)
     nm_fake_ndisc_add_dns_domain(ndisc, id, "foobar.com", now_msec + 10000);
 
     /* expire everything from the first RA in the second */
-    id = nm_fake_ndisc_add_ra(ndisc, 1, NM_NDISC_DHCP_LEVEL_NONE, 4, 1500);
+    id = nm_fake_ndisc_add_ra(ndisc, 1, NM_NDISC_DHCP_LEVEL_NONE, 4, 1500, "http://status.client");
     g_assert(id);
     nm_fake_ndisc_add_gateway(ndisc, id, "fe80::1", now_msec, NM_ICMPV6_ROUTER_PREF_MEDIUM);
     nm_fake_ndisc_add_prefix(ndisc, id, "2001:db8:a:a::", 64, "fe80::1", now_msec, now_msec, 0);
@@ -420,7 +422,7 @@ test_preference_order(void)
 
     /* Test insertion order of gateways */
 
-    id = nm_fake_ndisc_add_ra(ndisc, 1, NM_NDISC_DHCP_LEVEL_NONE, 4, 1500);
+    id = nm_fake_ndisc_add_ra(ndisc, 1, NM_NDISC_DHCP_LEVEL_NONE, 4, 1500, "http://status.client");
     g_assert(id);
     nm_fake_ndisc_add_gateway(ndisc, id, "fe80::1", now_msec + 10000, NM_ICMPV6_ROUTER_PREF_HIGH);
     nm_fake_ndisc_add_prefix(ndisc,
@@ -432,7 +434,7 @@ test_preference_order(void)
                              now_msec + 10000,
                              5);
 
-    id = nm_fake_ndisc_add_ra(ndisc, 1, NM_NDISC_DHCP_LEVEL_NONE, 4, 1500);
+    id = nm_fake_ndisc_add_ra(ndisc, 1, NM_NDISC_DHCP_LEVEL_NONE, 4, 1500, "http://status.client");
     g_assert(id);
     nm_fake_ndisc_add_gateway(ndisc, id, "fe80::2", now_msec + 11000, NM_ICMPV6_ROUTER_PREF_LOW);
     nm_fake_ndisc_add_prefix(ndisc,
@@ -546,7 +548,7 @@ test_preference_changed(void)
      * not get duplicates in the gateway list.
      */
 
-    id = nm_fake_ndisc_add_ra(ndisc, 1, NM_NDISC_DHCP_LEVEL_NONE, 4, 1500);
+    id = nm_fake_ndisc_add_ra(ndisc, 1, NM_NDISC_DHCP_LEVEL_NONE, 4, 1500, "http://status.client");
     g_assert(id);
     nm_fake_ndisc_add_gateway(ndisc, id, "fe80::1", now_msec + 10000, NM_ICMPV6_ROUTER_PREF_LOW);
     nm_fake_ndisc_add_prefix(ndisc,
@@ -558,7 +560,7 @@ test_preference_changed(void)
                              now_msec + 10000,
                              5);
 
-    id = nm_fake_ndisc_add_ra(ndisc, 1, NM_NDISC_DHCP_LEVEL_NONE, 4, 1500);
+    id = nm_fake_ndisc_add_ra(ndisc, 1, NM_NDISC_DHCP_LEVEL_NONE, 4, 1500, "http://status.client");
     g_assert(id);
     nm_fake_ndisc_add_gateway(ndisc, id, "fe80::2", now_msec + 11000, NM_ICMPV6_ROUTER_PREF_MEDIUM);
     nm_fake_ndisc_add_prefix(ndisc,
@@ -570,7 +572,7 @@ test_preference_changed(void)
                              now_msec + 11000,
                              10);
 
-    id = nm_fake_ndisc_add_ra(ndisc, 1, NM_NDISC_DHCP_LEVEL_NONE, 4, 1500);
+    id = nm_fake_ndisc_add_ra(ndisc, 1, NM_NDISC_DHCP_LEVEL_NONE, 4, 1500, "http://status.client");
     g_assert(id);
     nm_fake_ndisc_add_gateway(ndisc, id, "fe80::1", now_msec + 12000, NM_ICMPV6_ROUTER_PREF_HIGH);
     nm_fake_ndisc_add_prefix(ndisc,
@@ -629,7 +631,7 @@ test_dns_solicit_loop(void)
      * first.
      */
 
-    id = nm_fake_ndisc_add_ra(ndisc, 1, NM_NDISC_DHCP_LEVEL_NONE, 4, 1500);
+    id = nm_fake_ndisc_add_ra(ndisc, 1, NM_NDISC_DHCP_LEVEL_NONE, 4, 1500, "http://status.client");
     g_assert(id);
     nm_fake_ndisc_add_gateway(ndisc, id, "fe80::1", now_msec + 10000, NM_ICMPV6_ROUTER_PREF_LOW);
     nm_fake_ndisc_add_dns_server(ndisc, id, "2001:db8:c:c::1", now_msec + 6000);
