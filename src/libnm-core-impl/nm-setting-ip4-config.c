@@ -241,7 +241,8 @@ verify(NMSetting *setting, NMConnection *connection, GError **error)
                    NM_SETTING_IP4_LL_AUTO,
                    NM_SETTING_IP4_LL_DEFAULT,
                    NM_SETTING_IP4_LL_DISABLED,
-                   NM_SETTING_IP4_LL_ENABLED)) {
+                   NM_SETTING_IP4_LL_ENABLED,
+                   NM_SETTING_IP4_LL_UNTIL_DHCP)) {
         g_set_error(error,
                     NM_CONNECTION_ERROR,
                     NM_CONNECTION_ERROR_INVALID_PROPERTY,
