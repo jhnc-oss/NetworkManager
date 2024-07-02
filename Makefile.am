@@ -1,151 +1,135 @@
-include $(GLIB_MAKEFILE)
--include $(INTROSPECTION_MAKEFILE)
+include
+    $(GLIB_MAKEFILE)
+    - include $(INTROSPECTION_MAKEFILE)
 include Makefile.vapigen
 
-@GNOME_CODE_COVERAGE_RULES@
+    @GNOME_CODE_COVERAGE_RULES @
 
-@NM_LOG_COMPILER@
+    @NM_LOG_COMPILER @
 
-###############################################################################
+    ############################################################################## #
 
-AUTOMAKE_OPTIONS = subdir-objects
+    AUTOMAKE_OPTIONS = subdir
+                       - objects
 
-noinst_LTLIBRARIES =
-check_LTLIBRARIES =
-noinst_PROGRAMS =
-noinst_LIBRARIES =
-check_PROGRAMS =
-noinst_DATA =
-sbin_PROGRAMS =
-bin_PROGRAMS =
-libexec_PROGRAMS =
-dist_libexec_SCRIPTS =
-lib_LTLIBRARIES =
-plugin_LTLIBRARIES =
-core_plugins =
-service_DATA =
-man_MANS =
-examples_DATA =
-CLEANFILES =
-DISTCLEANFILES =
-EXTRA_DIST =
-EXTRA_LTLIBRARIES =
-dist_hook =
-dist_dependencies =
-dist_configure_check =
-install_data_hook =
-install_exec_hook =
-uninstall_hook =
-TESTS =
-BUILT_SOURCES =
-GLIB_GENERATED =
-man_pages =
-man_pages_autogen =
-check_programs =
-check_programs_norun =
-check_ltlibraries =
-check_local =
-VAPIGEN_VAPIS =
-dbusservice_DATA =
-dbusactivation_DATA =
-systemdsystemunit_DATA =
+                           noinst_LTLIBRARIES = check_LTLIBRARIES = noinst_PROGRAMS =
+    noinst_LIBRARIES = check_PROGRAMS = noinst_DATA = sbin_PROGRAMS = bin_PROGRAMS =
+        libexec_PROGRAMS = dist_libexec_SCRIPTS = lib_LTLIBRARIES = plugin_LTLIBRARIES =
+            core_plugins = service_DATA = man_MANS = examples_DATA = CLEANFILES = DISTCLEANFILES =
+                EXTRA_DIST = EXTRA_LTLIBRARIES = dist_hook = dist_dependencies =
+                    dist_configure_check = install_data_hook = install_exec_hook = uninstall_hook =
+                        TESTS = BUILT_SOURCES = GLIB_GENERATED = man_pages = man_pages_autogen =
+                            check_programs = check_programs_norun = check_ltlibraries =
+                                check_local = VAPIGEN_VAPIS = dbusservice_DATA =
+                                    dbusactivation_DATA     = systemdsystemunit_DATA =
 
-INTROSPECTION_GIRS =
-INTROSPECTION_SCANNER_ARGS =
-INTROSPECTION_COMPILER_ARGS =
-# Pass SANITIZER_ENV where a command that uses built libraries is
-# executed, to suppress possible errors
-INTROSPECTION_SCANNER_ENV = $(SANITIZER_ENV) LDFLAGS="$(SANITIZER_LIB_LDFLAGS)"
+                                        INTROSPECTION_GIRS = INTROSPECTION_SCANNER_ARGS =
+                                            INTROSPECTION_COMPILER_ARGS =
+#Pass SANITIZER_ENV where a command that uses built libraries is
+#executed, to suppress possible errors
+                                                INTROSPECTION_SCANNER_ENV = $(SANITIZER_ENV)
+                                                    LDFLAGS = "$(SANITIZER_LIB_LDFLAGS)"
 
-libnmincludedir = $(includedir)/libnm
-libnminclude_HEADERS =
-nodist_libnminclude_HEADERS =
+    libnmincludedir = $(includedir) / libnm libnminclude_HEADERS = nodist_libnminclude_HEADERS =
 
-pkgconfigdir = $(libdir)/pkgconfig
-pkgconfig_DATA =
+        pkgconfigdir = $(libdir) / pkgconfig pkgconfig_DATA =
 
-pppd_plugindir = $(PPPD_PLUGIN_DIR)
-pppd_plugin_LTLIBRARIES =
+            pppd_plugindir = $(PPPD_PLUGIN_DIR) pppd_plugin_LTLIBRARIES =
 
-vapidir = $(datadir)/vala/vapi
-vapi_DATA =
+                vapidir = $(datadir) / vala / vapi vapi_DATA =
 
-examplesdir = $(docdir)/examples
+                    examplesdir = $(docdir)
+                                  / examples
 
-rundir=$(runstatedir)/NetworkManager
-statedir=$(localstatedir)/lib/NetworkManager
+                                      rundir = $(runstatedir) / NetworkManager statedir =
+                        $(localstatedir) / lib
+                        / NetworkManager
 
-plugindir=$(pkglibdir)/$(NM_DIST_VERSION)
+                            plugindir = $(pkglibdir)
+                                        / $(NM_DIST_VERSION)
 
-dbusactivationdir = $(datadir)/dbus-1/system-services
+                                            dbusactivationdir = $(datadir) / dbus - 1 / system
+                                                                - services
 
-servicedir = $(datadir)/dbus-1/system-services
+                                                                    servicedir =
+                            $(datadir) / dbus - 1 / system
+                            - services
 
-completiondir = $(datadir)/bash-completion/completions
+                                completiondir = $(datadir) / bash
+                                                - completion
+                                                      / completions
 
-nmlocaledir = $(datadir)/locale
+                                                          nmlocaledir =
+                                $(datadir)
+                                / locale
 
-INTROSPECTION_EXTRA_CFLAGS = -Wno-incompatible-pointer-types-discards-qualifiers
+                                    INTROSPECTION_EXTRA_CFLAGS =
+                                    -Wno - incompatible - pointer - types - discards
+                                    - qualifiers
 
-GLIB_MKENUMS_H_FLAGS = --identifier-prefix NM
-GLIB_MKENUMS_C_FLAGS = --identifier-prefix NM
+                                                                 GLIB_MKENUMS_H_FLAGS =
+                                        --identifier - prefix NM GLIB_MKENUMS_C_FLAGS =
+                                            --identifier
+                                            - prefix NM
 
-SUBDIRS = \
-	. \
-	po
+                                                SUBDIRS =.po
 
-if HAVE_DOCS
+                                                         if HAVE_DOCS
 
-SUBDIRS += \
-	docs/libnm \
-	docs/api
+                                                             SUBDIRS +=
+    docs / libnm                                             docs
+    / api
 
-endif
+        endif
 
-dflt_cppflags = -std=gnu11
+            dflt_cppflags = -std =
+        gnu11
 
-###############################################################################
+        ############################################################################## #
 
-include config-extra.h.mk
+        include config
+        - extra.h.mk
 
-DISTCLEANFILES += config-extra.h
+              DISTCLEANFILES +=
+    config
+    - extra.h
 
-$(src_libnm_core_public_mkenums_c):                 config-extra.h
-$(src_libnm_core_public_mkenums_h):                 config-extra.h
-src/core/dhcp/.dirstamp:                            config-extra.h
-src/libnm-base/.dirstamp:                           config-extra.h
-src/libnm-client-public/.dirstamp:                  config-extra.h
-src/libnm-client-public/.dirstamp:                  config-extra.h
-src/libnm-core-impl/.dirstamp:                      config-extra.h
-src/libnm-core-impl/.dirstamp:                      config-extra.h
-src/libnm-crypto/.dirstamp:                         config-extra.h
-src/libnm-glib-aux/.dirstamp:                       config-extra.h
-src/libnm-glib-aux/tests/.dirstamp:                 config-extra.h
-src/libnm-log-core/.dirstamp:                       config-extra.h
-src/libnm-log-null/.dirstamp:                       config-extra.h
-src/libnm-platform/.dirstamp:                       config-extra.h
-src/libnm-platform/tests/.dirstamp:                 config-extra.h
-src/libnm-platform/wifi/.dirstamp:                  config-extra.h
-src/libnm-platform/wpan/.dirstamp:                  config-extra.h
-src/libnm-std-aux/.dirstamp:                        config-extra.h
-src/libnm-systemd-shared/.dirstamp:                 config-extra.h
-src/libnm-systemd-shared/src/basic/.dirstamp:       config-extra.h
-src/libnm-systemd-shared/src/fundamental/.dirstamp: config-extra.h
-src/libnm-systemd-shared/src/shared/.dirstamp:      config-extra.h
-src/libnm-udev-aux/.dirstamp:                       config-extra.h
+          $(src_libnm_core_public_mkenums_c)
+    : config
+    - extra.h $(src_libnm_core_public_mkenums_h)
+    : config
+    - extra.h src / core / dhcp /.dirstamp : config - extra.h src / libnm - base /.dirstamp : config
+    - extra.h src / libnm - client - public /.dirstamp : config - extra.h src / libnm - client
+    - public /.dirstamp : config - extra.h src / libnm - core - impl /.dirstamp : config
+    - extra.h src / libnm - core - impl /.dirstamp : config - extra.h src / libnm
+    - crypto /.dirstamp : config - extra.h src / libnm - glib - aux /.dirstamp : config
+    - extra.h src / libnm - glib - aux / tests /.dirstamp : config - extra.h src / libnm - log
+    - core /.dirstamp : config - extra.h src / libnm - log - null /.dirstamp : config
+    - extra.h src / libnm - platform /.dirstamp : config - extra.h src / libnm
+    - platform / tests /.dirstamp : config - extra.h               src / libnm
+    - platform / wifi /.dirstamp : config - extra.h                src / libnm
+    - platform / wpan /.dirstamp : config - extra.h src / libnm - std - aux /.dirstamp : config
+    - extra.h src / libnm - systemd - shared /.dirstamp : config - extra.h src / libnm - systemd
+    - shared / src / basic /.dirstamp : config - extra.h                   src / libnm - systemd
+    - shared / src / fundamental /.dirstamp : config - extra.h             src / libnm - systemd
+    - shared / src / shared /.dirstamp : config - extra.h                  src / libnm - udev
+    - aux /.dirstamp : config
+    - extra.h
 
-###############################################################################
+      ############################################################################## #
 
-set_sanitizer_env = \
-	[ -n "$(SANITIZER_ENV)" ] && export $(SANITIZER_ENV) ; \
-	if echo $(SANITIZER_LIB_CFLAGS) $(SANITIZER_EXEC_CFLAGS) | grep -e -fsanitize=address > /dev/null; then \
-		[ -n "$(1)" ] && export LD_PRELOAD="$${LD_PRELOAD}:$$(ldd $(1) | grep libasan\.so\.. -o | head -n 1)"; \
-		[ -n "$(2)" ] && export LD_PRELOAD="$${LD_PRELOAD}:$$(ldd $(2) | grep libasan\.so\.. -o | head -n 1)"; \
-	fi
+      set_sanitizer_env = [-n "$(SANITIZER_ENV)"] && export $(SANITIZER_ENV);
+if echo
+    $(SANITIZER_LIB_CFLAGS)
+        $(SANITIZER_EXEC_CFLAGS) | grep - e - fsanitize = address > / dev / null;
+then[-n "$(1)"] &&export LD_PRELOAD =
+    "$${LD_PRELOAD}:$$(ldd $(1) | grep libasan\.so\.. -o | head -n 1)";
+[-n "$(2)"] &&export LD_PRELOAD =
+    "$${LD_PRELOAD}:$$(ldd $(2) | grep libasan\.so\.. -o | head -n 1)";
+fi
 
-check_so_symbols = \
-	$(call set_sanitizer_env,$(1),$(builddir)/src/core/NetworkManager); \
-	LD_BIND_NOW=1 LD_PRELOAD=$${LD_PRELOAD}:$(1) $(builddir)/src/core/NetworkManager --version >/dev/null
+    check_so_symbols = $(call set_sanitizer_env, $(1), $(builddir) / src / core / NetworkManager);
+LD_BIND_NOW=1 LD_PRELOAD=$${LD_PRELOAD}:$(1) $(builddir)/src/core/NetworkManager --version >/dev/null
 
 ###############################################################################
 
@@ -169,12 +153,12 @@ if !BUILD_DOCS
 dist_configure_check += dist-configure-check
 endif
 
-# Gettext's Makefile has a race with parallel builds during dist.
-# Hack around that.
-# See also:
-#   https://gitlab.freedesktop.org/NetworkManager/NetworkManager/-/merge_requests/1094#note_1435313
-#   https://lists.gnu.org/archive/html/bug-gettext/2022-06/msg00022.html
-#   https://gitlab.freedesktop.org/NetworkManager/NetworkManager/-/merge_requests/1405
+#Gettext's Makefile has a race with parallel builds during dist.
+#Hack around that.
+#See also:
+#https:  //gitlab.freedesktop.org/NetworkManager/NetworkManager/-/merge_requests/1094#note_1435313
+#https:  //lists.gnu.org/archive/html/bug-gettext/2022-06/msg00022.html
+#https:  //gitlab.freedesktop.org/NetworkManager/NetworkManager/-/merge_requests/1405
 po/.Makefile.patched:
 	sed -i \
 	    -e 's#^dist2: \$$(srcdir)/stamp-po \$$(DISTFILES)#dist2: \$$(srcdir)/stamp-po\n\t\$$(MAKE) \$$(DISTFILES)#' \
@@ -692,1422 +676,1351 @@ src_libnm_platform_libnm_platform_la_SOURCES += \
 	$(NULL)
 endif
 
-src_libnm_platform_libnm_platform_la_LDFLAGS = \
-	$(CODE_COVERAGE_LDFLAGS) \
-	$(SANITIZER_LIB_LDFLAGS) \
-	$(NULL)
-
-src_libnm_platform_libnm_platform_la_LIBADD = \
-	$(GLIB_LIBS) \
-	$(NULL)
-
-EXTRA_DIST += src/libnm-platform/meson.build
-
-###############################################################################
-
-check_programs += src/libnm-platform/tests/test-nm-platform
-
-src_libnm_platform_tests_test_nm_platform_CPPFLAGS = \
-	$(dflt_cppflags) \
-	-I$(srcdir)/src \
-	-I$(builddir)/src \
-	$(CODE_COVERAGE_CFLAGS) \
-	$(SYSTEMD_JOURNAL_CFLAGS) \
-	$(GLIB_CFLAGS) \
-	$(SANITIZER_LIB_CFLAGS) \
-	$(NULL)
-
-src_libnm_platform_tests_test_nm_platform_LDFLAGS = \
-	$(CODE_COVERAGE_LDFLAGS) \
-	$(SANITIZER_EXEC_LDFLAGS) \
-	$(NULL)
-
-src_libnm_platform_tests_test_nm_platform_LDADD = \
-	src/libnm-platform/libnm-platform.la \
-	src/libnm-udev-aux/libnm-udev-aux.la \
-	src/libnm-base/libnm-base.la \
-	src/libnm-log-core/libnm-log-core.la \
-	src/libnm-glib-aux/libnm-glib-aux.la \
-	src/libnm-std-aux/libnm-std-aux.la \
-	src/c-siphash/libc-siphash.la \
-	$(SYSTEMD_JOURNAL_LIBS) \
-	$(GLIB_LIBS) \
-	$(NULL)
-
-EXTRA_DIST += \
-	src/libnm-platform/tests/meson.build \
-	$(NULL)
-
-###############################################################################
-
-noinst_LTLIBRARIES += src/libnm-core-aux-intern/libnm-core-aux-intern.la
-
-src_libnm_core_aux_intern_libnm_core_aux_intern_la_CPPFLAGS = \
-	$(dflt_cppflags) \
-	-I$(builddir)/src \
-	-I$(srcdir)/src \
-	-I$(builddir)/src/libnm-core-public \
-	-I$(srcdir)/src/libnm-core-public \
-	$(CODE_COVERAGE_CFLAGS) \
-	$(GLIB_CFLAGS) \
-	$(SANITIZER_LIB_CFLAGS) \
-	$(NULL)
-
-src_libnm_core_aux_intern_libnm_core_aux_intern_la_SOURCES = \
-	src/libnm-core-aux-intern/nm-auth-subject.c \
-	src/libnm-core-aux-intern/nm-auth-subject.h \
-	src/libnm-core-aux-intern/nm-common-macros.h \
-	src/libnm-core-aux-intern/nm-libnm-core-utils.c \
-	src/libnm-core-aux-intern/nm-libnm-core-utils.h \
-	$(NULL)
-
-src_libnm_core_aux_intern_libnm_core_aux_intern_la_LDFLAGS = \
-	$(CODE_COVERAGE_LDFLAGS) \
-	$(SANITIZER_LIB_LDFLAGS) \
-	$(NULL)
-
-src_libnm_core_aux_intern_libnm_core_aux_intern_la_LIBADD = \
-	$(GLIB_LIBS) \
-	$(NULL)
-
-$(src_libnm_core_aux_intern_libnm_core_aux_intern_la_OBJECTS): $(src_libnm_core_public_mkenums_h)
-
-EXTRA_DIST += \
-	src/libnm-core-aux-intern/README.md \
-	src/libnm-core-aux-intern/meson.build \
-	$(NULL)
-
-###############################################################################
-
-noinst_LTLIBRARIES += src/libnm-core-aux-extern/libnm-core-aux-extern.la
-
-src_libnm_core_aux_extern_libnm_core_aux_extern_la_CPPFLAGS = \
-	$(dflt_cppflags) \
-	-I$(builddir)/src/libnm-core-public \
-	-I$(srcdir)/src/libnm-core-public \
-	-I$(srcdir)/src \
-	$(CODE_COVERAGE_CFLAGS) \
-	$(GLIB_CFLAGS) \
-	$(SANITIZER_LIB_CFLAGS) \
-	$(NULL)
-
-src_libnm_core_aux_extern_libnm_core_aux_extern_la_SOURCES = \
-	src/libnm-core-aux-extern/nm-dispatcher-api.h \
-	src/libnm-core-aux-extern/nm-libnm-core-aux.c \
-	src/libnm-core-aux-extern/nm-libnm-core-aux.h \
-	$(NULL)
-
-src_libnm_core_aux_extern_libnm_core_aux_extern_la_LDFLAGS = \
-	$(CODE_COVERAGE_LDFLAGS) \
-	$(SANITIZER_LIB_LDFLAGS) \
-	$(NULL)
-
-src_libnm_core_aux_extern_libnm_core_aux_extern_la_LIBADD = \
-	$(GLIB_LIBS) \
-	$(NULL)
-
-$(src_libnm_core_aux_extern_libnm_core_aux_extern_la_OBJECTS): $(src_libnm_core_public_mkenums_h)
-
-EXTRA_DIST += \
-	src/libnm-core-aux-extern/README.md \
-	src/libnm-core-aux-extern/meson.build \
-	$(NULL)
-
-###############################################################################
-
-noinst_LTLIBRARIES += src/libnm-client-aux-extern/libnm-client-aux-extern.la
-
-src_libnm_client_aux_extern_libnm_client_aux_extern_la_CPPFLAGS = \
-	$(dflt_cppflags) \
-	-I$(srcdir)/src \
-	-I$(builddir)/src \
-	-I$(builddir)/src/libnm-core-public \
-	-I$(srcdir)/src/libnm-core-public \
-	-I$(srcdir)/src/libnm-client-public \
-	-I$(builddir)/src/libnm-client-public \
-	$(CODE_COVERAGE_CFLAGS) \
-	$(GLIB_CFLAGS) \
-	$(SANITIZER_LIB_CFLAGS) \
-	$(NULL)
-
-src_libnm_client_aux_extern_libnm_client_aux_extern_la_SOURCES = \
-	src/libnm-client-aux-extern/nm-libnm-aux.c \
-	src/libnm-client-aux-extern/nm-libnm-aux.h \
-	$(NULL)
-
-src_libnm_client_aux_extern_libnm_client_aux_extern_la_LDFLAGS = \
-	$(CODE_COVERAGE_LDFLAGS) \
-	$(SANITIZER_LIB_LDFLAGS) \
-	$(NULL)
-
-src_libnm_client_aux_extern_libnm_client_aux_extern_la_LIBADD = \
-	$(GLIB_LIBS) \
-	src/libnm-client-impl/libnm.la \
-	$(NULL)
-
-$(src_libnm_client_aux_extern_libnm_client_aux_extern_la_OBJECTS): $(src_libnm_core_public_mkenums_h)
-$(src_libnm_client_aux_extern_libnm_client_aux_extern_la_OBJECTS): $(src_libnm_client_public_mkenums_h)
-
-EXTRA_DIST += \
-	src/libnm-client-aux-extern/README.md \
-	src/libnm-client-aux-extern/meson.build \
-	src/libnm-client-aux-extern/tests/meson.build \
-	$(NULL)
-
-###############################################################################
-
-check_programs += src/libnm-client-aux-extern/tests/test-libnm-client-aux
-
-src_libnm_client_aux_extern_tests_test_libnm_client_aux_CPPFLAGS = \
-	$(dflt_cppflags) \
-	-I$(srcdir)/src/libnm-core-public \
-	-I$(builddir)/src/libnm-core-public \
-	-I$(srcdir)/src/libnm-client-public \
-	-I$(builddir)/src/libnm-client-public \
-	-I$(srcdir)/src \
-	-I$(builddir)/src \
-	$(CODE_COVERAGE_CFLAGS) \
-	$(GLIB_CFLAGS) \
-	$(SANITIZER_LIB_CFLAGS) \
-	$(NULL)
-
-src_libnm_client_aux_extern_tests_test_libnm_client_aux_LDFLAGS = \
-	$(CODE_COVERAGE_LDFLAGS) \
-	$(SANITIZER_EXEC_LDFLAGS) \
-	$(NULL)
-
-src_libnm_client_aux_extern_tests_test_libnm_client_aux_LDADD = \
-	src/libnm-core-aux-extern/libnm-core-aux-extern.la \
-	src/libnm-core-aux-intern/libnm-core-aux-intern.la \
-	src/libnm-glib-aux/libnm-glib-aux.la \
-	src/libnm-log-null/libnm-log-null.la \
-	src/libnm-std-aux/libnm-std-aux.la \
-	src/c-siphash/libc-siphash.la \
-	src/libnm-client-impl/libnm.la \
-	$(GLIB_LIBS) \
-	$(NULL)
-
-$(src_libnm_client_aux_extern_tests_test_libnm_client_aux_OBJECTS): $(src_libnm_core_public_mkenums_h)
-$(src_libnm_client_aux_extern_tests_test_libnm_client_aux_OBJECTS): $(src_libnm_client_public_mkenums_h)
-
-###############################################################################
-
-noinst_LTLIBRARIES += src/libnm-client-test/libnm-client-test.la
-
-src_libnm_client_test_libnm_client_test_la_CPPFLAGS = \
-	$(dflt_cppflags) \
-	-I$(srcdir)/src \
-	-I$(builddir)/src \
-	-I$(builddir)/src/libnm-core-public \
-	-I$(srcdir)/src/libnm-core-public \
-	-I$(srcdir)/src/libnm-client-public \
-	-I$(builddir)/src/libnm-client-public \
-	$(CODE_COVERAGE_CFLAGS) \
-	$(GLIB_CFLAGS) \
-	$(SANITIZER_LIB_CFLAGS) \
-	$(NULL)
-
-src_libnm_client_test_libnm_client_test_la_SOURCES = \
-	src/libnm-client-test/nm-test-libnm-utils.h \
-	src/libnm-client-test/nm-test-utils-impl.c \
-	$(NULL)
-
-src_libnm_client_test_libnm_client_test_la_LDFLAGS = \
-	$(CODE_COVERAGE_LDFLAGS) \
-	$(SANITIZER_LIB_LDFLAGS) \
-	$(NULL)
-
-src_libnm_client_test_libnm_client_test_la_LIBADD = \
-	$(GLIB_LIBS) \
-	$(NULL)
-
-$(src_libnm_client_test_libnm_client_test_la_OBJECTS): $(src_libnm_core_public_mkenums_h)
-$(src_libnm_client_test_libnm_client_test_la_OBJECTS): $(src_libnm_client_public_mkenums_h)
-
-EXTRA_DIST += \
-	src/libnm-client-test/meson.build \
-	$(NULL)
-
-###############################################################################
-
-EXTRA_DIST += \
-	src/libnm-glib-aux/tests/meson.build \
-	$(NULL)
-
-check_programs += src/libnm-glib-aux/tests/test-shared-general
-
-src_libnm_glib_aux_tests_test_shared_general_CPPFLAGS = \
-	$(dflt_cppflags) \
-	-I$(srcdir)/src \
-	-I$(builddir)/src \
-	$(CODE_COVERAGE_CFLAGS) \
-	$(GLIB_CFLAGS) \
-	$(SANITIZER_LIB_CFLAGS) \
-	$(NULL)
-
-src_libnm_glib_aux_tests_test_shared_general_LDFLAGS = \
-	$(CODE_COVERAGE_LDFLAGS) \
-	$(SANITIZER_EXEC_LDFLAGS) \
-	$(NULL)
-
-src_libnm_glib_aux_tests_test_shared_general_LDADD = \
-	src/libnm-glib-aux/libnm-glib-aux.la \
-	src/libnm-log-null/libnm-log-null.la \
-	src/libnm-std-aux/libnm-std-aux.la \
-	src/c-siphash/libc-siphash.la \
-	$(GLIB_LIBS) \
-	$(NULL)
-
-###############################################################################
-
-if WITH_JANSSON
-
-check_programs += src/libnm-glib-aux/tests/test-json-aux
-
-src_libnm_glib_aux_tests_test_json_aux_CPPFLAGS = \
-	$(dflt_cppflags) \
-	-I$(srcdir)/src \
-	-I$(builddir)/src \
-	$(CODE_COVERAGE_CFLAGS) \
-	$(GLIB_CFLAGS) \
-	$(JANSSON_CFLAGS) \
-	$(SANITIZER_LIB_CFLAGS) \
-	$(NULL)
-
-src_libnm_glib_aux_tests_test_json_aux_LDFLAGS = \
-	$(CODE_COVERAGE_LDFLAGS) \
-	$(SANITIZER_EXEC_LDFLAGS) \
-	$(NULL)
-
-src_libnm_glib_aux_tests_test_json_aux_LDADD = \
-	$(JANSSON_LIBS) \
-	src/libnm-glib-aux/libnm-glib-aux.la \
-	src/libnm-log-null/libnm-log-null.la \
-	src/libnm-std-aux/libnm-std-aux.la \
-	src/c-siphash/libc-siphash.la \
-	$(GLIB_LIBS) \
-	$(NULL)
-
-endif
-
-###############################################################################
-
-noinst_LTLIBRARIES += introspection/libnmdbus.la
-
-introspection_libnmdbus_la_CPPFLAGS = \
-	$(GLIB_CFLAGS) \
-	$(INTROSPECTION_EXTRA_CFLAGS) \
-	$(NULL)
-
-introspection_sources = \
-	introspection/org.freedesktop.NetworkManager.AccessPoint.c \
-	introspection/org.freedesktop.NetworkManager.AccessPoint.h \
-	introspection/org.freedesktop.NetworkManager.AgentManager.c \
-	introspection/org.freedesktop.NetworkManager.AgentManager.h \
-	introspection/org.freedesktop.NetworkManager.Checkpoint.c \
-	introspection/org.freedesktop.NetworkManager.Checkpoint.h \
-	introspection/org.freedesktop.NetworkManager.Connection.Active.c \
-	introspection/org.freedesktop.NetworkManager.Connection.Active.h \
-	introspection/org.freedesktop.NetworkManager.DHCP4Config.c \
-	introspection/org.freedesktop.NetworkManager.DHCP4Config.h \
-	introspection/org.freedesktop.NetworkManager.DHCP6Config.c \
-	introspection/org.freedesktop.NetworkManager.DHCP6Config.h \
-	introspection/org.freedesktop.NetworkManager.Device.Adsl.c \
-	introspection/org.freedesktop.NetworkManager.Device.Adsl.h \
-	introspection/org.freedesktop.NetworkManager.Device.Bluetooth.c \
-	introspection/org.freedesktop.NetworkManager.Device.Bluetooth.h \
-	introspection/org.freedesktop.NetworkManager.Device.Bond.c \
-	introspection/org.freedesktop.NetworkManager.Device.Bond.h \
-	introspection/org.freedesktop.NetworkManager.Device.Bridge.c \
-	introspection/org.freedesktop.NetworkManager.Device.Bridge.h \
-	introspection/org.freedesktop.NetworkManager.Device.Dummy.c \
-	introspection/org.freedesktop.NetworkManager.Device.Dummy.h \
-	introspection/org.freedesktop.NetworkManager.Device.Generic.c \
-	introspection/org.freedesktop.NetworkManager.Device.Generic.h \
-	introspection/org.freedesktop.NetworkManager.Device.Hsr.c \
-	introspection/org.freedesktop.NetworkManager.Device.Hsr.h \
-	introspection/org.freedesktop.NetworkManager.Device.IPTunnel.c \
-	introspection/org.freedesktop.NetworkManager.Device.IPTunnel.h \
-	introspection/org.freedesktop.NetworkManager.Device.Infiniband.c \
-	introspection/org.freedesktop.NetworkManager.Device.Infiniband.h \
-	introspection/org.freedesktop.NetworkManager.Device.Loopback.c \
-	introspection/org.freedesktop.NetworkManager.Device.Loopback.h \
-	introspection/org.freedesktop.NetworkManager.Device.Lowpan.c \
-	introspection/org.freedesktop.NetworkManager.Device.Lowpan.h \
-	introspection/org.freedesktop.NetworkManager.Device.Macsec.c \
-	introspection/org.freedesktop.NetworkManager.Device.Macsec.h \
-	introspection/org.freedesktop.NetworkManager.Device.Macvlan.c \
-	introspection/org.freedesktop.NetworkManager.Device.Macvlan.h \
-	introspection/org.freedesktop.NetworkManager.Device.Modem.c \
-	introspection/org.freedesktop.NetworkManager.Device.Modem.h \
-	introspection/org.freedesktop.NetworkManager.Device.OlpcMesh.c \
-	introspection/org.freedesktop.NetworkManager.Device.OlpcMesh.h \
-	introspection/org.freedesktop.NetworkManager.Device.OvsBridge.c \
-	introspection/org.freedesktop.NetworkManager.Device.OvsBridge.h \
-	introspection/org.freedesktop.NetworkManager.Device.OvsInterface.c \
-	introspection/org.freedesktop.NetworkManager.Device.OvsInterface.h \
-	introspection/org.freedesktop.NetworkManager.Device.OvsPort.c \
-	introspection/org.freedesktop.NetworkManager.Device.OvsPort.h \
-	introspection/org.freedesktop.NetworkManager.Device.Ppp.c \
-	introspection/org.freedesktop.NetworkManager.Device.Ppp.h \
-	introspection/org.freedesktop.NetworkManager.Device.Statistics.c \
-	introspection/org.freedesktop.NetworkManager.Device.Statistics.h \
-	introspection/org.freedesktop.NetworkManager.Device.Team.c \
-	introspection/org.freedesktop.NetworkManager.Device.Team.h \
-	introspection/org.freedesktop.NetworkManager.Device.Tun.c \
-	introspection/org.freedesktop.NetworkManager.Device.Tun.h \
-	introspection/org.freedesktop.NetworkManager.Device.Veth.c \
-	introspection/org.freedesktop.NetworkManager.Device.Veth.h \
-	introspection/org.freedesktop.NetworkManager.Device.Vlan.c \
-	introspection/org.freedesktop.NetworkManager.Device.Vlan.h \
-	introspection/org.freedesktop.NetworkManager.Device.Vrf.c \
-	introspection/org.freedesktop.NetworkManager.Device.Vrf.h \
-	introspection/org.freedesktop.NetworkManager.Device.Vxlan.c \
-	introspection/org.freedesktop.NetworkManager.Device.Vxlan.h \
-	introspection/org.freedesktop.NetworkManager.Device.WiMax.c \
-	introspection/org.freedesktop.NetworkManager.Device.WiMax.h \
-	introspection/org.freedesktop.NetworkManager.Device.WifiP2P.c \
-	introspection/org.freedesktop.NetworkManager.Device.WifiP2P.h \
-	introspection/org.freedesktop.NetworkManager.Device.WireGuard.c \
-	introspection/org.freedesktop.NetworkManager.Device.WireGuard.h \
-	introspection/org.freedesktop.NetworkManager.Device.Wired.c \
-	introspection/org.freedesktop.NetworkManager.Device.Wired.h \
-	introspection/org.freedesktop.NetworkManager.Device.Wireless.c \
-	introspection/org.freedesktop.NetworkManager.Device.Wireless.h \
-	introspection/org.freedesktop.NetworkManager.Device.Wpan.c \
-	introspection/org.freedesktop.NetworkManager.Device.Wpan.h \
-	introspection/org.freedesktop.NetworkManager.Device.c \
-	introspection/org.freedesktop.NetworkManager.Device.h \
-	introspection/org.freedesktop.NetworkManager.DnsManager.c \
-	introspection/org.freedesktop.NetworkManager.DnsManager.h \
-	introspection/org.freedesktop.NetworkManager.IP4Config.c \
-	introspection/org.freedesktop.NetworkManager.IP4Config.h \
-	introspection/org.freedesktop.NetworkManager.IP6Config.c \
-	introspection/org.freedesktop.NetworkManager.IP6Config.h \
-	introspection/org.freedesktop.NetworkManager.WifiP2PPeer.c \
-	introspection/org.freedesktop.NetworkManager.WifiP2PPeer.h \
-	introspection/org.freedesktop.NetworkManager.PPP.c \
-	introspection/org.freedesktop.NetworkManager.PPP.h \
-	introspection/org.freedesktop.NetworkManager.SecretAgent.c \
-	introspection/org.freedesktop.NetworkManager.SecretAgent.h \
-	introspection/org.freedesktop.NetworkManager.Settings.Connection.c \
-	introspection/org.freedesktop.NetworkManager.Settings.Connection.h \
-	introspection/org.freedesktop.NetworkManager.Settings.c \
-	introspection/org.freedesktop.NetworkManager.Settings.h \
-	introspection/org.freedesktop.NetworkManager.VPN.Connection.c \
-	introspection/org.freedesktop.NetworkManager.VPN.Connection.h \
-	introspection/org.freedesktop.NetworkManager.VPN.Plugin.c \
-	introspection/org.freedesktop.NetworkManager.VPN.Plugin.h \
-	introspection/org.freedesktop.NetworkManager.c \
-	introspection/org.freedesktop.NetworkManager.h \
-	$(NULL)
-
-nodist_introspection_libnmdbus_la_SOURCES = $(introspection_sources)
-
-DBUS_INTERFACE_DOCS = \
-	docs/api/dbus-org.freedesktop.NetworkManager.AccessPoint.xml \
-	docs/api/dbus-org.freedesktop.NetworkManager.AgentManager.xml \
-	docs/api/dbus-org.freedesktop.NetworkManager.Checkpoint.xml \
-	docs/api/dbus-org.freedesktop.NetworkManager.Connection.Active.xml \
-	docs/api/dbus-org.freedesktop.NetworkManager.DHCP4Config.xml \
-	docs/api/dbus-org.freedesktop.NetworkManager.DHCP6Config.xml \
-	docs/api/dbus-org.freedesktop.NetworkManager.Device.Adsl.xml \
-	docs/api/dbus-org.freedesktop.NetworkManager.Device.Bluetooth.xml \
-	docs/api/dbus-org.freedesktop.NetworkManager.Device.Bond.xml \
-	docs/api/dbus-org.freedesktop.NetworkManager.Device.Bridge.xml \
-	docs/api/dbus-org.freedesktop.NetworkManager.Device.Dummy.xml \
-	docs/api/dbus-org.freedesktop.NetworkManager.Device.Generic.xml \
-	docs/api/dbus-org.freedesktop.NetworkManager.Device.Hsr.xml \
-	docs/api/dbus-org.freedesktop.NetworkManager.Device.IPTunnel.xml \
-	docs/api/dbus-org.freedesktop.NetworkManager.Device.Infiniband.xml \
-	docs/api/dbus-org.freedesktop.NetworkManager.Device.Loopback.xml \
-	docs/api/dbus-org.freedesktop.NetworkManager.Device.Lowpan.xml \
-	docs/api/dbus-org.freedesktop.NetworkManager.Device.Macsec.xml \
-	docs/api/dbus-org.freedesktop.NetworkManager.Device.Macvlan.xml \
-	docs/api/dbus-org.freedesktop.NetworkManager.Device.Modem.xml \
-	docs/api/dbus-org.freedesktop.NetworkManager.Device.OlpcMesh.xml \
-	docs/api/dbus-org.freedesktop.NetworkManager.Device.OvsBridge.xml \
-	docs/api/dbus-org.freedesktop.NetworkManager.Device.OvsInterface.xml \
-	docs/api/dbus-org.freedesktop.NetworkManager.Device.OvsPort.xml \
-	docs/api/dbus-org.freedesktop.NetworkManager.Device.Ppp.xml \
-	docs/api/dbus-org.freedesktop.NetworkManager.Device.Statistics.xml \
-	docs/api/dbus-org.freedesktop.NetworkManager.Device.Team.xml \
-	docs/api/dbus-org.freedesktop.NetworkManager.Device.Tun.xml \
-	docs/api/dbus-org.freedesktop.NetworkManager.Device.Veth.xml \
-	docs/api/dbus-org.freedesktop.NetworkManager.Device.Vlan.xml \
-	docs/api/dbus-org.freedesktop.NetworkManager.Device.Vrf.xml \
-	docs/api/dbus-org.freedesktop.NetworkManager.Device.Vxlan.xml \
-	docs/api/dbus-org.freedesktop.NetworkManager.Device.WiMax.xml \
-	docs/api/dbus-org.freedesktop.NetworkManager.Device.WifiP2P.xml \
-	docs/api/dbus-org.freedesktop.NetworkManager.Device.WireGuard.xml \
-	docs/api/dbus-org.freedesktop.NetworkManager.Device.Wired.xml \
-	docs/api/dbus-org.freedesktop.NetworkManager.Device.Wireless.xml \
-	docs/api/dbus-org.freedesktop.NetworkManager.Device.Wpan.xml \
-	docs/api/dbus-org.freedesktop.NetworkManager.Device.xml \
-	docs/api/dbus-org.freedesktop.NetworkManager.DnsManager.xml \
-	docs/api/dbus-org.freedesktop.NetworkManager.IP4Config.xml \
-	docs/api/dbus-org.freedesktop.NetworkManager.IP6Config.xml \
-	docs/api/dbus-org.freedesktop.NetworkManager.PPP.xml \
-	docs/api/dbus-org.freedesktop.NetworkManager.SecretAgent.xml \
-	docs/api/dbus-org.freedesktop.NetworkManager.Settings.Connection.xml \
-	docs/api/dbus-org.freedesktop.NetworkManager.Settings.xml \
-	docs/api/dbus-org.freedesktop.NetworkManager.VPN.Connection.xml \
-	docs/api/dbus-org.freedesktop.NetworkManager.VPN.Plugin.xml \
-	docs/api/dbus-org.freedesktop.NetworkManager.WifiP2PPeer.xml \
-	docs/api/dbus-org.freedesktop.NetworkManager.xml \
-	$(NULL)
-
-introspection/%.c: introspection/%.xml
-	@$(MKDIR_P) introspection/
-	$(AM_V_GEN) gdbus-codegen \
-		--generate-c-code $(basename $@) \
-		--generate-docbook docs/api/dbus \
-		--c-namespace NMDBus \
-		--interface-prefix org.freedesktop.NetworkManager \
-		$<
-
-introspection/%.h: introspection/%.c
-	$()
-
-docs/api/dbus-%.xml: introspection/%.c
-	$()
-
-dbusinterfacesdir = $(datadir)/dbus-1/interfaces
-
-dbusinterfaces_DATA = \
-	introspection/org.freedesktop.NetworkManager.AccessPoint.xml \
-	introspection/org.freedesktop.NetworkManager.AgentManager.xml \
-	introspection/org.freedesktop.NetworkManager.Checkpoint.xml \
-	introspection/org.freedesktop.NetworkManager.Connection.Active.xml \
-	introspection/org.freedesktop.NetworkManager.DHCP4Config.xml \
-	introspection/org.freedesktop.NetworkManager.DHCP6Config.xml \
-	introspection/org.freedesktop.NetworkManager.Device.Adsl.xml \
-	introspection/org.freedesktop.NetworkManager.Device.Bluetooth.xml \
-	introspection/org.freedesktop.NetworkManager.Device.Bond.xml \
-	introspection/org.freedesktop.NetworkManager.Device.Bridge.xml \
-	introspection/org.freedesktop.NetworkManager.Device.Dummy.xml \
-	introspection/org.freedesktop.NetworkManager.Device.Generic.xml \
-	introspection/org.freedesktop.NetworkManager.Device.Hsr.xml \
-	introspection/org.freedesktop.NetworkManager.Device.IPTunnel.xml \
-	introspection/org.freedesktop.NetworkManager.Device.Infiniband.xml \
-	introspection/org.freedesktop.NetworkManager.Device.Loopback.xml \
-	introspection/org.freedesktop.NetworkManager.Device.Lowpan.xml \
-	introspection/org.freedesktop.NetworkManager.Device.Macsec.xml \
-	introspection/org.freedesktop.NetworkManager.Device.Macvlan.xml \
-	introspection/org.freedesktop.NetworkManager.Device.Modem.xml \
-	introspection/org.freedesktop.NetworkManager.Device.OlpcMesh.xml \
-	introspection/org.freedesktop.NetworkManager.Device.OvsBridge.xml \
-	introspection/org.freedesktop.NetworkManager.Device.OvsInterface.xml \
-	introspection/org.freedesktop.NetworkManager.Device.OvsPort.xml \
-	introspection/org.freedesktop.NetworkManager.Device.Ppp.xml \
-	introspection/org.freedesktop.NetworkManager.Device.Statistics.xml \
-	introspection/org.freedesktop.NetworkManager.Device.Team.xml \
-	introspection/org.freedesktop.NetworkManager.Device.Tun.xml \
-	introspection/org.freedesktop.NetworkManager.Device.Veth.xml \
-	introspection/org.freedesktop.NetworkManager.Device.Vlan.xml \
-	introspection/org.freedesktop.NetworkManager.Device.Vrf.xml \
-	introspection/org.freedesktop.NetworkManager.Device.Vxlan.xml \
-	introspection/org.freedesktop.NetworkManager.Device.WiMax.xml \
-	introspection/org.freedesktop.NetworkManager.Device.WifiP2P.xml \
-	introspection/org.freedesktop.NetworkManager.Device.WireGuard.xml \
-	introspection/org.freedesktop.NetworkManager.Device.Wired.xml \
-	introspection/org.freedesktop.NetworkManager.Device.Wireless.xml \
-	introspection/org.freedesktop.NetworkManager.Device.Wpan.xml \
-	introspection/org.freedesktop.NetworkManager.Device.xml \
-	introspection/org.freedesktop.NetworkManager.DnsManager.xml \
-	introspection/org.freedesktop.NetworkManager.IP4Config.xml \
-	introspection/org.freedesktop.NetworkManager.IP6Config.xml \
-	introspection/org.freedesktop.NetworkManager.PPP.xml \
-	introspection/org.freedesktop.NetworkManager.SecretAgent.xml \
-	introspection/org.freedesktop.NetworkManager.Settings.Connection.xml \
-	introspection/org.freedesktop.NetworkManager.Settings.xml \
-	introspection/org.freedesktop.NetworkManager.VPN.Connection.xml \
-	introspection/org.freedesktop.NetworkManager.VPN.Plugin.xml \
-	introspection/org.freedesktop.NetworkManager.WiMax.Nsp.xml \
-	introspection/org.freedesktop.NetworkManager.WifiP2PPeer.xml \
-	introspection/org.freedesktop.NetworkManager.xml \
-	$(NULL)
-
-CLEANFILES += $(introspection_sources)
-CLEANFILES += $(DBUS_INTERFACE_DOCS)
-
-$(src_libnm_client_impl_libnm_client_impl_la_OBJECTS):               $(introspection_sources)
-$(src_libnm_client_impl_libnm_la_OBJECTS):                      $(introspection_sources)
-
-EXTRA_DIST += \
-	$(dbusinterfaces_DATA) \
-	introspection/meson.build
-
-check-docs:
-	$(srcdir)/tools/check-docs.sh "$(srcdir)" "$(builddir)"
-
-check_local += check-docs
-
-###############################################################################
-
-src_libnm_core_impl_lib_h_pub_real = \
-	src/libnm-core-public/nm-connection.h \
-	src/libnm-core-public/nm-core-types.h \
-	src/libnm-core-public/nm-dbus-interface.h \
-	src/libnm-core-public/nm-errors.h \
-	src/libnm-core-public/nm-keyfile.h \
-	src/libnm-core-public/nm-setting-6lowpan.h \
-	src/libnm-core-public/nm-setting-8021x.h \
-	src/libnm-core-public/nm-setting-adsl.h \
-	src/libnm-core-public/nm-setting-bluetooth.h \
-	src/libnm-core-public/nm-setting-bond-port.h \
-	src/libnm-core-public/nm-setting-bond.h \
-	src/libnm-core-public/nm-setting-bridge-port.h \
-	src/libnm-core-public/nm-setting-bridge.h \
-	src/libnm-core-public/nm-setting-cdma.h \
-	src/libnm-core-public/nm-setting-connection.h \
-	src/libnm-core-public/nm-setting-dcb.h \
-	src/libnm-core-public/nm-setting-dummy.h \
-	src/libnm-core-public/nm-setting-ethtool.h \
-	src/libnm-core-public/nm-setting-generic.h \
-	src/libnm-core-public/nm-setting-gsm.h \
-	src/libnm-core-public/nm-setting-hostname.h \
-	src/libnm-core-public/nm-setting-hsr.h \
-	src/libnm-core-public/nm-setting-infiniband.h \
-	src/libnm-core-public/nm-setting-ip-config.h \
-	src/libnm-core-public/nm-setting-ip-tunnel.h \
-	src/libnm-core-public/nm-setting-ip4-config.h \
-	src/libnm-core-public/nm-setting-ip6-config.h \
-	src/libnm-core-public/nm-setting-link.h \
-	src/libnm-core-public/nm-setting-loopback.h \
-	src/libnm-core-public/nm-setting-macsec.h \
-	src/libnm-core-public/nm-setting-macvlan.h \
-	src/libnm-core-public/nm-setting-match.h \
-	src/libnm-core-public/nm-setting-olpc-mesh.h \
-	src/libnm-core-public/nm-setting-ovs-bridge.h \
-	src/libnm-core-public/nm-setting-ovs-dpdk.h \
-	src/libnm-core-public/nm-setting-ovs-external-ids.h \
-	src/libnm-core-public/nm-setting-ovs-interface.h \
-	src/libnm-core-public/nm-setting-ovs-other-config.h \
-	src/libnm-core-public/nm-setting-ovs-patch.h \
-	src/libnm-core-public/nm-setting-ovs-port.h \
-	src/libnm-core-public/nm-setting-ppp.h \
-	src/libnm-core-public/nm-setting-pppoe.h \
-	src/libnm-core-public/nm-setting-proxy.h \
-	src/libnm-core-public/nm-setting-serial.h \
-	src/libnm-core-public/nm-setting-sriov.h \
-	src/libnm-core-public/nm-setting-tc-config.h \
-	src/libnm-core-public/nm-setting-team-port.h \
-	src/libnm-core-public/nm-setting-team.h \
-	src/libnm-core-public/nm-setting-tun.h \
-	src/libnm-core-public/nm-setting-user.h \
-	src/libnm-core-public/nm-setting-veth.h \
-	src/libnm-core-public/nm-setting-vlan.h \
-	src/libnm-core-public/nm-setting-vpn.h \
-	src/libnm-core-public/nm-setting-vrf.h \
-	src/libnm-core-public/nm-setting-vxlan.h \
-	src/libnm-core-public/nm-setting-wifi-p2p.h \
-	src/libnm-core-public/nm-setting-wimax.h \
-	src/libnm-core-public/nm-setting-wired.h \
-	src/libnm-core-public/nm-setting-wireguard.h \
-	src/libnm-core-public/nm-setting-wireless-security.h \
-	src/libnm-core-public/nm-setting-wireless.h \
-	src/libnm-core-public/nm-setting-wpan.h \
-	src/libnm-core-public/nm-setting.h \
-	src/libnm-core-public/nm-simple-connection.h \
-	src/libnm-core-public/nm-utils.h \
-	src/libnm-core-public/nm-version-macros.h \
-	src/libnm-core-public/nm-version.h \
-	src/libnm-core-public/nm-vpn-dbus-interface.h \
-	src/libnm-core-public/nm-vpn-editor-plugin.h \
-	src/libnm-core-public/nm-vpn-plugin-info.h \
-	$(NULL)
-src_libnm_core_public_mkenums_h = \
-	src/libnm-core-public/nm-core-enum-types.h \
-	$(NULL)
-src_libnm_core_impl_lib_h_priv = \
-	src/libnm-core-impl/nm-connection-private.h \
-	src/libnm-core-impl/nm-default-libnm-core.h \
-	src/libnm-core-impl/nm-setting-private.h \
-	src/libnm-core-impl/nm-team-utils.h \
-	src/libnm-core-impl/nm-utils-private.h \
-	src/libnm-core-intern/nm-core-internal.h \
-	src/libnm-core-intern/nm-keyfile-internal.h \
-	src/libnm-core-intern/nm-keyfile-utils.h \
-	src/libnm-core-intern/nm-meta-setting-base-impl.h \
-	src/libnm-core-intern/nm-meta-setting-base.h \
-	$(NULL)
-src_libnm_core_impl_lib_c_settings_real = \
-	src/libnm-core-impl/nm-setting-6lowpan.c \
-	src/libnm-core-impl/nm-setting-8021x.c \
-	src/libnm-core-impl/nm-setting-adsl.c \
-	src/libnm-core-impl/nm-setting-bluetooth.c \
-	src/libnm-core-impl/nm-setting-bond-port.c \
-	src/libnm-core-impl/nm-setting-bond.c \
-	src/libnm-core-impl/nm-setting-bridge-port.c \
-	src/libnm-core-impl/nm-setting-bridge.c \
-	src/libnm-core-impl/nm-setting-cdma.c \
-	src/libnm-core-impl/nm-setting-connection.c \
-	src/libnm-core-impl/nm-setting-dcb.c \
-	src/libnm-core-impl/nm-setting-dummy.c \
-	src/libnm-core-impl/nm-setting-ethtool.c \
-	src/libnm-core-impl/nm-setting-generic.c \
-	src/libnm-core-impl/nm-setting-gsm.c \
-	src/libnm-core-impl/nm-setting-hostname.c \
-	src/libnm-core-impl/nm-setting-hsr.c \
-	src/libnm-core-impl/nm-setting-infiniband.c \
-	src/libnm-core-impl/nm-setting-ip-config.c \
-	src/libnm-core-impl/nm-setting-ip-tunnel.c \
-	src/libnm-core-impl/nm-setting-ip4-config.c \
-	src/libnm-core-impl/nm-setting-ip6-config.c \
-	src/libnm-core-impl/nm-setting-link.c \
-	src/libnm-core-impl/nm-setting-loopback.c \
-	src/libnm-core-impl/nm-setting-macsec.c \
-	src/libnm-core-impl/nm-setting-macvlan.c \
-	src/libnm-core-impl/nm-setting-match.c \
-	src/libnm-core-impl/nm-setting-olpc-mesh.c \
-	src/libnm-core-impl/nm-setting-ovs-bridge.c \
-	src/libnm-core-impl/nm-setting-ovs-dpdk.c \
-	src/libnm-core-impl/nm-setting-ovs-external-ids.c \
-	src/libnm-core-impl/nm-setting-ovs-interface.c \
-	src/libnm-core-impl/nm-setting-ovs-other-config.c \
-	src/libnm-core-impl/nm-setting-ovs-patch.c \
-	src/libnm-core-impl/nm-setting-ovs-port.c \
-	src/libnm-core-impl/nm-setting-ppp.c \
-	src/libnm-core-impl/nm-setting-pppoe.c \
-	src/libnm-core-impl/nm-setting-proxy.c \
-	src/libnm-core-impl/nm-setting-serial.c \
-	src/libnm-core-impl/nm-setting-sriov.c \
-	src/libnm-core-impl/nm-setting-tc-config.c \
-	src/libnm-core-impl/nm-setting-team-port.c \
-	src/libnm-core-impl/nm-setting-team.c \
-	src/libnm-core-impl/nm-setting-tun.c \
-	src/libnm-core-impl/nm-setting-user.c \
-	src/libnm-core-impl/nm-setting-veth.c \
-	src/libnm-core-impl/nm-setting-vlan.c \
-	src/libnm-core-impl/nm-setting-vpn.c \
-	src/libnm-core-impl/nm-setting-vrf.c \
-	src/libnm-core-impl/nm-setting-vxlan.c \
-	src/libnm-core-impl/nm-setting-wifi-p2p.c \
-	src/libnm-core-impl/nm-setting-wimax.c \
-	src/libnm-core-impl/nm-setting-wired.c \
-	src/libnm-core-impl/nm-setting-wireguard.c \
-	src/libnm-core-impl/nm-setting-wireless-security.c \
-	src/libnm-core-impl/nm-setting-wireless.c \
-	src/libnm-core-impl/nm-setting-wpan.c \
-	$(NULL)
-src_libnm_core_impl_lib_c_real = \
-	$(src_libnm_core_impl_lib_c_settings_real) \
-	src/libnm-core-impl/nm-connection.c \
-	src/libnm-core-impl/nm-errors.c \
-	src/libnm-core-impl/nm-keyfile-utils.c \
-	src/libnm-core-impl/nm-keyfile.c \
-	src/libnm-core-impl/nm-meta-setting-base-impl.c \
-	src/libnm-core-impl/nm-setting.c \
-	src/libnm-core-impl/nm-simple-connection.c \
-	src/libnm-core-impl/nm-team-utils.c \
-	src/libnm-core-impl/nm-utils.c \
-	src/libnm-core-impl/nm-vpn-editor-plugin.c \
-	src/libnm-core-impl/nm-vpn-plugin-info.c \
-	$(NULL)
-
-src_libnm_core_public_mkenums_c = \
-	src/libnm-core-public/nm-core-enum-types.c \
-	$(NULL)
-
-libnminclude_HEADERS += \
-	$(src_libnm_core_impl_lib_h_pub_real)
-
-nodist_libnminclude_HEADERS += \
-	$(src_libnm_core_public_mkenums_h)
-
-EXTRA_DIST += \
-	src/libnm-core-impl/README.md \
-	src/libnm-core-impl/meson.build \
-	src/libnm-core-intern/README.md \
-	src/libnm-core-intern/meson.build \
-	src/libnm-core-public/README.md \
-	src/libnm-core-public/meson.build \
-	$(NULL)
-
-###############################################################################
-
-dflt_cppflags_libnm_core = \
-	$(dflt_cppflags) \
-	-I$(builddir)/src/libnm-core-public \
-	-I$(srcdir)/src/libnm-core-public \
-	-I$(srcdir)/src \
-	$(CODE_COVERAGE_CFLAGS) \
-	$(GLIB_CFLAGS) \
-	$(LIBUDEV_CFLAGS) \
-	$(SANITIZER_LIB_CFLAGS) \
-	$(NULL)
-
-noinst_LTLIBRARIES += src/libnm-core-impl/libnm-core-impl.la
-
-src/libnm-client-public/nm-enum-types.h.stamp:           src/libnm-client-public/.dirstamp
-src/libnm-client-public/nm-enum-types.c.stamp:           src/libnm-client-public/.dirstamp
-
-GLIB_GENERATED += \
-	$(src_libnm_core_public_mkenums_h) \
-	$(src_libnm_core_public_mkenums_c) \
-	$(NULL)
-nm_core_enum_types_sources = $(src_libnm_core_impl_lib_h_pub_real)
-
-nm_core_enum_types_MKENUMS_C_FLAGS = --fhead '\#undef G_LOG_DOMAIN\n\#include "src/libnm-core-impl/nm-default-libnm-core.h"\n'
-
-src/libnm-core-public/nm-core-enum-types.h.stamp:                           src/libnm-core-public/.dirstamp
-src/libnm-core-public/nm-core-enum-types.c.stamp:                           src/libnm-core-public/.dirstamp
-
-$(src_nm_dispatcher_libnm_dispatcher_core_la_OBJECTS):                      $(src_libnm_core_public_mkenums_h)
-$(src_nm_dispatcher_nm_dispatcher_OBJECTS):                                 $(src_libnm_core_public_mkenums_h)
-$(src_libnm_core_impl_libnm_core_impl_la_OBJECTS):                          $(src_libnm_core_public_mkenums_h)
-$(src_libnm_client_impl_libnm_la_OBJECTS):                                  $(src_libnm_core_public_mkenums_h)
-$(src_contrib_tests_libnm_vpn_plugin_utils_test_la_OBJECTS):                $(src_libnm_core_public_mkenums_h)
-$(src_core_NetworkManager_OBJECTS):                                         $(src_libnm_core_public_mkenums_h)
-$(src_core_devices_adsl_libnm_device_plugin_adsl_la_OBJECTS):               $(src_libnm_core_public_mkenums_h)
-$(src_core_devices_bluetooth_libnm_device_plugin_bluetooth_la_OBJECTS):     $(src_libnm_core_public_mkenums_h)
-$(src_core_devices_team_libnm_device_plugin_team_la_OBJECTS):               $(src_libnm_core_public_mkenums_h)
-$(src_core_devices_wifi_libnm_device_plugin_wifi_la_OBJECTS):               $(src_libnm_core_public_mkenums_h)
-$(src_core_devices_wwan_libnm_device_plugin_wwan_la_OBJECTS):               $(src_libnm_core_public_mkenums_h)
-$(src_core_devices_ovs_libnm_device_plugin_ovs_la_OBJECTS):                 $(src_libnm_core_public_mkenums_h)
-
-src_libnm_core_impl_libnm_core_impl_la_CPPFLAGS = \
-	$(dflt_cppflags_libnm_core) \
-	-I$(srcdir)/src/libnm-core-intern/ \
-	$(NULL)
-
-src_libnm_core_impl_libnm_core_impl_la_SOURCES = \
-	$(src_libnm_core_impl_lib_h_pub_real) \
-	$(src_libnm_core_impl_lib_h_priv) \
-	$(src_libnm_core_impl_lib_c_real)
-
-nodist_src_libnm_core_impl_libnm_core_impl_la_SOURCES = \
-	$(src_libnm_core_public_mkenums_h) \
-	$(src_libnm_core_public_mkenums_c) \
-	$(NULL)
-
-src_libnm_core_impl_libnm_core_impl_la_LIBADD = \
-	$(GLIB_LIBS) \
-	$(NULL)
-
-src_libnm_core_impl_libnm_core_impl_la_LDFLAGS = \
-	$(CODE_COVERAGE_LDFLAGS) \
-	$(SANITIZER_LIB_LDFLAGS) \
-	$(NULL)
-
-EXTRA_DIST += \
-	src/libnm-core-impl/meson.build \
-	$(NULL)
-
-src/libnm-core-public/nm-vpn-dbus-types.xml: src/libnm-core-public/nm-vpn-dbus-interface.h tools/enums-to-docbook.pl
-	@$(MKDIR_P) src/libnm-core-public/
-	$(AM_V_GEN) @PERL@ $(srcdir)/tools/enums-to-docbook.pl 'nm-vpn-dbus-types' 'VPN Plugin D-Bus API Types' $< >$@
-
-src/libnm-core-public/nm-dbus-types.xml: src/libnm-core-public/nm-dbus-interface.h tools/enums-to-docbook.pl
-	@$(MKDIR_P) src/libnm-core-public/
-	$(AM_V_GEN) @PERL@ $(srcdir)/tools/enums-to-docbook.pl 'nm-dbus-types' 'NetworkManager D-Bus API Types' $< >$@
-
-BUILT_SOURCES += \
-	src/libnm-core-public/nm-vpn-dbus-types.xml \
-	src/libnm-core-public/nm-dbus-types.xml
-
-dist_dependencies += \
-	src/libnm-core-public/nm-vpn-dbus-types.xml \
-	src/libnm-core-public/nm-dbus-types.xml
-
-###############################################################################
-
-noinst_LTLIBRARIES += src/libnm-crypto/libnm-crypto.la
-
-src_libnm_crypto_libnm_crypto_la_SOURCES = \
-	src/libnm-crypto/nm-crypto-impl.h \
-	src/libnm-crypto/nm-crypto.c \
-	src/libnm-crypto/nm-crypto.h \
-	$(NULL)
-
-src_libnm_crypto_libnm_crypto_la_CPPFLAGS = \
-	$(dflt_cppflags_libnm_core) \
-	$(NULL)
-
-src_libnm_crypto_libnm_crypto_la_LIBADD = \
-	$(GLIB_LIBS) \
-	$(NULL)
-
-src_libnm_crypto_libnm_crypto_la_LDFLAGS = \
-	$(CODE_COVERAGE_LDFLAGS) \
-	$(SANITIZER_LIB_LDFLAGS) \
-	$(NULL)
-
-if HAVE_CRYPTO_GNUTLS
-if WITH_GNUTLS
-libnm_crypto_lib = src/libnm-crypto/libnm-crypto-gnutls.la
-else
-check_ltlibraries += src/libnm-crypto/libnm-crypto-gnutls.la
-endif
-
-src_libnm_crypto_libnm_crypto_gnutls_la_SOURCES = src/libnm-crypto/nm-crypto-gnutls.c
-src_libnm_crypto_libnm_crypto_gnutls_la_CPPFLAGS = \
-	$(src_libnm_core_impl_libnm_core_impl_la_CPPFLAGS) \
-	$(GNUTLS_CFLAGS)
-src_libnm_crypto_libnm_crypto_gnutls_la_LDFLAGS = \
-	$(src_libnm_core_impl_libnm_core_impl_la_LDFLAGS)
-src_libnm_crypto_libnm_crypto_gnutls_la_LIBADD = \
-	$(GLIB_LIBS) \
-	$(GNUTLS_LIBS)
-endif
-
-if HAVE_CRYPTO_NSS
-if WITH_NSS
-libnm_crypto_lib = src/libnm-crypto/libnm-crypto-nss.la
-else
-check_ltlibraries += src/libnm-crypto/libnm-crypto-nss.la
-endif
-
-src_libnm_crypto_libnm_crypto_nss_la_SOURCES = src/libnm-crypto/nm-crypto-nss.c
-src_libnm_crypto_libnm_crypto_nss_la_CPPFLAGS = \
-	$(src_libnm_core_impl_libnm_core_impl_la_CPPFLAGS) \
-	$(NSS_CFLAGS)
-src_libnm_crypto_libnm_crypto_nss_la_LDFLAGS = \
-	$(src_libnm_core_impl_libnm_core_impl_la_LDFLAGS)
-src_libnm_crypto_libnm_crypto_nss_la_LIBADD = \
-	$(GLIB_LIBS) \
-	$(NSS_LIBS)
-endif
-
-if !WITH_GNUTLS
-if !WITH_NSS
-libnm_crypto_lib = src/libnm-crypto/libnm-crypto-null.la
-else
-check_ltlibraries += src/libnm-crypto/libnm-crypto-null.la
-endif
-else
-check_ltlibraries += src/libnm-crypto/libnm-crypto-null.la
-endif
-
-src_libnm_crypto_libnm_crypto_null_la_SOURCES = src/libnm-crypto/nm-crypto-null.c
-src_libnm_crypto_libnm_crypto_null_la_CPPFLAGS = \
-	$(src_libnm_core_impl_libnm_core_impl_la_CPPFLAGS) \
-	$(NULL)
-src_libnm_crypto_libnm_crypto_null_la_LDFLAGS = \
-	$(src_libnm_core_impl_libnm_core_impl_la_LDFLAGS) \
-	$(NULL)
-src_libnm_crypto_libnm_crypto_null_la_LIBADD = \
-	$(GLIB_LIBS) \
-	$(NULL)
-
-noinst_LTLIBRARIES += $(libnm_crypto_lib)
-
-EXTRA_DIST += \
-	src/libnm-crypto/README.md \
-	src/libnm-crypto/meson.build \
-	src/libnm-crypto/nm-crypto-gnutls.c \
-	src/libnm-crypto/nm-crypto-nss.c \
-	$(NULL)
-
-###############################################################################
-
-check_programs += \
-	src/libnm-core-impl/tests/test-crypto \
-	src/libnm-core-impl/tests/test-general \
-	src/libnm-core-impl/tests/test-keyfile \
-	src/libnm-core-impl/tests/test-secrets \
-	src/libnm-core-impl/tests/test-setting \
-	src/libnm-core-impl/tests/test-settings-defaults
-
-GLIB_GENERATED += \
-	src/libnm-core-impl/tests/nm-core-tests-enum-types.h \
-	src/libnm-core-impl/tests/nm-core-tests-enum-types.c
-nm_core_tests_enum_types_sources = src/libnm-core-impl/tests/test-general-enums.h
-nm_core_tests_enum_types_MKENUMS_C_FLAGS = --fhead '\#undef G_LOG_DOMAIN\n\#include "src/libnm-core-impl/nm-default-libnm-core.h"\n'
-
-src/libnm-core-impl/tests/nm-core-tests-enum-types.h.stamp: src/libnm-core-impl/tests/.dirstamp
-src/libnm-core-impl/tests/nm-core-tests-enum-types.c.stamp: src/libnm-core-impl/tests/.dirstamp
-
-$(src_libnm_core_impl_tests_test_general_OBJECTS): src/libnm-core-impl/tests/nm-core-tests-enum-types.h
-
-src_libnm_core_impl_tests_cppflags = \
-	-I$(builddir)/src/libnm-core-impl/tests \
-	-I$(srcdir)/src/libnm-core-impl/tests \
-	-I$(srcdir)/src/libnm-core-impl \
-	-I$(srcdir)/src/ \
-	-I$(builddir)/src/ \
-	$(dflt_cppflags_libnm_core) \
-	$(SANITIZER_EXEC_CFLAGS) \
-	$(NULL)
-
-src_libnm_core_impl_tests_test_crypto_CPPFLAGS = $(src_libnm_core_impl_tests_cppflags)
-src_libnm_core_impl_tests_test_general_CPPFLAGS = $(src_libnm_core_impl_tests_cppflags)
-src_libnm_core_impl_tests_test_keyfile_CPPFLAGS = $(src_libnm_core_impl_tests_cppflags)
-src_libnm_core_impl_tests_test_secrets_CPPFLAGS = $(src_libnm_core_impl_tests_cppflags)
-src_libnm_core_impl_tests_test_setting_CPPFLAGS = $(src_libnm_core_impl_tests_cppflags)
-src_libnm_core_impl_tests_test_settings_defaults_CPPFLAGS = $(src_libnm_core_impl_tests_cppflags)
-
-src_libnm_core_impl_tests_test_general_SOURCES = \
-	src/libnm-core-impl/tests/test-general-enums.h \
-	src/libnm-core-impl/tests/test-general.c \
-	$(NULL)
-
-nodist_src_libnm_core_impl_tests_test_general_SOURCES = \
-	src/libnm-core-impl/tests/nm-core-tests-enum-types.c \
-	src/libnm-core-impl/tests/nm-core-tests-enum-types.h \
-	$(NULL)
-
-src_libnm_core_impl_tests_ldadd = \
-	src/libnm-core-aux-extern/libnm-core-aux-extern.la \
-	src/libnm-core-impl/libnm-core-impl.la \
-	src/libnm-crypto/libnm-crypto.la \
-	$(libnm_crypto_lib) \
-	src/libnm-core-aux-intern/libnm-core-aux-intern.la \
-	src/libnm-base/libnm-base.la \
-	src/libnm-systemd-shared/libnm-systemd-shared.la \
-	src/libnm-log-null/libnm-log-null.la \
-	src/libnm-glib-aux/libnm-glib-aux.la \
-	src/libnm-std-aux/libnm-std-aux.la \
-	src/c-siphash/libc-siphash.la \
-	$(GLIB_LIBS) \
-	$(NULL)
-
-src_libnm_core_impl_tests_ldflags = \
-	$(SANITIZER_EXEC_LDFLAGS) \
-	$(NULL)
-
-src_libnm_core_impl_tests_test_crypto_LDADD = $(src_libnm_core_impl_tests_ldadd)
-src_libnm_core_impl_tests_test_general_LDADD = $(src_libnm_core_impl_tests_ldadd)
-src_libnm_core_impl_tests_test_keyfile_LDADD = $(src_libnm_core_impl_tests_ldadd)
-src_libnm_core_impl_tests_test_secrets_LDADD = $(src_libnm_core_impl_tests_ldadd)
-src_libnm_core_impl_tests_test_setting_LDADD = $(src_libnm_core_impl_tests_ldadd)
-src_libnm_core_impl_tests_test_settings_defaults_LDADD = $(src_libnm_core_impl_tests_ldadd)
-
-src_libnm_core_impl_tests_test_crypto_LDFLAGS = $(src_libnm_core_impl_tests_ldflags)
-src_libnm_core_impl_tests_test_general_LDFLAGS = $(src_libnm_core_impl_tests_ldflags)
-src_libnm_core_impl_tests_test_keyfile_LDFLAGS = $(src_libnm_core_impl_tests_ldflags)
-src_libnm_core_impl_tests_test_secrets_LDFLAGS = $(src_libnm_core_impl_tests_ldflags)
-src_libnm_core_impl_tests_test_setting_LDFLAGS = $(src_libnm_core_impl_tests_ldflags)
-src_libnm_core_impl_tests_test_settings_defaults_LDFLAGS = $(src_libnm_core_impl_tests_ldflags)
-
-$(src_libnm_core_impl_tests_test_crypto_OBJECTS): $(src_libnm_core_public_mkenums_h)
-$(src_libnm_core_impl_tests_test_general_OBJECTS): $(src_libnm_core_public_mkenums_h)
-$(src_libnm_core_impl_tests_test_keyfile_OBJECTS): $(src_libnm_core_public_mkenums_h)
-$(src_libnm_core_impl_tests_test_secrets_OBJECTS): $(src_libnm_core_public_mkenums_h)
-$(src_libnm_core_impl_tests_test_setting_OBJECTS): $(src_libnm_core_public_mkenums_h)
-$(src_libnm_core_impl_tests_test_settings_defaults_OBJECTS): $(src_libnm_core_public_mkenums_h)
-
-# test-cert.p12 created with:
+    src_libnm_platform_libnm_platform_la_LDFLAGS = $(CODE_COVERAGE_LDFLAGS) $(SANITIZER_LIB_LDFLAGS)
+        $(NULL)
+
+            src_libnm_platform_libnm_platform_la_LIBADD = $(GLIB_LIBS) $(NULL)
+
+                EXTRA_DIST +=
+    src / libnm
+    - platform
+          / meson.build
+
+            ############################################################################## #
+
+            check_programs += src / libnm - platform / tests / test - nm
+                              - platform
+
+                                  src_libnm_platform_tests_test_nm_platform_CPPFLAGS =
+        $(dflt_cppflags) - I$(srcdir) / src
+        - I$(builddir)
+              / src
+              $(CODE_COVERAGE_CFLAGS) $(SYSTEMD_JOURNAL_CFLAGS) $(GLIB_CFLAGS)
+                  $(SANITIZER_LIB_CFLAGS) $(NULL)
+
+                      src_libnm_platform_tests_test_nm_platform_LDFLAGS = $(CODE_COVERAGE_LDFLAGS)
+            $(SANITIZER_EXEC_LDFLAGS) $(NULL)
+
+                src_libnm_platform_tests_test_nm_platform_LDADD =
+                    src / libnm - platform / libnm - platform.la src / libnm - udev - aux / libnm
+                    - udev - aux.la src / libnm - base / libnm - base.la src / libnm - log
+                    - core / libnm - log - core.la src / libnm - glib - aux / libnm - glib
+                    - aux.la src / libnm - std - aux / libnm - std - aux.la src / c - siphash / libc
+                    - siphash.la $(SYSTEMD_JOURNAL_LIBS) $(GLIB_LIBS) $(NULL)
+
+                          EXTRA_DIST +=
+    src / libnm
+    - platform / tests
+          / meson.build $(NULL)
+
+                ############################################################################## #
+
+            noinst_LTLIBRARIES +=
+    src / libnm - core - aux - intern / libnm - core - aux
+    - intern.la
+
+          src_libnm_core_aux_intern_libnm_core_aux_intern_la_CPPFLAGS =
+        $(dflt_cppflags) - I$(builddir) / src - I$(srcdir) / src - I$(builddir) / src / libnm - core
+        - public - I$(srcdir) / src / libnm - core
+        - public $(CODE_COVERAGE_CFLAGS) $(GLIB_CFLAGS) $(SANITIZER_LIB_CFLAGS) $(NULL)
+
+            src_libnm_core_aux_intern_libnm_core_aux_intern_la_SOURCES =
+            src / libnm - core - aux - intern / nm - auth - subject.c src / libnm - core - aux
+            - intern / nm - auth - subject.h src / libnm - core - aux - intern / nm - common
+            - macros.h src / libnm - core - aux - intern / nm - libnm - core - utils.c src / libnm
+            - core - aux - intern / nm - libnm - core
+            - utils.h $(NULL)
+
+                  src_libnm_core_aux_intern_libnm_core_aux_intern_la_LDFLAGS =
+                $(CODE_COVERAGE_LDFLAGS) $(SANITIZER_LIB_LDFLAGS) $(NULL)
+
+                    src_libnm_core_aux_intern_libnm_core_aux_intern_la_LIBADD = $(GLIB_LIBS) $(NULL)
+
+                        $(src_libnm_core_aux_intern_libnm_core_aux_intern_la_OBJECTS)
+    : $(src_libnm_core_public_mkenums_h)
+
+          EXTRA_DIST +=
+      src / libnm - core - aux - intern / README.md src / libnm - core - aux
+      - intern
+            / meson.build $(NULL)
+
+                  ############################################################################## #
+
+              noinst_LTLIBRARIES +=
+      src / libnm - core - aux - extern / libnm - core - aux
+      - extern.la
+
+            src_libnm_core_aux_extern_libnm_core_aux_extern_la_CPPFLAGS =
+          $(dflt_cppflags) - I$(builddir) / src / libnm - core - public - I$(srcdir) / src / libnm
+          - core - public
+          - I$(srcdir)
+                / src $(CODE_COVERAGE_CFLAGS) $(GLIB_CFLAGS) $(SANITIZER_LIB_CFLAGS) $(NULL)
+
+                    src_libnm_core_aux_extern_libnm_core_aux_extern_la_SOURCES =
+              src / libnm - core - aux - extern / nm - dispatcher - api.h src / libnm - core - aux
+              - extern / nm - libnm - core - aux.c src / libnm - core - aux - extern / nm - libnm
+              - core
+              - aux.h $(NULL)
+
+                    src_libnm_core_aux_extern_libnm_core_aux_extern_la_LDFLAGS =
+                  $(CODE_COVERAGE_LDFLAGS) $(SANITIZER_LIB_LDFLAGS) $(NULL)
+
+                      src_libnm_core_aux_extern_libnm_core_aux_extern_la_LIBADD =
+                          $(GLIB_LIBS) $(NULL)
+
+                              $(src_libnm_core_aux_extern_libnm_core_aux_extern_la_OBJECTS)
+    : $(src_libnm_core_public_mkenums_h)
+
+          EXTRA_DIST +=
+      src / libnm - core - aux - extern / README.md src / libnm - core - aux
+      - extern
+            / meson.build $(NULL)
+
+                  ############################################################################## #
+
+              noinst_LTLIBRARIES +=
+      src / libnm - client - aux - extern / libnm - client - aux
+      - extern.la
+
+            src_libnm_client_aux_extern_libnm_client_aux_extern_la_CPPFLAGS =
+          $(dflt_cppflags) - I$(srcdir) / src - I$(builddir) / src - I$(builddir) / src / libnm
+          - core - public - I$(srcdir) / src / libnm - core - public - I$(srcdir) / src / libnm
+          - client - public - I$(builddir) / src / libnm - client
+          - public $(CODE_COVERAGE_CFLAGS) $(GLIB_CFLAGS) $(SANITIZER_LIB_CFLAGS) $(NULL)
+
+              src_libnm_client_aux_extern_libnm_client_aux_extern_la_SOURCES =
+              src / libnm - client - aux - extern / nm - libnm - aux.c src / libnm - client - aux
+              - extern / nm - libnm
+              - aux.h $(NULL)
+
+                    src_libnm_client_aux_extern_libnm_client_aux_extern_la_LDFLAGS = $(
+                  CODE_COVERAGE_LDFLAGS) $(SANITIZER_LIB_LDFLAGS) $(NULL)
+
+                  src_libnm_client_aux_extern_libnm_client_aux_extern_la_LIBADD =
+                      $(GLIB_LIBS) src / libnm - client
+                      - impl
+                            / libnm.la $(NULL)
+
+                                  $(src_libnm_client_aux_extern_libnm_client_aux_extern_la_OBJECTS)
+    : $(src_libnm_core_public_mkenums_h)
+          $(src_libnm_client_aux_extern_libnm_client_aux_extern_la_OBJECTS)
+    : $(src_libnm_client_public_mkenums_h)
+
+          EXTRA_DIST +=
+      src / libnm - client - aux - extern / README.md src / libnm - client - aux
+      - extern / meson.build                          src / libnm - client - aux
+      - extern / tests
+            / meson.build $(NULL)
+
+                  ############################################################################## #
+
+              check_programs +=
+      src / libnm - client - aux - extern / tests / test - libnm - client
+      - aux
+
+          src_libnm_client_aux_extern_tests_test_libnm_client_aux_CPPFLAGS =
+          $(dflt_cppflags) - I$(srcdir) / src / libnm - core - public - I$(builddir) / src / libnm
+          - core - public - I$(srcdir) / src / libnm - client - public - I$(builddir) / src / libnm
+          - client - public - I$(srcdir) / src
+          - I$(builddir)
+                / src $(CODE_COVERAGE_CFLAGS) $(GLIB_CFLAGS) $(SANITIZER_LIB_CFLAGS) $(NULL)
+
+                    src_libnm_client_aux_extern_tests_test_libnm_client_aux_LDFLAGS =
+              $(CODE_COVERAGE_LDFLAGS) $(SANITIZER_EXEC_LDFLAGS) $(NULL)
+
+                  src_libnm_client_aux_extern_tests_test_libnm_client_aux_LDADD =
+                      src / libnm - core - aux - extern / libnm - core - aux - extern.la src / libnm
+                      - core - aux - intern / libnm - core - aux - intern.la src / libnm - glib
+                      - aux / libnm - glib - aux.la src / libnm - log - null / libnm - log
+                      - null.la src / libnm - std - aux / libnm - std - aux.la src / c
+                      - siphash / libc - siphash.la                            src / libnm - client
+                      - impl
+                            / libnm.la $(GLIB_LIBS) $(NULL)
+
+                                  $(src_libnm_client_aux_extern_tests_test_libnm_client_aux_OBJECTS)
+    : $(src_libnm_core_public_mkenums_h)
+          $(src_libnm_client_aux_extern_tests_test_libnm_client_aux_OBJECTS)
+    : $(src_libnm_client_public_mkenums_h)
+
+          ############################################################################## #
+
+      noinst_LTLIBRARIES +=
+      src / libnm - client - test / libnm - client
+      - test.la
+
+            src_libnm_client_test_libnm_client_test_la_CPPFLAGS =
+          $(dflt_cppflags) - I$(srcdir) / src - I$(builddir) / src - I$(builddir) / src / libnm
+          - core - public - I$(srcdir) / src / libnm - core - public - I$(srcdir) / src / libnm
+          - client - public - I$(builddir) / src / libnm - client
+          - public $(CODE_COVERAGE_CFLAGS) $(GLIB_CFLAGS) $(SANITIZER_LIB_CFLAGS) $(NULL)
+
+              src_libnm_client_test_libnm_client_test_la_SOURCES =
+              src / libnm - client - test / nm - test - libnm - utils.h src / libnm - client
+              - test / nm - test - utils
+              - impl.c $(NULL)
+
+                    src_libnm_client_test_libnm_client_test_la_LDFLAGS =
+                  $(CODE_COVERAGE_LDFLAGS) $(SANITIZER_LIB_LDFLAGS) $(NULL)
+
+                      src_libnm_client_test_libnm_client_test_la_LIBADD = $(GLIB_LIBS) $(NULL)
+
+                          $(src_libnm_client_test_libnm_client_test_la_OBJECTS)
+    : $(src_libnm_core_public_mkenums_h) $(src_libnm_client_test_libnm_client_test_la_OBJECTS)
+    : $(src_libnm_client_public_mkenums_h)
+
+          EXTRA_DIST +=
+      src / libnm - client
+      - test
+            / meson.build $(NULL)
+
+                  ############################################################################## #
+
+              EXTRA_DIST += src / libnm - glib
+                            - aux / tests
+                                  / meson.build $(NULL)
+
+                                        check_programs +=
+      src / libnm - glib - aux / tests / test - shared
+      - general
+
+          src_libnm_glib_aux_tests_test_shared_general_CPPFLAGS =
+          $(dflt_cppflags) - I$(srcdir) / src
+          - I$(builddir)
+                / src $(CODE_COVERAGE_CFLAGS) $(GLIB_CFLAGS) $(SANITIZER_LIB_CFLAGS) $(NULL)
+
+                    src_libnm_glib_aux_tests_test_shared_general_LDFLAGS = $(
+              CODE_COVERAGE_LDFLAGS) $(SANITIZER_EXEC_LDFLAGS) $(NULL)
+
+              src_libnm_glib_aux_tests_test_shared_general_LDADD =
+                  src / libnm - glib - aux / libnm - glib - aux.la src / libnm - log - null / libnm
+                  - log - null.la src / libnm - std - aux / libnm - std - aux.la src / c
+                  - siphash / libc
+                  - siphash.la $(GLIB_LIBS) $(NULL)
+
+                        ############################################################################## #
+
+                    if WITH_JANSSON
+
+                        check_programs +=
+      src / libnm - glib - aux / tests / test - json
+      - aux
+
+          src_libnm_glib_aux_tests_test_json_aux_CPPFLAGS =
+          $(dflt_cppflags) - I$(srcdir) / src
+          - I$(builddir)
+                / src $(CODE_COVERAGE_CFLAGS) $(GLIB_CFLAGS) $(JANSSON_CFLAGS)
+                    $(SANITIZER_LIB_CFLAGS) $(NULL)
+
+                        src_libnm_glib_aux_tests_test_json_aux_LDFLAGS = $(CODE_COVERAGE_LDFLAGS) $(
+              SANITIZER_EXEC_LDFLAGS) $(NULL)
+
+              src_libnm_glib_aux_tests_test_json_aux_LDADD =
+                  $(JANSSON_LIBS) src / libnm - glib - aux / libnm - glib - aux.la src / libnm - log
+                  - null / libnm - log - null.la src / libnm - std - aux / libnm - std
+                  - aux.la                       src / c - siphash / libc
+                  - siphash.la                   $(GLIB_LIBS) $(NULL)
+
+                        endif
+
+                    ############################################################################## #
+
+                    noinst_LTLIBRARIES +=
+      introspection
+      / libnmdbus.la
+
+            introspection_libnmdbus_la_CPPFLAGS = $(GLIB_CFLAGS) $(INTROSPECTION_EXTRA_CFLAGS) $(
+          NULL)
+
+          introspection_sources =
+              introspection / org.freedesktop.NetworkManager.AccessPoint.c introspection
+              / org.freedesktop.NetworkManager.AccessPoint.h               introspection
+              / org.freedesktop.NetworkManager.AgentManager.c              introspection
+              / org.freedesktop.NetworkManager.AgentManager.h              introspection
+              / org.freedesktop.NetworkManager.Checkpoint.c                introspection
+              / org.freedesktop.NetworkManager.Checkpoint.h                introspection
+              / org.freedesktop.NetworkManager.Connection.Active.c         introspection
+              / org.freedesktop.NetworkManager.Connection.Active.h         introspection
+              / org.freedesktop.NetworkManager.DHCP4Config.c               introspection
+              / org.freedesktop.NetworkManager.DHCP4Config.h               introspection
+              / org.freedesktop.NetworkManager.DHCP6Config.c               introspection
+              / org.freedesktop.NetworkManager.DHCP6Config.h               introspection
+              / org.freedesktop.NetworkManager.Device.Adsl.c               introspection
+              / org.freedesktop.NetworkManager.Device.Adsl.h               introspection
+              / org.freedesktop.NetworkManager.Device.Bluetooth.c          introspection
+              / org.freedesktop.NetworkManager.Device.Bluetooth.h          introspection
+              / org.freedesktop.NetworkManager.Device.Bond.c               introspection
+              / org.freedesktop.NetworkManager.Device.Bond.h               introspection
+              / org.freedesktop.NetworkManager.Device.Bridge.c             introspection
+              / org.freedesktop.NetworkManager.Device.Bridge.h             introspection
+              / org.freedesktop.NetworkManager.Device.Dummy.c              introspection
+              / org.freedesktop.NetworkManager.Device.Dummy.h              introspection
+              / org.freedesktop.NetworkManager.Device.Generic.c            introspection
+              / org.freedesktop.NetworkManager.Device.Generic.h            introspection
+              / org.freedesktop.NetworkManager.Device.Hsr.c                introspection
+              / org.freedesktop.NetworkManager.Device.Hsr.h                introspection
+              / org.freedesktop.NetworkManager.Device.IPTunnel.c           introspection
+              / org.freedesktop.NetworkManager.Device.IPTunnel.h           introspection
+              / org.freedesktop.NetworkManager.Device.Infiniband.c         introspection
+              / org.freedesktop.NetworkManager.Device.Infiniband.h         introspection
+              / org.freedesktop.NetworkManager.Device.Loopback.c           introspection
+              / org.freedesktop.NetworkManager.Device.Loopback.h           introspection
+              / org.freedesktop.NetworkManager.Device.Lowpan.c             introspection
+              / org.freedesktop.NetworkManager.Device.Lowpan.h             introspection
+              / org.freedesktop.NetworkManager.Device.Macsec.c             introspection
+              / org.freedesktop.NetworkManager.Device.Macsec.h             introspection
+              / org.freedesktop.NetworkManager.Device.Macvlan.c            introspection
+              / org.freedesktop.NetworkManager.Device.Macvlan.h            introspection
+              / org.freedesktop.NetworkManager.Device.Modem.c              introspection
+              / org.freedesktop.NetworkManager.Device.Modem.h              introspection
+              / org.freedesktop.NetworkManager.Device.OlpcMesh.c           introspection
+              / org.freedesktop.NetworkManager.Device.OlpcMesh.h           introspection
+              / org.freedesktop.NetworkManager.Device.OvsBridge.c          introspection
+              / org.freedesktop.NetworkManager.Device.OvsBridge.h          introspection
+              / org.freedesktop.NetworkManager.Device.OvsInterface.c       introspection
+              / org.freedesktop.NetworkManager.Device.OvsInterface.h       introspection
+              / org.freedesktop.NetworkManager.Device.OvsPort.c            introspection
+              / org.freedesktop.NetworkManager.Device.OvsPort.h            introspection
+              / org.freedesktop.NetworkManager.Device.Ppp.c                introspection
+              / org.freedesktop.NetworkManager.Device.Ppp.h                introspection
+              / org.freedesktop.NetworkManager.Device.Statistics.c         introspection
+              / org.freedesktop.NetworkManager.Device.Statistics.h         introspection
+              / org.freedesktop.NetworkManager.Device.Team.c               introspection
+              / org.freedesktop.NetworkManager.Device.Team.h               introspection
+              / org.freedesktop.NetworkManager.Device.Tun.c                introspection
+              / org.freedesktop.NetworkManager.Device.Tun.h                introspection
+              / org.freedesktop.NetworkManager.Device.Veth.c               introspection
+              / org.freedesktop.NetworkManager.Device.Veth.h               introspection
+              / org.freedesktop.NetworkManager.Device.Vlan.c               introspection
+              / org.freedesktop.NetworkManager.Device.Vlan.h               introspection
+              / org.freedesktop.NetworkManager.Device.Vrf.c                introspection
+              / org.freedesktop.NetworkManager.Device.Vrf.h                introspection
+              / org.freedesktop.NetworkManager.Device.Vxlan.c              introspection
+              / org.freedesktop.NetworkManager.Device.Vxlan.h              introspection
+              / org.freedesktop.NetworkManager.Device.WiMax.c              introspection
+              / org.freedesktop.NetworkManager.Device.WiMax.h              introspection
+              / org.freedesktop.NetworkManager.Device.WifiP2P.c            introspection
+              / org.freedesktop.NetworkManager.Device.WifiP2P.h            introspection
+              / org.freedesktop.NetworkManager.Device.WireGuard.c          introspection
+              / org.freedesktop.NetworkManager.Device.WireGuard.h          introspection
+              / org.freedesktop.NetworkManager.Device.Wired.c              introspection
+              / org.freedesktop.NetworkManager.Device.Wired.h              introspection
+              / org.freedesktop.NetworkManager.Device.Wireless.c           introspection
+              / org.freedesktop.NetworkManager.Device.Wireless.h           introspection
+              / org.freedesktop.NetworkManager.Device.Wpan.c               introspection
+              / org.freedesktop.NetworkManager.Device.Wpan.h               introspection
+              / org.freedesktop.NetworkManager.Device.c                    introspection
+              / org.freedesktop.NetworkManager.Device.h                    introspection
+              / org.freedesktop.NetworkManager.DnsManager.c                introspection
+              / org.freedesktop.NetworkManager.DnsManager.h                introspection
+              / org.freedesktop.NetworkManager.IP4Config.c                 introspection
+              / org.freedesktop.NetworkManager.IP4Config.h                 introspection
+              / org.freedesktop.NetworkManager.IP6Config.c                 introspection
+              / org.freedesktop.NetworkManager.IP6Config.h                 introspection
+              / org.freedesktop.NetworkManager.WifiP2PPeer.c               introspection
+              / org.freedesktop.NetworkManager.WifiP2PPeer.h               introspection
+              / org.freedesktop.NetworkManager.PPP.c                       introspection
+              / org.freedesktop.NetworkManager.PPP.h                       introspection
+              / org.freedesktop.NetworkManager.SecretAgent.c               introspection
+              / org.freedesktop.NetworkManager.SecretAgent.h               introspection
+              / org.freedesktop.NetworkManager.Settings.Connection.c       introspection
+              / org.freedesktop.NetworkManager.Settings.Connection.h       introspection
+              / org.freedesktop.NetworkManager.Settings.c                  introspection
+              / org.freedesktop.NetworkManager.Settings.h                  introspection
+              / org.freedesktop.NetworkManager.VPN.Connection.c            introspection
+              / org.freedesktop.NetworkManager.VPN.Connection.h            introspection
+              / org.freedesktop.NetworkManager.VPN.Plugin.c                introspection
+              / org.freedesktop.NetworkManager.VPN.Plugin.h                introspection
+              / org.freedesktop.NetworkManager.c                           introspection
+              / org.freedesktop.NetworkManager.h                           $(NULL)
+
+                    nodist_introspection_libnmdbus_la_SOURCES = $(introspection_sources)
+
+                  DBUS_INTERFACE_DOCS =
+                      docs / api / dbus
+                          - org.freedesktop.NetworkManager.AccessPoint.xml         docs / api / dbus
+                          - org.freedesktop.NetworkManager.AgentManager.xml        docs / api / dbus
+                          - org.freedesktop.NetworkManager.Checkpoint.xml          docs / api / dbus
+                          - org.freedesktop.NetworkManager.Connection.Active.xml   docs / api / dbus
+                          - org.freedesktop.NetworkManager.DHCP4Config.xml         docs / api / dbus
+                          - org.freedesktop.NetworkManager.DHCP6Config.xml         docs / api / dbus
+                          - org.freedesktop.NetworkManager.Device.Adsl.xml         docs / api / dbus
+                          - org.freedesktop.NetworkManager.Device.Bluetooth.xml    docs / api / dbus
+                          - org.freedesktop.NetworkManager.Device.Bond.xml         docs / api / dbus
+                          - org.freedesktop.NetworkManager.Device.Bridge.xml       docs / api / dbus
+                          - org.freedesktop.NetworkManager.Device.Dummy.xml        docs / api / dbus
+                          - org.freedesktop.NetworkManager.Device.Generic.xml      docs / api / dbus
+                          - org.freedesktop.NetworkManager.Device.Hsr.xml          docs / api / dbus
+                          - org.freedesktop.NetworkManager.Device.IPTunnel.xml     docs / api / dbus
+                          - org.freedesktop.NetworkManager.Device.Infiniband.xml   docs / api / dbus
+                          - org.freedesktop.NetworkManager.Device.Loopback.xml     docs / api / dbus
+                          - org.freedesktop.NetworkManager.Device.Lowpan.xml       docs / api / dbus
+                          - org.freedesktop.NetworkManager.Device.Macsec.xml       docs / api / dbus
+                          - org.freedesktop.NetworkManager.Device.Macvlan.xml      docs / api / dbus
+                          - org.freedesktop.NetworkManager.Device.Modem.xml        docs / api / dbus
+                          - org.freedesktop.NetworkManager.Device.OlpcMesh.xml     docs / api / dbus
+                          - org.freedesktop.NetworkManager.Device.OvsBridge.xml    docs / api / dbus
+                          - org.freedesktop.NetworkManager.Device.OvsInterface.xml docs / api / dbus
+                          - org.freedesktop.NetworkManager.Device.OvsPort.xml      docs / api / dbus
+                          - org.freedesktop.NetworkManager.Device.Ppp.xml          docs / api / dbus
+                          - org.freedesktop.NetworkManager.Device.Statistics.xml   docs / api / dbus
+                          - org.freedesktop.NetworkManager.Device.Team.xml         docs / api / dbus
+                          - org.freedesktop.NetworkManager.Device.Tun.xml          docs / api / dbus
+                          - org.freedesktop.NetworkManager.Device.Veth.xml         docs / api / dbus
+                          - org.freedesktop.NetworkManager.Device.Vlan.xml         docs / api / dbus
+                          - org.freedesktop.NetworkManager.Device.Vrf.xml          docs / api / dbus
+                          - org.freedesktop.NetworkManager.Device.Vxlan.xml        docs / api / dbus
+                          - org.freedesktop.NetworkManager.Device.WiMax.xml        docs / api / dbus
+                          - org.freedesktop.NetworkManager.Device.WifiP2P.xml      docs / api / dbus
+                          - org.freedesktop.NetworkManager.Device.WireGuard.xml    docs / api / dbus
+                          - org.freedesktop.NetworkManager.Device.Wired.xml        docs / api / dbus
+                          - org.freedesktop.NetworkManager.Device.Wireless.xml     docs / api / dbus
+                          - org.freedesktop.NetworkManager.Device.Wpan.xml         docs / api / dbus
+                          - org.freedesktop.NetworkManager.Device.xml              docs / api / dbus
+                          - org.freedesktop.NetworkManager.DnsManager.xml          docs / api / dbus
+                          - org.freedesktop.NetworkManager.IP4Config.xml           docs / api / dbus
+                          - org.freedesktop.NetworkManager.IP6Config.xml           docs / api / dbus
+                          - org.freedesktop.NetworkManager.PPP.xml                 docs / api / dbus
+                          - org.freedesktop.NetworkManager.SecretAgent.xml         docs / api / dbus
+                          - org.freedesktop.NetworkManager.Settings.Connection.xml docs / api / dbus
+                          - org.freedesktop.NetworkManager.Settings.xml            docs / api / dbus
+                          - org.freedesktop.NetworkManager.VPN.Connection.xml      docs / api / dbus
+                          - org.freedesktop.NetworkManager.VPN.Plugin.xml          docs / api / dbus
+                          - org.freedesktop.NetworkManager.WifiP2PPeer.xml         docs / api / dbus
+                          - org.freedesktop.NetworkManager.xml                     $(NULL)
+
+                                    introspection
+                                / %.c : introspection / %.xml @$(MKDIR_P) introspection
+                                / $(AM_V_GEN) gdbus
+                          - codegen-- generate - c - code         $(basename $ @)-- generate
+                          - docbook                               docs / api / dbus-- c
+                          - namespace NMDBus-- interface - prefix org.freedesktop.NetworkManager $
+                      <
+
+                      introspection / %.h : introspection /
+                              %.c $()
+
+                                   docs
+                              / api / dbus
+                          - %.xml : introspection /
+                                %.c $()
+
+                                     dbusinterfacesdir = $(datadir) / dbus
+                                                         - 1
+                                                               / interfaces
+
+                                                                   dbusinterfaces_DATA =
+                          introspection
+                          / org.freedesktop.NetworkManager.AccessPoint.xml         introspection
+                          / org.freedesktop.NetworkManager.AgentManager.xml        introspection
+                          / org.freedesktop.NetworkManager.Checkpoint.xml          introspection
+                          / org.freedesktop.NetworkManager.Connection.Active.xml   introspection
+                          / org.freedesktop.NetworkManager.DHCP4Config.xml         introspection
+                          / org.freedesktop.NetworkManager.DHCP6Config.xml         introspection
+                          / org.freedesktop.NetworkManager.Device.Adsl.xml         introspection
+                          / org.freedesktop.NetworkManager.Device.Bluetooth.xml    introspection
+                          / org.freedesktop.NetworkManager.Device.Bond.xml         introspection
+                          / org.freedesktop.NetworkManager.Device.Bridge.xml       introspection
+                          / org.freedesktop.NetworkManager.Device.Dummy.xml        introspection
+                          / org.freedesktop.NetworkManager.Device.Generic.xml      introspection
+                          / org.freedesktop.NetworkManager.Device.Hsr.xml          introspection
+                          / org.freedesktop.NetworkManager.Device.IPTunnel.xml     introspection
+                          / org.freedesktop.NetworkManager.Device.Infiniband.xml   introspection
+                          / org.freedesktop.NetworkManager.Device.Loopback.xml     introspection
+                          / org.freedesktop.NetworkManager.Device.Lowpan.xml       introspection
+                          / org.freedesktop.NetworkManager.Device.Macsec.xml       introspection
+                          / org.freedesktop.NetworkManager.Device.Macvlan.xml      introspection
+                          / org.freedesktop.NetworkManager.Device.Modem.xml        introspection
+                          / org.freedesktop.NetworkManager.Device.OlpcMesh.xml     introspection
+                          / org.freedesktop.NetworkManager.Device.OvsBridge.xml    introspection
+                          / org.freedesktop.NetworkManager.Device.OvsInterface.xml introspection
+                          / org.freedesktop.NetworkManager.Device.OvsPort.xml      introspection
+                          / org.freedesktop.NetworkManager.Device.Ppp.xml          introspection
+                          / org.freedesktop.NetworkManager.Device.Statistics.xml   introspection
+                          / org.freedesktop.NetworkManager.Device.Team.xml         introspection
+                          / org.freedesktop.NetworkManager.Device.Tun.xml          introspection
+                          / org.freedesktop.NetworkManager.Device.Veth.xml         introspection
+                          / org.freedesktop.NetworkManager.Device.Vlan.xml         introspection
+                          / org.freedesktop.NetworkManager.Device.Vrf.xml          introspection
+                          / org.freedesktop.NetworkManager.Device.Vxlan.xml        introspection
+                          / org.freedesktop.NetworkManager.Device.WiMax.xml        introspection
+                          / org.freedesktop.NetworkManager.Device.WifiP2P.xml      introspection
+                          / org.freedesktop.NetworkManager.Device.WireGuard.xml    introspection
+                          / org.freedesktop.NetworkManager.Device.Wired.xml        introspection
+                          / org.freedesktop.NetworkManager.Device.Wireless.xml     introspection
+                          / org.freedesktop.NetworkManager.Device.Wpan.xml         introspection
+                          / org.freedesktop.NetworkManager.Device.xml              introspection
+                          / org.freedesktop.NetworkManager.DnsManager.xml          introspection
+                          / org.freedesktop.NetworkManager.IP4Config.xml           introspection
+                          / org.freedesktop.NetworkManager.IP6Config.xml           introspection
+                          / org.freedesktop.NetworkManager.PPP.xml                 introspection
+                          / org.freedesktop.NetworkManager.SecretAgent.xml         introspection
+                          / org.freedesktop.NetworkManager.Settings.Connection.xml introspection
+                          / org.freedesktop.NetworkManager.Settings.xml            introspection
+                          / org.freedesktop.NetworkManager.VPN.Connection.xml      introspection
+                          / org.freedesktop.NetworkManager.VPN.Plugin.xml          introspection
+                          / org.freedesktop.NetworkManager.WiMax.Nsp.xml           introspection
+                          / org.freedesktop.NetworkManager.WifiP2PPeer.xml         introspection
+                          / org.freedesktop.NetworkManager.xml                     $(NULL)
+
+                                CLEANFILES += $(introspection_sources) CLEANFILES +=
+      $(DBUS_INTERFACE_DOCS)
+
+          $(src_libnm_client_impl_libnm_client_impl_la_OBJECTS)
+    : $(introspection_sources) $(src_libnm_client_impl_libnm_la_OBJECTS)
+    : $(introspection_sources)
+
+          EXTRA_DIST += $(dbusinterfaces_DATA) introspection
+                            / meson.build
+
+                                  check
+                        - docs : $(srcdir) / tools / check
+                        - docs.sh "$(srcdir)"
+                                  "$(builddir)"
+
+                          check_local +=
+      check
+      - docs
+
+      ############################################################################## #
+
+      src_libnm_core_impl_lib_h_pub_real =
+          src / libnm - core - public / nm - connection.h src / libnm - core - public / nm - core
+          - types.h src / libnm - core - public / nm - dbus - interface.h src / libnm - core
+          - public / nm - errors.h src / libnm - core - public / nm - keyfile.h src / libnm - core
+          - public / nm - setting - 6lowpan.h src / libnm - core - public / nm - setting
+          - 8021x.h src / libnm - core - public / nm - setting - adsl.h src / libnm - core
+          - public / nm - setting - bluetooth.h src / libnm - core - public / nm - setting - bond
+          - port.h src / libnm - core - public / nm - setting - bond.h src / libnm - core
+          - public / nm - setting - bridge - port.h src / libnm - core - public / nm - setting
+          - bridge.h src / libnm - core - public / nm - setting - cdma.h src / libnm - core
+          - public / nm - setting - connection.h src / libnm - core - public / nm - setting
+          - dcb.h src / libnm - core - public / nm - setting - dummy.h src / libnm - core
+          - public / nm - setting - ethtool.h src / libnm - core - public / nm - setting
+          - generic.h src / libnm - core - public / nm - setting - gsm.h src / libnm - core
+          - public / nm - setting - hostname.h src / libnm - core - public / nm - setting
+          - hsr.h src / libnm - core - public / nm - setting - infiniband.h src / libnm - core
+          - public / nm - setting - ip - config.h src / libnm - core - public / nm - setting - ip
+          - tunnel.h src / libnm - core - public / nm - setting - ip4 - config.h src / libnm - core
+          - public / nm - setting - ip6 - config.h src / libnm - core - public / nm - setting
+          - link.h src / libnm - core - public / nm - setting - loopback.h src / libnm - core
+          - public / nm - setting - macsec.h src / libnm - core - public / nm - setting
+          - macvlan.h src / libnm - core - public / nm - setting - match.h src / libnm - core
+          - public / nm - setting - olpc - mesh.h src / libnm - core - public / nm - setting - ovs
+          - bridge.h src / libnm - core - public / nm - setting - ovs - dpdk.h src / libnm - core
+          - public / nm - setting - ovs - external - ids.h src / libnm - core - public / nm
+          - setting - ovs - interface.h src / libnm - core - public / nm - setting - ovs - other
+          - config.h src / libnm - core - public / nm - setting - ovs - patch.h src / libnm - core
+          - public / nm - setting - ovs - port.h src / libnm - core - public / nm - setting
+          - ppp.h src / libnm - core - public / nm - setting - pppoe.h src / libnm - core
+          - public / nm - setting - proxy.h src / libnm - core - public / nm - setting
+          - serial.h src / libnm - core - public / nm - setting - sriov.h src / libnm - core
+          - public / nm - setting - tc - config.h src / libnm - core - public / nm - setting - team
+          - port.h src / libnm - core - public / nm - setting - team.h src / libnm - core
+          - public / nm - setting - tun.h src / libnm - core - public / nm - setting
+          - user.h src / libnm - core - public / nm - setting - veth.h src / libnm - core
+          - public / nm - setting - vlan.h src / libnm - core - public / nm - setting
+          - vpn.h src / libnm - core - public / nm - setting - vrf.h src / libnm - core
+          - public / nm - setting - vxlan.h src / libnm - core - public / nm - setting - wifi
+          - p2p.h src / libnm - core - public / nm - setting - wimax.h src / libnm - core
+          - public / nm - setting - wired.h src / libnm - core - public / nm - setting
+          - wireguard.h                     src / libnm - core - public / nm - setting - wireless
+          - security.h src / libnm - core - public / nm - setting - wireless.h src / libnm - core
+          - public / nm - setting - wpan.h src / libnm - core - public / nm - setting.h src / libnm
+          - core - public / nm - simple - connection.h src / libnm - core - public / nm
+          - utils.h src / libnm - core - public / nm - version - macros.h src / libnm - core
+          - public / nm - version.h src / libnm - core - public / nm - vpn - dbus
+          - interface.h src / libnm - core - public / nm - vpn - editor - plugin.h src / libnm
+          - core - public / nm - vpn - plugin
+          - info.h $(NULL)
+                src_libnm_core_public_mkenums_h = src / libnm - core - public / nm - core - enum
+                                                  - types.h $(NULL) src_libnm_core_impl_lib_h_priv =
+              src / libnm - core - impl / nm - connection - private.h src / libnm - core - impl / nm
+              - default - libnm - core.h src / libnm - core - impl / nm - setting
+              - private.h src / libnm - core - impl / nm - team - utils.h src / libnm - core
+              - impl / nm - utils - private.h src / libnm - core - intern / nm - core
+              - internal.h src / libnm - core - intern / nm - keyfile - internal.h src / libnm
+              - core - intern / nm - keyfile - utils.h src / libnm - core - intern / nm - meta
+              - setting - base - impl.h src / libnm - core - intern / nm - meta - setting
+              - base.h                  $(NULL) src_libnm_core_impl_lib_c_settings_real =
+                  src / libnm - core - impl / nm - setting - 6lowpan.c src / libnm - core
+                  - impl / nm - setting - 8021x.c src / libnm - core - impl / nm - setting
+                  - adsl.c src / libnm - core - impl / nm - setting - bluetooth.c src / libnm - core
+                  - impl / nm - setting - bond - port.c src / libnm - core - impl / nm - setting
+                  - bond.c src / libnm - core - impl / nm - setting - bridge - port.c src / libnm
+                  - core - impl / nm - setting - bridge.c src / libnm - core - impl / nm - setting
+                  - cdma.c src / libnm - core - impl / nm - setting - connection.c src / libnm
+                  - core - impl / nm - setting - dcb.c src / libnm - core - impl / nm - setting
+                  - dummy.c src / libnm - core - impl / nm - setting - ethtool.c src / libnm - core
+                  - impl / nm - setting - generic.c src / libnm - core - impl / nm - setting
+                  - gsm.c src / libnm - core - impl / nm - setting - hostname.c src / libnm - core
+                  - impl / nm - setting - hsr.c src / libnm - core - impl / nm - setting
+                  - infiniband.c                src / libnm - core - impl / nm - setting - ip
+                  - config.c src / libnm - core - impl / nm - setting - ip - tunnel.c src / libnm
+                  - core - impl / nm - setting - ip4 - config.c src / libnm - core - impl / nm
+                  - setting - ip6 - config.c src / libnm - core - impl / nm - setting
+                  - link.c src / libnm - core - impl / nm - setting - loopback.c src / libnm - core
+                  - impl / nm - setting - macsec.c src / libnm - core - impl / nm - setting
+                  - macvlan.c src / libnm - core - impl / nm - setting - match.c src / libnm - core
+                  - impl / nm - setting - olpc - mesh.c src / libnm - core - impl / nm - setting
+                  - ovs - bridge.c src / libnm - core - impl / nm - setting - ovs
+                  - dpdk.c         src / libnm - core - impl / nm - setting - ovs - external
+                  - ids.c src / libnm - core - impl / nm - setting - ovs - interface.c src / libnm
+                  - core - impl / nm - setting - ovs - other - config.c src / libnm - core
+                  - impl / nm - setting - ovs - patch.c src / libnm - core - impl / nm - setting
+                  - ovs - port.c src / libnm - core - impl / nm - setting - ppp.c src / libnm - core
+                  - impl / nm - setting - pppoe.c src / libnm - core - impl / nm - setting
+                  - proxy.c src / libnm - core - impl / nm - setting - serial.c src / libnm - core
+                  - impl / nm - setting - sriov.c src / libnm - core - impl / nm - setting - tc
+                  - config.c src / libnm - core - impl / nm - setting - team - port.c src / libnm
+                  - core - impl / nm - setting - team.c src / libnm - core - impl / nm - setting
+                  - tun.c src / libnm - core - impl / nm - setting - user.c src / libnm - core
+                  - impl / nm - setting - veth.c src / libnm - core - impl / nm - setting
+                  - vlan.c src / libnm - core - impl / nm - setting - vpn.c src / libnm - core
+                  - impl / nm - setting - vrf.c src / libnm - core - impl / nm - setting
+                  - vxlan.c src / libnm - core - impl / nm - setting - wifi - p2p.c src / libnm
+                  - core - impl / nm - setting - wimax.c src / libnm - core - impl / nm - setting
+                  - wired.c src / libnm - core - impl / nm - setting - wireguard.c src / libnm
+                  - core - impl / nm - setting - wireless - security.c src / libnm - core
+                  - impl / nm - setting - wireless.c src / libnm - core - impl / nm - setting
+                  - wpan.c                           $(NULL) src_libnm_core_impl_lib_c_real =
+                      $(src_libnm_core_impl_lib_c_settings_real) src / libnm - core - impl / nm
+                      - connection.c src / libnm - core - impl / nm - errors.c src / libnm - core
+                      - impl / nm - keyfile - utils.c src / libnm - core - impl / nm
+                      - keyfile.c src / libnm - core - impl / nm - meta - setting - base
+                      - impl.c src / libnm - core - impl / nm - setting.c src / libnm - core
+                      - impl / nm - simple - connection.c src / libnm - core - impl / nm - team
+                      - utils.c src / libnm - core - impl / nm - utils.c src / libnm - core
+                      - impl / nm - vpn - editor - plugin.c src / libnm - core - impl / nm - vpn
+                      - plugin
+                      - info.c $(NULL)
+
+                            src_libnm_core_public_mkenums_c =
+                          src / libnm - core - public / nm - core - enum
+                          - types.c $(NULL)
+
+                                libnminclude_HEADERS += $(src_libnm_core_impl_lib_h_pub_real)
+
+                              nodist_libnminclude_HEADERS += $(src_libnm_core_public_mkenums_h)
+
+                                  EXTRA_DIST +=
+      src / libnm - core - impl / README.md src / libnm - core - impl / meson.build src / libnm
+      - core - intern / README.md src / libnm - core - intern / meson.build src / libnm - core
+      - public / README.md                                                  src / libnm - core
+      - public
+            / meson.build $(NULL)
+
+                  ############################################################################## #
+
+              dflt_cppflags_libnm_core = $(dflt_cppflags) - I$(builddir) / src / libnm - core
+                                         - public - I$(srcdir) / src / libnm - core - public
+                                         - I$(srcdir)
+                                               / src $(CODE_COVERAGE_CFLAGS) $(GLIB_CFLAGS)
+                                                   $(LIBUDEV_CFLAGS) $(SANITIZER_LIB_CFLAGS) $(NULL)
+
+                                                       noinst_LTLIBRARIES +=
+      src / libnm - core - impl / libnm - core
+      - impl.la
+
+                src
+            / libnm
+      - client - public / nm - enum - types.h.stamp : src / libnm - client
+      - public /.dirstamp src / libnm - client - public / nm - enum - types.c.stamp : src / libnm
+      - client
+      - public
+            /.dirstamp
+
+                 GLIB_GENERATED +=
+      $(src_libnm_core_public_mkenums_h) $(src_libnm_core_public_mkenums_c) $(
+          NULL) nm_core_enum_types_sources = $(src_libnm_core_impl_lib_h_pub_real)
+
+          nm_core_enum_types_MKENUMS_C_FLAGS =
+              --fhead '\#undef G_LOG_DOMAIN\n\#include "src/libnm-core-impl/nm-default-libnm-core.h"\n'
+
+                  src
+                  / libnm
+              - core - public / nm - core - enum - types.h.stamp : src / libnm - core
+              - public /.dirstamp src / libnm - core - public / nm - core - enum
+              - types.c.stamp : src / libnm - core
+              - public
+                    /.dirstamp
+
+                         $(src_nm_dispatcher_libnm_dispatcher_core_la_OBJECTS)
+    : $(src_libnm_core_public_mkenums_h) $(src_nm_dispatcher_nm_dispatcher_OBJECTS)
+    : $(src_libnm_core_public_mkenums_h) $(src_libnm_core_impl_libnm_core_impl_la_OBJECTS)
+    : $(src_libnm_core_public_mkenums_h) $(src_libnm_client_impl_libnm_la_OBJECTS)
+    : $(src_libnm_core_public_mkenums_h) $(src_contrib_tests_libnm_vpn_plugin_utils_test_la_OBJECTS)
+    : $(src_libnm_core_public_mkenums_h) $(src_core_NetworkManager_OBJECTS)
+    : $(src_libnm_core_public_mkenums_h)
+          $(src_core_devices_adsl_libnm_device_plugin_adsl_la_OBJECTS)
+    : $(src_libnm_core_public_mkenums_h)
+          $(src_core_devices_bluetooth_libnm_device_plugin_bluetooth_la_OBJECTS)
+    : $(src_libnm_core_public_mkenums_h)
+          $(src_core_devices_team_libnm_device_plugin_team_la_OBJECTS)
+    : $(src_libnm_core_public_mkenums_h)
+          $(src_core_devices_wifi_libnm_device_plugin_wifi_la_OBJECTS)
+    : $(src_libnm_core_public_mkenums_h)
+          $(src_core_devices_wwan_libnm_device_plugin_wwan_la_OBJECTS)
+    : $(src_libnm_core_public_mkenums_h) $(src_core_devices_ovs_libnm_device_plugin_ovs_la_OBJECTS)
+    : $(src_libnm_core_public_mkenums_h)
+
+          src_libnm_core_impl_libnm_core_impl_la_CPPFLAGS =
+                  $(dflt_cppflags_libnm_core) - I$(srcdir) / src / libnm - core
+                  - intern
+                        / $(NULL)
+
+                            src_libnm_core_impl_libnm_core_impl_la_SOURCES =
+                      $(src_libnm_core_impl_lib_h_pub_real) $(src_libnm_core_impl_lib_h_priv)
+                          $(src_libnm_core_impl_lib_c_real)
+
+                              nodist_src_libnm_core_impl_libnm_core_impl_la_SOURCES =
+                                  $(src_libnm_core_public_mkenums_h)
+                                      $(src_libnm_core_public_mkenums_c) $(NULL)
+
+                                          src_libnm_core_impl_libnm_core_impl_la_LIBADD =
+                                              $(GLIB_LIBS) $(NULL)
+
+                                                  src_libnm_core_impl_libnm_core_impl_la_LDFLAGS =
+                                                      $(CODE_COVERAGE_LDFLAGS)
+                                                          $(SANITIZER_LIB_LDFLAGS) $(NULL)
+
+                                                              EXTRA_DIST +=
+      src / libnm - core
+      - impl
+            / meson.build $(NULL)
+
+                  src
+            / libnm
+      - core - public / nm - vpn - dbus - types.xml : src / libnm - core - public / nm - vpn - dbus
+      - interface.h tools / enums - to - docbook.pl @$(MKDIR_P) src / libnm - core
+      - public / $(AM_V_GEN) @PERL @$(srcdir) / tools / enums - to
+      - docbook.pl 'nm-vpn-dbus-types' 'VPN Plugin D-Bus API Types' $<> $ @
+
+            src
+            / libnm
+      - core - public / nm - dbus - types.xml : src / libnm - core - public / nm - dbus
+      - interface.h tools / enums - to - docbook.pl @$(MKDIR_P) src / libnm - core
+      - public / $(AM_V_GEN) @PERL @$(srcdir) / tools / enums - to
+      - docbook.pl 'nm-dbus-types' 'NetworkManager D-Bus API Types' $<> $ @
+
+        BUILT_SOURCES += src / libnm - core - public / nm - vpn - dbus - types.xml src / libnm
+                         - core - public / nm - dbus
+                         - types.xml
+
+                                                                dist_dependencies +=
+      src / libnm - core - public / nm - vpn - dbus - types.xml src / libnm - core - public / nm
+      - dbus
+      - types.xml
+
+        ############################################################################## #
+
+        noinst_LTLIBRARIES += src / libnm - crypto / libnm
+                              - crypto.la
+
+                                                      src_libnm_crypto_libnm_crypto_la_SOURCES =
+          src / libnm - crypto / nm - crypto - impl.h src / libnm - crypto / nm
+          - crypto.c                                  src / libnm - crypto / nm
+          - crypto.h                                  $(NULL)
+
+                src_libnm_crypto_libnm_crypto_la_CPPFLAGS = $(dflt_cppflags_libnm_core) $(NULL)
+
+              src_libnm_crypto_libnm_crypto_la_LIBADD = $(GLIB_LIBS) $(NULL)
+
+                  src_libnm_crypto_libnm_crypto_la_LDFLAGS =
+                      $(CODE_COVERAGE_LDFLAGS) $(SANITIZER_LIB_LDFLAGS) $(NULL)
+
+                          if HAVE_CRYPTO_GNUTLS if WITH_GNUTLS libnm_crypto_lib =
+                              src / libnm - crypto / libnm - crypto
+                              - gnutls.la else check_ltlibraries +=
+      src / libnm - crypto / libnm - crypto
+      - gnutls.la endif
+
+            src_libnm_crypto_libnm_crypto_gnutls_la_SOURCES =
+          src / libnm - crypto / nm - crypto
+          - gnutls.c src_libnm_crypto_libnm_crypto_gnutls_la_CPPFLAGS =
+              $(src_libnm_core_impl_libnm_core_impl_la_CPPFLAGS) $(GNUTLS_CFLAGS)
+                  src_libnm_crypto_libnm_crypto_gnutls_la_LDFLAGS =
+                      $(src_libnm_core_impl_libnm_core_impl_la_LDFLAGS)
+                          src_libnm_crypto_libnm_crypto_gnutls_la_LIBADD =
+                              $(GLIB_LIBS) $(GNUTLS_LIBS) endif
+
+      if HAVE_CRYPTO_NSS if WITH_NSS libnm_crypto_lib =
+          src / libnm - crypto / libnm - crypto - nss.la else check_ltlibraries +=
+      src / libnm - crypto / libnm - crypto
+      - nss.la endif
+
+                                                     src_libnm_crypto_libnm_crypto_nss_la_SOURCES =
+          src / libnm - crypto / nm - crypto - nss.c src_libnm_crypto_libnm_crypto_nss_la_CPPFLAGS =
+              $(src_libnm_core_impl_libnm_core_impl_la_CPPFLAGS) $(NSS_CFLAGS)
+                  src_libnm_crypto_libnm_crypto_nss_la_LDFLAGS =
+                      $(src_libnm_core_impl_libnm_core_impl_la_LDFLAGS)
+                          src_libnm_crypto_libnm_crypto_nss_la_LIBADD =
+                              $(GLIB_LIBS) $(NSS_LIBS) endif
+
+      if !WITH_GNUTLS if !WITH_NSS libnm_crypto_lib =
+          src / libnm - crypto / libnm - crypto - null.la else check_ltlibraries +=
+      src / libnm - crypto / libnm - crypto - null.la endif else check_ltlibraries +=
+      src / libnm - crypto / libnm - crypto
+      - null.la endif
+
+            src_libnm_crypto_libnm_crypto_null_la_SOURCES =
+          src / libnm - crypto / nm - crypto
+          - null.c src_libnm_crypto_libnm_crypto_null_la_CPPFLAGS =
+              $(src_libnm_core_impl_libnm_core_impl_la_CPPFLAGS) $(NULL)
+                  src_libnm_crypto_libnm_crypto_null_la_LDFLAGS =
+                      $(src_libnm_core_impl_libnm_core_impl_la_LDFLAGS) $(NULL)
+                          src_libnm_crypto_libnm_crypto_null_la_LIBADD = $(GLIB_LIBS) $(NULL)
+
+                              noinst_LTLIBRARIES += $(libnm_crypto_lib)
+
+                                  EXTRA_DIST +=
+      src / libnm - crypto / README.md src / libnm - crypto / meson.build src / libnm - crypto / nm
+      - crypto - gnutls.c src / libnm - crypto / nm - crypto
+      - nss.c             $(NULL)
+
+            ############################################################################## #
+
+        check_programs +=
+      src / libnm - core - impl / tests / test - crypto src / libnm - core - impl / tests / test
+      - general src / libnm - core - impl / tests / test - keyfile src / libnm - core
+      - impl / tests / test - secrets src / libnm - core - impl / tests / test - setting src / libnm
+      - core - impl / tests / test - settings
+      - defaults
+
+                                                                             GLIB_GENERATED +=
+      src / libnm - core - impl / tests / nm - core - tests - enum - types.h src / libnm - core
+      - impl / tests / nm - core - tests - enum
+      - types.c nm_core_tests_enum_types_sources = src / libnm - core
+                                                   - impl / tests / test - general
+                                                   - enums.h
+                                                         nm_core_tests_enum_types_MKENUMS_C_FLAGS =
+          --fhead '\#undef G_LOG_DOMAIN\n\#include "src/libnm-core-impl/nm-default-libnm-core.h"\n'
+
+              src
+              / libnm
+          - core - impl / tests / nm - core - tests - enum - types.h.stamp : src / libnm - core
+          - impl / tests /.dirstamp src / libnm - core - impl / tests / nm - core - tests - enum
+          - types.c.stamp : src / libnm - core
+          - impl / tests
+                /.dirstamp
+
+                     $(src_libnm_core_impl_tests_test_general_OBJECTS)
+    : src / libnm
+          - core - impl / tests / nm - core - tests - enum
+          - types.h
+
+                src_libnm_core_impl_tests_cppflags = -I$(builddir) / src / libnm - core
+                                                     - impl / tests - I$(srcdir) / src / libnm
+                                                     - core - impl / tests
+                                                     - I$(srcdir) / src / libnm - core - impl
+                                                     - I$(srcdir) / src / -I$(builddir) / src
+                                                           / $(dflt_cppflags_libnm_core) $(
+                                                               SANITIZER_EXEC_CFLAGS) $(NULL)
+
+                                                               src_libnm_core_impl_tests_test_crypto_CPPFLAGS = $(
+              src_libnm_core_impl_tests_cppflags) src_libnm_core_impl_tests_test_general_CPPFLAGS =
+              $(src_libnm_core_impl_tests_cppflags) src_libnm_core_impl_tests_test_keyfile_CPPFLAGS = $(
+                  src_libnm_core_impl_tests_cppflags) src_libnm_core_impl_tests_test_secrets_CPPFLAGS =
+                  $(src_libnm_core_impl_tests_cppflags) src_libnm_core_impl_tests_test_setting_CPPFLAGS = $(
+                      src_libnm_core_impl_tests_cppflags) src_libnm_core_impl_tests_test_settings_defaults_CPPFLAGS = $(src_libnm_core_impl_tests_cppflags)
+
+                      src_libnm_core_impl_tests_test_general_SOURCES = src / libnm
+                                                                       - core
+                                                                       - impl / tests / test
+                                                                       - general
+                                                                       - enums.h src
+                                                                             / libnm
+                                                                       - core
+                                                                       - impl / tests / test
+                                                                       - general.c $(NULL)
+
+                                                                             nodist_src_libnm_core_impl_tests_test_general_SOURCES =
+                          src / libnm
+                          - core
+                          - impl / tests / nm
+                          - core - tests - enum - types.c src / libnm - core - impl / tests / nm
+                          - core - tests - enum
+                          - types
+                                .h $(NULL)
+
+                                    src_libnm_core_impl_tests_ldadd =
+                              src / libnm
+                              - core - aux - extern / libnm - core - aux - extern.la src / libnm
+                              - core
+                              - impl / libnm - core - impl.la src / libnm - crypto / libnm
+                              - crypto.la                     $(libnm_crypto_lib) src / libnm
+                              - core - aux - intern / libnm - core - aux - intern.la src / libnm
+                              - base / libnm - base.la               src / libnm - systemd
+                              - shared / libnm - systemd - shared.la src / libnm - log
+                              - null / libnm - log - null.la src / libnm - glib - aux / libnm - glib
+                              - aux.la                       src / libnm - std - aux / libnm - std
+                              - aux.la                       src / c - siphash / libc
+                              - siphash.la                   $(
+                                  GLIB_LIBS) $(NULL)
+
+                                    src_libnm_core_impl_tests_ldflags = $(SANITIZER_EXEC_LDFLAGS) $(
+                                  NULL)
+
+                                  src_libnm_core_impl_tests_test_crypto_LDADD = $(
+                                      src_libnm_core_impl_tests_ldadd)
+                                      src_libnm_core_impl_tests_test_general_LDADD = $(
+                                          src_libnm_core_impl_tests_ldadd)
+                                          src_libnm_core_impl_tests_test_keyfile_LDADD = $(
+                                              src_libnm_core_impl_tests_ldadd)
+                                              src_libnm_core_impl_tests_test_secrets_LDADD = $(
+                                                  src_libnm_core_impl_tests_ldadd)
+                                                  src_libnm_core_impl_tests_test_setting_LDADD = $(
+                                                      src_libnm_core_impl_tests_ldadd)
+                                                      src_libnm_core_impl_tests_test_settings_defaults_LDADD = $(
+                                                          src_libnm_core_impl_tests_ldadd)
+
+                                                          src_libnm_core_impl_tests_test_crypto_LDFLAGS = $(
+                                                              src_libnm_core_impl_tests_ldflags)
+                                                              src_libnm_core_impl_tests_test_general_LDFLAGS = $(
+                                                                  src_libnm_core_impl_tests_ldflags)
+                                                                  src_libnm_core_impl_tests_test_keyfile_LDFLAGS = $(
+                                                                      src_libnm_core_impl_tests_ldflags)
+                                                                      src_libnm_core_impl_tests_test_secrets_LDFLAGS = $(
+                                                                          src_libnm_core_impl_tests_ldflags)
+                                                                          src_libnm_core_impl_tests_test_setting_LDFLAGS =
+                                                                              $(src_libnm_core_impl_tests_ldflags)
+                                                                                  src_libnm_core_impl_tests_test_settings_defaults_LDFLAGS =
+                                                                                      $(src_libnm_core_impl_tests_ldflags)
+
+                                                                                          $(src_libnm_core_impl_tests_test_crypto_OBJECTS)
+    : $(src_libnm_core_public_mkenums_h) $(src_libnm_core_impl_tests_test_general_OBJECTS)
+    : $(src_libnm_core_public_mkenums_h) $(src_libnm_core_impl_tests_test_keyfile_OBJECTS)
+    : $(src_libnm_core_public_mkenums_h) $(src_libnm_core_impl_tests_test_secrets_OBJECTS)
+    : $(src_libnm_core_public_mkenums_h) $(src_libnm_core_impl_tests_test_setting_OBJECTS)
+    : $(src_libnm_core_public_mkenums_h) $(src_libnm_core_impl_tests_test_settings_defaults_OBJECTS)
+    : $(src_libnm_core_public_mkenums_h)
+
+#test - cert.p12 created with:
 #
-# openssl pkcs12 -export \
-#    -in test_key_and_cert.pem \
-#    -inkey test_key_and_cert.pem \
-#    -certfile test_ca_cert.pem \
-#    -name "test-pkcs12" \
-#    -out test-cert.p12
+#openssl pkcs12 - export # - in test_key_and_cert.pem # - inkey test_key_and_cert.pem # \
+    - certfile test_ca_cert.pem # - name "test-pkcs12" # - out test - cert.p12
 
-EXTRA_DIST += \
-	src/libnm-core-impl/tests/certs/ca-no-ending-newline.pem \
-	src/libnm-core-impl/tests/certs/pkcs8-decrypted.der \
-	src/libnm-core-impl/tests/certs/pkcs8-enc-key.pem \
-	src/libnm-core-impl/tests/certs/pkcs8-noenc-key.pem \
-	src/libnm-core-impl/tests/certs/test2_ca_cert.pem \
-	src/libnm-core-impl/tests/certs/test2-cert.p12 \
-	src/libnm-core-impl/tests/certs/test2_key_and_cert.pem \
-	src/libnm-core-impl/tests/certs/test-aes-128-key.pem \
-	src/libnm-core-impl/tests/certs/test-aes-256-key.pem \
-	src/libnm-core-impl/tests/certs/test-aes-128-ec-key.pem \
-	src/libnm-core-impl/tests/certs/test-aes-256-ec-key.pem \
-	src/libnm-core-impl/tests/certs/test_ca_cert.der \
-	src/libnm-core-impl/tests/certs/test_ca_cert.pem \
-	src/libnm-core-impl/tests/certs/test-ca-cert.pem \
-	src/libnm-core-impl/tests/certs/test-cert.p12 \
-	src/libnm-core-impl/tests/certs/test_key_and_cert.pem \
-	src/libnm-core-impl/tests/certs/test-key-and-cert.pem \
-	src/libnm-core-impl/tests/certs/test-key-only-decrypted.der \
-	src/libnm-core-impl/tests/certs/test-key-only-decrypted.pem \
-	src/libnm-core-impl/tests/certs/test-ec-key-only-decrypted.der \
-	src/libnm-core-impl/tests/certs/test-ec-key-only-decrypted.pem \
-	src/libnm-core-impl/tests/certs/test-key-only.pem \
-	src/libnm-core-impl/tests/certs/test-tpm2wrapped-key.pem \
-	src/libnm-core-impl/tests/nm-core-tests-enum-types.c.template \
-	src/libnm-core-impl/tests/nm-core-tests-enum-types.h.template \
-	src/libnm-core-impl/tests/meson.build
+          EXTRA_DIST +=
+      src / libnm - core - impl / tests / certs / ca - no - ending - newline.pem src / libnm - core
+      - impl / tests / certs / pkcs8 - decrypted.der                             src / libnm - core
+      - impl / tests / certs / pkcs8 - enc - key.pem                             src / libnm - core
+      - impl / tests / certs / pkcs8 - noenc - key.pem                           src / libnm - core
+      - impl / tests / certs / test2_ca_cert.pem src / libnm - core - impl / tests / certs / test2
+      - cert.p12 src / libnm - core - impl / tests / certs / test2_key_and_cert.pem src / libnm
+      - core - impl / tests / certs / test - aes - 128 - key.pem src / libnm - core
+      - impl / tests / certs / test - aes - 256 - key.pem        src / libnm - core
+      - impl / tests / certs / test - aes - 128 - ec - key.pem   src / libnm - core
+      - impl / tests / certs / test - aes - 256 - ec - key.pem   src / libnm - core
+      - impl / tests / certs / test_ca_cert.der                  src / libnm - core
+      - impl / tests / certs / test_ca_cert.pem src / libnm - core - impl / tests / certs / test
+      - ca - cert.pem src / libnm - core - impl / tests / certs / test - cert.p12 src / libnm - core
+      - impl / tests / certs / test_key_and_cert.pem                              src / libnm - core
+      - impl / tests / certs / test - key - and-cert.pem                          src / libnm - core
+      - impl / tests / certs / test - key - only - decrypted.der                  src / libnm - core
+      - impl / tests / certs / test - key - only - decrypted.pem                  src / libnm - core
+      - impl / tests / certs / test - ec - key - only - decrypted.der             src / libnm - core
+      - impl / tests / certs / test - ec - key - only - decrypted.pem             src / libnm - core
+      - impl / tests / certs / test - key - only.pem                              src / libnm - core
+      - impl / tests / certs / test - tpm2wrapped - key.pem src / libnm - core - impl / tests / nm
+      - core - tests - enum - types.c.template src / libnm - core - impl / tests / nm - core - tests
+      - enum - types.h.template src / libnm - core
+      - impl / tests
+            / meson.build
 
-###############################################################################
+              ############################################################################## #
 
-libnm_lib_h_pub_real = \
-	src/libnm-client-public/NetworkManager.h \
-	src/libnm-client-public/nm-access-point.h \
-	src/libnm-client-public/nm-active-connection.h \
-	src/libnm-client-public/nm-autoptr.h \
-	src/libnm-client-public/nm-checkpoint.h \
-	src/libnm-client-public/nm-client.h \
-	src/libnm-client-public/nm-conn-utils.h \
-	src/libnm-client-public/nm-device-6lowpan.h \
-	src/libnm-client-public/nm-device-adsl.h \
-	src/libnm-client-public/nm-device-bond.h \
-	src/libnm-client-public/nm-device-bridge.h \
-	src/libnm-client-public/nm-device-bt.h \
-	src/libnm-client-public/nm-device-dummy.h \
-	src/libnm-client-public/nm-device-ethernet.h \
-	src/libnm-client-public/nm-device-generic.h \
-	src/libnm-client-public/nm-device-hsr.h \
-	src/libnm-client-public/nm-device-infiniband.h \
-	src/libnm-client-public/nm-device-ip-tunnel.h \
-	src/libnm-client-public/nm-device-loopback.h \
-	src/libnm-client-public/nm-device-macsec.h \
-	src/libnm-client-public/nm-device-macvlan.h \
-	src/libnm-client-public/nm-device-modem.h \
-	src/libnm-client-public/nm-device-olpc-mesh.h \
-	src/libnm-client-public/nm-device-ovs-bridge.h \
-	src/libnm-client-public/nm-device-ovs-interface.h \
-	src/libnm-client-public/nm-device-ovs-port.h \
-	src/libnm-client-public/nm-device-ppp.h \
-	src/libnm-client-public/nm-device-team.h \
-	src/libnm-client-public/nm-device-tun.h \
-	src/libnm-client-public/nm-device-veth.h \
-	src/libnm-client-public/nm-device-vlan.h \
-	src/libnm-client-public/nm-device-vrf.h \
-	src/libnm-client-public/nm-device-vxlan.h \
-	src/libnm-client-public/nm-device-wifi-p2p.h \
-	src/libnm-client-public/nm-device-wifi.h \
-	src/libnm-client-public/nm-device-wimax.h \
-	src/libnm-client-public/nm-device-wireguard.h \
-	src/libnm-client-public/nm-device-wpan.h \
-	src/libnm-client-public/nm-device.h \
-	src/libnm-client-public/nm-dhcp-config.h \
-	src/libnm-client-public/nm-ethtool-utils.h \
-	src/libnm-client-public/nm-ip-config.h \
-	src/libnm-client-public/nm-object.h \
-	src/libnm-client-public/nm-remote-connection.h \
-	src/libnm-client-public/nm-secret-agent-old.h \
-	src/libnm-client-public/nm-vpn-connection.h \
-	src/libnm-client-public/nm-vpn-editor.h \
-	src/libnm-client-public/nm-vpn-plugin-old.h \
-	src/libnm-client-public/nm-vpn-service-plugin.h \
-	src/libnm-client-public/nm-wifi-p2p-peer.h \
-	src/libnm-client-public/nm-wimax-nsp.h \
-	$(NULL)
-src_libnm_client_public_mkenums_h = \
-	src/libnm-client-public/nm-enum-types.h \
-	$(NULL)
-libnm_lib_h_priv = \
-	src/libnm-client-impl/nm-dbus-helpers.h \
-	src/libnm-client-aux-extern/nm-default-client.h \
-	src/libnm-client-impl/nm-default-libnm.h \
-	src/libnm-client-impl/nm-device-private.h \
-	src/libnm-client-impl/nm-dhcp4-config.h \
-	src/libnm-client-impl/nm-dhcp6-config.h \
-	src/libnm-client-impl/nm-dns-manager.h \
-	src/libnm-client-impl/nm-ip4-config.h \
-	src/libnm-client-impl/nm-ip6-config.h \
-	src/libnm-client-impl/nm-libnm-utils.h \
-	src/libnm-client-impl/nm-object-private.h \
-	src/libnm-client-impl/nm-remote-connection-private.h \
-	$(NULL)
-libnm_lib_c_real = \
-	src/libnm-client-impl/nm-client.c \
-	src/libnm-client-impl/nm-object.c \
-	src/libnm-client-impl/nm-device.c \
-	src/libnm-client-impl/nm-active-connection.c \
-	\
-	src/libnm-client-impl/nm-access-point.c \
-	src/libnm-client-impl/nm-checkpoint.c \
-	src/libnm-client-impl/nm-conn-utils.c \
-	src/libnm-client-impl/nm-dbus-helpers.c \
-	src/libnm-client-impl/nm-device-6lowpan.c \
-	src/libnm-client-impl/nm-device-adsl.c \
-	src/libnm-client-impl/nm-device-bond.c \
-	src/libnm-client-impl/nm-device-bridge.c \
-	src/libnm-client-impl/nm-device-bt.c \
-	src/libnm-client-impl/nm-device-dummy.c \
-	src/libnm-client-impl/nm-device-ethernet.c \
-	src/libnm-client-impl/nm-device-generic.c \
-	src/libnm-client-impl/nm-device-hsr.c \
-	src/libnm-client-impl/nm-device-infiniband.c \
-	src/libnm-client-impl/nm-device-ip-tunnel.c \
-	src/libnm-client-impl/nm-device-loopback.c \
-	src/libnm-client-impl/nm-device-macsec.c \
-	src/libnm-client-impl/nm-device-macvlan.c \
-	src/libnm-client-impl/nm-device-modem.c \
-	src/libnm-client-impl/nm-device-olpc-mesh.c \
-	src/libnm-client-impl/nm-device-ovs-bridge.c \
-	src/libnm-client-impl/nm-device-ovs-interface.c \
-	src/libnm-client-impl/nm-device-ovs-port.c \
-	src/libnm-client-impl/nm-device-ppp.c \
-	src/libnm-client-impl/nm-device-team.c \
-	src/libnm-client-impl/nm-device-tun.c \
-	src/libnm-client-impl/nm-device-veth.c \
-	src/libnm-client-impl/nm-device-vlan.c \
-	src/libnm-client-impl/nm-device-vrf.c \
-	src/libnm-client-impl/nm-device-vxlan.c \
-	src/libnm-client-impl/nm-device-wifi-p2p.c \
-	src/libnm-client-impl/nm-device-wifi.c \
-	src/libnm-client-impl/nm-device-wimax.c \
-	src/libnm-client-impl/nm-device-wireguard.c \
-	src/libnm-client-impl/nm-device-wpan.c \
-	src/libnm-client-impl/nm-dhcp-config.c \
-	src/libnm-client-impl/nm-dhcp4-config.c \
-	src/libnm-client-impl/nm-dhcp6-config.c \
-	src/libnm-client-impl/nm-dns-manager.c \
-	src/libnm-client-impl/nm-ip-config.c \
-	src/libnm-client-impl/nm-ip4-config.c \
-	src/libnm-client-impl/nm-ip6-config.c \
-	src/libnm-client-impl/nm-libnm-utils.c \
-	src/libnm-client-impl/nm-remote-connection.c \
-	src/libnm-client-impl/nm-secret-agent-old.c \
-	src/libnm-client-impl/nm-vpn-connection.c \
-	src/libnm-client-impl/nm-vpn-editor.c \
-	src/libnm-client-impl/nm-vpn-plugin-old.c \
-	src/libnm-client-impl/nm-vpn-service-plugin.c \
-	src/libnm-client-impl/nm-wifi-p2p-peer.c \
-	src/libnm-client-impl/nm-wimax-nsp.c \
-	$(NULL)
-src_libnm_client_public_mkenums_c = \
-	src/libnm-client-public/nm-enum-types.c \
-	$(NULL)
+              libnm_lib_h_pub_real =
+          src / libnm - client - public / NetworkManager.h src / libnm - client - public / nm
+          - access - point.h src / libnm - client - public / nm - active - connection.h src / libnm
+          - client - public / nm - autoptr.h src / libnm - client - public / nm
+          - checkpoint.h src / libnm - client - public / nm - client.h src / libnm - client
+          - public / nm - conn - utils.h src / libnm - client - public / nm - device
+          - 6lowpan.h src / libnm - client - public / nm - device - adsl.h src / libnm - client
+          - public / nm - device - bond.h src / libnm - client - public / nm - device
+          - bridge.h src / libnm - client - public / nm - device - bt.h src / libnm - client
+          - public / nm - device - dummy.h src / libnm - client - public / nm - device
+          - ethernet.h src / libnm - client - public / nm - device - generic.h src / libnm - client
+          - public / nm - device - hsr.h src / libnm - client - public / nm - device
+          - infiniband.h src / libnm - client - public / nm - device - ip - tunnel.h src / libnm
+          - client - public / nm - device - loopback.h src / libnm - client - public / nm - device
+          - macsec.h src / libnm - client - public / nm - device - macvlan.h src / libnm - client
+          - public / nm - device - modem.h src / libnm - client - public / nm - device - olpc
+          - mesh.h src / libnm - client - public / nm - device - ovs - bridge.h src / libnm - client
+          - public / nm - device - ovs - interface.h src / libnm - client - public / nm - device
+          - ovs - port.h src / libnm - client - public / nm - device - ppp.h src / libnm - client
+          - public / nm - device - team.h src / libnm - client - public / nm - device
+          - tun.h src / libnm - client - public / nm - device - veth.h src / libnm - client
+          - public / nm - device - vlan.h src / libnm - client - public / nm - device
+          - vrf.h src / libnm - client - public / nm - device - vxlan.h src / libnm - client
+          - public / nm - device - wifi - p2p.h src / libnm - client - public / nm - device
+          - wifi.h src / libnm - client - public / nm - device - wimax.h src / libnm - client
+          - public / nm - device - wireguard.h src / libnm - client - public / nm - device
+          - wpan.h src / libnm - client - public / nm - device.h src / libnm - client - public / nm
+          - dhcp - config.h src / libnm - client - public / nm - ethtool - utils.h src / libnm
+          - client - public / nm - ip - config.h src / libnm - client - public / nm
+          - object.h src / libnm - client - public / nm - remote - connection.h src / libnm - client
+          - public / nm - secret - agent - old.h src / libnm - client - public / nm - vpn
+          - connection.h src / libnm - client - public / nm - vpn - editor.h src / libnm - client
+          - public / nm - vpn - plugin - old.h src / libnm - client - public / nm - vpn - service
+          - plugin.h src / libnm - client - public / nm - wifi - p2p - peer.h src / libnm - client
+          - public / nm - wimax
+          - nsp.h $(NULL) src_libnm_client_public_mkenums_h = src / libnm - client - public / nm
+                                                              - enum
+                                                              - types.h $(NULL) libnm_lib_h_priv =
+              src / libnm - client - impl / nm - dbus - helpers.h       src / libnm - client - aux
+              - extern / nm - default - client.h src / libnm - client - impl / nm - default
+              - libnm.h src / libnm - client - impl / nm - device - private.h src / libnm - client
+              - impl / nm - dhcp4 - config.h src / libnm - client - impl / nm - dhcp6
+              - config.h src / libnm - client - impl / nm - dns - manager.h src / libnm - client
+              - impl / nm - ip4 - config.h src / libnm - client - impl / nm - ip6
+              - config.h src / libnm - client - impl / nm - libnm - utils.h src / libnm - client
+              - impl / nm - object - private.h src / libnm - client - impl / nm - remote
+              - connection - private.h         $(NULL) libnm_lib_c_real =
+                  src / libnm - client - impl / nm - client.c src / libnm - client - impl / nm
+                  - object.c src / libnm - client - impl / nm - device.c src / libnm - client
+                  - impl / nm - active
+                  - connection.c
 
-libnminclude_HEADERS += \
-	$(libnm_lib_h_pub_real)
+                            src
+                        / libnm
+                  - client - impl / nm - access - point.c src / libnm - client - impl / nm
+                  - checkpoint.c src / libnm - client - impl / nm - conn - utils.c src / libnm
+                  - client - impl / nm - dbus - helpers.c src / libnm - client - impl / nm - device
+                  - 6lowpan.c src / libnm - client - impl / nm - device - adsl.c src / libnm
+                  - client - impl / nm - device - bond.c src / libnm - client - impl / nm - device
+                  - bridge.c src / libnm - client - impl / nm - device - bt.c src / libnm - client
+                  - impl / nm - device - dummy.c src / libnm - client - impl / nm - device
+                  - ethernet.c src / libnm - client - impl / nm - device - generic.c src / libnm
+                  - client - impl / nm - device - hsr.c src / libnm - client - impl / nm - device
+                  - infiniband.c src / libnm - client - impl / nm - device - ip
+                  - tunnel.c src / libnm - client - impl / nm - device - loopback.c src / libnm
+                  - client - impl / nm - device - macsec.c src / libnm - client - impl / nm - device
+                  - macvlan.c src / libnm - client - impl / nm - device - modem.c src / libnm
+                  - client - impl / nm - device - olpc - mesh.c src / libnm - client - impl / nm
+                  - device - ovs - bridge.c src / libnm - client - impl / nm - device - ovs
+                  - interface.c src / libnm - client - impl / nm - device - ovs - port.c src / libnm
+                  - client - impl / nm - device - ppp.c src / libnm - client - impl / nm - device
+                  - team.c src / libnm - client - impl / nm - device - tun.c src / libnm - client
+                  - impl / nm - device - veth.c src / libnm - client - impl / nm - device
+                  - vlan.c src / libnm - client - impl / nm - device - vrf.c src / libnm - client
+                  - impl / nm - device - vxlan.c src / libnm - client - impl / nm - device - wifi
+                  - p2p.c src / libnm - client - impl / nm - device - wifi.c src / libnm - client
+                  - impl / nm - device - wimax.c src / libnm - client - impl / nm - device
+                  - wireguard.c src / libnm - client - impl / nm - device - wpan.c src / libnm
+                  - client - impl / nm - dhcp - config.c src / libnm - client - impl / nm - dhcp4
+                  - config.c src / libnm - client - impl / nm - dhcp6 - config.c src / libnm
+                  - client - impl / nm - dns - manager.c src / libnm - client - impl / nm - ip
+                  - config.c src / libnm - client - impl / nm - ip4 - config.c src / libnm - client
+                  - impl / nm - ip6 - config.c src / libnm - client - impl / nm - libnm
+                  - utils.c src / libnm - client - impl / nm - remote - connection.c src / libnm
+                  - client - impl / nm - secret - agent - old.c src / libnm - client - impl / nm
+                  - vpn - connection.c src / libnm - client - impl / nm - vpn - editor.c src / libnm
+                  - client - impl / nm - vpn - plugin - old.c src / libnm - client - impl / nm - vpn
+                  - service - plugin.c src / libnm - client - impl / nm - wifi - p2p
+                  - peer.c             src / libnm - client - impl / nm - wimax
+                  - nsp.c              $(NULL) src_libnm_client_public_mkenums_c =
+                      src / libnm - client - public / nm - enum
+                      - types.c $(NULL)
 
-nodist_libnminclude_HEADERS += \
-	$(src_libnm_client_public_mkenums_h)
+                            libnminclude_HEADERS += $(libnm_lib_h_pub_real)
 
-EXTRA_DIST += src/libnm-client-public/meson.build
+                          nodist_libnminclude_HEADERS += $(src_libnm_client_public_mkenums_h)
 
-check-local-nm-autoptr:
-	$(srcdir)/tools/check-nm-autoptr.sh
+                              EXTRA_DIST += src / libnm - client
+                                            - public
+                                                  / meson.build
 
-check_local += check-local-nm-autoptr
+                                                        check
+                                            - local - nm - autoptr : $(srcdir) / tools / check - nm
+                                            - autoptr.sh
 
-###############################################################################
+                                                  check_local +=
+      check - local - nm
+      - autoptr
 
-noinst_PROGRAMS += src/libnm-core-impl/gen-metadata-nm-settings-libnm-core
+      ############################################################################## #
 
-src_libnm_core_impl_gen_metadata_nm_settings_libnm_core_SOURCES = \
-	src/libnm-core-impl/gen-metadata-nm-settings-libnm-core.c \
-	$(NULL)
+      noinst_PROGRAMS += src / libnm - core - impl / gen - metadata - nm - settings - libnm
+                         - core
 
-src_libnm_core_impl_gen_metadata_nm_settings_libnm_core_CPPFLAGS = \
-	$(clients_cppflags) \
-	$(NULL)
+                             src_libnm_core_impl_gen_metadata_nm_settings_libnm_core_SOURCES =
+          src / libnm - core - impl / gen - metadata - nm - settings - libnm
+          - core.c $(NULL)
 
-src_libnm_core_impl_gen_metadata_nm_settings_libnm_core_LDADD = \
-	src/libnm-core-impl/libnm-core-impl.la \
-	src/libnm-crypto/libnm-crypto.la \
-	$(libnm_crypto_lib) \
-	src/libnm-core-aux-intern/libnm-core-aux-intern.la \
-	src/libnm-base/libnm-base.la \
-	src/libnm-systemd-shared/libnm-systemd-shared.la \
-	src/libnm-log-null/libnm-log-null.la \
-	src/libnm-glib-aux/libnm-glib-aux.la \
-	src/libnm-std-aux/libnm-std-aux.la \
-	src/c-siphash/libc-siphash.la \
-	$(GLIB_LIBS) \
-	$(NULL)
+                src_libnm_core_impl_gen_metadata_nm_settings_libnm_core_CPPFLAGS =
+              $(clients_cppflags) $(NULL)
 
-src_libnm_core_impl_gen_metadata_nm_settings_libnm_core_LDFLAGS = \
-	-Wl,--version-script="$(srcdir)/linker-script-binary.ver" \
-	$(SANITIZER_EXEC_LDFLAGS) \
-	$(NULL)
+                  src_libnm_core_impl_gen_metadata_nm_settings_libnm_core_LDADD =
+                      src / libnm - core - impl / libnm - core - impl.la src / libnm
+                      - crypto / libnm - crypto.la $(libnm_crypto_lib) src / libnm - core - aux
+                      - intern / libnm - core - aux - intern.la src / libnm - base / libnm
+                      - base.la   src / libnm - systemd - shared / libnm - systemd
+                      - shared.la src / libnm - log - null / libnm - log - null.la src / libnm
+                      - glib - aux / libnm - glib - aux.la src / libnm - std - aux / libnm - std
+                      - aux.la                             src / c - siphash / libc
+                      - siphash.la                         $(GLIB_LIBS) $(NULL)
 
-$(src_libnm_core_impl_gen_metadata_nm_settings_libnm_core_OBJECTS): $(src_libnm_core_public_mkenums_h)
+                            src_libnm_core_impl_gen_metadata_nm_settings_libnm_core_LDFLAGS = -Wl,
+    --version - script = "$(srcdir)/linker-script-binary.ver" $(SANITIZER_EXEC_LDFLAGS) $(NULL)
 
-###############################################################################
+        $(src_libnm_core_impl_gen_metadata_nm_settings_libnm_core_OBJECTS)
+    : $(src_libnm_core_public_mkenums_h)
 
-noinst_LTLIBRARIES += src/libnm-client-impl/libnm-client-impl.la
+          ############################################################################## #
 
-src_libnm_client_impl_libnm_client_impl_la_CPPFLAGS = \
-	-I$(builddir)/src/libnm-client-public \
-	-I$(srcdir)/src/libnm-client-public \
-	-I$(srcdir)/src \
-	$(dflt_cppflags_libnm_core) \
-	$(INTROSPECTION_CFLAGS) \
-	$(NULL)
+      noinst_LTLIBRARIES += src / libnm - client - impl / libnm - client
+                            - impl.la
 
-src_libnm_client_impl_libnm_client_impl_la_SOURCES = \
-	$(libnm_lib_c_real) \
-	$(NULL)
+                                  src_libnm_client_impl_libnm_client_impl_la_CPPFLAGS =
+          -I$(builddir) / src / libnm - client - public - I$(srcdir) / src / libnm - client - public
+          - I$(srcdir)
+                / src $(dflt_cppflags_libnm_core) $(INTROSPECTION_CFLAGS) $(NULL)
 
-nodist_src_libnm_client_impl_libnm_client_impl_la_SOURCES = \
-	$(src_libnm_client_public_mkenums_h) \
-	$(src_libnm_client_public_mkenums_c) \
-	$(NULL)
+                    src_libnm_client_impl_libnm_client_impl_la_SOURCES = $(libnm_lib_c_real) $(NULL)
 
-src_libnm_client_impl_libnm_client_impl_la_LIBADD = \
-	src/libnm-core-aux-extern/libnm-core-aux-extern.la \
-	src/libnm-core-impl/libnm-core-impl.la \
-	src/libnm-crypto/libnm-crypto.la \
-	$(libnm_crypto_lib) \
-	src/libnm-core-aux-intern/libnm-core-aux-intern.la \
-	src/libnm-base/libnm-base.la \
-	introspection/libnmdbus.la \
-	src/libnm-glib-aux/libnm-glib-aux.la \
-	src/libnm-systemd-shared/libnm-systemd-shared.la \
-	src/libnm-log-null/libnm-log-null.la \
-	src/libnm-udev-aux/libnm-udev-aux.la \
-	src/libnm-std-aux/libnm-std-aux.la \
-	src/c-siphash/libc-siphash.la \
-	$(GLIB_LIBS) \
-	$(DL_LIBS) \
-	$(LIBUDEV_LIBS) \
-	$(NULL)
+              nodist_src_libnm_client_impl_libnm_client_impl_la_SOURCES =
+                  $(src_libnm_client_public_mkenums_h) $(src_libnm_client_public_mkenums_c) $(NULL)
 
-$(src_libnm_client_impl_libnm_client_impl_la_OBJECTS) : $(src_libnm_client_public_mkenums_h)
-$(src_libnm_client_impl_libnm_client_impl_la_OBJECTS) : $(src_libnm_core_public_mkenums_h)
+                      src_libnm_client_impl_libnm_client_impl_la_LIBADD =
+                          src / libnm - core - aux - extern / libnm - core - aux
+                          - extern.la src / libnm - core - impl / libnm - core - impl.la src / libnm
+                          - crypto / libnm - crypto.la $(libnm_crypto_lib) src / libnm - core - aux
+                          - intern / libnm - core - aux - intern.la src / libnm - base / libnm
+                          - base.la introspection / libnmdbus.la src / libnm - glib - aux / libnm
+                          - glib - aux.la src / libnm - systemd - shared / libnm - systemd
+                          - shared.la src / libnm - log - null / libnm - log - null.la src / libnm
+                          - udev - aux / libnm - udev - aux.la src / libnm - std - aux / libnm - std
+                          - aux.la                             src / c - siphash / libc
+                          - siphash.la $(GLIB_LIBS) $(DL_LIBS) $(LIBUDEV_LIBS) $(NULL)
 
-###############################################################################
+                                $(src_libnm_client_impl_libnm_client_impl_la_OBJECTS)
+    : $(src_libnm_client_public_mkenums_h) $(src_libnm_client_impl_libnm_client_impl_la_OBJECTS)
+    : $(src_libnm_core_public_mkenums_h)
 
-lib_LTLIBRARIES += src/libnm-client-impl/libnm.la
+          ############################################################################## #
 
-GLIB_GENERATED += \
-	$(src_libnm_client_public_mkenums_h) \
-	$(src_libnm_client_public_mkenums_c)
-nm_enum_types_sources = \
-	$(src_libnm_client_public_mkenums_h) \
-	$(libnm_lib_h_pub_real)
-nm_enum_types_MKENUMS_H_FLAGS = --fhead '\#include "nm-core-enum-types.h"\n'
-nm_enum_types_MKENUMS_C_FLAGS = --fhead '\#undef G_LOG_DOMAIN\n\#include "libnm-client-impl/nm-default-libnm.h"\n'
+      lib_LTLIBRARIES += src / libnm - client
+                          - impl
+                                / libnm.la
 
-$(src_nm_dispatcher_nm_dispatcher_OBJECTS):                             $(src_libnm_client_public_mkenums_h)
-$(src_nm_dispatcher_libnm_dispatcher_core_la_OBJECTS):                  $(src_libnm_client_public_mkenums_h)
-$(src_libnm_client_impl_libnm_la_OBJECTS):                              $(src_libnm_client_public_mkenums_h)
-$(src_contrib_tests_libnm_vpn_plugin_utils_test_la_OBJECTS):            $(src_libnm_client_public_mkenums_h)
+                                      GLIB_GENERATED +=
+      $(src_libnm_client_public_mkenums_h) $(
+          src_libnm_client_public_mkenums_c) nm_enum_types_sources =
+          $(src_libnm_client_public_mkenums_h) $(
+              libnm_lib_h_pub_real) nm_enum_types_MKENUMS_H_FLAGS =
+              --fhead '\#include "nm-core-enum-types.h"\n' nm_enum_types_MKENUMS_C_FLAGS =
+                  --fhead '\#undef G_LOG_DOMAIN\n\#include "libnm-client-impl/nm-default-libnm.h"\n'
 
-src_libnm_client_impl_libnm_la_CPPFLAGS = \
-	-I$(builddir)/src/libnm-client-public \
-	-I$(srcdir)/src/libnm-client-public \
-	-I$(srcdir)/src \
-	$(dflt_cppflags_libnm_core) \
-	$(LIBUDEV_CFLAGS) \
-	$(SANITIZER_LIB_CFLAGS) \
-	$(NULL)
+                  $(src_nm_dispatcher_nm_dispatcher_OBJECTS)
+    : $(src_libnm_client_public_mkenums_h) $(src_nm_dispatcher_libnm_dispatcher_core_la_OBJECTS)
+    : $(src_libnm_client_public_mkenums_h) $(src_libnm_client_impl_libnm_la_OBJECTS)
+    : $(src_libnm_client_public_mkenums_h)
+          $(src_contrib_tests_libnm_vpn_plugin_utils_test_la_OBJECTS)
+    : $(src_libnm_client_public_mkenums_h)
 
-src_libnm_client_impl_libnm_la_SOURCES = \
-	$(libnm_lib_h_pub_real) \
-	$(libnm_lib_h_priv) \
-	$(NULL)
+          src_libnm_client_impl_libnm_la_CPPFLAGS =
+                      -I$(builddir) / src / libnm - client - public - I$(srcdir) / src / libnm
+                      - client - public
+                      - I$(srcdir)
+                            / src $(dflt_cppflags_libnm_core) $(LIBUDEV_CFLAGS)
+                                $(SANITIZER_LIB_CFLAGS) $(NULL)
 
-EXTRA_src_libnm_client_impl_libnm_la_DEPENDENCIES = \
-	src/libnm-client-impl/libnm.ver
+                                    src_libnm_client_impl_libnm_la_SOURCES =
+                          $(libnm_lib_h_pub_real) $(libnm_lib_h_priv) $(NULL)
 
-src_libnm_client_impl_libnm_la_LIBADD = \
-	src/libnm-client-impl/libnm-client-impl.la \
-	$(NULL)
+                              EXTRA_src_libnm_client_impl_libnm_la_DEPENDENCIES =
+                                  src / libnm - client
+                                  - impl
+                                        / libnm.ver
 
-src_libnm_client_impl_libnm_la_LDFLAGS = \
-	-Wl,--version-script="$(srcdir)/src/libnm-client-impl/libnm.ver" \
-	$(CODE_COVERAGE_LDFLAGS) \
-	$(SANITIZER_LIB_LDFLAGS) \
-	-version-info "1:0:1"
+                                              src_libnm_client_impl_libnm_la_LIBADD =
+                                      src / libnm - client - impl / libnm - client
+                                      - impl.la $(NULL)
 
-check-local-exports-libnm: src/libnm-client-impl/libnm.la
-	$(srcdir)/tools/check-exports.sh "$(builddir)/src/libnm-client-impl/.libs/libnm.so" "$(srcdir)/src/libnm-client-impl/libnm.ver"
+                                            src_libnm_client_impl_libnm_la_LDFLAGS = -Wl,
+    --version - script =
+        "$(srcdir)/src/libnm-client-impl/libnm.ver" $(CODE_COVERAGE_LDFLAGS)
+            $(SANITIZER_LIB_LDFLAGS)
+        - version
+        - info "1:0:1"
 
-check_local += check-local-exports-libnm
+        check
+        - local - exports - libnm : src / libnm - client - impl / libnm.la $(srcdir) / tools / check
+        - exports.sh "$(builddir)/src/libnm-client-impl/.libs/libnm.so"
+                     "$(srcdir)/src/libnm-client-impl/libnm.ver"
 
-pkgconfig_DATA += src/libnm-client-impl/libnm.pc
+          check_local += check - local - exports
+                         - libnm
 
-DISTCLEANFILES += \
-	src/libnm-client-impl/libnm.pc
+                             pkgconfig_DATA +=
+    src / libnm - client
+    - impl
+          / libnm.pc
 
-EXTRA_DIST += \
-	src/libnm-client-public/nm-enum-types.c.template \
-	src/libnm-client-public/nm-enum-types.h.template \
-	\
-	src/libnm-client-impl/libnm.pc.in \
-	src/libnm-client-impl/libnm.ver
+                DISTCLEANFILES += src / libnm - client
+                                  - impl
+                                        / libnm.pc
 
-###############################################################################
+                                              EXTRA_DIST +=
+    src / libnm - client - public / nm - enum - types.c.template src / libnm - client - public / nm
+    - enum
+    - types.h.template
 
-src/libnm-client-impl/NM-1.0.gir: src/libnm-client-impl/libnm.la
-src_libnm_client_impl_NM_1_0_gir_INCLUDES = Gio-2.0
-src_libnm_client_impl_NM_1_0_gir_PACKAGES = gio-2.0
-src_libnm_client_impl_NM_1_0_gir_EXPORT_PACKAGES = libnm
-src_libnm_client_impl_NM_1_0_gir_CFLAGS = \
-	$(filter-out -DGLIB_VERSION_%, $(src_libnm_client_impl_libnm_la_CPPFLAGS)) \
-	-DNETWORKMANAGER_COMPILATION \
-	$(NULL)
-src_libnm_client_impl_NM_1_0_gir_LIBS = src/libnm-client-impl/libnm.la
-src_libnm_client_impl_NM_1_0_gir_FILES = \
-	$(src_libnm_core_public_mkenums_h) \
-	$(src_libnm_core_impl_lib_h_pub_real) \
-	$(src_libnm_core_public_mkenums_c) \
-	$(src_libnm_core_impl_lib_c_real) \
-	$(src_libnm_client_public_mkenums_h) \
-	$(libnm_lib_h_pub_real) \
-	$(src_libnm_client_public_mkenums_c) \
-	$(libnm_lib_c_real)
-src_libnm_client_impl_NM_1_0_gir_SCANNERFLAGS = --warn-all --identifier-prefix=NM --symbol-prefix=nm --c-include="NetworkManager.h"
+          src
+          / libnm
+    - client - impl / libnm.pc.in src / libnm - client
+    - impl
+          / libnm.ver
 
-src/libnm-client-impl/libnm.typelib: src/libnm-client-impl/libnm.gir
-	$(INTROSPECTION_COMPILER) --includedir=$(srcdir)/src/libnm-core-public --includedir=$(builddir)/src/libnm-core-public --includedir=$(srcdir)/libnm-client-public --includedir=$(builddir)/libnm-client-public $< -o $@
+            ############################################################################## #
 
+            src
+          / libnm
+    - client - impl / NM - 1.0.gir : src / libnm - client
+    - impl / libnm.la src_libnm_client_impl_NM_1_0_gir_INCLUDES =
+        Gio - 2.0 src_libnm_client_impl_NM_1_0_gir_PACKAGES =
+            gio - 2.0 src_libnm_client_impl_NM_1_0_gir_EXPORT_PACKAGES =
+                libnm src_libnm_client_impl_NM_1_0_gir_CFLAGS =
+                    $(filter - out - DGLIB_VERSION_ %, $(src_libnm_client_impl_libnm_la_CPPFLAGS))
+                    - DNETWORKMANAGER_COMPILATION $(NULL) src_libnm_client_impl_NM_1_0_gir_LIBS =
+                        src / libnm - client
+                        - impl / libnm.la src_libnm_client_impl_NM_1_0_gir_FILES =
+                            $(src_libnm_core_public_mkenums_h) $(src_libnm_core_impl_lib_h_pub_real)
+                                $(src_libnm_core_public_mkenums_c) $(src_libnm_core_impl_lib_c_real)
+                                    $(src_libnm_client_public_mkenums_h) $(libnm_lib_h_pub_real) $(
+                                        src_libnm_client_public_mkenums_c) $(libnm_lib_c_real)
+                                        src_libnm_client_impl_NM_1_0_gir_SCANNERFLAGS =
+                                            --warn - all-- identifier
+                                            - prefix = NM-- symbol - prefix = nm-- c - include =
+                                                "NetworkManager.h"
 
-libnm_noinst_data = \
-	src/libnm-core-impl/gen-metadata-nm-settings-libnm-core.xml \
-	src/nmcli/gen-metadata-nm-settings-nmcli.xml \
-	man/nm-settings-docs-dbus.xml \
-	man/nm-settings-docs-nmcli.xml \
-	src/libnm-client-impl/nm-property-infos-dbus.xml \
-	src/libnm-client-impl/nm-property-infos-ifcfg-rh.xml \
-	src/libnm-client-impl/nm-property-infos-keyfile.xml \
-	src/libnm-client-impl/nm-property-infos-nmcli.xml \
-	src/libnm-client-impl/nm-settings-docs-gir-dbus.xml \
-	src/libnm-client-impl/nm-settings-docs-gir-ifcfg-rh.xml \
-	src/libnm-client-impl/nm-settings-docs-gir-keyfile.xml \
-	src/libnm-client-impl/nm-settings-docs-gir-nmcli.xml \
-	src/libnmc-setting/settings-docs-input.xml \
-	$(NULL)
+                                                    src
+                                                    / libnm
+                                                - client - impl / libnm.typelib : src / libnm
+                                                - client
+                                                - impl
+                                                      / libnm.gir $(
+                                                          INTROSPECTION_COMPILER)-- includedir =
+                                                    $(srcdir) / src / libnm - core
+                                                    - public --includedir = $(builddir)
+                                                                                / src / libnm
+                                                                            - core
+                                                                            - public --includedir =
+                                                        $(srcdir) / libnm - client
+                                                        - public --includedir =
+                                                            $(builddir) / libnm - client - public $
+                                                            < -o $ @
 
-if HAVE_INTROSPECTION
-INTROSPECTION_GIRS += src/libnm-client-impl/NM-1.0.gir
-noinst_DATA += $(libnm_noinst_data)
-DISTCLEANFILES += $(libnm_noinst_data)
+                                                              libnm_noinst_data =
+                                                                src / libnm
+                                                                - core - impl / gen - metadata - nm
+                                                                - settings - libnm
+                                                                - core.xml src / nmcli / gen
+                                                                - metadata - nm - settings
+                                                                - nmcli.xml man / nm - settings
+                                                                - docs - dbus.xml man / nm
+                                                                - settings - docs
+                                                                - nmcli.xml src / libnm
+                                                                - client - impl / nm - property
+                                                                - infos - dbus.xml src / libnm
+                                                                - client - impl / nm - property
+                                                                - infos - ifcfg - rh.xml src / libnm
+                                                                - client - impl / nm - property
+                                                                - infos - keyfile.xml src / libnm
+                                                                - client - impl / nm - property
+                                                                - infos - nmcli.xml src / libnm
+                                                                - client - impl / nm - settings
+                                                                - docs - gir - dbus.xml src / libnm
+                                                                - client - impl / nm - settings
+                                                                - docs - gir - ifcfg
+                                                                - rh.xml src / libnm - client
+                                                                - impl / nm - settings - docs - gir
+                                                                - keyfile.xml src / libnm - client
+                                                                - impl / nm - settings - docs - gir
+                                                                - nmcli.xml src / libnmc
+                                                                - setting / settings - docs
+                                                                - input.xml $(NULL)
 
-EXTRA_DIST += \
-	src/nmcli/gen-metadata-nm-settings-nmcli.xml.in \
-	src/libnm-core-impl/gen-metadata-nm-settings-libnm-core.xml.in
+                                                                      if HAVE_INTROSPECTION
+                                                                          INTROSPECTION_GIRS +=
+    src / libnm - client - impl / NM - 1.0.gir noinst_DATA += $(libnm_noinst_data) DISTCLEANFILES +=
+    $(libnm_noinst_data)
 
-src_libnm_client_impl_NM_1_0_typelib = src/libnm-client-impl/NM-1.0.typelib
-else
-src_libnm_client_impl_NM_1_0_typelib =
-endif
+        EXTRA_DIST +=
+    src / nmcli / gen - metadata - nm - settings - nmcli.xml.in src / libnm - core - impl / gen
+    - metadata - nm - settings - libnm
+    - core.xml.in
 
-###############################################################################
+          src_libnm_client_impl_NM_1_0_typelib =
+        src / libnm - client - impl / NM - 1.0.typelib else src_libnm_client_impl_NM_1_0_typelib =
+            endif
 
-if BUILD_DOCS
-src/nmcli/gen-metadata-nm-settings-nmcli.xml: src/nmcli/gen-metadata-nm-settings-nmcli
-	$(AM_V_GEN) src/nmcli/gen-metadata-nm-settings-nmcli > "$@"
-check-local-gen-metadata-nm-settings-nmcli: src/nmcli/gen-metadata-nm-settings-nmcli.xml
-	$(srcdir)/tools/check-compare-generated.sh "$(srcdir)/src/nmcli/gen-metadata-nm-settings-nmcli.xml.in" "$(builddir)/src/nmcli/gen-metadata-nm-settings-nmcli.xml"
-check_local += check-local-gen-metadata-nm-settings-nmcli
-DISTCLEANFILES += src/nmcli/gen-metadata-nm-settings-nmcli.xml
+                    ############################################################################## #
 
-src/libnm-core-impl/gen-metadata-nm-settings-libnm-core.xml: src/libnm-core-impl/gen-metadata-nm-settings-libnm-core
-	$(AM_V_GEN) src/libnm-core-impl/gen-metadata-nm-settings-libnm-core > "$@"
-check-local-gen-metadata-nm-settings-libnm-core: src/libnm-core-impl/gen-metadata-nm-settings-libnm-core.xml
-	$(srcdir)/tools/check-compare-generated.sh "$(srcdir)/src/libnm-core-impl/gen-metadata-nm-settings-libnm-core.xml.in" "$(builddir)/src/libnm-core-impl/gen-metadata-nm-settings-libnm-core.xml"
-check_local += check-local-gen-metadata-nm-settings-libnm-core
-DISTCLEANFILES += src/libnm-core-impl/gen-metadata-nm-settings-libnm-core.xml
-else
-src/nmcli/gen-metadata-nm-settings-nmcli.xml: src/nmcli/gen-metadata-nm-settings-nmcli.xml.in
-	$(AM_V_GEN) cp $^ $@
-check-local-gen-metadata-nm-settings-nmcli:
+                    if BUILD_DOCS src
+                    / nmcli / gen
+                - metadata - nm - settings - nmcli.xml : src / nmcli / gen - metadata - nm
+                - settings - nmcli $(AM_V_GEN) src / nmcli / gen - metadata - nm - settings - nmcli
+            > "$@" check - local - gen - metadata - nm - settings - nmcli : src / nmcli / gen
+                  - metadata - nm - settings - nmcli.xml $(srcdir) / tools / check - compare
+                  - generated.sh
+                    "$(srcdir)/src/nmcli/gen-metadata-nm-settings-nmcli.xml.in"
+                    "$(builddir)/src/nmcli/gen-metadata-nm-settings-nmcli.xml" check_local
+    += check - local - gen - metadata - nm - settings - nmcli DISTCLEANFILES
+    += src / nmcli / gen - metadata - nm - settings
+           - nmcli.xml
 
-src/libnm-core-impl/gen-metadata-nm-settings-libnm-core.xml: src/libnm-core-impl/gen-metadata-nm-settings-libnm-core.xml.in
-	$(AM_V_GEN) cp $^ $@
-check-local-gen-metadata-nm-settings-libnm-core:
-endif
+                 src
+                 / libnm
+           - core - impl / gen - metadata - nm - settings - libnm - core.xml : src / libnm - core
+           - impl / gen - metadata - nm - settings - libnm - core $(AM_V_GEN) src / libnm - core
+           - impl / gen - metadata - nm - settings - libnm - core
+       > "$@" check - local - gen - metadata - nm - settings - libnm - core : src / libnm - core
+             - impl / gen - metadata - nm - settings - libnm - core.xml $(srcdir) / tools / check
+             - compare
+             - generated.sh
+               "$(srcdir)/src/libnm-core-impl/gen-metadata-nm-settings-libnm-core.xml.in"
+               "$(builddir)/src/libnm-core-impl/gen-metadata-nm-settings-libnm-core.xml" check_local
+    += check - local - gen - metadata - nm - settings - libnm - core DISTCLEANFILES
+    += src / libnm - core - impl / gen - metadata - nm - settings - libnm
+       - core.xml else src / nmcli / gen - metadata - nm - settings - nmcli.xml : src / nmcli / gen
+       - metadata - nm - settings - nmcli.xml.in $(AM_V_GEN)
+cp $
+    ^ $ @check - local - gen - metadata - nm - settings
+          - nmcli :
 
-libnm_docs_sources = $(src_libnm_core_impl_lib_c_settings_real)
+    src
+    / libnm
+          - core - impl / gen - metadata - nm - settings - libnm - core.xml : src / libnm - core
+          - impl / gen - metadata - nm - settings - libnm
+          - core.xml.in
+            $(AM_V_GEN)
+cp          $
+    ^ $ @check - local - gen - metadata - nm - settings - libnm
+          - core : endif
 
-src/libnm-client-impl/nm-property-infos-%.xml: tools/generate-docs-nm-property-infos.py src/libnm-core-impl/libnm-core-impl.la src/libnm-client-impl/NM-1.0.gir $(libnm_docs_sources)
-	$(AM_V_GEN) \
-		"$(PYTHON)" \
-		$(srcdir)/tools/generate-docs-nm-property-infos.py \
-		$(patsubst nm-property-infos-%.xml,%,$(notdir $@)) \
-		$@ \
-		$(wordlist 3,1000,$^)
+                       libnm_docs_sources =
+    $(src_libnm_core_impl_lib_c_settings_real)
 
-src/libnm-client-impl/nm-settings-docs-gir-%.xml: tools/generate-docs-nm-settings-docs-gir.py src/libnm-client-impl/NM-1.0.gir src/libnm-client-impl/NM-1.0.typelib src/libnm-client-impl/libnm.la $(libnm_docs_sources)
-	$(AM_V_GEN) \
-	export GI_TYPELIB_PATH=$(abs_builddir)/src/libnm-client-impl$${GI_TYPELIB_PATH:+:$$GI_TYPELIB_PATH}; \
-	export LD_LIBRARY_PATH=$(abs_builddir)/src/libnm-client-impl/.libs$${LD_LIBRARY_PATH:+:$$LD_LIBRARY_PATH}; \
-	$(call set_sanitizer_env,$(abs_builddir)/src/libnm-client-impl/.libs/libnm.so); \
-	"$(PYTHON)" \
+            src
+        / libnm
+    - client - impl / nm - property - infos - %.xml : tools / generate - docs - nm - property
+    - infos.py src / libnm - core - impl / libnm - core - impl.la src / libnm - client - impl / NM
+    - 1.0.gir $(libnm_docs_sources) $(AM_V_GEN) "$(PYTHON)" $(srcdir) / tools / generate - docs - nm
+    - property
+    - infos.py $(patsubst nm - property - infos - %.xml, %, $(notdir $ @)) $
+          @$(wordlist 3, 1000, $ ^)
+
+              src
+          / libnm
+    - client - impl / nm - settings - docs - gir - %.xml : tools / generate - docs - nm - settings
+    - docs - gir.py src / libnm - client - impl / NM - 1.0.gir src / libnm - client - impl / NM
+    - 1.0.typelib src / libnm - client
+    - impl / libnm.la $(libnm_docs_sources) $(AM_V_GEN) export GI_TYPELIB_PATH =
+        $(abs_builddir) / src / libnm - client - impl$${GI_TYPELIB_PATH: +: $$GI_TYPELIB_PATH};
+export LD_LIBRARY_PATH =
+    $(abs_builddir) / src / libnm - client - impl /.libs$${LD_LIBRARY_PATH: +: $$LD_LIBRARY_PATH};
+$(call set_sanitizer_env, $(abs_builddir) / src / libnm - client - impl /.libs / libnm.so);
+    "$(PYTHON)" \
 	$(srcdir)/tools/generate-docs-nm-settings-docs-gir.py \
 		--gir $(builddir)/src/libnm-client-impl/NM-1.0.gir \
 		--output $@ \
@@ -2201,8 +2114,8 @@ $(src_libnm_client_impl_tests_test_nm_client_OBJECTS):              $(src_libnm_
 $(src_libnm_client_impl_tests_test_remote_settings_client_OBJECTS): $(src_libnm_core_public_mkenums_h) $(src_libnm_client_public_mkenums_h)
 $(src_libnm_client_impl_tests_test_secret_agent_OBJECTS):           $(src_libnm_core_public_mkenums_h) $(src_libnm_client_public_mkenums_h)
 
-# tools/test-networkmanager-service.py uses libnm's typelib. Ensure it
-# is built first.
+#tools / test - networkmanager - service.py uses libnm's typelib. Ensure it
+#is built                                        first.
 $(src_libnm_client_impl_tests_test_nm_client_OBJECTS):              $(src_libnm_client_impl_NM_1_0_typelib)
 $(src_libnm_client_impl_tests_test_remote_settings_client_OBJECTS): $(src_libnm_client_impl_NM_1_0_typelib)
 $(src_libnm_client_impl_tests_test_secret_agent_OBJECTS):           $(src_libnm_client_impl_NM_1_0_typelib)
@@ -2213,7 +2126,7 @@ EXTRA_DIST += \
 
 ###############################################################################
 
-# just test, that we can build "nm-vpn-plugin-utils.c"
+#just test, that we can build "nm-vpn-plugin-utils.c"
 
 check_ltlibraries += src/contrib/tests/libnm-vpn-plugin-utils-test.la
 
@@ -2244,7 +2157,7 @@ EXTRA_DIST += \
 	$(NULL)
 
 ###############################################################################
-# src/core/
+#src / core /
 ###############################################################################
 
 src_core_cppflags_base = \
@@ -3268,7 +3181,7 @@ EXTRA_DIST += \
 	src/core/meson.build
 
 ###############################################################################
-# src/core/dhcp
+#src / core / dhcp
 ###############################################################################
 
 libexec_PROGRAMS += src/core/dhcp/nm-dhcp-helper
@@ -3294,7 +3207,7 @@ EXTRA_DIST += \
 	src/core/dhcp/meson.build
 
 ###############################################################################
-# src/core/dhcp/tests
+#src / core / dhcp / tests
 ###############################################################################
 
 src_core_dhcp_tests_cppflags = $(src_core_cppflags_test)
@@ -3324,7 +3237,7 @@ EXTRA_DIST += \
 	src/core/dhcp/tests/meson.build
 
 ###############################################################################
-# src/core/ppp
+#src / core / ppp
 ###############################################################################
 
 if WITH_PPP
@@ -3397,7 +3310,7 @@ EXTRA_DIST += \
 	src/core/ppp/meson.build
 
 ###############################################################################
-# src/core/settings/plugins/keyfile/tests
+#src / core / settings / plugins / keyfile / tests
 ###############################################################################
 
 check_programs += src/core/settings/plugins/keyfile/tests/test-keyfile-settings
@@ -3457,7 +3370,7 @@ EXTRA_DIST += \
 	src/core/settings/plugins/keyfile/tests/meson.build
 
 ###############################################################################
-# src/core/settings/plugins/ifcfg-rh
+#src / core / settings / plugins / ifcfg - rh
 ###############################################################################
 
 if CONFIG_PLUGIN_IFCFG_RH
@@ -3538,7 +3451,7 @@ check-local-symbols-settings-ifcfg-rh: src/core/settings/plugins/ifcfg-rh/libnm-
 check_local += check-local-symbols-settings-ifcfg-rh
 
 ###############################################################################
-# src/core/settings/plugins/ifcfg-rh/tests
+#src / core / settings / plugins / ifcfg - rh / tests
 ###############################################################################
 
 check_programs += src/core/settings/plugins/ifcfg-rh/tests/test-ifcfg-rh
@@ -3793,9 +3706,9 @@ EXTRA_DIST += \
 	src/core/settings/plugins/ifcfg-rh/tests/network-scripts/test_client.p12 \
 	$(NULL)
 
-# make target dependencies can't have colons in their names, which ends up
-# meaning that we can't add the alias files to EXTRA_DIST. They are instead
-# dist'ed via dist-hook-settings-ifcfg-rh below.
+#make target dependencies can't have colons in their names, which ends up
+#meaning that we          can't add the alias files to EXTRA_DIST. They are instead
+#dist'ed via dist-hook-settings-ifcfg-rh below.
 src_core_settings_plugins_ifcfg_rh_tests_network_scripts_alias_files = \
 	src/core/settings/plugins/ifcfg-rh/tests/network-scripts/ifcfg-aliasem0 \
 	src/core/settings/plugins/ifcfg-rh/tests/network-scripts/ifcfg-aliasem0:1 \
@@ -3809,385 +3722,437 @@ src_core_settings_plugins_ifcfg_rh_tests_network_scripts_alias_files = \
 	src/core/settings/plugins/ifcfg-rh/tests/network-scripts/ifcfg-aliasem3:1
 
 dist-hook-settings-ifcfg-rh-alias-files:
-	@for f in $(src_core_settings_plugins_ifcfg_rh_tests_network_scripts_alias_files); do \
-		cp $(abs_srcdir)/$$f $(distdir)/src/core/settings/plugins/ifcfg-rh/tests/network-scripts/; \
-	done
-
-dist_hook += dist-hook-settings-ifcfg-rh-alias-files
-
-###############################################################################
-
-if CONFIG_PLUGIN_IFCFG_RH
-dbusservice_DATA += src/core/settings/plugins/ifcfg-rh/nm-ifcfg-rh.conf
-endif
-
-EXTRA_DIST += \
-	src/core/settings/plugins/ifcfg-rh/nm-ifcfg-rh.conf \
-	src/core/settings/plugins/ifcfg-rh/nm-ifcfg-rh.xml \
-	src/core/settings/plugins/ifcfg-rh/meson.build \
-	src/core/settings/plugins/ifcfg-rh/tests/meson.build
-
-###############################################################################
-# src/core/settings/plugins/ifupdown
-###############################################################################
-
-if CONFIG_PLUGIN_IFUPDOWN
-
-core_plugins += src/core/settings/plugins/ifupdown/libnm-settings-plugin-ifupdown.la
-
-noinst_LTLIBRARIES += src/core/settings/plugins/ifupdown/libnms-ifupdown-core.la
-
-src_core_settings_plugins_ifupdown_libnms_ifupdown_core_la_SOURCES = \
-	src/core/settings/plugins/ifupdown/nms-ifupdown-interface-parser.c \
-	src/core/settings/plugins/ifupdown/nms-ifupdown-interface-parser.h \
-	src/core/settings/plugins/ifupdown/nms-ifupdown-parser.c \
-	src/core/settings/plugins/ifupdown/nms-ifupdown-parser.h \
-	$(NULL)
-
-src_core_settings_plugins_ifupdown_libnms_ifupdown_core_la_CPPFLAGS = $(src_core_cppflags_base)
-
-src_core_settings_plugins_ifupdown_libnms_ifupdown_core_la_LIBADD = \
-	$(LIBUDEV_LIBS) \
-	$(NULL)
-
-src_core_settings_plugins_ifupdown_libnm_settings_plugin_ifupdown_la_SOURCES = \
-	src/core/settings/plugins/ifupdown/nms-ifupdown-plugin.c \
-	src/core/settings/plugins/ifupdown/nms-ifupdown-plugin.h \
-	$(NULL)
-
-src_core_settings_plugins_ifupdown_libnm_settings_plugin_ifupdown_la_CPPFLAGS = $(src_core_cppflags_base)
-
-src_core_settings_plugins_ifupdown_libnm_settings_plugin_ifupdown_la_LDFLAGS = \
-	-module -avoid-version \
-	-Wl,--version-script="$(srcdir)/linker-script-settings.ver" \
-	$(NULL)
-
-src_core_settings_plugins_ifupdown_libnm_settings_plugin_ifupdown_la_LIBADD = \
-	src/core/settings/plugins/ifupdown/libnms-ifupdown-core.la \
-	$(LIBUDEV_LIBS) \
-	$(NULL)
-
-$(src_core_settings_plugins_ifupdown_libnm_settings_plugin_ifupdown_la_OBJECTS): $(src_libnm_core_public_mkenums_h)
-$(src_core_settings_plugins_ifupdown_libnms_ifupdown_core_la_OBJECTS): $(src_libnm_core_public_mkenums_h)
-
-check-local-symbols-settings-ifupdown: src/core/settings/plugins/ifupdown/libnm-settings-plugin-ifupdown.la
-	$(call check_so_symbols,$(builddir)/src/core/settings/plugins/ifupdown/.libs/libnm-settings-plugin-ifupdown.so)
-
-check_local += check-local-symbols-settings-ifupdown
-
-###############################################################################
-
-check_programs += src/core/settings/plugins/ifupdown/tests/test-ifupdown
-
-src_core_settings_plugins_ifupdown_tests_test_ifupdown_CPPFLAGS = $(src_core_cppflags_base_test)
-
-src_core_settings_plugins_ifupdown_tests_test_ifupdown_LDFLAGS = \
-	$(CODE_COVERAGE_LDFLAGS) \
-	$(SANITIZER_EXEC_LDFLAGS)
-
-src_core_settings_plugins_ifupdown_tests_test_ifupdown_LDADD = \
-	src/core/settings/plugins/ifupdown/libnms-ifupdown-core.la \
-	src/core/libNetworkManagerTest.la \
-	$(GLIB_LIBS) \
-	$(NULL)
-
-$(src_core_settings_plugins_ifupdown_tests_test_ifupdown_OBJECTS): $(src_libnm_core_public_mkenums_h)
-
-endif
-
-EXTRA_DIST += \
-	src/core/settings/plugins/ifupdown/tests/test1 \
-	src/core/settings/plugins/ifupdown/tests/test2 \
-	src/core/settings/plugins/ifupdown/tests/test3 \
-	src/core/settings/plugins/ifupdown/tests/test4 \
-	src/core/settings/plugins/ifupdown/tests/test5 \
-	src/core/settings/plugins/ifupdown/tests/test6 \
-	src/core/settings/plugins/ifupdown/tests/test7 \
-	src/core/settings/plugins/ifupdown/tests/test8 \
-	src/core/settings/plugins/ifupdown/tests/test9 \
-	src/core/settings/plugins/ifupdown/tests/test11 \
-	src/core/settings/plugins/ifupdown/tests/test12 \
-	src/core/settings/plugins/ifupdown/tests/test13 \
-	src/core/settings/plugins/ifupdown/tests/test14 \
-	src/core/settings/plugins/ifupdown/tests/test15 \
-	src/core/settings/plugins/ifupdown/tests/test16 \
-	src/core/settings/plugins/ifupdown/tests/test17-wired-static-verify-ip4 \
-	src/core/settings/plugins/ifupdown/tests/test18-wired-static-verify-ip6 \
-	src/core/settings/plugins/ifupdown/tests/test19-wired-static-verify-ip4-plen \
-	src/core/settings/plugins/ifupdown/tests/test20-source-stanza \
-	src/core/settings/plugins/ifupdown/tests/test20-source-stanza.eth0 \
-	src/core/settings/plugins/ifupdown/tests/test20-source-stanza.eth1 \
-	src/core/settings/plugins/ifupdown/tests/test21-source-dir-stanza \
-	src/core/settings/plugins/ifupdown/tests/test21-source-dir-stanza.d \
-	src/core/settings/plugins/ifupdown/tests/test22-duplicate-stanzas \
-	src/core/settings/plugins/ifupdown/meson.build \
-	src/core/settings/plugins/ifupdown/tests/meson.build
-
-###############################################################################
-# src/core/devices
-###############################################################################
-
-EXTRA_DIST += \
-	src/core/devices/meson.build
-
-###############################################################################
-# src/core/devices/adsl
-###############################################################################
-
-core_plugins += src/core/devices/adsl/libnm-device-plugin-adsl.la
-
-src_core_devices_adsl_libnm_device_plugin_adsl_la_SOURCES = \
-	src/core/devices/adsl/nm-atm-manager.c \
-	src/core/devices/adsl/nm-device-adsl.c \
-	src/core/devices/adsl/nm-device-adsl.h
-
-src_core_devices_adsl_libnm_device_plugin_adsl_la_CPPFLAGS = $(src_core_cppflags_device_plugin)
-
-src_core_devices_adsl_libnm_device_plugin_adsl_la_LDFLAGS = \
-	-module -avoid-version \
-	-Wl,--version-script="$(srcdir)/linker-script-devices.ver"
-
-src_core_devices_adsl_libnm_device_plugin_adsl_la_LIBADD = \
-	$(LIBUDEV_LIBS)
-
-check-local-devices-adsl: src/core/devices/adsl/libnm-device-plugin-adsl.la
-	$(srcdir)/tools/check-exports.sh $(builddir)/src/core/devices/adsl/.libs/libnm-device-plugin-adsl.so "$(srcdir)/linker-script-devices.ver"
-	$(call check_so_symbols,$(builddir)/src/core/devices/adsl/.libs/libnm-device-plugin-adsl.so)
-
-check_local += check-local-devices-adsl
-
-EXTRA_DIST += \
-	src/core/devices/adsl/meson.build
-
-###############################################################################
-# src/core/devices/wwan
-###############################################################################
-
-if WITH_MODEM_MANAGER_1
-
-src_core_devices_wwan_cppflags = \
-	$(src_core_cppflags_device_plugin) \
-	$(MM_GLIB_CFLAGS) \
-	$(NULL)
-
-core_plugins += src/core/devices/wwan/libnm-wwan.la
-
-src_core_devices_wwan_libnm_wwan_la_SOURCES = \
-	src/core/devices/wwan/nm-modem-broadband.c \
-	src/core/devices/wwan/nm-modem-broadband.h \
-	src/core/devices/wwan/nm-modem-manager.c \
-	src/core/devices/wwan/nm-modem-manager.h \
-	src/core/devices/wwan/nm-modem.c \
-	src/core/devices/wwan/nm-modem.h \
-	src/core/devices/wwan/nm-service-providers.c \
-	src/core/devices/wwan/nm-service-providers.h \
-	$(NULL)
-
-if WITH_OFONO
-src_core_devices_wwan_libnm_wwan_la_SOURCES += \
-	src/core/devices/wwan/nm-modem-ofono.c \
-	src/core/devices/wwan/nm-modem-ofono.h
-endif
-
-src_core_devices_wwan_libnm_wwan_la_CPPFLAGS = $(src_core_devices_wwan_cppflags)
-
-src_core_devices_wwan_libnm_wwan_la_LDFLAGS = \
-	-avoid-version \
-	-Wl,--version-script="$(srcdir)/src/core/devices/wwan/libnm-wwan.ver"
-
-src_core_devices_wwan_libnm_wwan_la_LIBADD = \
-	$(GLIB_LIBS) \
-	$(LIBSYSTEMD_LIBS) \
-	$(MM_GLIB_LIBS)
-
-$(src_core_devices_wwan_libnm_wwan_la_OBJECTS): $(src_libnm_core_public_mkenums_h)
-
-EXTRA_src_core_devices_wwan_libnm_wwan_la_DEPENDENCIES = \
-	src/core/devices/wwan/libnm-wwan.ver
-
-core_plugins += src/core/devices/wwan/libnm-device-plugin-wwan.la
-
-src_core_devices_wwan_libnm_device_plugin_wwan_la_SOURCES = \
-	src/core/devices/wwan/nm-wwan-factory.c \
-	src/core/devices/wwan/nm-device-modem.c \
-	src/core/devices/wwan/nm-device-modem.h
-
-src_core_devices_wwan_libnm_device_plugin_wwan_la_CPPFLAGS = $(src_core_devices_wwan_cppflags)
-
-src_core_devices_wwan_libnm_device_plugin_wwan_la_LDFLAGS = \
-	-module -avoid-version \
-	-Wl,--version-script="$(srcdir)/linker-script-devices.ver"
-
-src_core_devices_wwan_libnm_device_plugin_wwan_la_LIBADD = \
-	src/core/devices/wwan/libnm-wwan.la \
-	$(GLIB_LIBS)
-
-check-local-devices-wwan: src/core/devices/wwan/libnm-device-plugin-wwan.la src/core/devices/wwan/libnm-wwan.la
-	$(srcdir)/tools/check-exports.sh $(builddir)/src/core/devices/wwan/.libs/libnm-device-plugin-wwan.so "$(srcdir)/linker-script-devices.ver"
-	$(call check_so_symbols,$(builddir)/src/core/devices/wwan/.libs/libnm-device-plugin-wwan.so)
-	$(srcdir)/tools/check-exports.sh $(builddir)/src/core/devices/wwan/.libs/libnm-wwan.so "$(srcdir)/src/core/devices/wwan/libnm-wwan.ver"
-	$(call check_so_symbols,$(builddir)/src/core/devices/wwan/.libs/libnm-wwan.so)
-
-check_local += check-local-devices-wwan
-
-src_core_devices_wwan_tests_test_service_providers_SOURCES = \
-	src/core/devices/wwan/tests/test-service-providers.c \
-	src/core/devices/wwan/nm-service-providers.c \
-	src/core/devices/wwan/nm-service-providers.h \
-	$(NULL)
-
-src_core_devices_wwan_tests_test_service_providers_CPPFLAGS = \
-	$(src_core_cppflags_base_test) \
-	-I$(srcdir)/src/core/devices/wwan \
-	$(NULL)
-
-src_core_devices_wwan_tests_test_service_providers_LDFLAGS = \
-	$(SANITIZER_EXEC_LDFLAGS) \
-	$(NULL)
-
-src_core_devices_wwan_tests_test_service_providers_LDADD = \
-	src/core/libNetworkManagerTest.la \
-	$(GLIB_LIBS) \
-	$(NULL)
-
-check_programs += src/core/devices/wwan/tests/test-service-providers
-
-$(src_core_devices_wwan_tests_test_service_providers_OBJECTS): $(src_libnm_core_public_mkenums_h)
-
-endif
-
-EXTRA_DIST += \
-	src/core/devices/wwan/libnm-wwan.ver \
-	src/core/devices/wwan/meson.build \
-	src/core/devices/wwan/tests/test-service-providers.xml \
-	$(NULL)
-
-###############################################################################
-# src/core/devices/bluetooth
-###############################################################################
-
-if WITH_MODEM_MANAGER_1
-
-noinst_LTLIBRARIES += src/core/devices/bluetooth/libnm-bluetooth-utils.la
-
-src_core_devices_bluetooth_libnm_bluetooth_utils_la_SOURCES = \
-	src/core/devices/bluetooth/nm-bluez-common.h \
-	src/core/devices/bluetooth/nm-bt-error.c \
-	src/core/devices/bluetooth/nm-bt-error.h \
-	$(NULL)
-
-src_core_devices_bluetooth_libnm_bluetooth_utils_la_CPPFLAGS = \
-	$(src_core_cppflags_base) \
-	$(NULL)
-
-src_core_devices_bluetooth_libnm_bluetooth_utils_la_LIBADD = \
-	$(GLIB_LIBS) \
-	$(NULL)
-
-if WITH_BLUEZ5_DUN
-src_core_devices_bluetooth_libnm_bluetooth_utils_la_SOURCES += \
-	src/core/devices/bluetooth/nm-bluez5-dun.c \
-	src/core/devices/bluetooth/nm-bluez5-dun.h \
-	$(NULL)
-
-src_core_devices_bluetooth_libnm_bluetooth_utils_la_CPPFLAGS += $(BLUEZ5_CFLAGS)
-src_core_devices_bluetooth_libnm_bluetooth_utils_la_LIBADD += $(BLUEZ5_LIBS)
-endif
-
-$(src_core_devices_bluetooth_libnm_bluetooth_utils_la_OBJECTS): $(src_libnm_core_public_mkenums_h)
-
-###############################################################################
-
-core_plugins += src/core/devices/bluetooth/libnm-device-plugin-bluetooth.la
-
-src_core_devices_bluetooth_libnm_device_plugin_bluetooth_la_SOURCES = \
-	src/core/devices/bluetooth/nm-bluez-manager.c \
-	src/core/devices/bluetooth/nm-bluez-manager.h \
-	src/core/devices/bluetooth/nm-device-bt.c \
-	src/core/devices/bluetooth/nm-device-bt.h \
-	$(NULL)
-
-src_core_devices_bluetooth_libnm_device_plugin_bluetooth_la_CPPFLAGS = $(src_core_cppflags_device_plugin)
-
-src_core_devices_bluetooth_libnm_device_plugin_bluetooth_la_LDFLAGS = \
-	-module -avoid-version \
-	-Wl,--version-script="$(srcdir)/linker-script-devices.ver"
-
-src_core_devices_bluetooth_libnm_device_plugin_bluetooth_la_LIBADD = \
-	src/core/devices/bluetooth/libnm-bluetooth-utils.la \
-	src/core/devices/wwan/libnm-wwan.la \
-	$(GLIB_LIBS) \
-	$(NULL)
-
-###############################################################################
-
-check_programs_norun += \
-	src/core/devices/bluetooth/tests/nm-bt-test
-
-src_core_devices_bluetooth_tests_nm_bt_test_CPPFLAGS = \
-	$(src_core_cppflags_test) \
-	$(NULL)
-
-src_core_devices_bluetooth_tests_nm_bt_test_LDFLAGS = \
-	$(SANITIZER_EXEC_LDFLAGS) \
-	$(NULL)
-
-src_core_devices_bluetooth_tests_nm_bt_test_LDADD = \
-	src/core/devices/bluetooth/libnm-bluetooth-utils.la \
-	src/core/libNetworkManager.la \
-	$(GLIB_LIBS) \
-	$(NULL)
-
-$(src_core_devices_bluetooth_tests_nm_bt_test_OBJECTS): $(src_libnm_core_public_mkenums_h)
-
-###############################################################################
-
-check-local-devices-bluetooth: src/core/devices/bluetooth/libnm-device-plugin-bluetooth.la
-	$(srcdir)/tools/check-exports.sh $(builddir)/src/core/devices/bluetooth/.libs/libnm-device-plugin-bluetooth.so "$(srcdir)/linker-script-devices.ver"
-	$(call check_so_symbols,$(builddir)/src/core/devices/bluetooth/.libs/libnm-device-plugin-bluetooth.so)
-
-check_local += check-local-devices-bluetooth
-
-endif
-
-EXTRA_DIST += \
-	src/core/devices/bluetooth/meson.build \
-	$(NULL)
-
-###############################################################################
-# src/core/devices/wifi
-###############################################################################
-
-if WITH_WIFI
-
-noinst_LTLIBRARIES += src/core/devices/wifi/libnm-wifi-base.la
-
-src_core_devices_wifi_libnm_wifi_base_la_SOURCES = \
-	src/core/devices/wifi/nm-device-olpc-mesh.c \
-	src/core/devices/wifi/nm-device-olpc-mesh.h \
-	src/core/devices/wifi/nm-device-wifi-p2p.c \
-	src/core/devices/wifi/nm-device-wifi-p2p.h \
-	src/core/devices/wifi/nm-device-wifi.c \
-	src/core/devices/wifi/nm-device-wifi.h \
-	src/core/devices/wifi/nm-wifi-ap.c \
-	src/core/devices/wifi/nm-wifi-ap.h \
-	src/core/devices/wifi/nm-wifi-common.c \
-	src/core/devices/wifi/nm-wifi-common.h \
-	src/core/devices/wifi/nm-wifi-p2p-peer.c \
-	src/core/devices/wifi/nm-wifi-p2p-peer.h \
-	src/core/devices/wifi/nm-wifi-utils.c \
-	src/core/devices/wifi/nm-wifi-utils.h \
-	$(NULL)
-
-if WITH_IWD
-src_core_devices_wifi_libnm_wifi_base_la_SOURCES += \
-	src/core/devices/wifi/nm-device-iwd.c \
-	src/core/devices/wifi/nm-device-iwd.h \
-	src/core/devices/wifi/nm-device-iwd-p2p.c \
-	src/core/devices/wifi/nm-device-iwd-p2p.h \
-	src/core/devices/wifi/nm-iwd-manager.c \
-	src/core/devices/wifi/nm-iwd-manager.h \
-	$(NULL)
+	@for f in $(src_core_settings_plugins_ifcfg_rh_tests_network_scripts_alias_files);
+    do
+        cp $(abs_srcdir) / $$f $(distdir) / src / core / settings / plugins / ifcfg
+            - rh / tests / network - scripts / ;
+    done
+
+        dist_hook +=
+        dist - hook - settings - ifcfg - rh - alias
+        - files
+
+        ############################################################################## #
+
+        if CONFIG_PLUGIN_IFCFG_RH dbusservice_DATA +=
+        src / core / settings / plugins / ifcfg - rh / nm - ifcfg
+        - rh.conf endif
+
+              EXTRA_DIST +=
+        src / core / settings / plugins / ifcfg - rh / nm - ifcfg
+        - rh.conf          src / core / settings / plugins / ifcfg - rh / nm - ifcfg
+        - rh.xml           src / core / settings / plugins / ifcfg
+        - rh / meson.build src / core / settings / plugins / ifcfg
+        - rh / tests
+              / meson.build
+
+                ############################################################################## #
+#src / core / settings / plugins / ifupdown
+                ############################################################################## #
+
+                if CONFIG_PLUGIN_IFUPDOWN
+
+                    core_plugins +=
+        src / core / settings / plugins / ifupdown / libnm - settings - plugin
+        - ifupdown.la
+
+              noinst_LTLIBRARIES +=
+        src / core / settings / plugins / ifupdown / libnms - ifupdown
+        - core.la
+
+              src_core_settings_plugins_ifupdown_libnms_ifupdown_core_la_SOURCES =
+            src / core / settings / plugins / ifupdown / nms - ifupdown
+            - interface - parser.c src / core / settings / plugins / ifupdown / nms - ifupdown
+            - interface - parser.h src / core / settings / plugins / ifupdown / nms - ifupdown
+            - parser.c             src / core / settings / plugins / ifupdown / nms - ifupdown
+            - parser.h             $(NULL)
+
+                  src_core_settings_plugins_ifupdown_libnms_ifupdown_core_la_CPPFLAGS = $(
+                src_core_cppflags_base)
+
+                src_core_settings_plugins_ifupdown_libnms_ifupdown_core_la_LIBADD = $(
+                    LIBUDEV_LIBS) $(NULL)
+
+                    src_core_settings_plugins_ifupdown_libnm_settings_plugin_ifupdown_la_SOURCES =
+                        src / core / settings / plugins / ifupdown / nms - ifupdown
+                        - plugin.c src / core / settings / plugins / ifupdown / nms - ifupdown
+                        - plugin.h $(NULL)
+
+                              src_core_settings_plugins_ifupdown_libnm_settings_plugin_ifupdown_la_CPPFLAGS =
+                            $(src_core_cppflags_base)
+
+                                src_core_settings_plugins_ifupdown_libnm_settings_plugin_ifupdown_la_LDFLAGS =
+                                    -module - avoid - version - Wl,
+              --version - script = "$(srcdir)/linker-script-settings.ver" $(NULL)
+
+                  src_core_settings_plugins_ifupdown_libnm_settings_plugin_ifupdown_la_LIBADD =
+                      src / core / settings / plugins / ifupdown / libnms - ifupdown
+                      - core.la $(LIBUDEV_LIBS) $(NULL)
+
+                            $(src_core_settings_plugins_ifupdown_libnm_settings_plugin_ifupdown_la_OBJECTS)
+        : $(src_libnm_core_public_mkenums_h)
+              $(src_core_settings_plugins_ifupdown_libnms_ifupdown_core_la_OBJECTS)
+        : $(src_libnm_core_public_mkenums_h)
+
+              check - local
+                      - symbols - settings
+                      - ifupdown : src / core / settings / plugins / ifupdown / libnm - settings
+                      - plugin
+                      - ifupdown.la $(call check_so_symbols,
+                                      $(builddir) / src / core / settings / plugins / ifupdown
+                                              /.libs / libnm
+                                          - settings - plugin - ifupdown.so)
+
+                            check_local +=
+              check - local - symbols - settings
+              - ifupdown
+
+              ############################################################################## #
+
+              check_programs +=
+              src / core / settings / plugins / ifupdown / tests / test
+              - ifupdown
+
+                  src_core_settings_plugins_ifupdown_tests_test_ifupdown_CPPFLAGS = $(
+                  src_core_cppflags_base_test)
+
+                  src_core_settings_plugins_ifupdown_tests_test_ifupdown_LDFLAGS = $(
+                      CODE_COVERAGE_LDFLAGS) $(SANITIZER_EXEC_LDFLAGS)
+
+                      src_core_settings_plugins_ifupdown_tests_test_ifupdown_LDADD =
+                          src / core / settings / plugins / ifupdown / libnms - ifupdown
+                          - core.la                        src / core
+                                / libNetworkManagerTest.la $(GLIB_LIBS) $(NULL)
+
+                                      $(src_core_settings_plugins_ifupdown_tests_test_ifupdown_OBJECTS)
+        : $(src_libnm_core_public_mkenums_h)
+
+              endif
+
+                                                                         EXTRA_DIST +=
+              src / core / settings / plugins / ifupdown / tests / test1 src / core / settings
+                  / plugins / ifupdown / tests / test2 src / core / settings / plugins / ifupdown
+                  / tests / test3 src / core / settings / plugins / ifupdown / tests / test4 src
+                  / core / settings / plugins / ifupdown / tests / test5 src / core / settings
+                  / plugins / ifupdown / tests / test6 src / core / settings / plugins / ifupdown
+                  / tests / test7 src / core / settings / plugins / ifupdown / tests / test8 src
+                  / core / settings / plugins / ifupdown / tests / test9 src / core / settings
+                  / plugins / ifupdown / tests / test11 src / core / settings / plugins / ifupdown
+                  / tests / test12 src / core / settings / plugins / ifupdown / tests / test13 src
+                  / core / settings / plugins / ifupdown / tests / test14 src / core / settings
+                  / plugins / ifupdown / tests / test15 src / core / settings / plugins / ifupdown
+                  / tests / test16 src / core / settings / plugins / ifupdown / tests / test17
+              - wired - static - verify
+              - ip4 src / core / settings / plugins / ifupdown / tests / test18 - wired - static
+              - verify - ip6 src / core / settings / plugins / ifupdown / tests / test19 - wired
+              - static - verify - ip4
+              - plen           src / core / settings / plugins / ifupdown / tests / test20 - source
+              - stanza         src / core / settings / plugins / ifupdown / tests / test20 - source
+              - stanza.eth0    src / core / settings / plugins / ifupdown / tests / test20 - source
+              - stanza.eth1    src / core / settings / plugins / ifupdown / tests / test21 - source
+              - dir - stanza   src / core / settings / plugins / ifupdown / tests / test21 - source
+              - dir - stanza.d src / core / settings / plugins / ifupdown / tests / test22
+              - duplicate
+              - stanzas src / core / settings / plugins / ifupdown / meson.build src / core
+                    / settings / plugins / ifupdown / tests
+                    / meson.build
+
+                      ############################################################################## #
+#src / core / devices
+                      ############################################################################## #
+
+                      EXTRA_DIST +=
+              src / core / devices
+              / meson.build
+
+                ############################################################################## #
+#src / core / devices / adsl
+                ############################################################################## #
+
+                core_plugins += src / core / devices / adsl / libnm - device - plugin
+                                - adsl.la
+
+                                      src_core_devices_adsl_libnm_device_plugin_adsl_la_SOURCES =
+                  src / core / devices / adsl / nm - atm
+                  - manager.c src / core / devices / adsl / nm - device
+                  - adsl.c    src / core / devices / adsl / nm - device
+                  - adsl.h
+
+                        src_core_devices_adsl_libnm_device_plugin_adsl_la_CPPFLAGS =
+                      $(src_core_cppflags_device_plugin)
+
+                          src_core_devices_adsl_libnm_device_plugin_adsl_la_LDFLAGS =
+                              -module - avoid - version - Wl,
+              --version - script = "$(srcdir)/linker-script-devices.ver"
+
+              src_core_devices_adsl_libnm_device_plugin_adsl_la_LIBADD =
+                  $(LIBUDEV_LIBS)
+
+                      check
+                  - local - devices - adsl : src / core / devices / adsl / libnm - device - plugin
+                  - adsl.la    $(srcdir) / tools / check
+                  - exports.sh $(builddir) / src / core / devices / adsl /.libs / libnm - device
+                  - plugin
+                  - adsl.so "$(srcdir)/linker-script-devices.ver" $(
+                      call check_so_symbols,
+                      $(builddir) / src / core / devices / adsl /.libs / libnm - device - plugin
+                          - adsl.so)
+
+                        check_local += check - local - devices
+                                       - adsl
+
+                                           EXTRA_DIST +=
+              src / core / devices / adsl
+              / meson.build
+
+                ############################################################################## #
+#src / core / devices / wwan
+                ############################################################################## #
+
+                if WITH_MODEM_MANAGER_1
+
+                    src_core_devices_wwan_cppflags =
+                  $(src_core_cppflags_device_plugin) $(MM_GLIB_CFLAGS) $(NULL)
+
+                      core_plugins += src / core / devices / wwan / libnm
+                                      - wwan.la
+
+                                            src_core_devices_wwan_libnm_wwan_la_SOURCES =
+                          src / core / devices / wwan / nm - modem
+                          - broadband.c src / core / devices / wwan / nm - modem
+                          - broadband.h src / core / devices / wwan / nm - modem
+                          - manager.c   src / core / devices / wwan / nm - modem
+                          - manager.h   src / core / devices / wwan / nm
+                          - modem.c     src / core / devices / wwan / nm
+                          - modem.h     src / core / devices / wwan / nm - service
+                          - providers.c src / core / devices / wwan / nm - service
+                          - providers.h $(NULL)
+
+                                if WITH_OFONO src_core_devices_wwan_libnm_wwan_la_SOURCES +=
+              src / core / devices / wwan / nm - modem - ofono.c src / core / devices / wwan / nm
+              - modem
+              - ofono.h endif
+
+                    src_core_devices_wwan_libnm_wwan_la_CPPFLAGS = $(src_core_devices_wwan_cppflags)
+
+                  src_core_devices_wwan_libnm_wwan_la_LDFLAGS = -avoid - version - Wl,
+              --version - script = "$(srcdir)/src/core/devices/wwan/libnm-wwan.ver"
+
+              src_core_devices_wwan_libnm_wwan_la_LIBADD =
+                  $(GLIB_LIBS) $(LIBSYSTEMD_LIBS) $(MM_GLIB_LIBS)
+
+                      $(src_core_devices_wwan_libnm_wwan_la_OBJECTS)
+        : $(src_libnm_core_public_mkenums_h)
+
+              EXTRA_src_core_devices_wwan_libnm_wwan_la_DEPENDENCIES =
+                  src / core / devices / wwan / libnm
+                  - wwan.ver
+
+                        core_plugins +=
+          src / core / devices / wwan / libnm - device - plugin
+          - wwan.la
+
+                src_core_devices_wwan_libnm_device_plugin_wwan_la_SOURCES =
+              src / core / devices / wwan / nm - wwan - factory.c src / core / devices / wwan / nm
+              - device - modem.c src / core / devices / wwan / nm - device
+              - modem.h
+
+                    src_core_devices_wwan_libnm_device_plugin_wwan_la_CPPFLAGS =
+                  $(src_core_devices_wwan_cppflags)
+
+                      src_core_devices_wwan_libnm_device_plugin_wwan_la_LDFLAGS =
+                          -module - avoid - version - Wl,
+              --version - script = "$(srcdir)/linker-script-devices.ver"
+
+              src_core_devices_wwan_libnm_device_plugin_wwan_la_LIBADD =
+                  src / core / devices / wwan / libnm
+                  - wwan.la $(GLIB_LIBS)
+
+                        check
+                  - local - devices - wwan : src / core / devices / wwan / libnm - device - plugin
+                  - wwan.la src / core / devices / wwan / libnm - wwan.la $(srcdir) / tools / check
+                  - exports.sh $(builddir) / src / core / devices / wwan /.libs / libnm - device
+                  - plugin
+                  - wwan.so "$(srcdir)/linker-script-devices.ver" $(
+                        call check_so_symbols,
+                        $(builddir) / src / core / devices / wwan /.libs / libnm - device - plugin
+                            - wwan.so) $(srcdir)
+                        / tools / check
+                  - exports.sh $(builddir) / src / core / devices / wwan /.libs / libnm
+                  - wwan.so "$(srcdir)/src/core/devices/wwan/libnm-wwan.ver" $(
+                      call check_so_symbols,
+                      $(builddir) / src / core / devices / wwan /.libs / libnm - wwan.so)
+
+                        check_local +=
+              check - local - devices
+              - wwan
+
+                  src_core_devices_wwan_tests_test_service_providers_SOURCES =
+                  src / core / devices / wwan / tests / test - service
+                  - providers.c src / core / devices / wwan / nm - service
+                  - providers.c src / core / devices / wwan / nm - service
+                  - providers.h $(NULL)
+
+                        src_core_devices_wwan_tests_test_service_providers_CPPFLAGS =
+                      $(src_core_cppflags_base_test)
+                      - I$(srcdir) / src / core / devices
+                            / wwan $(NULL)
+
+                                src_core_devices_wwan_tests_test_service_providers_LDFLAGS =
+                          $(SANITIZER_EXEC_LDFLAGS) $(NULL)
+
+                              src_core_devices_wwan_tests_test_service_providers_LDADD =
+                                  src / core
+                                  / libNetworkManagerTest.la $(GLIB_LIBS) $(NULL)
+
+                                        check_programs +=
+              src / core / devices / wwan / tests / test - service
+              - providers
+
+                  $(src_core_devices_wwan_tests_test_service_providers_OBJECTS)
+        : $(src_libnm_core_public_mkenums_h)
+
+              endif
+
+                  EXTRA_DIST +=
+              src / core / devices / wwan / libnm
+              - wwan.ver src / core / devices / wwan / meson.build src / core / devices / wwan
+                    / tests / test
+              - service
+              - providers.xml $(NULL)
+
+                    ############################################################################## #
+#src / core / devices / bluetooth
+                ############################################################################## #
+
+                if WITH_MODEM_MANAGER_1
+
+                    noinst_LTLIBRARIES +=
+              src / core / devices / bluetooth / libnm - bluetooth
+              - utils.la
+
+                    src_core_devices_bluetooth_libnm_bluetooth_utils_la_SOURCES =
+                  src / core / devices / bluetooth / nm - bluez
+                  - common.h src / core / devices / bluetooth / nm - bt
+                  - error.c  src / core / devices / bluetooth / nm - bt
+                  - error.h  $(NULL)
+
+                        src_core_devices_bluetooth_libnm_bluetooth_utils_la_CPPFLAGS =
+                      $(src_core_cppflags_base) $(NULL)
+
+                          src_core_devices_bluetooth_libnm_bluetooth_utils_la_LIBADD =
+                              $(GLIB_LIBS) $(NULL)
+
+                                  if WITH_BLUEZ5_DUN
+                                      src_core_devices_bluetooth_libnm_bluetooth_utils_la_SOURCES +=
+              src / core / devices / bluetooth / nm - bluez5
+              - dun.c src / core / devices / bluetooth / nm - bluez5
+              - dun.h $(NULL)
+
+                    src_core_devices_bluetooth_libnm_bluetooth_utils_la_CPPFLAGS += $(BLUEZ5_CFLAGS)
+                  src_core_devices_bluetooth_libnm_bluetooth_utils_la_LIBADD += $(BLUEZ5_LIBS) endif
+
+                      $(src_core_devices_bluetooth_libnm_bluetooth_utils_la_OBJECTS)
+        : $(src_libnm_core_public_mkenums_h)
+
+              ############################################################################## #
+
+          core_plugins +=
+          src / core / devices / bluetooth / libnm - device - plugin
+          - bluetooth.la
+
+                src_core_devices_bluetooth_libnm_device_plugin_bluetooth_la_SOURCES =
+              src / core / devices / bluetooth / nm - bluez
+              - manager.c src / core / devices / bluetooth / nm - bluez
+              - manager.h src / core / devices / bluetooth / nm - device
+              - bt.c      src / core / devices / bluetooth / nm - device
+              - bt.h      $(NULL)
+
+                    src_core_devices_bluetooth_libnm_device_plugin_bluetooth_la_CPPFLAGS =
+                  $(src_core_cppflags_device_plugin)
+
+                      src_core_devices_bluetooth_libnm_device_plugin_bluetooth_la_LDFLAGS =
+                          -module - avoid - version - Wl,
+              --version - script = "$(srcdir)/linker-script-devices.ver"
+
+              src_core_devices_bluetooth_libnm_device_plugin_bluetooth_la_LIBADD =
+                  src / core / devices / bluetooth / libnm - bluetooth
+                  - utils.la src / core / devices / wwan / libnm
+                  - wwan.la  $(GLIB_LIBS) $(NULL)
+
+                        ############################################################################## #
+
+                    check_programs_norun +=
+              src / core / devices / bluetooth / tests / nm - bt
+              - test
+
+                  src_core_devices_bluetooth_tests_nm_bt_test_CPPFLAGS =
+                  $(src_core_cppflags_test) $(NULL)
+
+                      src_core_devices_bluetooth_tests_nm_bt_test_LDFLAGS =
+                          $(SANITIZER_EXEC_LDFLAGS) $(NULL)
+
+                              src_core_devices_bluetooth_tests_nm_bt_test_LDADD =
+                                  src / core / devices / bluetooth / libnm - bluetooth
+                                  - utils.la                   src / core
+                                        / libNetworkManager.la $(GLIB_LIBS) $(NULL)
+
+                                              $(src_core_devices_bluetooth_tests_nm_bt_test_OBJECTS)
+        : $(src_libnm_core_public_mkenums_h)
+
+              ############################################################################## #
+
+          check - local - devices - bluetooth : src / core / devices / bluetooth / libnm
+                                  - device - plugin - bluetooth.la $(srcdir) / tools / check
+                                  - exports.sh $(builddir) / src / core / devices / bluetooth /.libs
+                                        / libnm
+                                  - device - plugin
+                                  - bluetooth.so "$(srcdir)/linker-script-devices.ver" $(
+                                      call check_so_symbols,
+                                      $(builddir) / src / core / devices / bluetooth /.libs / libnm
+                                          - device - plugin - bluetooth.so)
+
+                                        check_local += check - local - devices
+                                                       - bluetooth
+
+                                                           endif
+
+                                                               EXTRA_DIST +=
+              src / core / devices / bluetooth
+              / meson.build $(NULL)
+
+                    ############################################################################## #
+#src / core / devices / wifi
+                ############################################################################## #
+
+                if WITH_WIFI
+
+                    noinst_LTLIBRARIES += src / core / devices / wifi / libnm - wifi
+                                          - base.la
+
+                                                src_core_devices_wifi_libnm_wifi_base_la_SOURCES =
+                  src / core / devices / wifi / nm - device - olpc
+                  - mesh.c   src / core / devices / wifi / nm - device - olpc
+                  - mesh.h   src / core / devices / wifi / nm - device - wifi
+                  - p2p.c    src / core / devices / wifi / nm - device - wifi
+                  - p2p.h    src / core / devices / wifi / nm - device
+                  - wifi.c   src / core / devices / wifi / nm - device
+                  - wifi.h   src / core / devices / wifi / nm - wifi
+                  - ap.c     src / core / devices / wifi / nm - wifi
+                  - ap.h     src / core / devices / wifi / nm - wifi
+                  - common.c src / core / devices / wifi / nm - wifi
+                  - common.h src / core / devices / wifi / nm - wifi - p2p
+                  - peer.c   src / core / devices / wifi / nm - wifi - p2p
+                  - peer.h   src / core / devices / wifi / nm - wifi
+                  - utils.c  src / core / devices / wifi / nm - wifi
+                  - utils.h  $(NULL)
+
+                        if WITH_IWD src_core_devices_wifi_libnm_wifi_base_la_SOURCES +=
+              src / core / devices / wifi / nm - device - iwd.c src / core / devices / wifi / nm
+              - device - iwd.h src / core / devices / wifi / nm - device - iwd
+              - p2p.c          src / core / devices / wifi / nm - device - iwd
+              - p2p.h          src / core / devices / wifi / nm - iwd
+              - manager.c src / core / devices / wifi / nm - iwd - manager.h $(NULL)
 endif
 
 src_core_devices_wifi_libnm_wifi_base_la_CPPFLAGS = $(src_core_cppflags_device_plugin)
@@ -4244,7 +4209,7 @@ EXTRA_DIST += \
 	$(NULL)
 
 ###############################################################################
-# src/core/devices/team
+#src / core / devices / team
 ###############################################################################
 
 if WITH_TEAMDCTL
@@ -4286,7 +4251,7 @@ EXTRA_DIST += \
 	src/core/devices/team/meson.build
 
 ###############################################################################
-# src/core/devices/ovs
+#src / core / devices / ovs
 ###############################################################################
 
 if WITH_OPENVSWITCH
@@ -4341,7 +4306,7 @@ EXTRA_DIST += \
 	src/core/devices/ovs/meson.build
 
 ###############################################################################
-# src/core/dnsmasq/tests
+#src / core / dnsmasq / tests
 ###############################################################################
 
 check_programs += src/core/dnsmasq/tests/test-dnsmasq-utils
@@ -4360,7 +4325,7 @@ EXTRA_DIST += \
 	src/core/dnsmasq/tests/meson.build
 
 ###############################################################################
-# src/core/platform/tests
+#src / core / platform / tests
 ###############################################################################
 
 src_core_platform_tests_ldflags = \
@@ -4466,7 +4431,7 @@ EXTRA_DIST += \
 	$(NULL)
 
 ###############################################################################
-# src/core/devices/tests
+#src / core / devices / tests
 ###############################################################################
 
 src_core_devices_tests_ldflags = \
@@ -4488,7 +4453,7 @@ EXTRA_DIST += \
 	src/core/devices/tests/meson.build
 
 ###############################################################################
-# src/core/ndisc/tests
+#src / core / ndisc / tests
 ###############################################################################
 
 src_core_ndisc_tests_ldflags = \
@@ -4517,7 +4482,7 @@ EXTRA_DIST += \
 	src/core/ndisc/tests/meson.build
 
 ###############################################################################
-# src/core/supplicant/tests
+#src / core / supplicant / tests
 ###############################################################################
 
 check_programs += src/core/supplicant/tests/test-supplicant-config
@@ -4538,7 +4503,7 @@ EXTRA_DIST += \
 	src/core/supplicant/tests/meson.build
 
 ###############################################################################
-# src/core/tests/config
+#src / core / tests / config
 ###############################################################################
 
 check_programs += src/core/tests/config/test-config
@@ -4573,7 +4538,7 @@ EXTRA_DIST += \
 	src/core/tests/config/meson.build
 
 ###############################################################################
-# src/core/tests
+#src / core / tests
 ###############################################################################
 
 src_core_tests_ldflags = \
@@ -4650,7 +4615,7 @@ EXTRA_DIST += \
 	src/core/tests/meson.build
 
 ###############################################################################
-# src/nm-dispatcher
+#src / nm - dispatcher
 ###############################################################################
 
 dispatcher_nmdbus_dispatcher_sources = \
@@ -4752,7 +4717,7 @@ EXTRA_DIST += \
 	$(NULL)
 
 ###############################################################################
-# src/nm-dispatcher/tests
+#src / nm - dispatcher / tests
 ###############################################################################
 
 check_programs += src/nm-dispatcher/tests/test-dispatcher-envp
@@ -4808,7 +4773,7 @@ EXTRA_DIST += \
 	$(NULL)
 
 ###############################################################################
-# src/nm-priv-helper
+#src / nm - priv - helper
 ###############################################################################
 
 libexec_PROGRAMS += src/nm-priv-helper/nm-priv-helper
@@ -4859,7 +4824,7 @@ EXTRA_DIST += \
 	$(NULL)
 
 ###############################################################################
-# src/nm-daemon-helper
+#src / nm - daemon - helper
 ###############################################################################
 
 libexec_PROGRAMS += src/nm-daemon-helper/nm-daemon-helper
@@ -4884,7 +4849,7 @@ EXTRA_DIST += \
 	$(NULL)
 
 ###############################################################################
-# src/nm-online
+#src / nm - online
 ###############################################################################
 
 bin_PROGRAMS += src/nm-online/nm-online
@@ -4921,7 +4886,7 @@ $(src_nm_online_nm_online_OBJECTS): $(src_libnm_client_public_mkenums_h)
 EXTRA_DIST += src/nm-online/meson.build
 
 ###############################################################################
-# src/libnmc-base
+#src / libnmc - base
 ###############################################################################
 
 clients_cppflags = \
@@ -4969,7 +4934,7 @@ $(src_libnmc_base_libnmc_base_la_OBJECTS): $(src_libnm_client_public_mkenums_h)
 EXTRA_DIST += src/libnmc-base/meson.build
 
 ###############################################################################
-# src/libnmc-setting
+#src / libnmc - setting
 ###############################################################################
 
 libnmc_setting_settings_doc_h = src/libnmc-setting/settings-docs.h
@@ -5052,7 +5017,7 @@ EXTRA_DIST += \
 	$(NULL)
 
 ###############################################################################
-# src/nmcli
+#src / nmcli
 ###############################################################################
 
 if BUILD_NMCLI
@@ -5161,7 +5126,7 @@ EXTRA_DIST += \
 	src/libnmc-setting/tests/meson.build
 
 ###############################################################################
-# src/libnmt-newt
+#src / libnmt - newt
 ###############################################################################
 
 if BUILD_NMTUI
@@ -5226,7 +5191,7 @@ endif
 EXTRA_DIST += src/libnmt-newt/meson.build
 
 ###############################################################################
-# src/nmtui
+#src / nmtui
 ###############################################################################
 
 if BUILD_NMTUI
@@ -5370,16 +5335,18 @@ nmtui_links = \
 	$(NULL)
 
 install-exec-hook-nmtui:
-	for link in $(nmtui_links); do \
-		$(LN_S) -f nmtui "$(DESTDIR)$(bindir)/$$link"; \
-	done
+	for link in $(nmtui_links);
+do
+    $(LN_S) - f nmtui "$(DESTDIR)$(bindir)/$$link";
+    done
 
 install_exec_hook += install-exec-hook-nmtui
 
 uninstall-hook-nmtui:
-	for link in $(nmtui_links); do \
-		rm -f "$(DESTDIR)$(bindir)/$$link"; \
-	done
+	for link in $(nmtui_links);
+    do
+        rm - f "$(DESTDIR)$(bindir)/$$link";
+    done
 
 uninstall_hook += uninstall-hook-nmtui
 
@@ -5388,7 +5355,7 @@ endif
 EXTRA_DIST += src/nmtui/meson.build
 
 ###############################################################################
-# src/nm-cloud-setup
+#src / nm - cloud - setup
 ###############################################################################
 
 if BUILD_NM_CLOUD_SETUP
@@ -5410,6 +5377,8 @@ src_nm_cloud_setup_libnm_cloud_setup_core_a_SOURCES = \
 	src/nm-cloud-setup/nmcs-provider-azure.h \
 	src/nm-cloud-setup/nmcs-provider-aliyun.c \
 	src/nm-cloud-setup/nmcs-provider-aliyun.h \
+	src/nm-cloud-setup/nmcs-provider-oci.c \
+        src/nm-cloud-setup/nmcs-provider-oci.h \
 	$(NULL)
 
 src_nm_cloud_setup_libnm_cloud_setup_core_a_CPPFLAGS = \
@@ -5524,7 +5493,7 @@ $(src_nm_cloud_setup_tests_test_cloud_setup_general_OBJECTS): $(src_libnm_client
 endif
 
 ###############################################################################
-# src/tests/client
+#src / tests / client
 ###############################################################################
 
 check-local-tests-client: src/nmcli/nmcli src/tests/client/test-client.py
@@ -5563,7 +5532,7 @@ check-local-gitlab-ci:
 check_local += check-local-gitlab-ci
 
 ###############################################################################
-# data
+#data
 ###############################################################################
 
 if HAVE_SYSTEMD
@@ -5630,7 +5599,7 @@ CLEANFILES += \
 	$(NULL)
 
 ###############################################################################
-# man
+#man
 ###############################################################################
 
 man/common.ent: man/common.ent.in
@@ -5731,20 +5700,24 @@ EXTRA_DIST += \
 if HAVE_DOCS
 
 install-data-hook-man:
-	for link in $(nmtui_links); do \
-		ln -f $(DESTDIR)$(mandir)/man1/nmtui.1 $(DESTDIR)$(mandir)/man1/$$link.1; \
-	done; \
-	ln -f $(DESTDIR)$(mandir)/man5/NetworkManager.conf.5 $(DESTDIR)$(mandir)/man5/nm-system-settings.conf.5; \
-	ln -f $(DESTDIR)$(mandir)/man5/nm-settings-nmcli.5 $(DESTDIR)$(mandir)/man5/nm-settings.5;
+	for link in $(nmtui_links);
+    do
+        ln - f $(DESTDIR) $(mandir) / man1 / nmtui .1 $(DESTDIR) $(mandir) / man1 / $$link .1;
+    done;
+    ln - f $(DESTDIR) $(mandir) / man5 / NetworkManager.conf .5 $(DESTDIR) $(mandir) / man5 / nm
+        - system - settings.conf .5;
+    ln - f $(DESTDIR) $(mandir) / man5 / nm - settings - nmcli .5 $(DESTDIR) $(mandir) / man5 / nm
+        - settings .5;
 
 install_data_hook += install-data-hook-man
 
 uninstall-hook-man:
-	for link in $(nmtui_links); do \
-		rm -f $(DESTDIR)$(mandir)/man1/$$link.1; \
-	done; \
-	rm -f $(DESTDIR)$(mandir)/man5/nm-system-settings.conf.5; \
-	rm -f $(DESTDIR)$(mandir)/man5/nm-settings.5;
+	for link in $(nmtui_links);
+do
+    rm - f $(DESTDIR) $(mandir) / man1 / $$link .1;
+done;
+rm - f $(DESTDIR) $(mandir) / man5 / nm - system - settings.conf .5;
+rm - f $(DESTDIR) $(mandir) / man5 / nm - settings .5;
 
 uninstall_hook += uninstall-hook-man
 
@@ -5765,7 +5738,7 @@ EXTRA_DIST += \
 	man/meson.build
 
 ###############################################################################
-# vapi
+#vapi
 ###############################################################################
 
 if ENABLE_VAPIGEN
