@@ -592,7 +592,7 @@ nm_team_link_watcher_get_delay_down(const NMTeamLinkWatcher *watcher)
  * nm_team_link_watcher_get_init_wait:
  * @watcher: the #NMTeamLinkWatcher
  *
- * Gets the init_wait interval (in milliseconds) that the team slave should
+ * Gets the init_wait interval (in milliseconds) that the team port should
  * wait before sending the first packet to the target host.
  *
  * Since: 1.12
@@ -613,7 +613,7 @@ nm_team_link_watcher_get_init_wait(const NMTeamLinkWatcher *watcher)
  * nm_team_link_watcher_get_interval:
  * @watcher: the #NMTeamLinkWatcher
  *
- * Gets the interval (in milliseconds) that the team slave should wait between
+ * Gets the interval (in milliseconds) that the team port should wait between
  * sending two check packets to the target host.
  *
  * Since: 1.12

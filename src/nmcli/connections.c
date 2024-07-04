@@ -3534,7 +3534,7 @@ get_name_alias_toplevel(const char *name, const char *port_type)
     if (port_type) {
         const char *port_name;
 
-        if (nm_meta_setting_info_valid_parts_for_slave_type(port_type, &port_name))
+        if (nm_meta_setting_info_valid_parts_for_port_type(port_type, &port_name))
             return port_name ?: name;
         return name;
     }
@@ -3882,7 +3882,7 @@ is_setting_mandatory(NMConnection *connection, NMSetting *setting)
         if (i == 0)
             item = get_valid_settings_array(c_type);
         else
-            item = nm_meta_setting_info_valid_parts_for_slave_type(s_type, NULL);
+            item = nm_meta_setting_info_valid_parts_for_port_type(s_type, NULL);
         for (; item && *item; item++) {
             if (nm_streq(name, (*item)->setting_info->general->setting_name))
                 return (*item)->mandatory;
@@ -4465,7 +4465,7 @@ con_settings(NMConnection                             *connection,
     g_return_val_if_fail(s_con, FALSE);
 
     con_type       = nm_setting_connection_get_port_type(s_con);
-    *port_settings = nm_meta_setting_info_valid_parts_for_slave_type(con_type, NULL);
+    *port_settings = nm_meta_setting_info_valid_parts_for_port_type(con_type, NULL);
     if (!*port_settings) {
         g_set_error(error,
                     NMCLI_ERROR,
@@ -5030,7 +5030,7 @@ complete_property_name(NmCli                 *nmc,
     if (s_con)
         port_type = nm_setting_connection_get_port_type(s_con);
     valid_settings_main = get_valid_settings_array(connection_type);
-    valid_settings_port = nm_meta_setting_info_valid_parts_for_slave_type(port_type, NULL);
+    valid_settings_port = nm_meta_setting_info_valid_parts_for_port_type(port_type, NULL);
 
     word_list = get_valid_properties_string(valid_settings_main,
                                             valid_settings_port,
@@ -6258,7 +6258,7 @@ gen_setting_names(const char *text, int state)
     s_con = nm_connection_get_setting_connection(nmc_tab_completion.connection);
     if (s_con)
         s_type = nm_setting_connection_get_port_type(s_con);
-    valid_settings_arr = nm_meta_setting_info_valid_parts_for_slave_type(s_type, NULL);
+    valid_settings_arr = nm_meta_setting_info_valid_parts_for_port_type(s_type, NULL);
 
     if (list_idx < NM_PTRARRAY_LEN(valid_settings_arr)) {
         while (valid_settings_arr[list_idx]) {
@@ -6315,7 +6315,7 @@ gen_property_names(const char *text, int state)
             port_type = NM_SETTING_BOND_SETTING_NAME;
         else
             port_type = NULL;
-        valid_settings_port = nm_meta_setting_info_valid_parts_for_slave_type(port_type, NULL);
+        valid_settings_port = nm_meta_setting_info_valid_parts_for_port_type(port_type, NULL);
 
         setting_name = check_valid_name(strv[0], valid_settings_main, valid_settings_port, NULL);
         if (setting_name) {
@@ -6627,7 +6627,7 @@ get_setting_and_property(const char *prompt,
             s_type = nm_setting_connection_get_port_type(s_con);
 
         valid_settings_main = get_valid_settings_array(nmc_tab_completion.con_type);
-        valid_settings_port = nm_meta_setting_info_valid_parts_for_slave_type(s_type, NULL);
+        valid_settings_port = nm_meta_setting_info_valid_parts_for_port_type(s_type, NULL);
 
         setting_name = check_valid_name(sett, valid_settings_main, valid_settings_port, NULL);
         setting      = nm_meta_setting_info_editor_new_setting(
@@ -7998,7 +7998,7 @@ editor_menu_main(NmCli *nmc, NMConnection *connection, const char *connection_ty
         s_type = nm_setting_connection_get_port_type(s_con);
 
     valid_settings_main = get_valid_settings_array(connection_type);
-    valid_settings_port = nm_meta_setting_info_valid_parts_for_slave_type(s_type, NULL);
+    valid_settings_port = nm_meta_setting_info_valid_parts_for_port_type(s_type, NULL);
 
     valid_settings_str = get_valid_options_string(valid_settings_main, valid_settings_port);
     nmc_print(_("You may edit the following settings: %s\n"), valid_settings_str);
