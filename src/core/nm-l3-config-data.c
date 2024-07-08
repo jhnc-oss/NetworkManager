@@ -370,7 +370,8 @@ nm_l3_config_data_log(const NML3ConfigData *self,
     nm_assert(!NM_FLAGS_ANY(self->flags,
                             ~(NM_L3_CONFIG_DAT_FLAGS_IGNORE_MERGE_NO_DEFAULT_ROUTES
                               | NM_L3_CONFIG_DAT_FLAGS_HAS_DNS_PRIORITY_4
-                              | NM_L3_CONFIG_DAT_FLAGS_HAS_DNS_PRIORITY_6)));
+                              | NM_L3_CONFIG_DAT_FLAGS_HAS_DNS_PRIORITY_6
+                              | NM_L3_CONFIG_DAT_FLAGS_HAS_IPV4_NON_LL)));
 
     _L("l3cd %s%s%s(" NM_HASH_OBFUSCATE_PTR_FMT ", ifindex=%d%s%s%s%s)",
        NM_PRINT_FMT_QUOTED(title, "\"", title, "\" ", ""),
@@ -3286,6 +3287,15 @@ nm_l3_config_data_merge(NML3ConfigData       *self,
                        != ((const NMPlatformIP4Address *) a_src)->a_acd_not_ready) {
                 _ensure_a();
                 a.a4.a_acd_not_ready = (!!hook_result.ip4acd_not_ready);
+            }
+
+            if (IS_IPv4) {
+                const NMPlatformIP4Address *const addr =
+                    (const NMPlatformIP4Address *const) (a_src);
+
+                if (!nm_platform_ip4_address_is_link_local(addr)) {
+                    self->flags |= NM_L3_CONFIG_DAT_FLAGS_HAS_IPV4_NON_LL;
+                }
             }
 
             nm_l3_config_data_add_address_full(self,
