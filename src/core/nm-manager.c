@@ -10,6 +10,7 @@
 
 #include <fcntl.h>
 #include <limits.h>
+#include <linux/if_ether.h>
 #include <stdlib.h>
 #include <sys/sendfile.h>
 #include <sys/stat.h>
@@ -7359,7 +7360,8 @@ do_sleep_wake(NMManager *self, gboolean sleeping_changed)
             guint               i;
 
             if (nm_device_is_software(device)
-                && !nm_device_get_unmanaged_flags(device, NM_UNMANAGED_SLEEPING)) {
+                && !nm_device_get_unmanaged_flags(device, NM_UNMANAGED_SLEEPING)
+                && !nm_utils_hwaddr_matches(nm_device_get_hw_address(device), -1, &nm_ether_addr_zero, ETH_ALEN)) {
                 /* DHCP leases of software devices could have gone stale
                  * so we need to renew them. */
                 nm_device_update_dynamic_ip_setup(device, "wake up");
