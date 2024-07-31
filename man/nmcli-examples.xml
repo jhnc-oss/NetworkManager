@@ -195,7 +195,7 @@ B,DISPATCH</screen>
         This example demonstrates adding a bond controller connection and two ports. The
         first command adds a controller bond connection, naming the bonding interface
         <emphasis>mybond0</emphasis> and using <emphasis>active-backup</emphasis> mode.
-        The next two commands add ports connections, both attached as port to <emphasis>mybond0</emphasis>.
+        The next two commands add port connections, both attached as port to <emphasis>mybond0</emphasis>.
         The first slave will be bound to <emphasis>eth1</emphasis> interface, the second to
         <emphasis>eth2</emphasis>.
       </para>
@@ -212,7 +212,7 @@ B,DISPATCH</screen>
         for the controller is read from <emphasis>team1-controller-json.conf</emphasis> file. Later, you can
         change the configuration with <emphasis>modify</emphasis> command
         (<emphasis role="bold">nmcli con modify Team1 team.config team1-controller-another-json.conf</emphasis>).
-        The last two commands add ports profiles, both attached as port to <emphasis>Team1</emphasis>.
+        The last two commands add port profiles, both attached as port to <emphasis>Team1</emphasis>.
         The first slave will be bound to the <emphasis>em1</emphasis> interface, the second to
         <emphasis>em2</emphasis>. The ports don't specify <emphasis>config</emphasis> and thus
         <emphasis>teamd</emphasis> will use its default configuration. You will activate the whole setup
