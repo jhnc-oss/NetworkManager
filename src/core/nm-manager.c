@@ -5042,7 +5042,7 @@ find_controller(NMManager             *self,
         }
 
         _LOGD(LOGD_CORE,
-              "Master connection for '%s' (%s) not found, will use device '%s'",
+              "Controller connection for '%s' (%s) not found, will use device '%s'",
               nm_connection_get_id(connection),
               nm_connection_get_uuid(connection),
               nm_device_get_iface(controller_device));
@@ -5052,7 +5052,7 @@ find_controller(NMManager             *self,
         g_set_error_literal(error,
                             NM_MANAGER_ERROR,
                             NM_MANAGER_ERROR_UNKNOWN_DEVICE,
-                            "Master connection not found or invalid");
+                            "Controller connection not found or invalid");
         return FALSE;
     }
 
@@ -5929,11 +5929,11 @@ _internal_activate_device(NMManager *self, NMActiveConnection *active, GError **
             if (!controller_ac) {
                 if (controller_device) {
                     g_prefix_error(error,
-                                   "Master device '%s' can't be activated: ",
+                                   "Controller device '%s' can't be activated: ",
                                    nm_device_get_ip_iface(controller_device));
                 } else {
                     g_prefix_error(error,
-                                   "Master connection '%s' can't be activated: ",
+                                   "Controller connection '%s' can't be activated: ",
                                    nm_settings_connection_get_id(controller_connection));
                 }
                 return FALSE;

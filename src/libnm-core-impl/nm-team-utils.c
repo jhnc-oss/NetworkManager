@@ -94,39 +94,39 @@ typedef struct {
 
 static const RunnerCompatElem _runner_compat_lst[] = {
     {
-        NM_TEAM_ATTRIBUTE_MASTER_RUNNER_HWADDR_POLICY,
+        NM_TEAM_ATTRIBUTE_CONTROLLER_RUNNER_HWADDR_POLICY,
         NM_MAKE_STRV(NM_SETTING_TEAM_RUNNER_ACTIVEBACKUP),
     },
     {
-        NM_TEAM_ATTRIBUTE_MASTER_RUNNER_TX_HASH,
+        NM_TEAM_ATTRIBUTE_CONTROLLER_RUNNER_TX_HASH,
         NM_MAKE_STRV(NM_SETTING_TEAM_RUNNER_LOADBALANCE, NM_SETTING_TEAM_RUNNER_LACP),
     },
     {
-        NM_TEAM_ATTRIBUTE_MASTER_RUNNER_TX_BALANCER,
+        NM_TEAM_ATTRIBUTE_CONTROLLER_RUNNER_TX_BALANCER,
         NM_MAKE_STRV(NM_SETTING_TEAM_RUNNER_LOADBALANCE, NM_SETTING_TEAM_RUNNER_LACP),
     },
     {
-        NM_TEAM_ATTRIBUTE_MASTER_RUNNER_TX_BALANCER_INTERVAL,
+        NM_TEAM_ATTRIBUTE_CONTROLLER_RUNNER_TX_BALANCER_INTERVAL,
         NM_MAKE_STRV(NM_SETTING_TEAM_RUNNER_LOADBALANCE, NM_SETTING_TEAM_RUNNER_LACP),
     },
     {
-        NM_TEAM_ATTRIBUTE_MASTER_RUNNER_ACTIVE,
+        NM_TEAM_ATTRIBUTE_CONTROLLER_RUNNER_ACTIVE,
         NM_MAKE_STRV(NM_SETTING_TEAM_RUNNER_LACP),
     },
     {
-        NM_TEAM_ATTRIBUTE_MASTER_RUNNER_FAST_RATE,
+        NM_TEAM_ATTRIBUTE_CONTROLLER_RUNNER_FAST_RATE,
         NM_MAKE_STRV(NM_SETTING_TEAM_RUNNER_LACP),
     },
     {
-        NM_TEAM_ATTRIBUTE_MASTER_RUNNER_SYS_PRIO,
+        NM_TEAM_ATTRIBUTE_CONTROLLER_RUNNER_SYS_PRIO,
         NM_MAKE_STRV(NM_SETTING_TEAM_RUNNER_LACP),
     },
     {
-        NM_TEAM_ATTRIBUTE_MASTER_RUNNER_MIN_PORTS,
+        NM_TEAM_ATTRIBUTE_CONTROLLER_RUNNER_MIN_PORTS,
         NM_MAKE_STRV(NM_SETTING_TEAM_RUNNER_LACP),
     },
     {
-        NM_TEAM_ATTRIBUTE_MASTER_RUNNER_AGG_SELECT_POLICY,
+        NM_TEAM_ATTRIBUTE_CONTROLLER_RUNNER_AGG_SELECT_POLICY,
         NM_MAKE_STRV(NM_SETTING_TEAM_RUNNER_LACP),
     },
 };
@@ -156,7 +156,7 @@ typedef struct {
 #define TEAM_ATTR_IDX(_is_port, _team_attr)                                     \
     (((!(_is_port) || (_team_attr) < _NM_TEAM_ATTRIBUTE_START)                  \
           ? (int) (_team_attr)                                                  \
-          : (((int) (_NM_TEAM_ATTRIBUTE_MASTER_NUM - _NM_TEAM_ATTRIBUTE_START)) \
+          : (((int) (_NM_TEAM_ATTRIBUTE_CONTROLLER_NUM - _NM_TEAM_ATTRIBUTE_START)) \
              + ((int) (_team_attr))))                                           \
      - 1)
 
@@ -209,98 +209,98 @@ static const TeamAttrData team_attr_datas[] = {
           _VAL_UNSPEC(), ),
 
     _INIT(0,
-          NM_TEAM_ATTRIBUTE_MASTER_NOTIFY_PEERS_COUNT,
+          NM_TEAM_ATTRIBUTE_CONTROLLER_NOTIFY_PEERS_COUNT,
           controller.notify_peers_count,
           NM_VALUE_TYPE_INT32,
           NM_SETTING_TEAM_NOTIFY_PEERS_COUNT,
           _JS_KEYS("notify_peers", "count"),
           _VAL_INT32_RANGE(-1, 0, G_MAXINT32), ),
     _INIT(0,
-          NM_TEAM_ATTRIBUTE_MASTER_NOTIFY_PEERS_INTERVAL,
+          NM_TEAM_ATTRIBUTE_CONTROLLER_NOTIFY_PEERS_INTERVAL,
           controller.notify_peers_interval,
           NM_VALUE_TYPE_INT32,
           NM_SETTING_TEAM_NOTIFY_PEERS_INTERVAL,
           _JS_KEYS("notify_peers", "interval"),
           _VAL_INT32_RANGE(-1, 0, G_MAXINT32), ),
     _INIT(0,
-          NM_TEAM_ATTRIBUTE_MASTER_MCAST_REJOIN_COUNT,
+          NM_TEAM_ATTRIBUTE_CONTROLLER_MCAST_REJOIN_COUNT,
           controller.mcast_rejoin_count,
           NM_VALUE_TYPE_INT32,
           NM_SETTING_TEAM_MCAST_REJOIN_COUNT,
           _JS_KEYS("mcast_rejoin", "count"),
           _VAL_INT32_RANGE(-1, 0, G_MAXINT32), ),
     _INIT(0,
-          NM_TEAM_ATTRIBUTE_MASTER_MCAST_REJOIN_INTERVAL,
+          NM_TEAM_ATTRIBUTE_CONTROLLER_MCAST_REJOIN_INTERVAL,
           controller.mcast_rejoin_interval,
           NM_VALUE_TYPE_INT32,
           NM_SETTING_TEAM_MCAST_REJOIN_INTERVAL,
           _JS_KEYS("mcast_rejoin", "interval"),
           _VAL_INT32_RANGE(-1, 0, G_MAXINT32), ),
     _INIT(0,
-          NM_TEAM_ATTRIBUTE_MASTER_RUNNER,
+          NM_TEAM_ATTRIBUTE_CONTROLLER_RUNNER,
           controller.runner,
           NM_VALUE_TYPE_STRING,
           NM_SETTING_TEAM_RUNNER,
           _JS_KEYS("runner", "name"),
           _VAL_STRING_RANGE(_valid_names_runner), ),
     _INIT(0,
-          NM_TEAM_ATTRIBUTE_MASTER_RUNNER_HWADDR_POLICY,
+          NM_TEAM_ATTRIBUTE_CONTROLLER_RUNNER_HWADDR_POLICY,
           controller.runner_hwaddr_policy,
           NM_VALUE_TYPE_STRING,
           NM_SETTING_TEAM_RUNNER_HWADDR_POLICY,
           _JS_KEYS("runner", "hwaddr_policy"),
           _VAL_STRING_RANGE(_valid_names_runner_hwaddr_policy), ),
     _INIT(0,
-          NM_TEAM_ATTRIBUTE_MASTER_RUNNER_TX_HASH,
+          NM_TEAM_ATTRIBUTE_CONTROLLER_RUNNER_TX_HASH,
           controller.runner_tx_hash,
           NM_VALUE_TYPE_UNSPEC,
           NM_SETTING_TEAM_RUNNER_TX_HASH,
           _JS_KEYS("runner", "tx_hash"),
           _VAL_UNSPEC(), ),
     _INIT(0,
-          NM_TEAM_ATTRIBUTE_MASTER_RUNNER_TX_BALANCER,
+          NM_TEAM_ATTRIBUTE_CONTROLLER_RUNNER_TX_BALANCER,
           controller.runner_tx_balancer,
           NM_VALUE_TYPE_STRING,
           NM_SETTING_TEAM_RUNNER_TX_BALANCER,
           _JS_KEYS("runner", "tx_balancer", "name"),
           _VAL_STRING_RANGE(_valid_names_runner_tx_balancer), ),
     _INIT(0,
-          NM_TEAM_ATTRIBUTE_MASTER_RUNNER_TX_BALANCER_INTERVAL,
+          NM_TEAM_ATTRIBUTE_CONTROLLER_RUNNER_TX_BALANCER_INTERVAL,
           controller.runner_tx_balancer_interval,
           NM_VALUE_TYPE_INT32,
           NM_SETTING_TEAM_RUNNER_TX_BALANCER_INTERVAL,
           _JS_KEYS("runner", "tx_balancer", "balancing_interval"),
           _VAL_INT32_RANGE(-1, 0, G_MAXINT32), ),
     _INIT(0,
-          NM_TEAM_ATTRIBUTE_MASTER_RUNNER_ACTIVE,
+          NM_TEAM_ATTRIBUTE_CONTROLLER_RUNNER_ACTIVE,
           controller.runner_active,
           NM_VALUE_TYPE_BOOL,
           NM_SETTING_TEAM_RUNNER_ACTIVE,
           _JS_KEYS("runner", "active"),
           _VAL_BOOL(TRUE), ),
     _INIT(0,
-          NM_TEAM_ATTRIBUTE_MASTER_RUNNER_FAST_RATE,
+          NM_TEAM_ATTRIBUTE_CONTROLLER_RUNNER_FAST_RATE,
           controller.runner_fast_rate,
           NM_VALUE_TYPE_BOOL,
           NM_SETTING_TEAM_RUNNER_FAST_RATE,
           _JS_KEYS("runner", "fast_rate"),
           _VAL_BOOL(FALSE), ),
     _INIT(0,
-          NM_TEAM_ATTRIBUTE_MASTER_RUNNER_SYS_PRIO,
+          NM_TEAM_ATTRIBUTE_CONTROLLER_RUNNER_SYS_PRIO,
           controller.runner_sys_prio,
           NM_VALUE_TYPE_INT32,
           NM_SETTING_TEAM_RUNNER_SYS_PRIO,
           _JS_KEYS("runner", "sys_prio"),
           _VAL_INT32_RANGE(-1, 0, USHRT_MAX + 1), ),
     _INIT(0,
-          NM_TEAM_ATTRIBUTE_MASTER_RUNNER_MIN_PORTS,
+          NM_TEAM_ATTRIBUTE_CONTROLLER_RUNNER_MIN_PORTS,
           controller.runner_min_ports,
           NM_VALUE_TYPE_INT32,
           NM_SETTING_TEAM_RUNNER_MIN_PORTS,
           _JS_KEYS("runner", "min_ports"),
           _VAL_INT32_RANGE(-1, 1, UCHAR_MAX + 1), ),
     _INIT(0,
-          NM_TEAM_ATTRIBUTE_MASTER_RUNNER_AGG_SELECT_POLICY,
+          NM_TEAM_ATTRIBUTE_CONTROLLER_RUNNER_AGG_SELECT_POLICY,
           controller.runner_agg_select_policy,
           NM_VALUE_TYPE_STRING,
           NM_SETTING_TEAM_RUNNER_AGG_SELECT_POLICY,
@@ -520,7 +520,7 @@ _team_attr_data_cmp(const TeamAttrData *attr_data,
                                           len,
                                           FALSE));
         }
-    } else if (!is_port && attr_data->team_attr == NM_TEAM_ATTRIBUTE_MASTER_RUNNER_TX_HASH) {
+    } else if (!is_port && attr_data->team_attr == NM_TEAM_ATTRIBUTE_CONTROLLER_RUNNER_TX_HASH) {
         v_ptrarray_a = *((const GPtrArray *const *) val_a);
         v_ptrarray_b = *((const GPtrArray *const *) val_b);
         NM_CMP_RETURN(nm_strv_cmp_n(v_ptrarray_a ? (const char *const *) v_ptrarray_a->pdata : NULL,
@@ -574,7 +574,7 @@ _team_attr_data_copy(const TeamAttrData *attr_data,
                 g_ptr_array_unref(v_ptrarray_dst);
             *((GPtrArray **) dst) = dst_array;
         }
-    } else if (!is_port && attr_data->team_attr == NM_TEAM_ATTRIBUTE_MASTER_RUNNER_TX_HASH) {
+    } else if (!is_port && attr_data->team_attr == NM_TEAM_ATTRIBUTE_CONTROLLER_RUNNER_TX_HASH) {
         v_ptrarray_src = *((const GPtrArray *const *) src);
         v_ptrarray_dst = *((GPtrArray **) dst);
         len            = (v_ptrarray_src ? v_ptrarray_src->len : 0u);
@@ -631,7 +631,7 @@ _team_attr_data_to_json(const TeamAttrData *attr_data,
         return;
     }
 
-    if (!is_port && attr_data->team_attr == NM_TEAM_ATTRIBUTE_MASTER_RUNNER_TX_HASH) {
+    if (!is_port && attr_data->team_attr == NM_TEAM_ATTRIBUTE_CONTROLLER_RUNNER_TX_HASH) {
         const GPtrArray *v_ptrarray = *((const GPtrArray *const *) p_field);
 
         if (!v_ptrarray)
@@ -737,7 +737,7 @@ _team_setting_get_field(const NMTeamSetting *self, const TeamAttrData *attr_data
 
 #if NM_MORE_ASSERTS > 5
     if (attr_data->for_controller
-        && attr_data->team_attr == NM_TEAM_ATTRIBUTE_MASTER_RUNNER_SYS_PRIO)
+        && attr_data->team_attr == NM_TEAM_ATTRIBUTE_CONTROLLER_RUNNER_SYS_PRIO)
         nm_assert((gpointer) (((char *) self) + attr_data->field_offset)
                   == &self->d.controller.runner_sys_prio);
 #endif
@@ -1108,7 +1108,7 @@ nm_team_setting_value_controller_runner_tx_hash_add(NMTeamSetting *self, const c
     g_ptr_array_add((GPtrArray *) self->d.controller.runner_tx_hash, g_strdup(txhash));
 out:
     return _team_setting_attribute_changed_attr(self,
-                                                NM_TEAM_ATTRIBUTE_MASTER_RUNNER_TX_HASH,
+                                                NM_TEAM_ATTRIBUTE_CONTROLLER_RUNNER_TX_HASH,
                                                 changed,
                                                 SET_FIELD_MODE_SET_UNLESS_DEFAULT,
                                                 RESET_JSON_YES);
@@ -1119,7 +1119,7 @@ nm_team_setting_value_controller_runner_tx_hash_remove(NMTeamSetting *self, guin
 {
     g_ptr_array_remove_index((GPtrArray *) self->d.controller.runner_tx_hash, idx);
     return _team_setting_attribute_changed_attr(self,
-                                                NM_TEAM_ATTRIBUTE_MASTER_RUNNER_TX_HASH,
+                                                NM_TEAM_ATTRIBUTE_CONTROLLER_RUNNER_TX_HASH,
                                                 TRUE,
                                                 SET_FIELD_MODE_SET_UNLESS_DEFAULT,
                                                 RESET_JSON_YES);
@@ -1162,7 +1162,7 @@ _team_setting_value_controller_runner_tx_hash_set_list(NMTeamSetting     *self,
 
 out:
     return _team_setting_attribute_changed_attr(self,
-                                                NM_TEAM_ATTRIBUTE_MASTER_RUNNER_TX_HASH,
+                                                NM_TEAM_ATTRIBUTE_CONTROLLER_RUNNER_TX_HASH,
                                                 changed,
                                                 set_field_mode,
                                                 reset_json);
@@ -1771,28 +1771,28 @@ nm_team_setting_config_get(const NMTeamSetting *self)
                 list_is_empty = FALSE;
         } else {
             static const NMTeamAttribute attr_lst_runner_pt1[] = {
-                NM_TEAM_ATTRIBUTE_MASTER_RUNNER,
-                NM_TEAM_ATTRIBUTE_MASTER_RUNNER_HWADDR_POLICY,
-                NM_TEAM_ATTRIBUTE_MASTER_RUNNER_TX_HASH,
+                NM_TEAM_ATTRIBUTE_CONTROLLER_RUNNER,
+                NM_TEAM_ATTRIBUTE_CONTROLLER_RUNNER_HWADDR_POLICY,
+                NM_TEAM_ATTRIBUTE_CONTROLLER_RUNNER_TX_HASH,
             };
             static const NMTeamAttribute attr_lst_runner_pt2[] = {
-                NM_TEAM_ATTRIBUTE_MASTER_RUNNER_TX_BALANCER,
-                NM_TEAM_ATTRIBUTE_MASTER_RUNNER_TX_BALANCER_INTERVAL,
+                NM_TEAM_ATTRIBUTE_CONTROLLER_RUNNER_TX_BALANCER,
+                NM_TEAM_ATTRIBUTE_CONTROLLER_RUNNER_TX_BALANCER_INTERVAL,
             };
             static const NMTeamAttribute attr_lst_runner_pt3[] = {
-                NM_TEAM_ATTRIBUTE_MASTER_RUNNER_ACTIVE,
-                NM_TEAM_ATTRIBUTE_MASTER_RUNNER_FAST_RATE,
-                NM_TEAM_ATTRIBUTE_MASTER_RUNNER_SYS_PRIO,
-                NM_TEAM_ATTRIBUTE_MASTER_RUNNER_MIN_PORTS,
-                NM_TEAM_ATTRIBUTE_MASTER_RUNNER_AGG_SELECT_POLICY,
+                NM_TEAM_ATTRIBUTE_CONTROLLER_RUNNER_ACTIVE,
+                NM_TEAM_ATTRIBUTE_CONTROLLER_RUNNER_FAST_RATE,
+                NM_TEAM_ATTRIBUTE_CONTROLLER_RUNNER_SYS_PRIO,
+                NM_TEAM_ATTRIBUTE_CONTROLLER_RUNNER_MIN_PORTS,
+                NM_TEAM_ATTRIBUTE_CONTROLLER_RUNNER_AGG_SELECT_POLICY,
             };
             static const NMTeamAttribute attr_lst_notify_peers[] = {
-                NM_TEAM_ATTRIBUTE_MASTER_NOTIFY_PEERS_COUNT,
-                NM_TEAM_ATTRIBUTE_MASTER_NOTIFY_PEERS_INTERVAL,
+                NM_TEAM_ATTRIBUTE_CONTROLLER_NOTIFY_PEERS_COUNT,
+                NM_TEAM_ATTRIBUTE_CONTROLLER_NOTIFY_PEERS_INTERVAL,
             };
             static const NMTeamAttribute attr_lst_mcast_rejoin[] = {
-                NM_TEAM_ATTRIBUTE_MASTER_MCAST_REJOIN_COUNT,
-                NM_TEAM_ATTRIBUTE_MASTER_MCAST_REJOIN_INTERVAL,
+                NM_TEAM_ATTRIBUTE_CONTROLLER_MCAST_REJOIN_COUNT,
+                NM_TEAM_ATTRIBUTE_CONTROLLER_MCAST_REJOIN_INTERVAL,
             };
 
             if (_team_setting_has_fields_any_v(self,
@@ -2071,7 +2071,7 @@ _js_parse_unpack(const NMJsonVt *vt,
                 p_out_val->v_ptrarray             = link_watchers;
                 *out_ptr_array_link_watchers_free = link_watchers;
             }
-        } else if (!is_port && attr_data->team_attr == NM_TEAM_ATTRIBUTE_MASTER_RUNNER_TX_HASH) {
+        } else if (!is_port && attr_data->team_attr == NM_TEAM_ATTRIBUTE_CONTROLLER_RUNNER_TX_HASH) {
             GPtrArray *strv = NULL;
 
             nm_assert(out_ptr_array_controller_runner_tx_hash_free
@@ -2260,7 +2260,7 @@ _team_setting_verify_properties(const NMTeamSetting *self, GError **error)
                 nm_assert_not_reached();
         }
 
-        if (!self->d.is_port && attr_data->team_attr == NM_TEAM_ATTRIBUTE_MASTER_RUNNER_TX_HASH) {
+        if (!self->d.is_port && attr_data->team_attr == NM_TEAM_ATTRIBUTE_CONTROLLER_RUNNER_TX_HASH) {
             if (self->d.controller.runner_tx_hash) {
                 for (i = 0; i < self->d.controller.runner_tx_hash->len; i++) {
                     const char *val = self->d.controller.runner_tx_hash->pdata[i];
@@ -2544,7 +2544,7 @@ nm_team_setting_reset_from_dbus(NMTeamSetting                  *self,
         else if (attr_data->team_attr == NM_TEAM_ATTRIBUTE_LINK_WATCHERS)
             variant_type = G_VARIANT_TYPE("aa{sv}");
         else if (!self->d.is_port
-                 && attr_data->team_attr == NM_TEAM_ATTRIBUTE_MASTER_RUNNER_TX_HASH)
+                 && attr_data->team_attr == NM_TEAM_ATTRIBUTE_CONTROLLER_RUNNER_TX_HASH)
             variant_type = G_VARIANT_TYPE_STRING_ARRAY;
         else
             nm_assert_not_reached();
@@ -2647,7 +2647,7 @@ nm_team_setting_reset_from_dbus(NMTeamSetting                  *self,
                     SET_FIELD_MODE_SET,
                     RESET_JSON_NO);
             } else if (!self->d.is_port
-                       && attr_data->team_attr == NM_TEAM_ATTRIBUTE_MASTER_RUNNER_TX_HASH) {
+                       && attr_data->team_attr == NM_TEAM_ATTRIBUTE_CONTROLLER_RUNNER_TX_HASH) {
                 gs_free const char **strv = NULL;
                 gsize                len;
 
@@ -2758,7 +2758,7 @@ _nm_team_settings_property_to_dbus(_NM_SETT_INFO_PROP_TO_DBUS_FCN_ARGS _nm_nil)
     }
     if (attr_data->team_attr == NM_TEAM_ATTRIBUTE_LINK_WATCHERS)
         return _nm_utils_team_link_watchers_to_variant(self->d.link_watchers);
-    if (!self->d.is_port && attr_data->team_attr == NM_TEAM_ATTRIBUTE_MASTER_RUNNER_TX_HASH) {
+    if (!self->d.is_port && attr_data->team_attr == NM_TEAM_ATTRIBUTE_CONTROLLER_RUNNER_TX_HASH) {
         return g_variant_new_strv(
             self->d.controller.runner_tx_hash
                 ? (const char *const *) self->d.controller.runner_tx_hash->pdata
