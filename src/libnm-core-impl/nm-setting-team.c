@@ -1781,9 +1781,10 @@ nm_setting_team_class_init(NMSettingTeamClass *klass)
                             "",
                             NULL,
                             G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
-    _nm_properties_override_gobj(properties_override,
-                                 obj_properties[NM_TEAM_ATTRIBUTE_CONTROLLER_RUNNER_AGG_SELECT_POLICY],
-                                 &nm_sett_info_propert_type_team_s);
+    _nm_properties_override_gobj(
+        properties_override,
+        obj_properties[NM_TEAM_ATTRIBUTE_CONTROLLER_RUNNER_AGG_SELECT_POLICY],
+        &nm_sett_info_propert_type_team_s);
 
     /**
      * NMSettingTeam:link-watchers: (type GPtrArray(NMTeamLinkWatcher))

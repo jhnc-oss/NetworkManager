@@ -110,7 +110,7 @@ typedef enum {
     RELEASE_PORT_TYPE_NO_CONFIG,
     RELEASE_PORT_TYPE_CONFIG,
     RELEASE_PORT_TYPE_CONFIG_FORCE,
-} ReleaseSlaveType;
+} ReleasePortType;
 
 typedef enum {
     CLEANUP_TYPE_KEEP,
@@ -133,7 +133,7 @@ typedef struct {
     gulong        watch_id;
     bool          port_is_attached;
     bool          configure;
-} SlaveInfo;
+} PortInfo;
 
 typedef struct {
     NMDevice               *device;
@@ -716,7 +716,7 @@ typedef struct _NMDevicePrivate {
     int       controller_ifindex;
 
     /* port management */
-    CList ports; /* list of SlaveInfo */
+    CList ports; /* list of PortInfo */
 
     NMMetered metered;
 
@@ -793,7 +793,7 @@ static gboolean nm_device_controller_add_port(NMDevice *self, NMDevice *port, gb
 static void     nm_device_port_notify_attach_as_port(NMDevice *self, gboolean success);
 static void     nm_device_port_notify_release(NMDevice           *self,
                                               NMDeviceStateReason reason,
-                                              ReleaseSlaveType    release_type);
+                                              ReleasePortType     release_type);
 
 static void _dev_ipll6_start(NMDevice *self);
 
@@ -5683,7 +5683,7 @@ nm_device_get_route_metric(NMDevice *self, int addr_family)
     if (connection) {
         s_ip = nm_connection_get_setting_ip_config(connection, addr_family);
 
-        /* Slave interfaces don't have IP settings, but we may get here when
+        /* Port interfaces don't have IP settings, but we may get here when
          * external changes are made or when noticing IP changes when starting
          * the port connection.
          */
@@ -6671,11 +6671,11 @@ nm_device_get_connectivity_state(NMDevice *self, int addr_family)
 
 /*****************************************************************************/
 
-static SlaveInfo *
+static PortInfo *
 find_port_info(NMDevice *self, NMDevice *port)
 {
     NMDevicePrivate *priv = NM_DEVICE_GET_PRIVATE(self);
-    SlaveInfo       *info;
+    PortInfo        *info;
 
     c_list_for_each_entry (info, &priv->ports, lst_port) {
         if (info->port == port)
@@ -6687,7 +6687,7 @@ find_port_info(NMDevice *self, NMDevice *port)
 static void
 attach_port_done(NMDevice *self, NMDevice *port, gboolean success)
 {
-    SlaveInfo *info;
+    PortInfo *info;
 
     info = find_port_info(self, port);
     if (!info)
@@ -6718,8 +6718,8 @@ attach_port_done(NMDevice *self, NMDevice *port, gboolean success)
 static void
 attach_port_cb(NMDevice *self, GError *error, gpointer user_data)
 {
-    NMDevice  *port = user_data;
-    SlaveInfo *info;
+    NMDevice *port = user_data;
+    PortInfo *info;
 
     if (nm_utils_error_is_cancelled(error))
         return;
@@ -6744,9 +6744,9 @@ attach_port_cb(NMDevice *self, GError *error, gpointer user_data)
 static void
 nm_device_controller_attach_port(NMDevice *self, NMDevice *port, NMConnection *connection)
 {
-    SlaveInfo *info;
-    NMTernary  success;
-    gboolean   configure;
+    PortInfo *info;
+    NMTernary success;
+    gboolean  configure;
 
     g_return_if_fail(self);
     g_return_if_fail(port);
@@ -6811,12 +6811,12 @@ detach_port_cb(NMDevice *self, GError *error, gpointer user_data)
 static void
 nm_device_controller_release_port(NMDevice           *self,
                                   NMDevice           *port,
-                                  ReleaseSlaveType    release_type,
+                                  ReleasePortType     release_type,
                                   NMDeviceStateReason reason)
 {
     NMDevicePrivate          *priv;
     NMDevicePrivate          *port_priv;
-    SlaveInfo                *info;
+    PortInfo                 *info;
     gs_unref_object NMDevice *self_free = NULL;
     gs_unref_object NMDevice *port_free = NULL;
 
@@ -7018,7 +7018,7 @@ carrier_changed(NMDevice *self, gboolean carrier)
         }
         /* fall-through and change state of device */
     } else if (priv->is_attached && !carrier) {
-        /* Slaves don't deactivate when they lose carrier; for
+        /* Ports don't deactivate when they lose carrier; for
          * bonds/teams in particular that would be actively
          * counterproductive.
          */
@@ -8502,7 +8502,7 @@ nm_device_controller_add_port(NMDevice *self, NMDevice *port, gboolean configure
 {
     NMDevicePrivate *priv;
     NMDevicePrivate *port_priv;
-    SlaveInfo       *info;
+    PortInfo        *info;
     gboolean         changed = FALSE;
 
     g_return_val_if_fail(NM_IS_DEVICE(self), FALSE);
@@ -8527,7 +8527,7 @@ nm_device_controller_add_port(NMDevice *self, NMDevice *port, gboolean configure
         g_return_val_if_fail(!port_priv->controller, FALSE);
         g_return_val_if_fail(!port_priv->is_attached, FALSE);
 
-        info            = g_slice_new0(SlaveInfo);
+        info            = g_slice_new0(PortInfo);
         info->port      = g_object_ref(port);
         info->configure = configure;
         info->watch_id =
@@ -8575,7 +8575,7 @@ nm_device_controller_check_port_physical_port(NMDevice   *self,
 {
     NMDevicePrivate *priv = NM_DEVICE_GET_PRIVATE(self);
     const char      *port_physical_port_id, *existing_physical_port_id;
-    SlaveInfo       *info;
+    PortInfo        *info;
 
     port_physical_port_id = nm_device_get_physical_port_id(port);
     if (!port_physical_port_id)
@@ -8606,8 +8606,8 @@ nm_device_controller_release_ports_all(NMDevice *self)
 {
     NMDevicePrivate    *priv = NM_DEVICE_GET_PRIVATE(self);
     NMDeviceStateReason reason;
-    SlaveInfo          *info;
-    SlaveInfo          *safe;
+    PortInfo           *info;
+    PortInfo           *safe;
 
     /* Don't release the ports if this connection doesn't belong to NM. */
     if (nm_device_sys_iface_state_is_external(self))
@@ -8735,7 +8735,7 @@ nm_device_port_notify_attach_as_port(NMDevice *self, gboolean success)
 static void
 nm_device_port_notify_release(NMDevice           *self,
                               NMDeviceStateReason reason,
-                              ReleaseSlaveType    release_type)
+                              ReleasePortType     release_type)
 {
     NMDevicePrivate *priv       = NM_DEVICE_GET_PRIVATE(self);
     NMConnection    *connection = nm_device_get_applied_connection(self);
@@ -10455,7 +10455,7 @@ activate_stage2_device_config(NMDevice *self)
     NMActStageReturn ret;
     NMSettingWired  *s_wired;
     gboolean         no_firmware = FALSE;
-    SlaveInfo       *info;
+    PortInfo        *info;
     NMTernary        accept_all_mac_addresses;
 
     nm_device_state_changed(self, NM_DEVICE_STATE_CONFIG, NM_DEVICE_STATE_REASON_NONE);
@@ -11501,7 +11501,7 @@ static gboolean
 have_any_ready_ports(NMDevice *self)
 {
     NMDevicePrivate *priv = NM_DEVICE_GET_PRIVATE(self);
-    SlaveInfo       *info;
+    PortInfo        *info;
 
     /* Any attached port is "ready" in the generic case as it's
      * at least >= NM_DEVICE_STATE_IP_CONFIG and has had Layer 2
@@ -18399,7 +18399,7 @@ static GVariant *
 _device_get_ports_variant(NMDevice *device)
 {
     NMDevicePrivate *priv = NM_DEVICE_GET_PRIVATE(device);
-    SlaveInfo       *info;
+    PortInfo        *info;
     GVariantBuilder  builder;
     gboolean         any = FALSE;
 

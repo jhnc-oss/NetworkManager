@@ -5271,7 +5271,7 @@ ensure_controller_active_connection(NMManager            *self,
 typedef struct {
     NMSettingsConnection *connection;
     NMDevice             *device;
-} SlaveConnectionInfo;
+} PortConnectionInfo;
 
 /**
  * find_ports:
@@ -5283,9 +5283,9 @@ typedef struct {
  * Given an #NMSettingsConnection, attempts to find its ports. If @sett_conn is not
  * controller, or has not any ports, this will return %NULL.
  *
- * Returns: an array of #SlaveConnectionInfo for given controller @sett_conn, or %NULL
+ * Returns: an array of #PortConnectionInfo for given controller @sett_conn, or %NULL
  **/
-static SlaveConnectionInfo *
+static PortConnectionInfo *
 find_ports(NMManager            *manager,
            NMSettingsConnection *sett_conn,
            NMDevice             *device,
@@ -5296,7 +5296,7 @@ find_ports(NMManager            *manager,
     NMSettingsConnection *const   *all_connections = NULL;
     guint                          n_all_connections;
     guint                          i;
-    SlaveConnectionInfo           *ports   = NULL;
+    PortConnectionInfo            *ports   = NULL;
     guint                          n_ports = 0;
     NMSettingConnection           *s_con;
     gs_unref_hashtable GHashTable *devices = NULL;
@@ -5340,11 +5340,11 @@ find_ports(NMManager            *manager,
             if (!ports) {
                 /* what we allocate is quite likely much too large. Don't bother, it is only
                  * a temporary buffer. */
-                ports = g_new(SlaveConnectionInfo, n_all_connections);
+                ports = g_new(PortConnectionInfo, n_all_connections);
             }
 
             nm_assert(n_ports < n_all_connections);
-            ports[n_ports++] = (SlaveConnectionInfo){
+            ports[n_ports++] = (PortConnectionInfo){
                 .connection = candidate,
                 .device     = port_device,
             };
@@ -5392,10 +5392,10 @@ out:
 static int
 compare_ports(gconstpointer a, gconstpointer b)
 {
-    const SlaveConnectionInfo *a_info = a;
-    const SlaveConnectionInfo *b_info = b;
+    const PortConnectionInfo *a_info = a;
+    const PortConnectionInfo *b_info = b;
 
-    /* Slaves without a device at the end */
+    /* Ports without a device at the end */
     if (!a_info->device)
         return 1;
     if (!b_info->device)
@@ -5415,9 +5415,9 @@ autoconnect_ports(NMManager            *self,
 
     if (should_connect_ports(nm_settings_connection_get_connection(controller_connection),
                              controller_device)) {
-        gs_free SlaveConnectionInfo *ports = NULL;
-        guint                        i, n_ports = 0;
-        gboolean                     bind_lifetime_to_profile_visibility;
+        gs_free PortConnectionInfo *ports = NULL;
+        guint                       i, n_ports = 0;
+        gboolean                    bind_lifetime_to_profile_visibility;
 
         ports =
             find_ports(self, controller_connection, controller_device, &n_ports, for_user_request);
@@ -5431,8 +5431,8 @@ autoconnect_ports(NMManager            *self,
                             NM_ACTIVATION_STATE_FLAG_LIFETIME_BOUND_TO_PROFILE_VISIBILITY);
 
         for (i = 0; i < n_ports; i++) {
-            SlaveConnectionInfo *port = &ports[i];
-            const char          *uuid;
+            PortConnectionInfo *port = &ports[i];
+            const char         *uuid;
 
             /* To avoid loops when autoconnecting ports, we propagate
              * the UUID of the initial connection down to ports until
@@ -5493,7 +5493,7 @@ autoconnect_ports(NMManager            *self,
                     : NM_ACTIVATION_STATE_FLAG_NONE,
                 &local_err);
             if (local_err) {
-                _LOGW(LOGD_CORE, "Slave connection activation failed: %s", local_err->message);
+                _LOGW(LOGD_CORE, "Port connection activation failed: %s", local_err->message);
                 g_clear_error(&local_err);
             }
         }

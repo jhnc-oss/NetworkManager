@@ -1120,7 +1120,7 @@ usage(void)
           "  up [[id | uuid | path] <ID>] [ifname <ifname>] [ap <BSSID>] [passwd-file <file with "
           "passwords>]\n\n"
           "  down [id | uuid | path | apath] <ID> ...\n\n"
-          "  add COMMON_OPTIONS TYPE_SPECIFIC_OPTIONS SLAVE_OPTIONS IP_OPTIONS [-- "
+          "  add COMMON_OPTIONS TYPE_SPECIFIC_OPTIONS PORT_OPTIONS IP_OPTIONS [-- "
           "([+|-]<setting>.<property> <value>)+]\n\n"
           "  modify [--temporary] [id | uuid | path] <ID> ([+|-]<setting>.<property> <value>)+\n\n"
           "  clone [--temporary] [id | uuid | path ] <ID> <new name>\n\n"
@@ -1199,7 +1199,7 @@ usage_connection_add(void)
     nmc_printerr(
         _("Usage: nmcli connection add { ARGUMENTS | help }\n"
           "\n"
-          "ARGUMENTS := COMMON_OPTIONS TYPE_SPECIFIC_OPTIONS SLAVE_OPTIONS IP_OPTIONS [-- "
+          "ARGUMENTS := COMMON_OPTIONS TYPE_SPECIFIC_OPTIONS PORT_OPTIONS IP_OPTIONS [-- "
           "([+|-]<setting>.<property> <value>)+]\n\n"
           "  COMMON_OPTIONS:\n"
           "                  type <type>\n"
@@ -1208,7 +1208,7 @@ usage_connection_add(void)
           "                  [autoconnect yes|no]\n"
           "                  [save yes|no]\n"
           "                  [controller <controller (ifname, or connection UUID or name)>]\n"
-          "                  [slave-type <controller connection type>]\n\n"
+          "                  [port-type <controller connection type>]\n\n"
           "  TYPE_SPECIFIC_OPTIONS:\n"
           "    ethernet:     [mac <MAC address>]\n"
           "                  [cloned-mac <cloned MAC address>]\n"
@@ -1312,7 +1312,7 @@ usage_connection_add(void)
           "                  [mac <MAC address>]\n\n"
           "    6lowpan:      dev <parent device (connection UUID, ifname, or MAC)>\n"
           "    dummy:\n\n"
-          "  SLAVE_OPTIONS:\n"
+          "  PORT_OPTIONS:\n"
           "    bridge:       [priority <0-63>]\n"
           "                  [path-cost <1-65535>]\n"
           "                  [hairpin yes|no]\n\n"
@@ -4470,7 +4470,7 @@ con_settings(NMConnection                             *connection,
         g_set_error(error,
                     NMCLI_ERROR,
                     NMC_RESULT_ERROR_USER_INPUT,
-                    _("Error: invalid slave type; %s."),
+                    _("Error: invalid port type; %s."),
                     con_type);
         return FALSE;
     }
@@ -6249,7 +6249,7 @@ gen_setting_names(const char *text, int state)
                 return g_strdup(s_name);
         }
 
-        /* Let's give a try to parameters related to slave type */
+        /* Let's give a try to parameters related to port type */
         list_idx = 0;
         is_port  = 1;
     }
