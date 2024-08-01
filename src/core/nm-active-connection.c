@@ -660,7 +660,7 @@ device_controller_changed(GObject *object, GParamSpec *pspec, gpointer user_data
     controller       = nm_active_connection_get_controller(self);
     controller_state = nm_active_connection_get_state(controller);
     if (controller_state >= NM_ACTIVE_CONNECTION_STATE_DEACTIVATING) {
-        /* Master failed before attaching the port */
+        /* Controller failed before attaching the port */
         if (NM_ACTIVE_CONNECTION_GET_CLASS(self)->controller_failed)
             NM_ACTIVE_CONNECTION_GET_CLASS(self)->controller_failed(self);
     }
@@ -821,7 +821,7 @@ controller_state_cb(NMActiveConnection *controller, GParamSpec *pspec, gpointer 
     check_controller_ready(self);
 
     if (controller_state == NM_ACTIVE_CONNECTION_STATE_DEACTIVATING && !priv->controller_ready) {
-        /* Master disconnected before the port was added */
+        /* Controller disconnected before the port was added */
         if (NM_ACTIVE_CONNECTION_GET_CLASS(self)->controller_failed)
             NM_ACTIVE_CONNECTION_GET_CLASS(self)->controller_failed(self);
     }
