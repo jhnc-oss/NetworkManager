@@ -124,6 +124,8 @@ get_ethtool_format(const NMMetaPropertyInfo *prop_info)
     case NM_ETHTOOL_TYPE_PAUSE:
     case NM_ETHTOOL_TYPE_EEE:
         return g_strdup("ternary");
+    case NM_ETHTOOL_TYPE_FEC:
+        return g_strdup("flags (NMSettingEthtoolFecMode)");
     case NM_ETHTOOL_TYPE_UNKNOWN:
         nm_assert_not_reached();
     };
@@ -329,6 +331,9 @@ append_ethtool_valid_values(const NMMetaPropertyInfo *prop_info, GPtrArray *vali
     case NM_ETHTOOL_TYPE_PAUSE:
     case NM_ETHTOOL_TYPE_EEE:
         append_vals(valid_values, "on", "off", "ignore");
+        break;
+    case NM_ETHTOOL_TYPE_FEC:
+        append_vals(valid_values, "auto", "off", "rs", "baser", "llrs");
         break;
     case NM_ETHTOOL_TYPE_UNKNOWN:
         nm_assert_not_reached();
