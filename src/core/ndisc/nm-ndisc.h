@@ -141,6 +141,7 @@ typedef enum {
     NM_NDISC_CONFIG_MTU            = 1 << 7,
     NM_NDISC_CONFIG_REACHABLE_TIME = 1 << 8,
     NM_NDISC_CONFIG_RETRANS_TIMER  = 1 << 9,
+    NM_NDISC_CONFIG_CAPTIVE_PORTAL = 1 << 10,
 } NMNDiscConfigMap;
 
 typedef enum {
@@ -184,6 +185,7 @@ typedef struct {
     int              hop_limit;
     guint32          reachable_time_ms;
     guint32          retrans_timer_ms;
+    char             *captive_portal;
 
     guint gateways_n;
     guint addresses_n;
