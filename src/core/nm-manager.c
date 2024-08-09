@@ -3781,7 +3781,7 @@ recheck_assume_connection(NMManager *self, NMDevice *device)
                         &master_ac,
                         NULL)
             && master_ac)
-            nm_active_connection_set_controller(active, master_ac);
+            nm_active_connection_set_controller_ac(active, master_ac);
 
         active_connection_add(self, active);
         nm_device_queue_activation(device, NM_ACT_REQUEST(active));
@@ -5890,9 +5890,10 @@ _internal_activate_device(NMManager *self, NMActiveConnection *active, GError **
         }
         if (master_device) {
             _LOGD(LOGD_CORE,
-                  "Activation of '%s' requires master device '%s'",
+                  "Activation of '%s' requires master device '%s'(%s)",
                   nm_settings_connection_get_id(sett_conn),
-                  nm_device_get_ip_iface(master_device));
+                  nm_device_get_ip_iface(master_device),
+                  nm_device_get_type_desc(master_device));
         }
 
         /* Ensure eg bond slave and the candidate master is a bond master */
@@ -5941,31 +5942,21 @@ _internal_activate_device(NMManager *self, NMActiveConnection *active, GError **
                                              NM_UNMANAGED_EXTERNAL_DOWN,
                                              NM_UNMAN_FLAG_OP_FORGET,
                                              NM_DEVICE_STATE_REASON_USER_REQUESTED);
-        }
-
-        /* If controller NMActiveConnection is deactivating, we should wait on
-         * controller's NMDevice to have new NMActiveConnection after
-         * controller device state change to between NM_DEVICE_STATE_PREPARE and
-         * NM_DEVICE_STATE_ACTIVATED.
-         */
-        if ((nm_active_connection_get_state(master_ac) >= NM_ACTIVE_CONNECTION_STATE_DEACTIVATING)
-            && master_device
-            && (nm_device_get_state_reason(master_device)
-                == NM_DEVICE_STATE_REASON_NEW_ACTIVATION)) {
             nm_active_connection_set_controller_dev(active, master_device);
             _LOGD(LOGD_CORE,
-                  "Activation of '%s'(%s) depends on controller device %p %s",
+                  "Activation of '%s'(%s) depends on controller device %s(%s)",
                   nm_settings_connection_get_id(sett_conn),
                   nm_settings_connection_get_connection_type(sett_conn),
-                  master_device,
-                  nm_dbus_object_get_path(NM_DBUS_OBJECT(master_device)) ?: "");
+                  nm_device_get_iface(master_device),
+                  nm_device_get_type_desc(master_device));
         } else {
-            nm_active_connection_set_controller(active, master_ac);
+            nm_active_connection_set_controller_ac(active, master_ac);
             _LOGD(LOGD_CORE,
-                  "Activation of '%s'(%s) depends on active connection %p %s",
+                  "Activation of '%s'(%s) depends on active connection " NM_HASH_OBFUSCATE_PTR_FMT
+                  " %s",
                   nm_settings_connection_get_id(sett_conn),
                   nm_settings_connection_get_connection_type(sett_conn),
-                  master_ac,
+                  NM_HASH_OBFUSCATE_PTR(master_ac),
                   nm_dbus_object_get_path(NM_DBUS_OBJECT(master_ac)) ?: "");
         }
     }
