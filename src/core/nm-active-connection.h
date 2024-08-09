@@ -171,10 +171,12 @@ NMAuthSubject *nm_active_connection_get_subject(NMActiveConnection *self);
 gboolean nm_active_connection_get_user_requested(NMActiveConnection *self);
 
 NMActiveConnection *nm_active_connection_get_controller(NMActiveConnection *self);
+NMDevice           *nm_active_connection_get_controller_dev(NMActiveConnection *self);
 
 gboolean nm_active_connection_get_controller_ready(NMActiveConnection *self);
 
-void nm_active_connection_set_controller(NMActiveConnection *self, NMActiveConnection *controller);
+void nm_active_connection_set_controller_ac(NMActiveConnection *self,
+                                            NMActiveConnection *controller);
 void nm_active_connection_set_controller_dev(NMActiveConnection *self, NMDevice *controller_dev);
 
 void nm_active_connection_set_parent(NMActiveConnection *self, NMActiveConnection *parent);
