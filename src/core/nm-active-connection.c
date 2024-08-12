@@ -49,8 +49,10 @@ typedef struct _NMActiveConnectionPrivate {
     NMActivationReason activation_reason : 4;
 
     NMAuthSubject      *subject;
-    NMActiveConnection *controller;
+    NMActiveConnection *controller_ac;
     NMDevice           *controller_dev;
+    gulong              controller_dev_found_signal_id;
+    gulong              controller_dev_ready_signal_id;
 
     NMActiveConnection *parent;
 
@@ -705,8 +707,8 @@ nm_active_connection_set_device(NMActiveConnection *self, NMDevice *device)
 
     if (device) {
         /* Device obviously can't be its own controller */
-        g_return_val_if_fail(!priv->controller
-                                 || device != nm_active_connection_get_device(priv->controller),
+        g_return_val_if_fail(!priv->controller_ac
+                                 || device != nm_active_connection_get_device(priv->controller_ac),
                              FALSE);
 
         priv->device = g_object_ref(device);
@@ -752,7 +754,15 @@ nm_active_connection_get_controller(NMActiveConnection *self)
 {
     g_return_val_if_fail(NM_IS_ACTIVE_CONNECTION(self), NULL);
 
-    return NM_ACTIVE_CONNECTION_GET_PRIVATE(self)->controller;
+    return NM_ACTIVE_CONNECTION_GET_PRIVATE(self)->controller_ac;
+}
+
+NMDevice *
+nm_active_connection_get_controller_dev(NMActiveConnection *self)
+{
+    g_return_val_if_fail(NM_IS_ACTIVE_CONNECTION(self), NULL);
+
+    return NM_ACTIVE_CONNECTION_GET_PRIVATE(self)->controller_dev;
 }
 
 /**
@@ -773,31 +783,53 @@ nm_active_connection_get_controller_ready(NMActiveConnection *self)
 static void
 check_controller_ready(NMActiveConnection *self)
 {
-    NMActiveConnectionPrivate *priv       = NM_ACTIVE_CONNECTION_GET_PRIVATE(self);
-    gboolean                   signalling = FALSE;
+    NMActiveConnectionPrivate *priv                 = NM_ACTIVE_CONNECTION_GET_PRIVATE(self);
+    gboolean                   signalling           = FALSE;
+    NMDeviceState              controller_dev_state = NM_DEVICE_STATE_UNKNOWN;
+    NMActiveConnection        *controller_ac        = NULL;
 
     /* ActiveConnetions don't enter the ACTIVATING state until they have a
      * NMDevice in PREPARE or higher states, so the controller active connection's
      * device will be ready to accept ports when the controller is in ACTIVATING
      * or higher states.
      */
-    if (!priv->controller_ready && priv->controller
-        && priv->state == NM_ACTIVE_CONNECTION_STATE_ACTIVATING
-        && NM_IN_SET(nm_active_connection_get_state(priv->controller),
-                     NM_ACTIVE_CONNECTION_STATE_ACTIVATING,
-                     NM_ACTIVE_CONNECTION_STATE_ACTIVATED)) {
-        signalling = TRUE;
+    if (priv->controller_dev) {
+        controller_dev_state = nm_device_get_state(priv->controller_dev);
+        controller_ac = NM_ACTIVE_CONNECTION(nm_device_get_act_request(priv->controller_dev));
+        if (controller_ac && priv->controller_ac != controller_ac) {
+            if (priv->controller_ac != NULL) {
+                _LOGD("releasing previous controller active connection " NM_HASH_OBFUSCATE_PTR_FMT
+                      " %s, state %s",
+                      NM_HASH_OBFUSCATE_PTR(priv->controller_ac),
+                      nm_active_connection_get_settings_connection_id(priv->controller_ac),
+                      state_to_string_a(nm_active_connection_get_state(priv->controller_ac)));
+                if (priv->controller_dev_found_signal_id) {
+                    nm_clear_g_signal_handler(priv->controller_ac,
+                                              &priv->controller_dev_found_signal_id);
+                }
+                g_clear_object(&priv->controller_ac);
+            }
+            priv->controller_ac = g_object_ref(controller_ac);
+        }
     }
+
+    if (!priv->controller_ready && priv->controller_dev
+        && priv->state == NM_ACTIVE_CONNECTION_STATE_ACTIVATING
+        && controller_dev_state >= NM_DEVICE_STATE_PREPARE
+        && controller_dev_state <= NM_DEVICE_STATE_ACTIVATED)
+        signalling = TRUE;
 
     _LOGD("check-controller-ready: %s (state %s, %s)",
           signalling ? "signal" : (priv->controller_ready ? "already signalled" : "not signalling"),
+
           state_to_string_a(priv->state),
-          priv->controller
-              ? nm_sprintf_bufa(128,
-                                "controller %p is in state %s",
-                                priv->controller,
-                                state_to_string_a(nm_active_connection_get_state(priv->controller)))
-              : "no controller");
+
+          priv->controller_dev ? nm_sprintf_bufa(128,
+                                                 "controller %s(%s) is in state %s",
+                                                 nm_device_get_iface(priv->controller_dev),
+                                                 nm_device_get_type_desc(priv->controller_dev),
+                                                 nm_device_state_to_string(controller_dev_state))
+                               : "no controller");
 
     if (signalling) {
         priv->controller_ready = TRUE;
@@ -808,19 +840,32 @@ check_controller_ready(NMActiveConnection *self)
          * that we notify clients when the controller device is known.
          */
         nm_gobject_notify_together(self, PROP_MASTER, PROP_CONTROLLER);
+        if ((priv->controller_dev_ready_signal_id) && (priv->controller_dev))
+            nm_clear_g_signal_handler(priv->controller_dev, &priv->controller_dev_ready_signal_id);
     }
 }
 
+// Wait controller's NMDevice to show up
 static void
-controller_state_cb(NMActiveConnection *controller, GParamSpec *pspec, gpointer user_data)
+wait_controller_dev_to_compose_cb(NMActiveConnection *controller_ac,
+                                  GParamSpec         *pspec,
+                                  gpointer            user_data)
 {
     NMActiveConnection        *self             = NM_ACTIVE_CONNECTION(user_data);
     NMActiveConnectionPrivate *priv             = NM_ACTIVE_CONNECTION_GET_PRIVATE(self);
-    NMActiveConnectionState    controller_state = nm_active_connection_get_state(controller);
+    NMActiveConnectionState    controller_state = nm_active_connection_get_state(controller_ac);
+    NMDevice                  *controller_dev   = nm_active_connection_get_device(controller_ac);
 
-    check_controller_ready(self);
-
-    if (controller_state == NM_ACTIVE_CONNECTION_STATE_DEACTIVATING && !priv->controller_ready) {
+    if (controller_dev) {
+        _LOGD("controller dev %s(%s) composed, state: %s",
+              nm_device_get_iface(controller_dev),
+              nm_device_get_type_desc(controller_dev),
+              nm_device_state_to_string(nm_device_get_state(controller_dev)));
+        nm_active_connection_set_controller_dev(self, controller_dev);
+        if ((priv->controller_dev_found_signal_id) && (priv->controller_ac))
+            nm_clear_g_signal_handler(priv->controller_ac, &priv->controller_dev_found_signal_id);
+    } else if (controller_state == NM_ACTIVE_CONNECTION_STATE_DEACTIVATING
+               && !priv->controller_ready) {
         /* Controller disconnected before the port was added */
         if (NM_ACTIVE_CONNECTION_GET_CLASS(self)->controller_failed)
             NM_ACTIVE_CONNECTION_GET_CLASS(self)->controller_failed(self);
@@ -828,77 +873,89 @@ controller_state_cb(NMActiveConnection *controller, GParamSpec *pspec, gpointer 
 }
 
 static void
-controller_dev_state_cb(NMDevice           *controller_dev,
-                        NMDeviceState       new_state,
-                        NMDeviceState       old_state,
-                        NMDeviceStateReason reason,
-                        gpointer            user_data)
+wait_controller_dev_to_prepare_cb(NMDevice           *controller_dev,
+                                  NMDeviceState       new_state,
+                                  NMDeviceState       old_state,
+                                  NMDeviceStateReason reason,
+                                  gpointer            user_data)
 {
-    NMActiveConnection        *self = NM_ACTIVE_CONNECTION(user_data);
-    NMActiveConnectionPrivate *priv = NM_ACTIVE_CONNECTION_GET_PRIVATE(self);
-    NMActRequest              *controller_act_request;
-    NMActiveConnection        *controller_ac;
+    NMActiveConnection *self = NM_ACTIVE_CONNECTION(user_data);
 
-    if (new_state >= NM_DEVICE_STATE_PREPARE && new_state <= NM_DEVICE_STATE_ACTIVATED) {
-        controller_act_request = nm_device_get_act_request(controller_dev);
-        if (controller_act_request) {
-            controller_ac = NM_ACTIVE_CONNECTION(controller_act_request);
-            g_signal_handlers_disconnect_by_func(controller_dev,
-                                                 G_CALLBACK(controller_dev_state_cb),
-                                                 self);
-            g_clear_object(&priv->controller_dev);
-            nm_active_connection_set_controller(self, controller_ac);
-        }
-    }
+    _LOGD("controller dev %s(%s) state changed %s -> %s\n",
+          nm_device_get_iface(controller_dev),
+          nm_device_get_type_desc(controller_dev),
+          nm_device_state_to_string(old_state),
+          nm_device_state_to_string(new_state));
+    check_controller_ready(self);
 }
 
 /**
- * nm_active_connection_set_controller:
+ * nm_active_connection_set_controller_ac:
  * @self: the #NMActiveConnection
- * @controller: if the activation depends on another device (ie, bond or bridge
- * controller to which this device will be set as port) pass the #NMActiveConnection
- * that this activation request is a child of
+ * @controller_ac: if the activation depends on another device (ie, bond or
+ * bridge controller to which this device will be set as port) pass the
+ * #NMActiveConnection that this activation request is a child of
+ *
+ * The goal is waiting controller NMDevice reach NM_DEVICE_STATE_PREPARE , if
+ * controller NMActiveConnection does not have device attached, hook on signal
+ * of controoler NMActiveConnection state change.
  *
  * Sets the controller active connection of @self.
  */
 void
-nm_active_connection_set_controller(NMActiveConnection *self, NMActiveConnection *controller)
+nm_active_connection_set_controller_ac(NMActiveConnection *self, NMActiveConnection *controller_ac)
 {
     NMActiveConnectionPrivate *priv;
+    NMDevice                  *controller_dev = nm_active_connection_get_device(controller_ac);
 
     g_return_if_fail(NM_IS_ACTIVE_CONNECTION(self));
-    g_return_if_fail(NM_IS_ACTIVE_CONNECTION(controller));
+    g_return_if_fail(NM_IS_ACTIVE_CONNECTION(controller_ac));
 
     priv = NM_ACTIVE_CONNECTION_GET_PRIVATE(self);
 
-    if (priv->controller != NULL) {
-        _LOGD("releasing previous controller " NM_HASH_OBFUSCATE_PTR_FMT " %s, state %s",
-              NM_HASH_OBFUSCATE_PTR(priv->controller),
-              nm_active_connection_get_settings_connection_id(priv->controller),
-              state_to_string_a(nm_active_connection_get_state(priv->controller)));
-        g_clear_object(&priv->controller);
+    if (priv->controller_ac != NULL) {
+        _LOGD("releasing previous controller active connection " NM_HASH_OBFUSCATE_PTR_FMT
+              " %s, state %s",
+              NM_HASH_OBFUSCATE_PTR(priv->controller_ac),
+              nm_active_connection_get_settings_connection_id(priv->controller_ac),
+              state_to_string_a(nm_active_connection_get_state(priv->controller_ac)));
+        if (priv->controller_dev_found_signal_id) {
+            nm_clear_g_signal_handler(priv->controller_ac, &priv->controller_dev_found_signal_id);
+        }
+        g_clear_object(&priv->controller_ac);
     }
 
     if (priv->device) {
         /* Note, the controller ActiveConnection may not yet have a device */
-        g_return_if_fail(priv->device != nm_active_connection_get_device(controller));
+        g_return_if_fail(priv->device != controller_dev);
     }
 
-    _LOGD("set controller " NM_HASH_OBFUSCATE_PTR_FMT ", %s, state %s",
-          NM_HASH_OBFUSCATE_PTR(controller),
-          nm_active_connection_get_settings_connection_id(controller),
-          state_to_string_a(nm_active_connection_get_state(controller)));
+    _LOGD("waiting controller active connection " NM_HASH_OBFUSCATE_PTR_FMT
+          ", %s, current state %s",
+          NM_HASH_OBFUSCATE_PTR(controller_dev),
+          nm_active_connection_get_settings_connection_id(controller_ac),
+          state_to_string_a(nm_active_connection_get_state(controller_ac)));
+    priv->controller_ac    = g_object_ref(controller_ac);
+    priv->controller_ready = FALSE;
 
-    priv->controller = g_object_ref(controller);
-
-    _notify(self, PROP_CONTROLLER);
-
-    g_signal_connect(priv->controller,
-                     "notify::" NM_ACTIVE_CONNECTION_STATE,
-                     G_CALLBACK(controller_state_cb),
-                     self);
-
-    check_controller_ready(self);
+    /* If controller ActiveConnection does not have device, we wait
+     * its ActiveConnection to reach ACTIVATING state
+     */
+    if (controller_dev) {
+        if (controller_dev != priv->controller_dev || !priv->controller_dev_ready_signal_id)
+            nm_active_connection_set_controller_dev(self, controller_dev);
+    } else if (!priv->controller_dev) {
+        _LOGD("waiting controller active connection " NM_HASH_OBFUSCATE_PTR_FMT
+              " %s to reach activating state, current state %s",
+              NM_HASH_OBFUSCATE_PTR(priv->controller_ac),
+              nm_active_connection_get_settings_connection_id(priv->controller_ac),
+              state_to_string_a(nm_active_connection_get_state(priv->controller_ac)));
+        priv->controller_dev_found_signal_id =
+            g_signal_connect(priv->controller_ac,
+                             "notify::" NM_ACTIVE_CONNECTION_STATE,
+                             G_CALLBACK(wait_controller_dev_to_compose_cb),
+                             self);
+    }
 }
 
 void
@@ -911,29 +968,39 @@ nm_active_connection_set_controller_dev(NMActiveConnection *self, NMDevice *cont
 
     priv = NM_ACTIVE_CONNECTION_GET_PRIVATE(self);
 
-    if (priv->controller_dev != NULL) {
+    if (priv->controller_dev) {
         _LOGD("releasing previous controller device " NM_HASH_OBFUSCATE_PTR_FMT " %s(%s), state %s",
               NM_HASH_OBFUSCATE_PTR(priv->controller_dev),
               nm_device_get_iface(priv->controller_dev),
               nm_device_get_type_desc(priv->controller_dev),
               nm_device_state_to_string(nm_device_get_state(priv->controller_dev)));
+        if (priv->controller_dev_found_signal_id && priv->controller_dev)
+            nm_clear_g_signal_handler(priv->controller_dev, &priv->controller_dev_ready_signal_id);
         g_clear_object(&priv->controller_dev);
     }
+
     if (priv->device) {
         g_return_if_fail(priv->device != controller_dev);
     }
 
-    _LOGD("set controller device " NM_HASH_OBFUSCATE_PTR_FMT ", %s(%s), state %s",
-          NM_HASH_OBFUSCATE_PTR(controller_dev),
-          nm_device_get_iface(controller_dev),
-          nm_device_get_type_desc(controller_dev),
-          nm_device_state_to_string(nm_device_get_state(controller_dev)));
+    priv->controller_ready = FALSE;
+    priv->controller_dev   = g_object_ref(controller_dev);
+    _notify(self, PROP_CONTROLLER);
 
-    priv->controller_dev = g_object_ref(controller_dev);
-    g_signal_connect(priv->controller_dev,
-                     NM_DEVICE_STATE_CHANGED,
-                     G_CALLBACK(controller_dev_state_cb),
-                     self);
+    check_controller_ready(self);
+    if (!priv->controller_ready) {
+        _LOGD("wait controller device " NM_HASH_OBFUSCATE_PTR_FMT ", %s(%s), current state %s",
+              NM_HASH_OBFUSCATE_PTR(controller_dev),
+              nm_device_get_iface(controller_dev),
+              nm_device_get_type_desc(controller_dev),
+              nm_device_state_to_string(nm_device_get_state(controller_dev)));
+
+        priv->controller_dev_ready_signal_id =
+            g_signal_connect(priv->controller_dev,
+                             NM_DEVICE_STATE_CHANGED,
+                             G_CALLBACK(wait_controller_dev_to_prepare_cb),
+                             self);
+    }
 }
 
 NMActivationType
@@ -1347,7 +1414,6 @@ get_property(GObject *object, guint prop_id, GValue *value, GParamSpec *pspec)
     NMActiveConnection        *self = NM_ACTIVE_CONNECTION(object);
     NMActiveConnectionPrivate *priv = NM_ACTIVE_CONNECTION_GET_PRIVATE(self);
     char                     **strv;
-    NMDevice                  *controller_device = NULL;
 
     switch (prop_id) {
     /* note that while priv->settings_connection.obj might not be set initially,
@@ -1419,9 +1485,7 @@ get_property(GObject *object, guint prop_id, GValue *value, GParamSpec *pspec)
         break;
     case PROP_CONTROLLER:
     case PROP_MASTER:
-        if (priv->controller)
-            controller_device = nm_active_connection_get_device(priv->controller);
-        nm_dbus_utils_g_value_set_object_path(value, controller_device);
+        nm_dbus_utils_g_value_set_object_path(value, priv->controller_dev);
         break;
     case PROP_INT_SUBJECT:
         g_value_set_object(value, priv->subject);
@@ -1474,7 +1538,7 @@ set_property(GObject *object, guint prop_id, const GValue *value, GParamSpec *ps
         priv->subject = g_value_dup_object(value);
         break;
     case PROP_INT_CONTROLLER:
-        nm_active_connection_set_controller(self, g_value_get_object(value));
+        nm_active_connection_set_controller_ac(self, g_value_get_object(value));
         break;
     case PROP_INT_ACTIVATION_TYPE:
         /* construct-only */
@@ -1601,17 +1665,11 @@ dispose(GObject *object)
 
     _device_cleanup(self);
 
-    if (priv->controller) {
-        g_signal_handlers_disconnect_by_func(priv->controller,
-                                             G_CALLBACK(controller_state_cb),
-                                             self);
-    }
-    if (priv->controller_dev) {
-        g_signal_handlers_disconnect_by_func(priv->controller_dev,
-                                             G_CALLBACK(controller_dev_state_cb),
-                                             self);
-    }
-    g_clear_object(&priv->controller);
+    if ((priv->controller_dev_found_signal_id) && (priv->controller_ac))
+        nm_clear_g_signal_handler(priv->controller_ac, &priv->controller_dev_found_signal_id);
+    if ((priv->controller_dev_ready_signal_id) && (priv->controller_dev))
+        nm_clear_g_signal_handler(priv->controller_dev, &priv->controller_dev_ready_signal_id);
+    g_clear_object(&priv->controller_ac);
     g_clear_object(&priv->controller_dev);
 
     if (priv->parent)
