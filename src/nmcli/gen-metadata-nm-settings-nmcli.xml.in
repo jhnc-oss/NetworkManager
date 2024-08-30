@@ -1387,6 +1387,12 @@
                   nmcli-description="VPN connections will default to add the route automatically unless this setting is set to FALSE. For other connection types, adding such an automatic route is currently not supported and setting this to TRUE has no effect."
                   format="ternary"
                   values="true/yes/on, false/no/off, default/unknown" />
+        <property name="shared-dhcp-range"
+                  nmcli-description='Custom address range for DHCP server in shared IPv4 mode. Use format &lt;START_IP&gt;,&lt;END_IP&gt;.'
+                  format="string"/>
+        <property name="shared-dhcp-range"
+                  nmcli-description='Custom lease time for DHCP server in shared IPv4 mode. Either numebr of seconds between 120 and 31536000, or &quot;infinite&quot;.'
+                  format="string"/>
     </setting>
     <setting name="ipv6" >
         <property name="method"

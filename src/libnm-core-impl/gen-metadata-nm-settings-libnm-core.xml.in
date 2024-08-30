@@ -1622,6 +1622,14 @@
                   dbus-type="i"
                   gprop-type="NMTernary"
                   />
+        <property name="shared-dhcp-range"
+                  dbus-type="s"
+                  gprop-type="gchararray"
+                  />
+        <property name="shared-dhcp-lease-time"
+                  dbus-type="s"
+                  gprop-type="gchararray"
+                  />
         <property name="dhcp-timeout"
                   dbus-type="i"
                   gprop-type="gint"
