@@ -2016,6 +2016,8 @@ global:
 	nm_device_ipvlan_get_private;
 	nm_device_ipvlan_get_type;
 	nm_device_ipvlan_get_vepa;
+	nm_setting_ip_config_get_shared_dhcp_range;
+	nm_setting_ip_config_get_shared_dhcp_lease_time;
 	nm_setting_ipvlan_get_mode;
 	nm_setting_ipvlan_get_parent;
 	nm_setting_ipvlan_get_private;
