@@ -6919,7 +6919,7 @@ nmcli_editor_tab_completion(const char *text, int start, int end)
     return match_array;
 }
 
-#define NMCLI_EDITOR_HISTORY ".nmcli-history"
+#define NMCLI_EDITOR_HISTORY "nmcli-history"
 
 static void
 load_history_cmds(const char *uuid)
@@ -6931,7 +6931,7 @@ load_history_cmds(const char *uuid)
     size_t    i;
     GError   *err = NULL;
 
-    filename = g_build_filename(g_get_home_dir(), NMCLI_EDITOR_HISTORY, NULL);
+    filename = g_build_filename(g_get_user_cache_dir(), NMCLI_EDITOR_HISTORY, NULL);
     kf       = g_key_file_new();
     if (!g_key_file_load_from_file(kf, filename, G_KEY_FILE_KEEP_COMMENTS, &err)) {
         if (g_error_matches(err, G_KEY_FILE_ERROR, G_KEY_FILE_ERROR_PARSE))
@@ -6967,7 +6967,7 @@ save_history_cmds(const char *uuid)
     if (!hist)
         return;
 
-    filename = g_build_filename(g_get_home_dir(), NMCLI_EDITOR_HISTORY, NULL);
+    filename = g_build_filename(g_get_user_cache_dir(), NMCLI_EDITOR_HISTORY, NULL);
 
     kf = g_key_file_new();
 
