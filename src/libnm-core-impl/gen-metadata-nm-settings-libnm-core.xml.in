@@ -1403,6 +1403,30 @@
                   dbus-type="s"
                   gprop-type="gchararray"
                   />
+        <property name="initial-eps-bearer-noauth"
+                  dbus-type="b"
+                  gprop-type="gboolean"
+                  />
+        <property name="initial-eps-bearer-refuse-chap"
+                  dbus-type="b"
+                  gprop-type="gboolean"
+                  />
+        <property name="initial-eps-bearer-refuse-eap"
+                  dbus-type="b"
+                  gprop-type="gboolean"
+                  />
+        <property name="initial-eps-bearer-refuse-mschap"
+                  dbus-type="b"
+                  gprop-type="gboolean"
+                  />
+        <property name="initial-eps-bearer-refuse-mschapv2"
+                  dbus-type="b"
+                  gprop-type="gboolean"
+                  />
+        <property name="initial-eps-bearer-refuse-pap"
+                  dbus-type="b"
+                  gprop-type="gboolean"
+                  />
         <property name="mtu"
                   dbus-type="u"
                   gprop-type="guint"
@@ -2133,30 +2157,6 @@
                   gprop-type="guint"
                   />
         <property name="crtscts"
-                  dbus-type="b"
-                  gprop-type="gboolean"
-                  />
-        <property name="initial-eps-bearer-noauth"
-                  dbus-type="b"
-                  gprop-type="gboolean"
-                  />
-        <property name="initial-eps-bearer-refuse-chap"
-                  dbus-type="b"
-                  gprop-type="gboolean"
-                  />
-        <property name="initial-eps-bearer-refuse-eap"
-                  dbus-type="b"
-                  gprop-type="gboolean"
-                  />
-        <property name="initial-eps-bearer-refuse-mschap"
-                  dbus-type="b"
-                  gprop-type="gboolean"
-                  />
-        <property name="initial-eps-bearer-refuse-mschapv2"
-                  dbus-type="b"
-                  gprop-type="gboolean"
-                  />
-        <property name="initial-eps-bearer-refuse-pap"
                   dbus-type="b"
                   gprop-type="gboolean"
                   />

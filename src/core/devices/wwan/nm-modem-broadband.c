@@ -671,7 +671,6 @@ connect_context_step(NMModemBroadband *self)
             const char   *username  = nm_setting_gsm_get_initial_eps_username(s_gsm);
             const char   *password  = nm_setting_gsm_get_initial_eps_password(s_gsm);
 
-            NMSettingPpp *s_ppp = nm_connection_get_setting_ppp(ctx->connection);
 
             /* assume do_config is true if an APN is set */
             if (apn || do_config) {
@@ -701,17 +700,17 @@ connect_context_step(NMModemBroadband *self)
                     mm_bearer_properties_set_user(config, username);
                     mm_bearer_properties_set_password(config, password);
 
-                    if (nm_setting_ppp_get_initial_eps_noauth(s_ppp))
+                    if (nm_setting_gsm_get_initial_eps_noauth(s_gsm))
                         allowed_auth |= MM_BEARER_ALLOWED_AUTH_NONE;
-                    if (!nm_setting_ppp_get_initial_eps_refuse_pap(s_ppp))
+                    if (!nm_setting_gsm_get_initial_eps_refuse_pap(s_gsm))
                         allowed_auth |= MM_BEARER_ALLOWED_AUTH_PAP;
-                    if (!nm_setting_ppp_get_initial_eps_refuse_chap(s_ppp))
+                    if (!nm_setting_gsm_get_initial_eps_refuse_chap(s_gsm))
                         allowed_auth |= MM_BEARER_ALLOWED_AUTH_CHAP;
-                    if (!nm_setting_ppp_get_initial_eps_refuse_mschap(s_ppp))
+                    if (!nm_setting_gsm_get_initial_eps_refuse_mschap(s_gsm))
                         allowed_auth |= MM_BEARER_ALLOWED_AUTH_MSCHAP;
-                    if (!nm_setting_ppp_get_initial_eps_refuse_mschapv2(s_ppp))
+                    if (!nm_setting_gsm_get_initial_eps_refuse_mschapv2(s_gsm))
                         allowed_auth |= MM_BEARER_ALLOWED_AUTH_MSCHAPV2;
-                    if (!nm_setting_ppp_get_initial_eps_refuse_eap(s_ppp))
+                    if (!nm_setting_gsm_get_initial_eps_refuse_eap(s_gsm))
                         allowed_auth |= MM_BEARER_ALLOWED_AUTH_EAP;
 
                     mm_bearer_properties_set_allowed_auth(config, allowed_auth);

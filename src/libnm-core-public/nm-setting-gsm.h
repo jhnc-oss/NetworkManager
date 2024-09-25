@@ -44,6 +44,12 @@ G_BEGIN_DECLS
 #define NM_SETTING_GSM_INITIAL_EPS_BEARER_USERNAME       "initial-eps-bearer-username"
 #define NM_SETTING_GSM_INITIAL_EPS_BEARER_PASSWORD       "initial-eps-bearer-password"
 #define NM_SETTING_GSM_INITIAL_EPS_BEARER_PASSWORD_FLAGS "initial-eps-bearer-password-flags"
+#define NM_SETTING_GSM_INITIAL_EPS_BEARER_NOAUTH          "initial-eps-bearer-noauth"
+#define NM_SETTING_GSM_INITIAL_EPS_BEARER_REFUSE_EAP      "initial-eps-bearer-refuse-eap"
+#define NM_SETTING_GSM_INITIAL_EPS_BEARER_REFUSE_PAP      "initial-eps-bearer-refuse-pap"
+#define NM_SETTING_GSM_INITIAL_EPS_BEARER_REFUSE_CHAP     "initial-eps-bearer-refuse-chap"
+#define NM_SETTING_GSM_INITIAL_EPS_BEARER_REFUSE_MSCHAP   "initial-eps-bearer-refuse-mschap"
+#define NM_SETTING_GSM_INITIAL_EPS_BEARER_REFUSE_MSCHAPV2 "initial-eps-bearer-refuse-mschapv2"
 
 /* Deprecated */
 #define NM_SETTING_GSM_NUMBER "number"
@@ -80,6 +86,18 @@ NM_AVAILABLE_IN_1_50
 const char *nm_setting_gsm_get_initial_eps_username(NMSettingGsm *setting);
 NM_AVAILABLE_IN_1_50
 const char *nm_setting_gsm_get_initial_eps_password(NMSettingGsm *setting);
+NM_AVAILABLE_IN_1_50
+gboolean nm_setting_gsm_get_initial_eps_noauth(NMSettingGsm *setting);
+NM_AVAILABLE_IN_1_50
+gboolean nm_setting_gsm_get_initial_eps_refuse_eap(NMSettingGsm *setting);
+NM_AVAILABLE_IN_1_50
+gboolean nm_setting_gsm_get_initial_eps_refuse_pap(NMSettingGsm *setting);
+NM_AVAILABLE_IN_1_50
+gboolean nm_setting_gsm_get_initial_eps_refuse_chap(NMSettingGsm *setting);
+NM_AVAILABLE_IN_1_50
+gboolean nm_setting_gsm_get_initial_eps_refuse_mschap(NMSettingGsm *setting);
+NM_AVAILABLE_IN_1_50
+gboolean nm_setting_gsm_get_initial_eps_refuse_mschapv2(NMSettingGsm *setting);
 
 NM_DEPRECATED_IN_1_16
 const char *nm_setting_gsm_get_number(NMSettingGsm *setting);

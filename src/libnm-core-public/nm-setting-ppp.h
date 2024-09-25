@@ -32,12 +32,6 @@ G_BEGIN_DECLS
 #define NM_SETTING_PPP_REFUSE_CHAP                        "refuse-chap"
 #define NM_SETTING_PPP_REFUSE_MSCHAP                      "refuse-mschap"
 #define NM_SETTING_PPP_REFUSE_MSCHAPV2                    "refuse-mschapv2"
-#define NM_SETTING_PPP_INITIAL_EPS_BEARER_NOAUTH          "initial-eps-bearer-noauth"
-#define NM_SETTING_PPP_INITIAL_EPS_BEARER_REFUSE_EAP      "initial-eps-bearer-refuse-eap"
-#define NM_SETTING_PPP_INITIAL_EPS_BEARER_REFUSE_PAP      "initial-eps-bearer-refuse-pap"
-#define NM_SETTING_PPP_INITIAL_EPS_BEARER_REFUSE_CHAP     "initial-eps-bearer-refuse-chap"
-#define NM_SETTING_PPP_INITIAL_EPS_BEARER_REFUSE_MSCHAP   "initial-eps-bearer-refuse-mschap"
-#define NM_SETTING_PPP_INITIAL_EPS_BEARER_REFUSE_MSCHAPV2 "initial-eps-bearer-refuse-mschapv2"
 #define NM_SETTING_PPP_NOBSDCOMP                          "nobsdcomp"
 #define NM_SETTING_PPP_NODEFLATE                          "nodeflate"
 #define NM_SETTING_PPP_NO_VJ_COMP                         "no-vj-comp"
@@ -74,19 +68,6 @@ guint32    nm_setting_ppp_get_mru(NMSettingPpp *setting);
 guint32    nm_setting_ppp_get_mtu(NMSettingPpp *setting);
 guint32    nm_setting_ppp_get_lcp_echo_failure(NMSettingPpp *setting);
 guint32    nm_setting_ppp_get_lcp_echo_interval(NMSettingPpp *setting);
-
-NM_AVAILABLE_IN_1_50
-gboolean nm_setting_ppp_get_initial_eps_noauth(NMSettingPpp *setting);
-NM_AVAILABLE_IN_1_50
-gboolean nm_setting_ppp_get_initial_eps_refuse_eap(NMSettingPpp *setting);
-NM_AVAILABLE_IN_1_50
-gboolean nm_setting_ppp_get_initial_eps_refuse_pap(NMSettingPpp *setting);
-NM_AVAILABLE_IN_1_50
-gboolean nm_setting_ppp_get_initial_eps_refuse_chap(NMSettingPpp *setting);
-NM_AVAILABLE_IN_1_50
-gboolean nm_setting_ppp_get_initial_eps_refuse_mschap(NMSettingPpp *setting);
-NM_AVAILABLE_IN_1_50
-gboolean nm_setting_ppp_get_initial_eps_refuse_mschapv2(NMSettingPpp *setting);
 
 G_END_DECLS
 
