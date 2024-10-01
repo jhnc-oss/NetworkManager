@@ -1627,8 +1627,8 @@
                   gprop-type="gchararray"
                   />
         <property name="shared-dhcp-lease-time"
-                  dbus-type="s"
-                  gprop-type="gchararray"
+                  dbus-type="i"
+                  gprop-type="gint"
                   />
         <property name="dhcp-timeout"
                   dbus-type="i"

@@ -36,7 +36,7 @@ NMDnsMasqManager *nm_dnsmasq_manager_new(const char *iface);
 gboolean nm_dnsmasq_manager_start(NMDnsMasqManager     *manager,
                                   const NML3ConfigData *l3cd,
                                   const char           *shared_dhcp_range,
-                                  const char           *shared_dhcp_lease_time,
+                                  int                   shared_dhcp_lease_time,
                                   gboolean              announce_android_metered,
                                   GError              **error);
 

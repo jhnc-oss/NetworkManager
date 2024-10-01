@@ -187,7 +187,7 @@ typedef struct {
     char       *dhcp_iaid;
     char       *dhcp_dscp;
     char       *shared_dhcp_range;
-    char       *shared_dhcp_lease_time;
+    int         shared_dhcp_lease_time;
     gint64      route_metric;
     int         auto_route_ext_gw;
     int         replace_local_rule;

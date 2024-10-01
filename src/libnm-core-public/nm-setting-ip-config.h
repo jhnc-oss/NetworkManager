@@ -517,7 +517,7 @@ NMTernary nm_setting_ip_config_get_dhcp_send_release(NMSettingIPConfig *setting)
 NM_AVAILABLE_IN_1_52
 const char *nm_setting_ip_config_get_shared_dhcp_range(NMSettingIPConfig *setting);
 NM_AVAILABLE_IN_1_52
-const char *nm_setting_ip_config_get_shared_dhcp_lease_time(NMSettingIPConfig *setting);
+int nm_setting_ip_config_get_shared_dhcp_lease_time(NMSettingIPConfig *setting);
 
 G_END_DECLS
 

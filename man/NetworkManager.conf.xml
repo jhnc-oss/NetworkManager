@@ -990,22 +990,6 @@ ipv6.ip6-privacy=0
           </para></listitem>
         </varlistentry>
         <varlistentry>
-          <term><varname>ipv4.shared-dhcp-lease-time</varname></term>
-          <listitem><para>Custom lease time for DHCP server in shared mode. Use number of seconds between 120 and 31536000 or "infinite".
-            If not specified, the lease time is set to 3600 seconds.</para></listitem>
-        </varlistentry>
-        <varlistentry>
-          <term><varname>ipv4.shared-dhcp-range</varname></term>
-          <listitem><para>Custom address range for DHCP server in shared mode. It uses &lt;START_IP&gt;,&lt;END_IP&gt; format.
-            If this option is not specified, the DHCP range will be automatically determined based
-            on the interface address. The range will be selected to be adjacent to the interface address,
-            either before or after it, with preference given to the larger available range.
-            The range will be adjusted to utilize full address range, except in networks
-            with the subnet larger than /24, which are going to be partitioned and treated as if it were
-            be a /24.
-          </para></listitem>
-        </varlistentry>
-        <varlistentry>
           <term><varname>ipv6.addr-gen-mode</varname></term>
           <listitem><para>If the per-profile setting is either "default" or "default-or-eui64", the
             global default is used. If the default is unspecified, the fallback value is either "stable-privacy"

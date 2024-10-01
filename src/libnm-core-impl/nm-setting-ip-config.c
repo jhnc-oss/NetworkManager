@@ -5490,6 +5490,8 @@ nm_setting_ip_config_get_dhcp_send_release(NMSettingIPConfig *setting)
  * property.
  *
  * Returns: the configured DHCP server range
+ *
+ * Since: 1.52
  **/
 const char *
 nm_setting_ip_config_get_shared_dhcp_range(NMSettingIPConfig *setting)
@@ -5507,11 +5509,13 @@ nm_setting_ip_config_get_shared_dhcp_range(NMSettingIPConfig *setting)
  * property.
  *
  * Returns: the configured DHCP server lease time
+ *
+ * Since: 1.52
  **/
-const char *
+int
 nm_setting_ip_config_get_shared_dhcp_lease_time(NMSettingIPConfig *setting)
 {
-    g_return_val_if_fail(NM_IS_SETTING_IP_CONFIG(setting), NULL);
+    g_return_val_if_fail(NM_IS_SETTING_IP_CONFIG(setting), 0);
 
     return NM_SETTING_IP_CONFIG_GET_PRIVATE(setting)->shared_dhcp_lease_time;
 }
@@ -5812,20 +5816,6 @@ verify(NMSetting *setting, NMConnection *connection, GError **error)
         return FALSE;
     }
 
-    /* Normalizable errors */
-    if (priv->gateway && priv->never_default) {
-        g_set_error(error,
-                    NM_CONNECTION_ERROR,
-                    NM_CONNECTION_ERROR_INVALID_PROPERTY,
-                    _("a gateway is incompatible with '%s'"),
-                    NM_SETTING_IP_CONFIG_NEVER_DEFAULT);
-        g_prefix_error(error,
-                       "%s.%s: ",
-                       nm_setting_get_name(setting),
-                       NM_SETTING_IP_CONFIG_GATEWAY);
-        return NM_SETTING_VERIFY_NORMALIZABLE_ERROR;
-    }
-
     /* Validate DHCP range served in the shared move  */
     if (priv->shared_dhcp_range && !nm_utils_validate_shared_dhcp_range(priv->shared_dhcp_range, priv->addresses, error)) {
         g_prefix_error(error,
@@ -5842,6 +5832,20 @@ verify(NMSetting *setting, NMConnection *connection, GError **error)
                        nm_setting_get_name(setting),
                        NM_SETTING_IP_CONFIG_SHARED_DHCP_LEASE_TIME);
         return FALSE;
+    }
+
+    /* Normalizable errors */
+    if (priv->gateway && priv->never_default) {
+        g_set_error(error,
+                    NM_CONNECTION_ERROR,
+                    NM_CONNECTION_ERROR_INVALID_PROPERTY,
+                    _("a gateway is incompatible with '%s'"),
+                    NM_SETTING_IP_CONFIG_NEVER_DEFAULT);
+        g_prefix_error(error,
+                       "%s.%s: ",
+                       nm_setting_get_name(setting),
+                       NM_SETTING_IP_CONFIG_GATEWAY);
+        return NM_SETTING_VERIFY_NORMALIZABLE_ERROR;
     }
 
     return TRUE;
@@ -6262,9 +6266,9 @@ _nm_sett_info_property_override_create_array_ip_config(int addr_family)
     _nm_properties_override_gobj(
         properties_override,
         obj_properties[PROP_SHARED_DHCP_LEASE_TIME],
-        &nm_sett_info_propert_type_direct_string,
-        .direct_offset = NM_STRUCT_OFFSET_ENSURE_TYPE(char *, NMSettingIPConfigPrivate, shared_dhcp_lease_time),
-        .direct_string_allow_empty = TRUE);
+        &nm_sett_info_propert_type_direct_int32,
+        .direct_offset =
+            NM_STRUCT_OFFSET_ENSURE_TYPE(gint32, NMSettingIPConfigPrivate, shared_dhcp_lease_time));
 
     return properties_override;
 }
@@ -7040,17 +7044,22 @@ nm_setting_ip_config_class_init(NMSettingIPConfigClass *klass)
      * NMSettingIPConfig:shared-dhcp-lease-time:
      *
      * This option allows you to specify a custom DHCP lease time for the shared connection
-     * method in seconds. The value should be either a number between 120 and 31536000 (one year),
-     * or string "infinite". If this option is not specified, 3600 (one hour) is used.
+     * method in seconds. The value should be either a number between 120 and 31536000 (one year)
+     * If this option is not specified, 3600 (one hour) is used.
+     *
+     * Special values are 0 for default value of 1 hour and 2147483647 (MAXINT32) for infinite lease time.
      *
      * Since: 1.52
      */
     obj_properties[PROP_SHARED_DHCP_LEASE_TIME] =
-        g_param_spec_string(NM_SETTING_IP_CONFIG_SHARED_DHCP_LEASE_TIME,
-                            "",
-                            "",
-                            NULL,
-                            G_PARAM_READWRITE | G_PARAM_EXPLICIT_NOTIFY | G_PARAM_STATIC_STRINGS);
+        g_param_spec_int(NM_SETTING_IP_CONFIG_SHARED_DHCP_LEASE_TIME,
+                         "",
+                         "",
+                         0,
+                         G_MAXINT32,
+                         3600,
+                         G_PARAM_READWRITE | G_PARAM_EXPLICIT_NOTIFY | NM_SETTING_PARAM_FUZZY_IGNORE
+                             | G_PARAM_STATIC_STRINGS);
 
     g_object_class_install_properties(object_class, _PROPERTY_ENUMS_LAST, obj_properties);
 }

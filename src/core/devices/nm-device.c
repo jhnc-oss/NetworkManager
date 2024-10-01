@@ -13338,7 +13338,7 @@ _dev_ipshared4_spawn_dnsmasq(NMDevice *self)
     gboolean               ready;
     NMSettingIPConfig     *s_ip4 = NULL;
     const char            *shared_dhcp_range;
-    const char            *shared_dhcp_lease_time;
+    int                    shared_dhcp_lease_time;
 
     nm_assert(priv->ipshared_data_4.v4.firewall_config);
     nm_assert(priv->ipshared_data_4.v4.dnsmasq_state_id == 0);

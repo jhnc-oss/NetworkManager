@@ -93,7 +93,7 @@ create_dm_cmd_line(const char           *iface,
                    const NML3ConfigData *l3cd,
                    const char           *pidfile,
                    const char           *shared_dhcp_range,
-                   const char           *shared_dhcp_lease_time,
+                   int                   shared_dhcp_lease_time,
                    gboolean              announce_android_metered,
                    GError              **error)
 {
@@ -152,11 +152,19 @@ create_dm_cmd_line(const char           *iface,
 
     nm_strv_ptrarray_add_string_concat(cmd, "--listen-address=", listen_address_s);
 
-    shared_dhcp_lease_time = (shared_dhcp_lease_time && *shared_dhcp_lease_time) ? shared_dhcp_lease_time : "3600";
+    shared_dhcp_lease_time = (shared_dhcp_lease_time != 0) ? shared_dhcp_lease_time : 3600;
     if (shared_dhcp_range && *shared_dhcp_range) {
-        nm_strv_ptrarray_add_string_printf(cmd, "--dhcp-range=%s,%s", shared_dhcp_range, shared_dhcp_lease_time);
+        if (shared_dhcp_lease_time < G_MAXINT32) {
+          nm_strv_ptrarray_add_string_printf(cmd, "--dhcp-range=%s,%d", shared_dhcp_range, shared_dhcp_lease_time);
+        } else {
+          nm_strv_ptrarray_add_string_printf(cmd, "--dhcp-range=%s,infinite", shared_dhcp_range);
+        }
     } else if (nm_dnsmasq_utils_get_range(listen_address, first, last, &error_desc)) {
-        nm_strv_ptrarray_add_string_printf(cmd, "--dhcp-range=%s,%s,%s", first, last, shared_dhcp_lease_time);
+        if (shared_dhcp_lease_time < G_MAXINT32) {
+          nm_strv_ptrarray_add_string_printf(cmd, "--dhcp-range=%s,%s,%d", first, last, shared_dhcp_lease_time);
+        } else {
+          nm_strv_ptrarray_add_string_printf(cmd, "--dhcp-range=%s,%s,infinite", first, last);
+        }
     } else {
         g_set_error_literal(error, NM_MANAGER_ERROR, NM_MANAGER_ERROR_FAILED, error_desc);
         _LOGW("failed to find DHCP address ranges: %s", error_desc);
@@ -256,7 +264,7 @@ gboolean
 nm_dnsmasq_manager_start(NMDnsMasqManager     *manager,
                          const NML3ConfigData *l3cd,
                          const char           *shared_dhcp_range,
-                         const char           *shared_dhcp_lease_time,
+                         int                   shared_dhcp_lease_time,
                          gboolean              announce_android_metered,
                          GError              **error)
 {

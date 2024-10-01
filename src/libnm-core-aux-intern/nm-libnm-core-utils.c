@@ -9,8 +9,6 @@
 #include "nm-common-macros.h"
 #include "nm-errors.h"
 #include "libnm-core-public/nm-connection.h"
-
-#include <ctype.h>
 /*****************************************************************************/
 
 const char **
@@ -508,7 +506,7 @@ nm_utils_validate_shared_dhcp_range(const char *shared_dhcp_range, GPtrArray *ad
         g_set_error_literal(error,
                             NM_CONNECTION_ERROR,
                             NM_CONNECTION_ERROR_INVALID_PROPERTY,
-                            _(NM_INVALID_DHCP_RANGE_ERROR_MSG));
+                            _("invalid DHCP range; it should be provided as <START_IP>,<END_IP>."));
         return FALSE;
     }
     start_address_str = strndupa(shared_dhcp_range, end_address_str - shared_dhcp_range);
@@ -518,7 +516,7 @@ nm_utils_validate_shared_dhcp_range(const char *shared_dhcp_range, GPtrArray *ad
         g_set_error_literal(error,
                             NM_CONNECTION_ERROR,
                             NM_CONNECTION_ERROR_INVALID_PROPERTY,
-                            _(NM_INVALID_DHCP_RANGE_ERROR_MSG " Start IP is invalid."));
+                            _("Start IP is invalid."));
         return FALSE;
     }
 
@@ -526,7 +524,7 @@ nm_utils_validate_shared_dhcp_range(const char *shared_dhcp_range, GPtrArray *ad
         g_set_error_literal(error,
                             NM_CONNECTION_ERROR,
                             NM_CONNECTION_ERROR_INVALID_PROPERTY,
-                            _(NM_INVALID_DHCP_RANGE_ERROR_MSG " End IP is invalid."));
+                            _("End IP is invalid."));
         return FALSE;
     }
 
@@ -534,7 +532,7 @@ nm_utils_validate_shared_dhcp_range(const char *shared_dhcp_range, GPtrArray *ad
         g_set_error_literal(error,
                             NM_CONNECTION_ERROR,
                             NM_CONNECTION_ERROR_INVALID_PROPERTY,
-                            _(NM_INVALID_DHCP_RANGE_ERROR_MSG " Start IP should preceed End IP."));
+                            _("Start IP should be lower than the End IP."));
         return FALSE;
     }
 
@@ -561,7 +559,7 @@ nm_utils_validate_shared_dhcp_range(const char *shared_dhcp_range, GPtrArray *ad
         g_set_error_literal(error,
                             NM_CONNECTION_ERROR,
                             NM_CONNECTION_ERROR_INVALID_PROPERTY,
-                            _(NM_INVALID_DHCP_RANGE_ERROR_MSG " Requested range is not in any network configured on the interface."));
+                            _("requested range is not in any network configured on the interface."));
         return FALSE;
     }
 
@@ -569,29 +567,15 @@ nm_utils_validate_shared_dhcp_range(const char *shared_dhcp_range, GPtrArray *ad
 }
 
 gboolean
-nm_utils_validate_shared_dhcp_lease_time(const char *shared_dhcp_lease_time, GError **error)
+nm_utils_validate_shared_dhcp_lease_time(int shared_dhcp_lease_time, GError **error)
 {
-    int parsed_lease_time;
     g_return_val_if_fail(!error || !(*error), FALSE);
-    g_return_val_if_fail(shared_dhcp_lease_time, FALSE);
 
-    if (!*shared_dhcp_lease_time) {
+    if (shared_dhcp_lease_time == 0 || shared_dhcp_lease_time == G_MAXINT32) {
         return TRUE;
     }
-    if (strcmp(shared_dhcp_lease_time, NM_INFINITE_LEASE_TIME) == 0) {
-        return TRUE;
-    }
-    for (int i = 0; shared_dhcp_lease_time[i] != '\0'; i++) {
-        if (!isdigit(shared_dhcp_lease_time[i])) {
-            g_set_error_literal(error,
-                                NM_CONNECTION_ERROR,
-                                NM_CONNECTION_ERROR_INVALID_PROPERTY,
-                                _(NM_INVALID_LEASE_TIME_ERROR_MSG));
-            return FALSE;
-        }
-    }
-    parsed_lease_time = atoi(shared_dhcp_lease_time);
-    if (parsed_lease_time < NM_MIN_FINITE_LEASE_TIME || NM_MAX_FINITE_LEASE_TIME < parsed_lease_time) {
+
+    if (shared_dhcp_lease_time < NM_MIN_FINITE_LEASE_TIME || NM_MAX_FINITE_LEASE_TIME < shared_dhcp_lease_time) {
         g_set_error_literal(error,
                             NM_CONNECTION_ERROR,
                             NM_CONNECTION_ERROR_INVALID_PROPERTY,
