@@ -1358,6 +1358,35 @@ _prop_get_ipv6_ra_timeout(NMDevice *self)
                                                        0);
 }
 
+static NMSettingIPConfigAddDnsRoutes
+_prop_get_ipvx_add_dns_routes(NMDevice *self, int addr_family)
+{
+    NMSettingIPConfig            *s_ip;
+    NMSettingIPConfigAddDnsRoutes val;
+    int                           IS_IPv4;
+
+    g_return_val_if_fail(NM_IS_DEVICE(self), NM_SETTING_IP_CONFIG_ADD_DNS_ROUTES_NO);
+    IS_IPv4 = NM_IS_IPv4(addr_family);
+
+    s_ip = nm_device_get_applied_setting(self,
+                                         IS_IPv4 ? NM_TYPE_SETTING_IP4_CONFIG
+                                                 : NM_TYPE_SETTING_IP6_CONFIG);
+    if (!s_ip)
+        return NM_SETTING_IP_CONFIG_ADD_DNS_ROUTES_NO;
+
+    val = nm_setting_ip_config_get_add_dns_routes(s_ip);
+    if (val != NM_SETTING_IP_CONFIG_ADD_DNS_ROUTES_DEFAULT)
+        return val;
+
+    return nm_config_data_get_connection_default_int64(
+        NM_CONFIG_GET_DATA,
+        IS_IPv4 ? NM_CON_DEFAULT("ipv4.add-dns-routes") : NM_CON_DEFAULT("ipv6.add-dns-routes"),
+        self,
+        NM_SETTING_IP_CONFIG_ADD_DNS_ROUTES_NO,
+        NM_SETTING_IP_CONFIG_ADD_DNS_ROUTES_YES,
+        NM_SETTING_IP_CONFIG_ADD_DNS_ROUTES_NO);
+}
+
 static NMSettingConnectionMdns
 _prop_get_connection_mdns(NMDevice *self)
 {
@@ -3354,7 +3383,7 @@ nm_device_create_l3_config_data(NMDevice *self, NMIPConfigSource source)
     return nm_l3_config_data_new(nm_device_get_multi_index(self), ifindex, source);
 }
 
-const NML3ConfigData *
+NML3ConfigData *
 nm_device_create_l3_config_data_from_connection(NMDevice *self, NMConnection *connection)
 {
     NML3ConfigData *l3cd;
@@ -4628,15 +4657,6 @@ _dev_l3_cfg_notify_cb(NML3Cfg *l3cfg, const NML3ConfigNotifyData *notify_data, N
     nm_assert(l3cfg == priv->l3cfg);
 
     switch (notify_data->notify_type) {
-    case NM_L3_CONFIG_NOTIFY_TYPE_L3CD_CHANGED:
-        if (notify_data->l3cd_changed.commited) {
-            g_signal_emit(self,
-                          signals[L3CD_CHANGED],
-                          0,
-                          notify_data->l3cd_changed.l3cd_old,
-                          notify_data->l3cd_changed.l3cd_new);
-        }
-        return;
     case NM_L3_CONFIG_NOTIFY_TYPE_ACD_EVENT:
     {
         const NML3AcdAddrInfo *addr_info = &notify_data->acd_event.info;
@@ -4675,6 +4695,14 @@ _dev_l3_cfg_notify_cb(NML3Cfg *l3cfg, const NML3ConfigNotifyData *notify_data, N
         return;
     }
     case NM_L3_CONFIG_NOTIFY_TYPE_POST_COMMIT:
+        if (notify_data->commit.l3cd_changed) {
+            g_signal_emit(self,
+                          signals[L3CD_CHANGED],
+                          0,
+                          notify_data->commit.l3cd_old,
+                          notify_data->commit.l3cd_new);
+        }
+
         if (priv->ipshared_data_4.state == NM_DEVICE_IP_STATE_PENDING
             && !priv->ipshared_data_4.v4.dnsmasq_manager && priv->ipshared_data_4.v4.l3cd) {
             _dev_ipshared4_spawn_dnsmasq(self);
@@ -10947,8 +10975,8 @@ _dev_ipmanual_check_ready(NMDevice *self)
 static void
 _dev_ipmanual_start(NMDevice *self)
 {
-    NMDevicePrivate                         *priv = NM_DEVICE_GET_PRIVATE(self);
-    nm_auto_unref_l3cd const NML3ConfigData *l3cd = NULL;
+    NMDevicePrivate                        *priv = NM_DEVICE_GET_PRIVATE(self);
+    nm_auto_unref_l3cd_init NML3ConfigData *l3cd = NULL;
 
     if (priv->ipmanual_data.state_4 != NM_DEVICE_IP_STATE_NONE
         || priv->ipmanual_data.state_6 != NM_DEVICE_IP_STATE_NONE)
@@ -10958,6 +10986,15 @@ _dev_ipmanual_start(NMDevice *self)
         l3cd =
             nm_device_create_l3_config_data_from_connection(self,
                                                             nm_device_get_applied_connection(self));
+
+        if (_prop_get_ipvx_add_dns_routes(self, AF_INET)
+            == NM_SETTING_IP_CONFIG_ADD_DNS_ROUTES_YES) {
+            nm_l3_config_data_set_add_dns_routes(l3cd, AF_INET, TRUE);
+        }
+        if (_prop_get_ipvx_add_dns_routes(self, AF_INET6)
+            == NM_SETTING_IP_CONFIG_ADD_DNS_ROUTES_YES) {
+            nm_l3_config_data_set_add_dns_routes(l3cd, AF_INET6, TRUE);
+        }
     }
 
     if (!l3cd) {
