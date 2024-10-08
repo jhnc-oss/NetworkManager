@@ -141,6 +141,7 @@ global:
 	nm_connection_get_setting_vpn;
 	nm_connection_get_setting_wimax;
 	nm_connection_get_setting_wired;
+	nm_connection_get_setting_wireguard;
 	nm_connection_get_setting_wireless;
 	nm_connection_get_setting_wireless_security;
 	nm_connection_get_type;
