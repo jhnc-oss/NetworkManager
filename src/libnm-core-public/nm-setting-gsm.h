@@ -82,21 +82,21 @@ NM_AVAILABLE_IN_1_44
 gboolean nm_setting_gsm_get_initial_eps_config(NMSettingGsm *setting);
 NM_AVAILABLE_IN_1_44
 const char *nm_setting_gsm_get_initial_eps_apn(NMSettingGsm *setting);
-NM_AVAILABLE_IN_1_50
+NM_AVAILABLE_IN_1_52
 const char *nm_setting_gsm_get_initial_eps_username(NMSettingGsm *setting);
-NM_AVAILABLE_IN_1_50
+NM_AVAILABLE_IN_1_52
 const char *nm_setting_gsm_get_initial_eps_password(NMSettingGsm *setting);
-NM_AVAILABLE_IN_1_50
+NM_AVAILABLE_IN_1_52
 gboolean nm_setting_gsm_get_initial_eps_noauth(NMSettingGsm *setting);
-NM_AVAILABLE_IN_1_50
+NM_AVAILABLE_IN_1_52
 gboolean nm_setting_gsm_get_initial_eps_refuse_eap(NMSettingGsm *setting);
-NM_AVAILABLE_IN_1_50
+NM_AVAILABLE_IN_1_52
 gboolean nm_setting_gsm_get_initial_eps_refuse_pap(NMSettingGsm *setting);
-NM_AVAILABLE_IN_1_50
+NM_AVAILABLE_IN_1_52
 gboolean nm_setting_gsm_get_initial_eps_refuse_chap(NMSettingGsm *setting);
-NM_AVAILABLE_IN_1_50
+NM_AVAILABLE_IN_1_52
 gboolean nm_setting_gsm_get_initial_eps_refuse_mschap(NMSettingGsm *setting);
-NM_AVAILABLE_IN_1_50
+NM_AVAILABLE_IN_1_52
 gboolean nm_setting_gsm_get_initial_eps_refuse_mschapv2(NMSettingGsm *setting);
 
 NM_DEPRECATED_IN_1_16

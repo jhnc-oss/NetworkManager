@@ -344,7 +344,7 @@ nm_setting_gsm_get_initial_eps_apn(NMSettingGsm *setting)
  *
  * Returns: the #NMSettingGsm:initial-eps-bearer-username property of the setting
  *
- * Since: 1.50
+ * Since: 1.52
  **/
 const char *
 nm_setting_gsm_get_initial_eps_username(NMSettingGsm *setting)
@@ -360,7 +360,7 @@ nm_setting_gsm_get_initial_eps_username(NMSettingGsm *setting)
  *
  * Returns: the #NMSettingGsm:initial-eps-bearer-password property of the setting
  *
- * Since: 1.50
+ * Since: 1.52
  **/
 const char *
 nm_setting_gsm_get_initial_eps_password(NMSettingGsm *setting)
@@ -376,7 +376,7 @@ nm_setting_gsm_get_initial_eps_password(NMSettingGsm *setting)
  *
  * Returns: For LTE modems, the #NMSettingGsm:initial-eps-noauth property of the setting
  *
- * Since: 1.50
+ * Since: 1.52
  **/
 gboolean
 nm_setting_gsm_get_initial_eps_noauth(NMSettingGsm *setting)
@@ -392,7 +392,7 @@ nm_setting_gsm_get_initial_eps_noauth(NMSettingGsm *setting)
  *
  * Returns: For LTE modems, the #NMSettingGsm:initial-eps-refuse-eap property of the setting
  *
- * Since: 1.50
+ * Since: 1.52
  **/
 gboolean
 nm_setting_gsm_get_initial_eps_refuse_eap(NMSettingGsm *setting)
@@ -408,7 +408,7 @@ nm_setting_gsm_get_initial_eps_refuse_eap(NMSettingGsm *setting)
  *
  * Returns: For LTE modems, the #NMSettingGsm:initial-eps-refuse-pap property of the setting
  *
- * Since: 1.50
+ * Since: 1.52
  **/
 gboolean
 nm_setting_gsm_get_initial_eps_refuse_pap(NMSettingGsm *setting)
@@ -424,7 +424,7 @@ nm_setting_gsm_get_initial_eps_refuse_pap(NMSettingGsm *setting)
  *
  * Returns: For LTE modems, the #NMSettingGsm:initial-eps-refuse-chap property of the setting
  *
- * Since: 1.50
+ * Since: 1.52
  **/
 gboolean
 nm_setting_gsm_get_initial_eps_refuse_chap(NMSettingGsm *setting)
@@ -440,7 +440,7 @@ nm_setting_gsm_get_initial_eps_refuse_chap(NMSettingGsm *setting)
  *
  * Returns: For LTE modems, the #NMSettingGsm:initial-eps-refuse-mschap property of the setting
  *
- * Since: 1.50
+ * Since: 1.52
  **/
 gboolean
 nm_setting_gsm_get_initial_eps_refuse_mschap(NMSettingGsm *setting)
@@ -456,7 +456,7 @@ nm_setting_gsm_get_initial_eps_refuse_mschap(NMSettingGsm *setting)
  *
  * Returns: For LTE modems, the #NMSettingGsm:initial-eps-refuse-mschapv2 property of the setting
  *
- * Since: 1.50
+ * Since: 1.52
  **/
 gboolean
 nm_setting_gsm_get_initial_eps_refuse_mschapv2(NMSettingGsm *setting)
@@ -1001,7 +1001,7 @@ nm_setting_gsm_class_init(NMSettingGsmClass *klass)
      * up when attaching to the network.  Setting this parameter implies
      * initial-eps-bearer-configure to be TRUE.
      *
-     * Since: 1.50
+     * Since: 1.52
      **/
     _nm_setting_property_define_direct_string(properties_override,
                                               obj_properties,
@@ -1019,7 +1019,7 @@ nm_setting_gsm_class_init(NMSettingGsmClass *klass)
      * up when attaching to the network.  Setting this parameter implies
      * initial-eps-bearer-configure to be TRUE.
      *
-     * Since: 1.50
+     * Since: 1.52
      **/
     _nm_setting_property_define_direct_string(properties_override,
                                               obj_properties,
@@ -1035,7 +1035,7 @@ nm_setting_gsm_class_init(NMSettingGsmClass *klass)
      *
      * Flags indicating how to handle the #NMSettingGsm:initial-eps-bearer-password property.
      *
-     * Since: 1.50
+     * Since: 1.52
      **/
     _nm_setting_property_define_direct_secret_flags(
         properties_override,
@@ -1054,7 +1054,7 @@ nm_setting_gsm_class_init(NMSettingGsmClass *klass)
      * authenticate itself to the client.  If %FALSE, require authentication
      * from the remote side.  In almost all cases, this should be %TRUE.
      *
-     * Since: 1.50
+     * Since: 1.52
      **/
     _nm_setting_property_define_direct_boolean(properties_override,
                                                obj_properties,
@@ -1071,7 +1071,7 @@ nm_setting_gsm_class_init(NMSettingGsmClass *klass)
      * For LTE modems, this disables EAP authentication method for the initial EPS bearer that is set
      * up when attaching to the network.
      *
-     * Since: 1.50
+     * Since: 1.52
      **/
     _nm_setting_property_define_direct_boolean(properties_override,
                                                obj_properties,
@@ -1088,7 +1088,7 @@ nm_setting_gsm_class_init(NMSettingGsmClass *klass)
      * For LTE modems, this disables PAP authentication method for the initial EPS bearer that is set
      * up when attaching to the network.
      *
-     * Since: 1.50
+     * Since: 1.52
      **/
     _nm_setting_property_define_direct_boolean(properties_override,
                                                obj_properties,
@@ -1105,7 +1105,7 @@ nm_setting_gsm_class_init(NMSettingGsmClass *klass)
      * For LTE modems, this disables CHAP authentication method for the initial EPS bearer that is set
      * up when attaching to the network.
      *
-     * Since: 1.50
+     * Since: 1.52
      **/
     _nm_setting_property_define_direct_boolean(properties_override,
                                                obj_properties,
@@ -1122,7 +1122,7 @@ nm_setting_gsm_class_init(NMSettingGsmClass *klass)
      * For LTE modems, this disables MSCHAP authentication method for the initial EPS bearer that is set
      * up when attaching to the network.
      *
-     * Since: 1.50
+     * Since: 1.52
      **/
     _nm_setting_property_define_direct_boolean(properties_override,
                                                obj_properties,
@@ -1139,7 +1139,7 @@ nm_setting_gsm_class_init(NMSettingGsmClass *klass)
      * For LTE modems, this disables MSCHAPV2 authentication method for the initial EPS bearer that is set
      * up when attaching to the network.
      *
-     * Since: 1.50
+     * Since: 1.52
      **/
     _nm_setting_property_define_direct_boolean(properties_override,
                                                obj_properties,
