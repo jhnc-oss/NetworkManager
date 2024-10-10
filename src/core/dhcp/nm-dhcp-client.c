@@ -71,7 +71,7 @@ enum {
 
 static guint signals[LAST_SIGNAL] = {0};
 
-NM_GOBJECT_PROPERTIES_DEFINE(NMDhcpClient, PROP_CONFIG, );
+NM_GOBJECT_PROPERTIES_DEFINE(NMDhcpClient, PROP_CONFIG, PROP_MIN_V6ONLY_WAIT, );
 
 typedef struct _NMDhcpClientPrivate {
     NMDhcpClientConfig config;
@@ -86,6 +86,7 @@ typedef struct _NMDhcpClientPrivate {
 
     GSource *previous_lease_timeout_source;
     GSource *no_lease_timeout_source;
+    GSource *ipv6_only_restart_source;
     GSource *watch_source;
     GBytes  *effective_client_id;
 
@@ -133,6 +134,7 @@ typedef struct _NMDhcpClientPrivate {
     } l3cfg_notify;
 
     pid_t pid;
+    guint min_v6only_wait;
     bool  is_stopped : 1;
 } NMDhcpClientPrivate;
 
@@ -1360,6 +1362,8 @@ nm_dhcp_client_start(NMDhcpClient *self, GError **error)
     g_return_val_if_fail(priv->config.uuid, FALSE);
     nm_assert(!priv->effective_client_id);
 
+    priv->is_stopped = FALSE;
+
     IS_IPv4 = NM_IS_IPv4(priv->config.addr_family);
 
     if (!IS_IPv4) {
@@ -1400,6 +1404,35 @@ nm_dhcp_client_start(NMDhcpClient *self, GError **error)
 }
 
 /*****************************************************************************/
+
+static gboolean
+ipv6_only_restart_timeout_cb(gpointer user_data)
+{
+    NMDhcpClient        *self = user_data;
+    NMDhcpClientPrivate *priv = NM_DHCP_CLIENT_GET_PRIVATE(self);
+
+    nm_clear_g_source_inst(&priv->ipv6_only_restart_source);
+    nm_dhcp_client_start(self, NULL);
+
+    return G_SOURCE_CONTINUE;
+}
+
+void
+nm_dhcp_client_start_ipv6_only_timeout(NMDhcpClient *self, guint timeout)
+{
+    NMDhcpClientPrivate *priv = NM_DHCP_CLIENT_GET_PRIVATE(self);
+
+    nm_assert(priv->config.addr_family == AF_INET);
+    nm_assert(!priv->is_stopped);
+
+    timeout = NM_MAX(priv->min_v6only_wait, timeout);
+    _LOGI("received option \"ipv6-only-preferred\": stopping DHCPv4 for %u seconds", timeout);
+
+    nm_dhcp_client_stop(self, FALSE);
+    nm_clear_g_source_inst(&priv->no_lease_timeout_source);
+    priv->ipv6_only_restart_source =
+        nm_g_timeout_add_seconds_source(timeout, ipv6_only_restart_timeout_cb, self);
+}
 
 void
 nm_dhcp_client_stop_existing(const char *pid_file, const char *binary_name)
@@ -1473,7 +1506,9 @@ nm_dhcp_client_stop(NMDhcpClient *self, gboolean release)
     if (priv->is_stopped)
         return;
 
+    nm_clear_pointer(&priv->effective_client_id, g_bytes_unref);
     nm_clear_g_source_inst(&priv->previous_lease_timeout_source);
+    nm_clear_g_source_inst(&priv->ipv6_only_restart_source);
 
     priv->is_stopped = TRUE;
 
@@ -1943,6 +1978,9 @@ set_property(GObject *object, guint prop_id, const GValue *value, GParamSpec *ps
             };
         }
         break;
+    case PROP_MIN_V6ONLY_WAIT:
+        priv->min_v6only_wait = g_value_get_uint(value);
+        break;
     default:
         G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
         break;
@@ -1974,13 +2012,12 @@ dispose(GObject *object)
 
     nm_clear_g_source_inst(&priv->previous_lease_timeout_source);
     nm_clear_g_source_inst(&priv->no_lease_timeout_source);
+    nm_clear_g_source_inst(&priv->ipv6_only_restart_source);
 
     if (!NM_IS_IPv4(priv->config.addr_family)) {
         nm_clear_g_source_inst(&priv->v6.lladdr_timeout_source);
         nm_clear_g_source_inst(&priv->v6.dad_timeout_source);
     }
-
-    nm_clear_pointer(&priv->effective_client_id, g_bytes_unref);
 
     nm_assert(!priv->watch_source);
     nm_assert(!priv->l3cd_next);
@@ -2021,6 +2058,14 @@ nm_dhcp_client_class_init(NMDhcpClientClass *client_class)
                              "",
                              "",
                              G_PARAM_WRITABLE | G_PARAM_CONSTRUCT_ONLY | G_PARAM_STATIC_STRINGS);
+    obj_properties[PROP_MIN_V6ONLY_WAIT] =
+        g_param_spec_uint(NM_DHCP_CLIENT_MIN_V6ONLY_WAIT,
+                          "",
+                          "",
+                          1,
+                          G_MAXUINT,
+                          NM_DHCP_MIN_V6ONLY_WAIT_DEFAULT,
+                          G_PARAM_WRITABLE | G_PARAM_CONSTRUCT_ONLY | G_PARAM_STATIC_STRINGS);
 
     g_object_class_install_properties(object_class, _PROPERTY_ENUMS_LAST, obj_properties);
 
