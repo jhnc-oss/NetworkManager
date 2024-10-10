@@ -27,6 +27,7 @@ typedef struct {
     GArray          *dns_domains;
     int              hop_limit;
     guint32          mtu;
+    char            *captive_portal;
 } FakeRa;
 
 typedef struct {
@@ -102,22 +103,25 @@ nm_fake_ndisc_add_ra(NMFakeNDisc     *self,
                      guint            seconds_after_previous,
                      NMNDiscDHCPLevel dhcp_level,
                      int              hop_limit,
-                     guint32          mtu)
+                     guint32          mtu,
+                     char            *captive_portal
+                     )
 {
     NMFakeNDiscPrivate *priv    = NM_FAKE_NDISC_GET_PRIVATE(self);
     static guint        counter = 1;
     FakeRa             *ra;
 
-    ra              = g_malloc0(sizeof(*ra));
-    ra->id          = counter++;
-    ra->when        = seconds_after_previous;
-    ra->dhcp_level  = dhcp_level;
-    ra->hop_limit   = hop_limit;
-    ra->mtu         = mtu;
-    ra->gateways    = g_array_new(FALSE, FALSE, sizeof(NMNDiscGateway));
-    ra->prefixes    = g_array_new(FALSE, FALSE, sizeof(FakePrefix));
-    ra->dns_servers = g_array_new(FALSE, FALSE, sizeof(NMNDiscDNSServer));
-    ra->dns_domains = g_array_new(FALSE, FALSE, sizeof(NMNDiscDNSDomain));
+    ra                 = g_malloc0(sizeof(*ra));
+    ra->id             = counter++;
+    ra->when           = seconds_after_previous;
+    ra->dhcp_level     = dhcp_level;
+    ra->hop_limit      = hop_limit;
+    ra->mtu            = mtu;
+    ra->captive_portal = captive_portal;
+    ra->gateways       = g_array_new(FALSE, FALSE, sizeof(NMNDiscGateway));
+    ra->prefixes       = g_array_new(FALSE, FALSE, sizeof(FakePrefix));
+    ra->dns_servers    = g_array_new(FALSE, FALSE, sizeof(NMNDiscDNSServer));
+    ra->dns_domains    = g_array_new(FALSE, FALSE, sizeof(NMNDiscDNSDomain));
     g_array_set_clear_func(ra->dns_domains, ra_dns_domain_free);
 
     priv->ras = g_slist_append(priv->ras, ra);
@@ -303,6 +307,11 @@ receive_ra(gpointer user_data)
     if (rdata->public.hop_limit != ra->hop_limit) {
         rdata->public.hop_limit = ra->hop_limit;
         changed |= NM_NDISC_CONFIG_HOP_LIMIT;
+    }
+
+    if (g_strcmp0(rdata->public.captive_portal, ra->captive_portal) != 0) {
+        rdata->public.captive_portal = ra->captive_portal;
+        changed |= NM_NDISC_CONFIG_CAPTIVE_PORTAL;
     }
 
     priv->ras = g_slist_remove(priv->ras, priv->ras->data);
