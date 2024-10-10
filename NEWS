@@ -12,6 +12,7 @@ USE AT YOUR OWN RISK.  NOT RECOMMENDED FOR PRODUCTION USE!
   when no other IPv4 is set.
 * Remove support for building with Autotools
 * Add IPVLAN interface support
+* Add new key "wifi.periodic-scan-block-list" to the configuration file.
 
 =============================================
 NetworkManager-1.50
