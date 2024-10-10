@@ -166,6 +166,7 @@ nm_setting_ppp_get_refuse_mschapv2(NMSettingPpp *setting)
     return NM_SETTING_PPP_GET_PRIVATE(setting)->refuse_mschapv2;
 }
 
+
 /**
  * nm_setting_ppp_get_nobsdcomp:
  * @setting: the #NMSettingPpp
