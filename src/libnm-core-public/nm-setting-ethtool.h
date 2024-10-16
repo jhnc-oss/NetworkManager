@@ -11,6 +11,7 @@
 #endif
 
 #include "nm-setting.h"
+#include <linux/ethtool.h>
 
 G_BEGIN_DECLS
 
@@ -31,6 +32,9 @@ gboolean nm_ethtool_optname_is_channels(const char *optname);
 
 NM_AVAILABLE_IN_1_46
 gboolean nm_ethtool_optname_is_eee(const char *optname);
+
+NM_AVAILABLE_IN_1_52
+gboolean nm_ethtool_optname_is_fec(const char *optname);
 
 /*****************************************************************************/
 
@@ -73,6 +77,29 @@ nm_setting_ethtool_set_feature(NMSettingEthtool *setting, const char *optname, N
 NM_AVAILABLE_IN_1_14
 NM_DEPRECATED_IN_1_26
 void nm_setting_ethtool_clear_features(NMSettingEthtool *setting);
+
+/**
+ * NMSettingEthtoolFecMode:
+ * @NM_SETTING_ETHTOOL_FEC_MODE_NONE: FEC mode configuration is not supported.
+ * @NM_SETTING_ETHTOOL_FEC_MODE_AUTO: Select default/best FEC mode automatically.
+ * @NM_SETTING_ETHTOOL_FEC_MODE_OFF: No FEC mode.
+ * @NM_SETTING_ETHTOOL_FEC_MODE_RS: Reed-Solomon FEC Mode.
+ * @NM_SETTING_ETHTOOL_FEC_MODE_BASER: Base-R/Reed-Solomon FEC Mode.
+ * @NM_SETTING_ETHTOOL_FEC_MODE_LLRS: Low Latency Reed Solomon FEC Mode.
+ *
+ * These flags modify the ethtool FEC(Forward Error Correction) mode.
+ *
+ * Since: 1.52
+ **/
+typedef enum {                                                       /*< flags >*/
+               NM_SETTING_ETHTOOL_FEC_MODE_NONE  = ETHTOOL_FEC_NONE, /*< skip >*/
+               NM_SETTING_ETHTOOL_FEC_MODE_AUTO  = ETHTOOL_FEC_AUTO,
+               NM_SETTING_ETHTOOL_FEC_MODE_OFF   = ETHTOOL_FEC_OFF,
+               NM_SETTING_ETHTOOL_FEC_MODE_RS    = ETHTOOL_FEC_RS,
+               NM_SETTING_ETHTOOL_FEC_MODE_BASER = ETHTOOL_FEC_BASER,
+               NM_SETTING_ETHTOOL_FEC_MODE_LLRS  = ETHTOOL_FEC_LLRS,
+               _NM_SETTING_ETHTOOL_FEC_MODE_LAST = NM_SETTING_ETHTOOL_FEC_MODE_LLRS, /*< skip >*/
+} NMSettingEthtoolFecMode;
 
 G_END_DECLS
 
