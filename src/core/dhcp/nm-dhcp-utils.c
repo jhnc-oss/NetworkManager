@@ -583,6 +583,12 @@ nm_dhcp_utils_ip4_config_from_options(NMDedupMultiIndex *multi_idx,
         nm_l3_config_data_set_proxy_pac_url(l3cd, str);
     }
 
+    str = g_hash_table_lookup(options, "default_url");
+    if (str) {
+        _LOG2I(LOGD_DHCP4, iface, "  Default URL '%s'", str);
+        nm_l3_config_data_set_default_url(l3cd, str);
+    }
+
     return g_steal_pointer(&l3cd);
 }
 
