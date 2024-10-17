@@ -2106,8 +2106,7 @@ activate_secondary_connections(NMPolicy *self, NMConnection *connection, NMDevic
             break;
         }
 
-        if (!nm_connection_is_type(nm_settings_connection_get_connection(sett_conn),
-                                   NM_SETTING_VPN_SETTING_NAME)) {
+        if (!nm_connection_is_any_vpn(nm_settings_connection_get_connection(sett_conn))) {
             _LOGW(LOGD_DEVICE,
                   "secondary connection '%s (%s)' auto-activation failed: The connection is not a "
                   "VPN.",
