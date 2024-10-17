@@ -15,6 +15,9 @@ USE AT YOUR OWN RISK.  NOT RECOMMENDED FOR PRODUCTION USE!
 * Remove support for building with Autotools
 * Add IPVLAN interface support
 * Allow to manually configure the authentication of LTE's initial EPS Bearer.
+* Add new ipv4.shared-dhcp-range and ipv4.shared-dhcp-lease-time,
+  which allows you to customize the DHCP range and lease time offered
+  by DHCP server in `shared` connection method.
 
 =============================================
 NetworkManager-1.50

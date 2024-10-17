@@ -277,6 +277,17 @@ gboolean nm_utils_validate_dhcp_dscp(const char *dscp, GError **error);
 
 /*****************************************************************************/
 
+#define NM_MIN_FINITE_LEASE_TIME 120
+#define NM_MAX_FINITE_LEASE_TIME 31536000  /* 3600 * 24 * 365 */
+#define NM_INFINITE_LEASE_TIME   "infinity"
+
+#define NM_INVALID_LEASE_TIME_ERROR_MSG "invalid DHCP lease time value; it should be either empty, a positive number between " NM_STRINGIFY(NM_MIN_FINITE_LEASE_TIME) " and " NM_STRINGIFY(NM_MAX_FINITE_LEASE_TIME) ", or \"" NM_INFINITE_LEASE_TIME "\"."
+
+gboolean nm_utils_validate_shared_dhcp_range(const char *shared_dhcp_range, GPtrArray *addresses, GError **error);
+gboolean nm_utils_validate_shared_dhcp_lease_time(int shared_dhcp_lease_time, GError **error);
+
+/*****************************************************************************/
+
 #define NM_SETTINGS_CONNECTION_PERMISSION_USER        "user"
 #define NM_SETTINGS_CONNECTION_PERMISSION_USER_PREFIX "user:"
 
