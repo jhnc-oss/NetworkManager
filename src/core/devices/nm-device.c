@@ -9949,32 +9949,29 @@ activation_source_invoke_or_schedule(NMDevice *self, ActivationHandleFunc func, 
 
 /*****************************************************************************/
 
+/* Notify the controller device that it has a new port */
 static void
 controller_ready(NMDevice *self, NMActiveConnection *active)
 {
-    NMDevicePrivate    *priv = NM_DEVICE_GET_PRIVATE(self);
-    NMActiveConnection *controller_connection;
-    NMDevice           *controller;
+    NMDevicePrivate *priv           = NM_DEVICE_GET_PRIVATE(self);
+    NMDevice        *controller_dev = nm_active_connection_get_controller_dev(active);
 
-    /* Notify a controller device that it has a new port */
     nm_assert(nm_active_connection_get_controller_ready(active));
-
-    controller_connection = nm_active_connection_get_controller(active);
-
-    controller = nm_active_connection_get_device(controller_connection);
+    nm_assert(NM_IS_DEVICE(controller_dev));
 
     _LOGD(LOGD_DEVICE,
-          "controller connection ready; controller device %s",
-          nm_device_get_iface(controller));
+          "controller connection ready; controller device %s(%s)",
+          nm_device_get_iface(controller_dev),
+          nm_device_get_type_desc(controller_dev));
 
-    if (priv->controller && priv->controller != controller)
+    if (priv->controller && priv->controller != controller_dev)
         nm_device_controller_release_port(priv->controller,
                                           self,
                                           RELEASE_PORT_TYPE_NO_CONFIG,
                                           NM_DEVICE_STATE_REASON_CONNECTION_ASSUMED);
 
     /* If the controller didn't change, add-port only rechecks whether to assume a connection. */
-    nm_device_controller_add_port(controller,
+    nm_device_controller_add_port(controller_dev,
                                   self,
                                   !nm_device_managed_type_is_external_or_assume(self));
 }
@@ -10109,8 +10106,9 @@ activate_stage1_device_prepare(NMDevice *self)
     NMDevicePrivate    *priv = NM_DEVICE_GET_PRIVATE(self);
     NMActStageReturn    ret  = NM_ACT_STAGE_RETURN_SUCCESS;
     NMActiveConnection *active;
-    NMActiveConnection *controller;
     NMDeviceClass      *klass;
+    NMActiveConnection *controller_ac;
+    NMDevice           *controller_dev;
 
     nm_assert((priv->ip_data_4.state == NM_DEVICE_IP_STATE_NONE)
               == (priv->ip_data_6.state == NM_DEVICE_IP_STATE_NONE));
@@ -10230,37 +10228,59 @@ activate_stage1_device_prepare(NMDevice *self)
         }
     }
 
-    active     = NM_ACTIVE_CONNECTION(priv->act_request.obj);
-    controller = nm_active_connection_get_controller(active);
-    if (controller) {
-        if (nm_active_connection_get_state(controller) >= NM_ACTIVE_CONNECTION_STATE_DEACTIVATING) {
-            NMDevice           *controller_device = nm_active_connection_get_device(controller);
-            NMDeviceStateReason failure_reason    = NM_DEVICE_STATE_REASON_DEPENDENCY_FAILED;
-
-            _LOGD(LOGD_DEVICE, "controller connection is deactivating");
-
-            if (controller_device && NM_DEVICE_GET_PRIVATE(controller_device)->queued_act_request) {
-                /* if the controller is going to activate again, don't block this device */
-                failure_reason = NM_DEVICE_STATE_REASON_NONE;
-            }
-            nm_device_state_changed(self, NM_DEVICE_STATE_FAILED, failure_reason);
+    active         = NM_ACTIVE_CONNECTION(priv->act_request.obj);
+    controller_ac  = nm_active_connection_get_controller(active);
+    controller_dev = nm_active_connection_get_controller_dev(active);
+    if (controller_ac || controller_dev) {
+        if (!nm_active_connection_get_controller_ready(active) && priv->controller_ready_id == 0) {
+            _LOGD(LOGD_DEVICE, "waiting for controller connection to become ready");
+            priv->controller_ready_id =
+                g_signal_connect(active,
+                                 "notify::" NM_ACTIVE_CONNECTION_INT_CONTROLLER_READY,
+                                 G_CALLBACK(controller_ready_cb),
+                                 self);
             return;
         }
-        /* If the controller connection is ready for ports, attach ourselves */
-        if (!nm_active_connection_get_controller_ready(active)) {
-            if (priv->controller_ready_id == 0) {
-                _LOGD(LOGD_DEVICE, "waiting for controller connection to become ready");
-                priv->controller_ready_id =
-                    g_signal_connect(active,
-                                     "notify::" NM_ACTIVE_CONNECTION_INT_CONTROLLER_READY,
-                                     G_CALLBACK(controller_ready_cb),
-                                     self);
+
+        /* Even we have NMActiveConnection controller_ready to wait controller
+         * device, but it is possible the controller got reactivated or
+         * deactivated after CONTROLLER_READY signal emitted.  We have to check
+         * again before request port attach.
+         */
+        if (!controller_dev || nm_device_get_state(controller_dev) < NM_DEVICE_STATE_PREPARE
+            || nm_device_get_state(controller_dev) > NM_DEVICE_STATE_ACTIVATED) {
+            _LOGD(LOGD_DEVICE,
+                  "controller device %s(%s) is not ready: current state %s",
+                  nm_device_get_iface(controller_dev),
+                  nm_device_get_type_desc(controller_dev),
+                  nm_device_state_to_string(nm_device_get_state(controller_dev)));
+
+            /* Fail the activation is controller is deactivating and no pending new activating
+             */
+            if (controller_ac
+                && nm_active_connection_get_state(controller_ac)
+                       >= NM_ACTIVE_CONNECTION_STATE_DEACTIVATING
+                && controller_dev && !NM_DEVICE_GET_PRIVATE(controller_dev)->queued_act_request) {
+                _LOGD(LOGD_DEVICE,
+                      "Controller connection %s(%s) is deactivating",
+                      nm_device_get_iface(controller_dev),
+                      nm_device_get_type_desc(controller_dev));
+                nm_device_state_changed(self,
+                                        NM_DEVICE_STATE_FAILED,
+                                        NM_DEVICE_STATE_REASON_DEPENDENCY_FAILED);
+            } else {
+                /* Start new round of waiting controller */
+                if (controller_dev)
+                    nm_active_connection_set_controller_dev(active, controller_dev);
+                else
+                    nm_active_connection_set_controller_ac(active, controller_ac);
             }
             return;
         }
     }
+
     nm_clear_g_signal_handler(priv->act_request.obj, &priv->controller_ready_id);
-    if (controller)
+    if (controller_dev)
         controller_ready(self, active);
     else if (priv->controller) {
         nm_device_controller_release_port(priv->controller,
