@@ -8526,7 +8526,7 @@ port_state_changed(NMDevice           *port,
 /**
  * nm_device_controller_add_port:
  * @self: the controller device
- * @port: the port device to attach as port 
+ * @port: the port device to attach as port
  * @configure: pass %TRUE if the port should be configured by the controller, or
  * %FALSE if it is already configured outside NetworkManager
  *
@@ -13336,6 +13336,9 @@ _dev_ipshared4_spawn_dnsmasq(NMDevice *self)
     NMConnection          *applied;
     gs_unref_array GArray *conflicts = NULL;
     gboolean               ready;
+    NMSettingIPConfig     *s_ip4 = NULL;
+    const char            *shared_dhcp_range;
+    int                    shared_dhcp_lease_time;
 
     nm_assert(priv->ipshared_data_4.v4.firewall_config);
     nm_assert(priv->ipshared_data_4.v4.dnsmasq_state_id == 0);
@@ -13381,9 +13384,14 @@ _dev_ipshared4_spawn_dnsmasq(NMDevice *self)
         break;
     }
 
+    s_ip4                  = nm_device_get_applied_setting(self, NM_TYPE_SETTING_IP4_CONFIG);
+    shared_dhcp_range      = nm_setting_ip_config_get_shared_dhcp_range(s_ip4);
+    shared_dhcp_lease_time = nm_setting_ip_config_get_shared_dhcp_lease_time(s_ip4);
     priv->ipshared_data_4.v4.dnsmasq_manager = nm_dnsmasq_manager_new(ip_iface);
     if (!nm_dnsmasq_manager_start(priv->ipshared_data_4.v4.dnsmasq_manager,
                                   priv->ipshared_data_4.v4.l3cd,
+                                  shared_dhcp_range,
+                                  shared_dhcp_lease_time,
                                   announce_android_metered,
                                   &error)) {
         _LOGW_ipshared(AF_INET, "could not start dnsmasq: %s", error->message);
