@@ -9507,6 +9507,7 @@ check_connection_compatible(NMDevice     *self,
     NMSettingMatch       *s_match;
     const GSList         *specs;
     gboolean              has_match = FALSE;
+    NMSettingSriov       *s_sriov   = NULL;
 
     klass = NM_DEVICE_GET_CLASS(self);
     if (klass->connection_type_check_compatible) {
@@ -9524,12 +9525,14 @@ check_connection_compatible(NMDevice     *self,
         return FALSE;
     }
 
-    if (!nm_device_has_capability(self, NM_DEVICE_CAP_SRIOV)
-        && nm_connection_get_setting(connection, NM_TYPE_SETTING_SRIOV)) {
-        nm_utils_error_set_literal(error,
-                                   NM_UTILS_ERROR_CONNECTION_AVAILABLE_TEMPORARY,
-                                   "device does not support SR-IOV");
-        return FALSE;
+    if (!nm_device_has_capability(self, NM_DEVICE_CAP_SRIOV)) {
+        s_sriov = (NMSettingSriov *) nm_connection_get_setting(connection, NM_TYPE_SETTING_SRIOV);
+        if (s_sriov && nm_setting_sriov_get_total_vfs(s_sriov)) {
+            nm_utils_error_set_literal(error,
+                                       NM_UTILS_ERROR_CONNECTION_AVAILABLE_TEMPORARY,
+                                       "device does not support SR-IOV");
+            return FALSE;
+        }
     }
 
     conn_iface = nm_manager_get_connection_iface(NM_MANAGER_GET, connection, NULL, NULL, &local);
@@ -10148,51 +10151,62 @@ activate_stage1_device_prepare(NMDevice *self)
             guint                        num;
             guint                        i;
 
-            nm_assert(nm_device_has_capability(self, NM_DEVICE_CAP_SRIOV));
-
-            autoprobe = nm_setting_sriov_get_autoprobe_drivers(s_sriov);
-            if (autoprobe == NM_TERNARY_DEFAULT) {
-                autoprobe = nm_config_data_get_connection_default_int64(
-                    NM_CONFIG_GET_DATA,
-                    NM_CON_DEFAULT("sriov.autoprobe-drivers"),
-                    self,
-                    NM_OPTION_BOOL_FALSE,
-                    NM_OPTION_BOOL_TRUE,
-                    NM_OPTION_BOOL_TRUE);
+            if (!nm_device_has_capability(self, NM_DEVICE_CAP_SRIOV)
+                && nm_setting_sriov_get_total_vfs(s_sriov)) {
+                _LOGE(LOGD_DEVICE, "Device does not support SRIOV");
+                nm_device_state_changed(self,
+                                        NM_DEVICE_STATE_FAILED,
+                                        NM_DEVICE_STATE_REASON_SRIOV_CONFIGURATION_FAILED);
+                return;
             }
 
-            num      = nm_setting_sriov_get_num_vfs(s_sriov);
-            plat_vfs = g_new0(NMPlatformVF *, num + 1);
-            for (i = 0; i < num; i++) {
-                vf          = nm_setting_sriov_get_vf(s_sriov, i);
-                plat_vfs[i] = sriov_vf_config_to_platform(self, vf, &error);
-                if (!plat_vfs[i]) {
-                    _LOGE(LOGD_DEVICE,
-                          "failed to apply SR-IOV VF '%s': %s",
-                          nm_utils_sriov_vf_to_str(vf, FALSE, NULL),
-                          error->message);
-                    nm_device_state_changed(self,
-                                            NM_DEVICE_STATE_FAILED,
-                                            NM_DEVICE_STATE_REASON_SRIOV_CONFIGURATION_FAILED);
-                    return;
+            /// Silently ignore SRIOV disable setting on interface does not
+            /// support SRIOV.
+            if (nm_device_has_capability(self, NM_DEVICE_CAP_SRIOV)) {
+                autoprobe = nm_setting_sriov_get_autoprobe_drivers(s_sriov);
+                if (autoprobe == NM_TERNARY_DEFAULT) {
+                    autoprobe = nm_config_data_get_connection_default_int64(
+                        NM_CONFIG_GET_DATA,
+                        NM_CON_DEFAULT("sriov.autoprobe-drivers"),
+                        self,
+                        NM_OPTION_BOOL_FALSE,
+                        NM_OPTION_BOOL_TRUE,
+                        NM_OPTION_BOOL_TRUE);
                 }
-            }
 
-            /* When changing the number of VFs the kernel can block
-             * for very long time in the write to sysfs, especially
-             * if autoprobe-drivers is enabled. Do it asynchronously
-             * to avoid blocking the entire NM process.
-             */
-            sriov_op_queue(self,
-                           nm_setting_sriov_get_total_vfs(s_sriov),
-                           NM_TERNARY_TO_OPTION_BOOL(autoprobe),
-                           nm_setting_sriov_get_eswitch_mode(s_sriov),
-                           nm_setting_sriov_get_eswitch_inline_mode(s_sriov),
-                           nm_setting_sriov_get_eswitch_encap_mode(s_sriov),
-                           sriov_params_cb,
-                           nm_utils_user_data_pack(self, g_steal_pointer(&plat_vfs)));
-            priv->stage1_sriov_state = NM_DEVICE_STAGE_STATE_PENDING;
-            return;
+                num      = nm_setting_sriov_get_num_vfs(s_sriov);
+                plat_vfs = g_new0(NMPlatformVF *, num + 1);
+                for (i = 0; i < num; i++) {
+                    vf          = nm_setting_sriov_get_vf(s_sriov, i);
+                    plat_vfs[i] = sriov_vf_config_to_platform(self, vf, &error);
+                    if (!plat_vfs[i]) {
+                        _LOGE(LOGD_DEVICE,
+                              "failed to apply SR-IOV VF '%s': %s",
+                              nm_utils_sriov_vf_to_str(vf, FALSE, NULL),
+                              error->message);
+                        nm_device_state_changed(self,
+                                                NM_DEVICE_STATE_FAILED,
+                                                NM_DEVICE_STATE_REASON_SRIOV_CONFIGURATION_FAILED);
+                        return;
+                    }
+                }
+
+                /* When changing the number of VFs the kernel can block
+                 * for very long time in the write to sysfs, especially
+                 * if autoprobe-drivers is enabled. Do it asynchronously
+                 * to avoid blocking the entire NM process.
+                 */
+                sriov_op_queue(self,
+                               nm_setting_sriov_get_total_vfs(s_sriov),
+                               NM_TERNARY_TO_OPTION_BOOL(autoprobe),
+                               nm_setting_sriov_get_eswitch_mode(s_sriov),
+                               nm_setting_sriov_get_eswitch_inline_mode(s_sriov),
+                               nm_setting_sriov_get_eswitch_encap_mode(s_sriov),
+                               sriov_params_cb,
+                               nm_utils_user_data_pack(self, g_steal_pointer(&plat_vfs)));
+                priv->stage1_sriov_state = NM_DEVICE_STAGE_STATE_PENDING;
+                return;
+            }
         }
 
         priv->stage1_sriov_state = NM_DEVICE_STAGE_STATE_COMPLETED;
