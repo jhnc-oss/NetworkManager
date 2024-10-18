@@ -2031,4 +2031,6 @@ global:
 	nm_setting_gsm_get_initial_eps_refuse_eap;
 	nm_setting_gsm_get_initial_eps_refuse_mschap;
 	nm_setting_gsm_get_initial_eps_refuse_mschapv2;
+	nm_setting_ethtool_fec_mode_get_type;
+	nm_ethtool_optname_is_fec;
 } libnm_1_50_0;
