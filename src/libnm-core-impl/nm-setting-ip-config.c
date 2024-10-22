@@ -4005,7 +4005,9 @@ NM_GOBJECT_PROPERTIES_DEFINE(NMSettingIPConfig,
                              PROP_DHCP_REJECT_SERVERS,
                              PROP_AUTO_ROUTE_EXT_GW,
                              PROP_REPLACE_LOCAL_RULE,
-                             PROP_DHCP_SEND_RELEASE, );
+                             PROP_DHCP_SEND_RELEASE,
+                             PROP_SHARED_DHCP_RANGE,
+                             PROP_SHARED_DHCP_LEASE_TIME, );
 
 G_DEFINE_ABSTRACT_TYPE(NMSettingIPConfig, nm_setting_ip_config, NM_TYPE_SETTING)
 
@@ -5480,6 +5482,44 @@ nm_setting_ip_config_get_dhcp_send_release(NMSettingIPConfig *setting)
     return NM_SETTING_IP_CONFIG_GET_PRIVATE(setting)->dhcp_send_release;
 }
 
+/**
+ * nm_setting_ip_config_get_shared_dhcp_range:
+ * @setting: the #NMSettingIPConfig
+ *
+ * Returns the value contained in the #NMSettingIPConfig:shared-dhcp-range
+ * property.
+ *
+ * Returns: the configured DHCP server range
+ *
+ * Since: 1.52
+ **/
+const char *
+nm_setting_ip_config_get_shared_dhcp_range(NMSettingIPConfig *setting)
+{
+    g_return_val_if_fail(NM_IS_SETTING_IP_CONFIG(setting), NULL);
+
+    return NM_SETTING_IP_CONFIG_GET_PRIVATE(setting)->shared_dhcp_range;
+}
+
+/**
+ * nm_setting_ip_config_get_shared_dhcp_lease_time:
+ * @setting: the #NMSettingIPConfig
+ *
+ * Returns the value contained in the #NMSettingIPConfig:shared-dhcp-lease-time
+ * property.
+ *
+ * Returns: the configured DHCP server lease time
+ *
+ * Since: 1.52
+ **/
+int
+nm_setting_ip_config_get_shared_dhcp_lease_time(NMSettingIPConfig *setting)
+{
+    g_return_val_if_fail(NM_IS_SETTING_IP_CONFIG(setting), 0);
+
+    return NM_SETTING_IP_CONFIG_GET_PRIVATE(setting)->shared_dhcp_lease_time;
+}
+
 static gboolean
 verify_label(const char *label)
 {
@@ -5773,6 +5813,26 @@ verify(NMSetting *setting, NMConnection *connection, GError **error)
                        "%s.%s: ",
                        nm_setting_get_name(setting),
                        NM_SETTING_IP_CONFIG_DHCP_DSCP);
+        return FALSE;
+    }
+
+    /* Validate DHCP range served in the shared move  */
+    if (priv->shared_dhcp_range
+        && !nm_utils_validate_shared_dhcp_range(priv->shared_dhcp_range, priv->addresses, error)) {
+        g_prefix_error(error,
+                       "%s.%s: ",
+                       nm_setting_get_name(setting),
+                       NM_SETTING_IP_CONFIG_SHARED_DHCP_RANGE);
+        return FALSE;
+    }
+
+    /* Validate DHCP lease time */
+    if (priv->shared_dhcp_lease_time
+        && !nm_utils_validate_shared_dhcp_lease_time(priv->shared_dhcp_lease_time, error)) {
+        g_prefix_error(error,
+                       "%s.%s: ",
+                       nm_setting_get_name(setting),
+                       NM_SETTING_IP_CONFIG_SHARED_DHCP_LEASE_TIME);
         return FALSE;
     }
 
@@ -6197,6 +6257,21 @@ _nm_sett_info_property_override_create_array_ip_config(int addr_family)
                                      NM_STRUCT_OFFSET_ENSURE_TYPE(NMValueStrv,
                                                                   NMSettingIPConfigPrivate,
                                                                   dhcp_reject_servers));
+
+    _nm_properties_override_gobj(
+        properties_override,
+        obj_properties[PROP_SHARED_DHCP_RANGE],
+        &nm_sett_info_propert_type_direct_string,
+        .direct_offset =
+            NM_STRUCT_OFFSET_ENSURE_TYPE(char *, NMSettingIPConfigPrivate, shared_dhcp_range),
+        .direct_string_allow_empty = TRUE);
+
+    _nm_properties_override_gobj(
+        properties_override,
+        obj_properties[PROP_SHARED_DHCP_LEASE_TIME],
+        &nm_sett_info_propert_type_direct_int32,
+        .direct_offset =
+            NM_STRUCT_OFFSET_ENSURE_TYPE(gint32, NMSettingIPConfigPrivate, shared_dhcp_lease_time));
 
     return properties_override;
 }
@@ -6945,6 +7020,49 @@ nm_setting_ip_config_class_init(NMSettingIPConfigClass *klass)
                           NM_TYPE_TERNARY,
                           NM_TERNARY_DEFAULT,
                           G_PARAM_READWRITE | G_PARAM_EXPLICIT_NOTIFY | G_PARAM_STATIC_STRINGS);
+
+    /**
+     * NMSettingIPConfig:shared-dhcp-range:
+     *
+     * This option allows you to specify a custom DHCP range for the shared connection
+     * method. The value is expected to be in `<START_ADDRESS>,<END_ADDRESS>` format.
+     * The range should be part of network set by ipv4.address option and it should
+     * not contain network address or broadcast address. If this option is not specified,
+     * the DHCP range will be automatically determined based on the interface address.
+     * The range will be selected to be adjacent to the interface address, either before
+     * or after it, with the larger possible range being preferred. The range will be
+     * adjusted to fill the available address space, except for networks with a prefix
+     * length greater than 24, which will be treated as if they have a prefix length of 24.
+     *
+     * Since: 1.52
+     */
+    obj_properties[PROP_SHARED_DHCP_RANGE] =
+        g_param_spec_string(NM_SETTING_IP_CONFIG_SHARED_DHCP_RANGE,
+                            "",
+                            "",
+                            NULL,
+                            G_PARAM_READWRITE | G_PARAM_EXPLICIT_NOTIFY | G_PARAM_STATIC_STRINGS);
+
+    /**
+     * NMSettingIPConfig:shared-dhcp-lease-time:
+     *
+     * This option allows you to specify a custom DHCP lease time for the shared connection
+     * method in seconds. The value should be either a number between 120 and 31536000 (one year)
+     * If this option is not specified, 3600 (one hour) is used.
+     *
+     * Special values are 0 for default value of 1 hour and 2147483647 (MAXINT32) for infinite lease time.
+     *
+     * Since: 1.52
+     */
+    obj_properties[PROP_SHARED_DHCP_LEASE_TIME] =
+        g_param_spec_int(NM_SETTING_IP_CONFIG_SHARED_DHCP_LEASE_TIME,
+                         "",
+                         "",
+                         0,
+                         G_MAXINT32,
+                         0,
+                         G_PARAM_READWRITE | G_PARAM_EXPLICIT_NOTIFY | NM_SETTING_PARAM_FUZZY_IGNORE
+                             | G_PARAM_STATIC_STRINGS);
 
     g_object_class_install_properties(object_class, _PROPERTY_ENUMS_LAST, obj_properties);
 }
