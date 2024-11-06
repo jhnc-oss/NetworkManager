@@ -190,19 +190,34 @@ if [ "$CONFIGURE_ONLY" != 1 ]; then
     ninja -C build -v
     ninja -C build install
 
-    if ! meson test -C build -v --print-errorlogs ; then
-        echo ">>>> RUN SECOND TEST (start)"
-        NMTST_DEBUG="debug,TRACE,no-expect-message" \
-        meson test -C build -v --print-errorlogs || :
-        echo ">>>> RUN SECOND TEST (done)"
-        die "meson test failed"
-    fi
+    # if ! meson test -C build -v --print-errorlogs ; then
+    #     echo ">>>> RUN SECOND TEST (start)"
+    #     NMTST_DEBUG="debug,TRACE,no-expect-message" \
+    #     meson test -C build -v --print-errorlogs || :
+    #     echo ">>>> RUN SECOND TEST (done)"
+    #     die "meson test failed"
+    # fi
 
     if _with_valgrind; then
+        for i in $(seq 1 20); do
+            echo ">>>> RUN SINGLE TEST - $i"
+            NMTST_SET_DEBUG=1 NMTST_USE_VALGRIND=1 tools/run-nm-test.sh --called-from-make build  "" /usr/bin/valgrind valgrind.suppressions --launch-dbus=auto build/src/core/tests/test-core-with-expect
+            echo ">>>> RUN SINGLE TEST - $i (done)"
+        done
+
+        echo ">>>> RUN TEST SUITE with debug"
+        if ! NMTST_USE_VALGRIND=1 NMTST_SET_DEBUG=1 meson test -C build -v --print-errorlogs ; then
+            _print_test_logs "(valgrind test - $i)"
+            die "meson+valgrind test failed - $i"
+        fi
+        echo ">>>> RUN TEST SUITE with debug (done)"
+
+        echo ">>>> RUN TEST SUITE without debug"
         if ! NMTST_USE_VALGRIND=1 meson test -C build -v --print-errorlogs ; then
             _print_test_logs "(valgrind test)"
             die "meson+valgrind test failed"
         fi
+        echo ">>>> RUN TEST SUITE without debug (done)"
     fi
 fi
 

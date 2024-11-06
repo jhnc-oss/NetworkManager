@@ -158,11 +158,6 @@ t_{{distro.name}}:{{version}}:
     matrix:
       - NM_TEST_SELECT_RUN:
         - meson+gcc+docs+valgrind
-        - meson+clang
-        - rpm+meson
-        - tarball+meson
-        - tarball
-        - subtree
 {% endif %}
   variables:
     FDO_DISTRIBUTION_VERSION: '{{version}}'

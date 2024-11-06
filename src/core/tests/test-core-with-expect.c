@@ -188,9 +188,10 @@ do_test_nm_utils_kill_child_create_and_join_pgroup(void)
     g_assert(pgid >= 0);
 
     if (pgid == 0) {
-        /* child process... */
+        /* process #2*/
         nm_close(pipefd[0]);
 
+        /* @pgid becomes group leader*/
         err = setpgid(0, 0);
         g_assert(err == 0);
 
@@ -208,14 +209,18 @@ do_test_nm_utils_kill_child_create_and_join_pgroup(void)
 
     nm_close(pipefd[0]);
 
+    /* process #1 enters pgid group */
     err = setpgid(0, pgid);
     g_assert(err == 0);
 
     do {
+        /* wait termination of process #2 */
         err = waitpid(pgid, &tmp, 0);
     } while (err == -1 && errno == EINTR);
     g_assert(err == pgid);
     g_assert(WIFEXITED(tmp) && WEXITSTATUS(tmp) == 0);
+
+    /* now process #1 is in group @pgid */
 
     return pgid;
 }
@@ -290,6 +295,7 @@ do_test_nm_utils_kill_child(void)
                           "for process to terminate normally after sending SIGTERM (15)...");
     NMTST_EXPECT_NM_DEBUG("kill child process 'test-s-1-1' (*): after sending SIGTERM (15), "
                           "process * exited by signal 15 (* usec elapsed)");
+    nm_log_dbg(LOGD_CORE, "---- test-s-1-1: kill(TERM,3s+KILL) pid1s_1:%d", (int) pid1s_1);
     test_nm_utils_kill_child_sync_do("test-s-1-1",
                                      pid1s_1,
                                      SIGTERM,
@@ -301,6 +307,7 @@ do_test_nm_utils_kill_child(void)
                           "after sending SIGKILL (9)...");
     NMTST_EXPECT_NM_DEBUG("kill child process 'test-s-1-2' (*): after sending SIGKILL (9), process "
                           "* exited by signal 9 (* usec elapsed)");
+    nm_log_dbg(LOGD_CORE, "---- test-s-1-2: kill(KILL) pid1s_2:%d", (int) pid1s_2);
     test_nm_utils_kill_child_sync_do("test-s-1-2",
                                      pid1s_2,
                                      SIGKILL,
@@ -313,15 +320,18 @@ do_test_nm_utils_kill_child(void)
     NMTST_EXPECT_NM_DEBUG("kill child process 'test-s-1-3' (*): sending SIGKILL...");
     NMTST_EXPECT_NM_DEBUG("kill child process 'test-s-1-3' (*): after sending no signal (0) and "
                           "SIGKILL, process * exited by signal 9 (* usec elapsed)");
+    nm_log_dbg(LOGD_CORE, "---- test-s-1-3: kill(SIG:0) pid1s_3:%d", (int) pid1s_3);
     test_nm_utils_kill_child_sync_do("test-s-1-3", pid1s_3, 0, 1, TRUE, &expected_signal_KILL);
 
     NMTST_EXPECT_NM_DEBUG(
         "kill child process 'test-s-2' (*): process * already terminated normally with status 47");
+    nm_log_dbg(LOGD_CORE, "---- test-s-2: kill(TERM,3s+KILL) pid2s:%d", (int) pid2s);
     test_nm_utils_kill_child_sync_do("test-s-2", pid2s, SIGTERM, 3000, TRUE, &expected_exit_47);
 
     /* send invalid signal. */
     NMTST_EXPECT_NM_ERROR("kill child process 'test-s-3-0' (*): failed to send Unexpected signal: "
                           "Invalid argument (22)");
+    nm_log_dbg(LOGD_CORE, "---- test-s-3-1: kill(INVALID) pid3s:%d", (int) pid3s);
     test_nm_utils_kill_child_sync_do("test-s-3-0", pid3s, -1, 0, FALSE, NULL);
 
     /* really kill pid3s */
@@ -329,12 +339,14 @@ do_test_nm_utils_kill_child(void)
                           "for process to terminate normally after sending SIGTERM (15)...");
     NMTST_EXPECT_NM_DEBUG("kill child process 'test-s-3-1' (*): after sending SIGTERM (15), "
                           "process * exited normally with status 47 (* usec elapsed)");
+    nm_log_dbg(LOGD_CORE, "---- test-s-3-1: kill(TERM,3s+KILL) pid3s:%d", (int) pid3s);
     test_nm_utils_kill_child_sync_do("test-s-3-1", pid3s, SIGTERM, 3000, TRUE, &expected_exit_47);
 
     /* pid3s should not be a valid process, hence the call should fail. Note, that there
      * is a race here. */
     NMTST_EXPECT_NM_ERROR("kill child process 'test-s-3-2' (*): unexpected error while waitpid: No "
                           "child process* (10)");
+    nm_log_dbg(LOGD_CORE, "---- test-s-3-2: kill(TERM) pid3s:%d", (int) pid3s);
     test_nm_utils_kill_child_sync_do("test-s-3-2", pid3s, 0, 0, FALSE, NULL);
 
     NMTST_EXPECT_NM_DEBUG("kill child process 'test-s-4' (*): waiting up to 50 milliseconds for "
@@ -422,6 +434,8 @@ test_nm_utils_kill_child(void)
     pid_t gpid;
     pid_t child_pid;
 
+    /* Process #0 */
+
     /* the tests spawns several processes, we want to clean them up
      * by sending a SIGKILL to the process group.
      *
@@ -431,27 +445,37 @@ test_nm_utils_kill_child(void)
      * processes. */
     child_pid = fork();
     g_assert(child_pid >= 0);
+    if (child_pid > 0)
+        nm_log_dbg(LOGD_CORE, "---- child_pid: %d", (int)child_pid);
 
     if (child_pid == 0) {
+        /* Process #1 */
+
         gpid = do_test_nm_utils_kill_child_create_and_join_pgroup();
 
         do_test_nm_utils_kill_child();
 
+        /* Process #1 becomes group leader */
         err = setpgid(0, 0);
         g_assert(err == 0);
 
-        kill(-gpid, SIGKILL);
+        kill(-gpid, SIGSEGV);
 
+        g_usleep(G_USEC_PER_SEC);
+
+        /* Process #1 quits with code 0 */
         exit(0);
     };
 
     do {
+        /* wait that process #1 terminates */
         err = waitpid(child_pid, &exit_status, 0);
     } while (err == -1 && errno == EINTR);
     g_assert(err == child_pid);
     if (WIFEXITED(exit_status))
         g_assert_cmpint(WEXITSTATUS(exit_status), ==, 0);
     else {
+        /* error: process #1 was killed by signal */
         g_assert_cmpint(exit_status, ==, 0);
         g_assert_not_reached();
     }
