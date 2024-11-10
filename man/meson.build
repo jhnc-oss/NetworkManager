@@ -41,54 +41,51 @@ foreach man: mans + introspection_mans
   built_mans += name
 endforeach
 
-if built_mans.length() > 0
-  install_man(built_mans)
-  subdir_done()
-endif
-
-
-common_ent_file = configure_file(
-  input: 'common.ent.in',
-  output: '@BASENAME@',
-  configuration: data_conf,
-)
-
-xsltproc_options = [
-  find_program('xsltproc'),
-  '--output', '@OUTPUT@',
-  '--path', meson.current_build_dir(),
-  '--xinclude',
-  '--nonet',
-  '--stringparam', 'man.output.quietly', '1',
-  '--stringparam', 'funcsynopsis.style', 'ansi',
-  '--stringparam', 'man.th.extra1.suppress', '1',
-  '--stringparam', 'man.authors.section.enabled', '0',
-  '--stringparam', 'man.copyright.section.enabled', '0',
-  '--stringparam', 'man.th.title.max.length', '30',
-]
-
-docbook_xls = 'http://docbook.sourceforge.net/release/xsl/current/manpages/docbook.xsl'
-
-mans_xmls = []
-
-foreach man: mans
-  input = man[0] + '.xml'
-  content_files += join_paths(meson.current_source_dir(), input)
-
-  output = '@0@.@1@'.format(man[0], man[1])
-
-  custom_target(
-    output,
-    input: input,
-    output: output,
-    command: xsltproc_options + [docbook_xls, '@INPUT@'],
-    depend_files: common_ent_file,
-    install: true,
-    install_dir: join_paths(nm_mandir, 'man' + man[1]),
+if enable_introspection and find_program('xsltproc', required: false).found()
+  common_ent_file = configure_file(
+    input: 'common.ent.in',
+    output: '@BASENAME@',
+    configuration: data_conf,
   )
-endforeach
 
-if enable_introspection
+  xsltproc_options = [
+    find_program('xsltproc'),
+    '--output', '@OUTPUT@',
+    '--path', meson.current_build_dir(),
+    '--xinclude',
+    '--nonet',
+    '--stringparam', 'man.output.quietly', '1',
+    '--stringparam', 'funcsynopsis.style', 'ansi',
+    '--stringparam', 'man.th.extra1.suppress', '1',
+    '--stringparam', 'man.authors.section.enabled', '0',
+    '--stringparam', 'man.copyright.section.enabled', '0',
+    '--stringparam', 'man.th.title.max.length', '30',
+  ]
+
+  docbook_xls = 'http://docbook.sourceforge.net/release/xsl/current/manpages/docbook.xsl'
+
+  mans_xmls = []
+
+  foreach man: mans
+    input = man[0] + '.xml'
+    content_files += join_paths(meson.current_source_dir(), input)
+
+    output = '@0@.@1@'.format(man[0], man[1])
+
+    # not needed if only html requested
+    if enable_man
+      custom_target(
+        output,
+        input: input,
+        output: output,
+        command: xsltproc_options + [docbook_xls, '@INPUT@'],
+        depend_files: common_ent_file,
+        install: true,
+        install_dir: join_paths(nm_mandir, 'man' + man[1]),
+      )
+    endif
+  endforeach
+
   merge_cmd = files(source_root / 'tools' / 'generate-docs-nm-settings-docs-merge.py')
 
   name = 'dbus'
@@ -151,13 +148,23 @@ if enable_introspection
 
     output = '@0@.@1@'.format(man[0], man[1])
 
-    custom_target(
-      output,
-      input: input,
-      output: output,
-      command: xsltproc_options + [docbook_xls, '@INPUT@'],
-      install: true,
-      install_dir: join_paths(nm_mandir, 'man' + man[1]),
-    )
+    # not needed if only html requested
+    if enable_man
+      custom_target(
+        output,
+        input: input,
+        output: output,
+        command: xsltproc_options + [docbook_xls, '@INPUT@'],
+        install: true,
+        install_dir: join_paths(nm_mandir, 'man' + man[1]),
+      )
+    endif
   endforeach
+# not needed if only html requested
+elif enable_man
+  if built_mans.length() > 0
+    install_man(built_mans)
+  else
+    error('Building manpages requires xsltproc and -Dintrospection=true, and no prebuilt manpages were found. Try building from a release tarball or using -Dman=false.')
+  endif
 endif
