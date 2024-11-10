@@ -986,9 +986,9 @@ if enable_qt != 'false'
   endif
 endif
 
+subdir('man')
 if enable_docs
   assert(enable_introspection, '-Ddocs=true requires -Dintrospection=true')
-  subdir('man')
   subdir('docs')
   meson.add_dist_script(
     'tools/meson-dist-data.sh',

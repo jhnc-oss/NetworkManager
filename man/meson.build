@@ -41,11 +41,17 @@ foreach man: mans + introspection_mans
   built_mans += name
 endforeach
 
+# If pregenerated manpages exist, always install them. Otherwise, if -Dbuild_man=true,
+# build and then install them.
 if built_mans.length() > 0
   install_man(built_mans)
   subdir_done()
+elif not get_option('build_man')
+  subdir_done()
 endif
 
+
+assert(enable_introspection, 'Building manpages requires -Dintrospection=true and no prebuilt manpages were found. Try building from a release tarball or using -Dbuild_docs=false.')
 
 common_ent_file = configure_file(
   input: 'common.ent.in',
@@ -88,76 +94,74 @@ foreach man: mans
   )
 endforeach
 
-if enable_introspection
-  merge_cmd = files(source_root / 'tools' / 'generate-docs-nm-settings-docs-merge.py')
+merge_cmd = files(source_root / 'tools' / 'generate-docs-nm-settings-docs-merge.py')
 
-  name = 'dbus'
-  nm_settings_docs_xml_dbus = custom_target(
-    'nm-settings-docs-' + name + '.xml',
-    input: [merge_cmd, nm_property_infos_xml[name], nm_settings_docs_xml_gir[name]],
-    output: 'nm-settings-docs-' + name + '.xml',
-    command: [
-      python_path,
-      merge_cmd,
-      '@OUTPUT@',
-      nm_property_infos_xml[name],
-      nm_settings_docs_xml_gir[name]
-    ],
-  )
+name = 'dbus'
+nm_settings_docs_xml_dbus = custom_target(
+  'nm-settings-docs-' + name + '.xml',
+  input: [merge_cmd, nm_property_infos_xml[name], nm_settings_docs_xml_gir[name]],
+  output: 'nm-settings-docs-' + name + '.xml',
+  command: [
+    python_path,
+    merge_cmd,
+    '@OUTPUT@',
+    nm_property_infos_xml[name],
+    nm_settings_docs_xml_gir[name]
+  ],
+)
 
-  name = 'nmcli'
-  nm_settings_docs_xml_nmcli = custom_target(
-    'nm-settings-docs-' + name + '.xml',
-    input: [merge_cmd, nm_property_infos_xml[name], gen_metadata_nm_settings_nmcli_xml, nm_settings_docs_xml_gir[name]],
-    output: 'nm-settings-docs-' + name + '.xml',
-    command: [
-      python_path,
-      merge_cmd,
-      '@OUTPUT@',
-      '--only-properties-from',
-      gen_metadata_nm_settings_nmcli_xml,
-      nm_property_infos_xml[name],
-      gen_metadata_nm_settings_nmcli_xml,
-      nm_settings_docs_xml_gir[name]
-    ],
-  )
+name = 'nmcli'
+nm_settings_docs_xml_nmcli = custom_target(
+  'nm-settings-docs-' + name + '.xml',
+  input: [merge_cmd, nm_property_infos_xml[name], gen_metadata_nm_settings_nmcli_xml, nm_settings_docs_xml_gir[name]],
+  output: 'nm-settings-docs-' + name + '.xml',
+  command: [
+    python_path,
+    merge_cmd,
+    '@OUTPUT@',
+    '--only-properties-from',
+    gen_metadata_nm_settings_nmcli_xml,
+    nm_property_infos_xml[name],
+    gen_metadata_nm_settings_nmcli_xml,
+    nm_settings_docs_xml_gir[name]
+  ],
+)
 
-  nm_settings_docs_xml = {
-    'dbus':  nm_settings_docs_xml_dbus,
-    'nmcli':  nm_settings_docs_xml_nmcli,
-  }
+nm_settings_docs_xml = {
+  'dbus':  nm_settings_docs_xml_dbus,
+  'nmcli':  nm_settings_docs_xml_nmcli,
+}
 
-  mans = [
-    ['nm-settings-keyfile', '5', nm_property_infos_xml['keyfile']],
-    ['nm-settings-dbus',    '5', nm_settings_docs_xml['dbus']],
-    ['nm-settings-nmcli',   '5', nm_settings_docs_xml['nmcli']],
-  ]
+mans = [
+  ['nm-settings-keyfile', '5', nm_property_infos_xml['keyfile']],
+  ['nm-settings-dbus',    '5', nm_settings_docs_xml['dbus']],
+  ['nm-settings-nmcli',   '5', nm_settings_docs_xml['nmcli']],
+]
 
-  if enable_ifcfg_rh
-    mans += [['nm-settings-ifcfg-rh', '5', nm_property_infos_xml['ifcfg-rh']]]
-  endif
-
-  foreach man: mans
-    output = man[0] + '.xml'
-    template = join_paths(meson.current_source_dir(), man[0] + '.xsl')
-
-    input = custom_target(
-      output,
-      input: [template, man[2]],
-      output: output,
-      command: xsltproc_options + ['@INPUT@'],
-    )
-    content_files += input
-
-    output = '@0@.@1@'.format(man[0], man[1])
-
-    custom_target(
-      output,
-      input: input,
-      output: output,
-      command: xsltproc_options + [docbook_xls, '@INPUT@'],
-      install: true,
-      install_dir: join_paths(nm_mandir, 'man' + man[1]),
-    )
-  endforeach
+if enable_ifcfg_rh
+  mans += [['nm-settings-ifcfg-rh', '5', nm_property_infos_xml['ifcfg-rh']]]
 endif
+
+foreach man: mans
+  output = man[0] + '.xml'
+  template = join_paths(meson.current_source_dir(), man[0] + '.xsl')
+
+  input = custom_target(
+    output,
+    input: [template, man[2]],
+    output: output,
+    command: xsltproc_options + ['@INPUT@'],
+  )
+  content_files += input
+
+  output = '@0@.@1@'.format(man[0], man[1])
+
+  custom_target(
+    output,
+    input: input,
+    output: output,
+    command: xsltproc_options + [docbook_xls, '@INPUT@'],
+    install: true,
+    install_dir: join_paths(nm_mandir, 'man' + man[1]),
+  )
+endforeach
