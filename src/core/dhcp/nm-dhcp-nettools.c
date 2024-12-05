@@ -1542,7 +1542,7 @@ stop(NMDhcpClient *client, gboolean release)
     NMDhcpNettoolsPrivate *priv = NM_DHCP_NETTOOLS_GET_PRIVATE(self);
 
     if (release) {
-        if (n_dhcp4_client_probe_release(priv->probe))
+        if (nm_dhcp_client_get_lease(client, TRUE) && n_dhcp4_client_probe_release(priv->probe))
             _LOGT("dhcp-client4: failed to send request with RELEASE message");
     }
 
