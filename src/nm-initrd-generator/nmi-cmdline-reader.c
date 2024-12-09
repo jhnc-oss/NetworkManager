@@ -1407,6 +1407,7 @@ nmi_cmdline_reader_parse(const char        *etc_connections_dir,
     int                          i;
     guint64                      dhcp_timeout   = 90;
     guint64                      dhcp_num_tries = 1;
+    gboolean                     nvmf_nonbft    = FALSE;
 
     reader = reader_new();
 
@@ -1509,7 +1510,18 @@ nmi_cmdline_reader_parse(const char        *etc_connections_dir,
             bootif_val = g_strdup(argument);
         } else if (nm_streq(tag, "rd.ethtool")) {
             reader_parse_ethtool(reader, argument);
+        } else if (nm_streq(tag, "rd.nvmf.nonbft"))
+            nvmf_nonbft = TRUE;
+    }
+
+    if (neednet && !nvmf_nonbft) {
+        NMConnection **nbft_connections, **c;
+
+        nbft_connections = nmi_nbft_reader_parse(sysfs_dir, &reader->hostname);
+        for (c = nbft_connections; c && *c; c++) {
+            reader_add_connection(reader, nm_connection_get_id(*c), *c);
         }
+        g_free(nbft_connections);
     }
 
     for (i = 0; i < reader->vlan_parents->len; i++) {
