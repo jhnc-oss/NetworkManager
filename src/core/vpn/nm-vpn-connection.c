@@ -1175,7 +1175,8 @@ _parent_device_l3cd_add_gateway_route(NML3ConfigData *l3cd,
                                       int             addr_family,
                                       NMDevice       *parent_device,
                                       const NMIPAddr *vpn_gw,
-                                      NMPlatform     *platform)
+                                      NMPlatform     *platform,
+                                      guint32         route_table_id)
 {
     const int                       IS_IPv4        = NM_IS_IPv4(addr_family);
     NMIPAddr                        parent_gw      = NM_IP_ADDR_INIT;
@@ -1237,21 +1238,23 @@ _parent_device_l3cd_add_gateway_route(NML3ConfigData *l3cd,
 
     if (IS_IPv4) {
         route.r4 = (NMPlatformIP4Route) {
-            .ifindex    = ifindex,
-            .network    = vpn_gw->addr4,
-            .plen       = 32,
-            .gateway    = parent_gw.addr4,
-            .rt_source  = NM_IP_CONFIG_SOURCE_VPN,
-            .metric_any = TRUE,
+            .table_coerced = route_table_id,
+            .ifindex       = ifindex,
+            .network       = vpn_gw->addr4,
+            .plen          = 32,
+            .gateway       = parent_gw.addr4,
+            .rt_source     = NM_IP_CONFIG_SOURCE_VPN,
+            .metric_any    = TRUE,
         };
     } else {
         route.r6 = (NMPlatformIP6Route) {
-            .ifindex    = ifindex,
-            .network    = vpn_gw->addr6,
-            .plen       = 128,
-            .gateway    = parent_gw.addr6,
-            .rt_source  = NM_IP_CONFIG_SOURCE_VPN,
-            .metric_any = TRUE,
+            .table_coerced = route_table_id,
+            .ifindex       = ifindex,
+            .network       = vpn_gw->addr6,
+            .plen          = 128,
+            .gateway       = parent_gw.addr6,
+            .rt_source     = NM_IP_CONFIG_SOURCE_VPN,
+            .metric_any    = TRUE,
         };
     }
     nm_l3_config_data_add_route(l3cd, addr_family, NULL, &route.rx);
@@ -1291,6 +1294,7 @@ _l3cfg_l3cd_gw_extern_update(NMVpnConnection *self)
     int                                     ifindex;
     gboolean                                changed;
     int                                     IS_IPv4;
+    guint32                                 route_table_id = RT_TABLE_MAIN;
 
     ifindex = priv->ifindex_dev;
     if (ifindex <= 0)
@@ -1311,12 +1315,17 @@ _l3cfg_l3cd_gw_extern_update(NMVpnConnection *self)
             continue;
         }
 
+        if (s_ip) {
+            route_table_id = nm_setting_ip_config_get_route_table(s_ip);
+        }
+
         if (_parent_device_l3cd_add_gateway_route(
                 l3cd,
                 IS_IPv4 ? AF_INET : AF_INET6,
                 nm_active_connection_get_device(NM_ACTIVE_CONNECTION(self)),
                 &priv->ip_data_x[IS_IPv4].gw_external,
-                nm_netns_get_platform(priv->netns)))
+                nm_netns_get_platform(priv->netns),
+                route_table_id))
             changed = TRUE;
     }
     if (!changed)
