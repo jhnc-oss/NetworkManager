@@ -296,7 +296,7 @@ glib_dep = declare_dependency(
   ],
   compile_args: [
     '-DGLIB_VERSION_MIN_REQUIRED=GLIB_VERSION_2_42',
-    '-DGLIB_VERSION_MAX_ALLOWED=GLIB_VERSION_2_42',
+    '-DGLIB_VERSION_MAX_ALLOWED=GLIB_VERSION_2_80',
   ]
 )
 
@@ -356,7 +356,7 @@ endif
 # introspection support
 enable_introspection = get_option('introspection')
 if enable_introspection
-  gir_dep = dependency('gobject-introspection-1.0', version: '>= 0.9.6', required: false)
+  gir_dep = dependency('gobject-introspection-1.0', version: '>= 1.80.0', required: false)
   assert(gir_dep.found(), 'introspection support was requested, but the gobject-introspection library is not available. Use -Dintrospection=false to build without it.')
 endif
 
