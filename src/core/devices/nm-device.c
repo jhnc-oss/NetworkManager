@@ -2100,6 +2100,33 @@ _prop_get_ipvx_dhcp_send_hostname(NMDevice *self, int addr_family)
     return send_hostname_v2;
 }
 
+static NMSettingIPConfigForwarding
+_prop_get_ipv4_forwarding(NMDevice *self)
+{
+    NMSettingIPConfig          *s_ip;
+    NMSettingIPConfigForwarding forwarding;
+
+    g_return_val_if_fail(NM_IS_DEVICE(self), NM_SETTING_IP_CONFIG_FORWARDING_AUTO);
+
+    s_ip = nm_device_get_applied_setting(self, NM_TYPE_SETTING_IP4_CONFIG);
+    if (!s_ip)
+        return NM_SETTING_IP_CONFIG_FORWARDING_AUTO;
+
+    forwarding = nm_setting_ip_config_get_forwarding(s_ip);
+
+    if (forwarding == NM_SETTING_IP_CONFIG_FORWARDING_DEFAULT) {
+        forwarding =
+            nm_config_data_get_connection_default_int64(NM_CONFIG_GET_DATA,
+                                                        NM_CON_DEFAULT("ipv4.forwarding"),
+                                                        self,
+                                                        NM_SETTING_IP_CONFIG_FORWARDING_NO,
+                                                        NM_SETTING_IP_CONFIG_FORWARDING_AUTO,
+                                                        NM_SETTING_IP_CONFIG_FORWARDING_AUTO);
+    }
+
+    return forwarding;
+}
+
 static gboolean
 _prop_get_connection_ip_ping_addresses_require_all(NMDevice *self, NMSettingConnection *s_con)
 {
@@ -13013,6 +13040,11 @@ activate_stage3_ip_config_for_addr_family(NMDevice *self, int addr_family)
         goto out_devip;
 
     if (IS_IPv4) {
+        NMSettingIPConfigForwarding ipv4_forwarding = _prop_get_ipv4_forwarding(self);
+
+        if (ipv4_forwarding != NM_SETTING_IP_CONFIG_FORWARDING_AUTO) {
+            nm_device_sysctl_ip_conf_set(self, AF_INET, "forwarding", ipv4_forwarding ? "1" : "0");
+        }
         priv->ipll_data_4.v4.mode = _prop_get_ipv4_link_local(self);
         if (priv->ipll_data_4.v4.mode == NM_SETTING_IP4_LL_ENABLED)
             _dev_ipll4_start(self);
@@ -13021,9 +13053,14 @@ activate_stage3_ip_config_for_addr_family(NMDevice *self, int addr_family)
             _dev_ipdhcpx_start(self, AF_INET);
         else if (nm_streq(priv->ipv4_method, NM_SETTING_IP4_CONFIG_METHOD_LINK_LOCAL)) {
             /* pass */
-        } else if (nm_streq(priv->ipv4_method, NM_SETTING_IP4_CONFIG_METHOD_SHARED))
+        } else if (nm_streq(priv->ipv4_method, NM_SETTING_IP4_CONFIG_METHOD_SHARED)) {
+            _LOGD(LOGD_DEVICE,
+                  "IPv4 shared method will automatically enable the IPv4 global forwarding, "
+                  "all the per-interface level IPv4 forwarding settings may be changed to "
+                  "match the global setting. Also, all the per-inteface level forwarding "
+                  "settings can not be restored when deactivating the shared connection");
             _dev_ipshared4_start(self);
-        else if (nm_streq(priv->ipv4_method, NM_SETTING_IP4_CONFIG_METHOD_DISABLED))
+        } else if (nm_streq(priv->ipv4_method, NM_SETTING_IP4_CONFIG_METHOD_DISABLED))
             priv->ip_data_x[IS_IPv4].is_disabled = TRUE;
         else if (nm_streq(priv->ipv4_method, NM_SETTING_IP4_CONFIG_METHOD_MANUAL)) {
             /* pass */
@@ -13072,9 +13109,14 @@ activate_stage3_ip_config_for_addr_family(NMDevice *self, int addr_family)
 
             if (NM_IN_STRSET(priv->ipv6_method, NM_SETTING_IP6_CONFIG_METHOD_AUTO))
                 _dev_ipac6_start(self);
-            else if (NM_IN_STRSET(priv->ipv6_method, NM_SETTING_IP6_CONFIG_METHOD_SHARED))
+            else if (NM_IN_STRSET(priv->ipv6_method, NM_SETTING_IP6_CONFIG_METHOD_SHARED)) {
+                _LOGD(LOGD_DEVICE,
+                      "IPv6 shared method will automatically enable the IPv6 global forwarding, "
+                      "all the per-interface level IPv6 forwarding settings may be changed to "
+                      "match the global setting. Also, all the per-inteface level forwarding "
+                      "settings can not be restored when deactivating the shared connection");
                 _dev_ipshared6_start(self);
-            else if (nm_streq(priv->ipv6_method, NM_SETTING_IP6_CONFIG_METHOD_DHCP)) {
+            } else if (nm_streq(priv->ipv6_method, NM_SETTING_IP6_CONFIG_METHOD_DHCP)) {
                 priv->ipdhcp_data_6.v6.mode = NM_NDISC_DHCP_LEVEL_MANAGED;
                 _dev_ipdhcpx_start(self, AF_INET6);
             } else
