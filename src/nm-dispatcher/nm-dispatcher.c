@@ -41,14 +41,10 @@ typedef struct {
     bool log_verbose;
     bool log_stdout;
 
-    GSource *source_idle_timeout;
-
     gint64 start_timestamp_msec;
 
     guint request_id_counter;
     guint service_regist_id;
-
-    gboolean persist;
 
     Request *current_request;
     GQueue  *requests_waiting;
@@ -59,7 +55,6 @@ typedef struct {
     bool name_requested;
     bool reject_new_requests;
 
-    bool shutdown_timeout;
     bool shutdown_quitting;
 } GlobalData;
 
@@ -226,33 +221,6 @@ request_free(Request *request)
 
 /*****************************************************************************/
 
-static gboolean
-_idle_timeout_cb(gpointer user_data)
-{
-    nm_clear_g_source_inst(&gl.source_idle_timeout);
-    gl.shutdown_timeout = TRUE;
-    return G_SOURCE_CONTINUE;
-}
-
-static void
-_idle_timeout_restart(void)
-{
-    nm_clear_g_source_inst(&gl.source_idle_timeout);
-
-    if (gl.persist)
-        return;
-
-    if (gl.shutdown_quitting)
-        return;
-
-    if (gl.num_requests_pending > 0)
-        return;
-
-    gl.source_idle_timeout = nm_g_timeout_add_source(10000, _idle_timeout_cb, NULL);
-}
-
-/*****************************************************************************/
-
 /**
  * next_request:
  *
@@ -405,7 +373,7 @@ request_dbus_method_return(Request *request)
  * Checks if all the scripts for the request have terminated and in such case
  * it sends the D-Bus response and releases the request resources.
  *
- * It also decreases @num_requests_pending and possibly does _idle_timeout_restart().
+ * It also decreases @num_requests_pending.
  */
 static void
 complete_request(Request *request)
@@ -426,10 +394,8 @@ complete_request(Request *request)
     request_free(request);
 
     nm_assert(gl.num_requests_pending > 0);
-    if (--gl.num_requests_pending <= 0) {
+    if (--gl.num_requests_pending <= 0)
         nm_assert(!gl.current_request && !g_queue_peek_head(gl.requests_waiting));
-        _idle_timeout_restart();
-    }
 }
 
 static void
@@ -1076,8 +1042,6 @@ _handle_action(GDBusMethodInvocation *invocation, GVariant *parameters, gboolean
     }
 
     gl.num_requests_pending++;
-    gl.shutdown_timeout = FALSE;
-    nm_clear_g_source_inst(&gl.source_idle_timeout);
 
     for (i = 0; i < request->scripts->len; i++) {
         ScriptInfo *s = g_ptr_array_index(request->scripts, i);
@@ -1387,7 +1351,6 @@ _bus_release_name(void)
 
     /* we create a fake pending request. */
     gl.num_requests_pending++;
-    nm_clear_g_source_inst(&gl.source_idle_timeout);
 
     r = nm_sd_notify("STOPPING=1");
     if (r < 0)
@@ -1424,15 +1387,6 @@ _initial_setup(int *p_argc, char ***p_argv, GError **error)
                                   G_OPTION_ARG_NONE,
                                   &arg_debug,
                                   "Output to console rather than syslog",
-                                  NULL,
-                              },
-                                 {
-                                  "persist",
-                                  0,
-                                  0,
-                                  G_OPTION_ARG_NONE,
-                                  &gl.persist,
-                                  "Don't quit after a short timeout",
                                   NULL,
                               },
                                  {
@@ -1512,8 +1466,6 @@ main(int argc, char **argv)
 
     gl.requests_waiting = g_queue_new();
 
-    _idle_timeout_restart();
-
     if (!_bus_register_service()) {
         /* we failed to start the D-Bus service, and will shut down. However,
          * first see whether there are any requests that we should process.
@@ -1532,7 +1484,7 @@ main(int argc, char **argv)
 
         if (gl.num_requests_pending > 0) {
             /* while we have requests pending, we cannot stop processing them... */
-        } else if (gl.shutdown_timeout || gl.shutdown_quitting) {
+        } else if (gl.shutdown_quitting) {
             if (!_bus_release_name())
                 break;
         }
@@ -1552,8 +1504,6 @@ done:
     }
 
     nm_clear_pointer(&gl.requests_waiting, g_queue_free);
-
-    nm_clear_g_source_inst(&gl.source_idle_timeout);
 
     if (gl.dbus_connection) {
         g_dbus_connection_flush_sync(gl.dbus_connection, NULL, NULL);
