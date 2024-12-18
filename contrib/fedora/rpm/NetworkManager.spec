@@ -43,7 +43,7 @@
 
 %global real_version_major %(printf '%s' '%{real_version}' | sed -n 's/^\\([1-9][0-9]*\\.[0-9][0-9]*\\)\\.[0-9][0-9]*$/\\1/p')
 
-%global systemd_units NetworkManager.service NetworkManager-wait-online.service NetworkManager-dispatcher.service nm-priv-helper.service
+%global systemd_units NetworkManager.service NetworkManager-wait-online.service NetworkManager-dispatcher.service nm-priv-helper.service nm-config-initrd.service nm-initrd.service nm-wait-online-initrd.service
 
 %global systemd_units_cloud_setup nm-cloud-setup.service nm-cloud-setup.timer
 
@@ -830,7 +830,7 @@ if [ $1 -eq 0 ]; then
     # Don't kill networking entirely just on package remove
     #/bin/systemctl stop NetworkManager.service >/dev/null 2>&1 || :
 fi
-%systemd_preun NetworkManager-wait-online.service NetworkManager-dispatcher.service nm-priv-helper.service
+%systemd_preun NetworkManager-wait-online.service NetworkManager-dispatcher.service nm-priv-helper.service nm-config-initrd.service nm-initrd.service nm-wait-online-initrd.service
 
 
 %if %{with ifcfg_rh}
@@ -928,6 +928,9 @@ fi
 %{_unitdir}/NetworkManager-wait-online.service
 %{_unitdir}/NetworkManager-dispatcher.service
 %{_unitdir}/nm-priv-helper.service
+%{_unitdir}/nm-config-initrd.service
+%{_unitdir}/nm-initrd.service
+%{_unitdir}/nm-wait-online-initrd.service
 %dir %{_datadir}/doc/NetworkManager/examples
 %{_datadir}/doc/NetworkManager/examples/server.conf
 %if %{with ifcfg_warning} || %{with ifcfg_migrate}
