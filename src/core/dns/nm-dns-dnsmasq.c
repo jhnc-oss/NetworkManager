@@ -853,13 +853,17 @@ add_global_config(NMDnsDnsmasq            *self,
         const char *const *servers = nm_global_dns_domain_get_servers(domain);
         const char        *name    = nm_global_dns_domain_get_name(domain);
 
-        g_return_if_fail(name);
+        nm_assert(name);
 
         for (j = 0; servers && servers[j]; j++) {
-            if (!strcmp(name, "*"))
-                add_dnsmasq_nameserver(self, dnsmasq_servers, servers[j], NULL);
-            else
-                add_dnsmasq_nameserver(self, dnsmasq_servers, servers[j], name);
+            gs_free char *str_free = NULL;
+            const char   *str;
+
+            /* TODO: support IPv6 link-local addresses with scope id */
+            if (!nm_utils_dns_uri_get_plain(AF_UNSPEC, servers[j], &str, &str_free, NULL))
+                continue;
+
+            add_dnsmasq_nameserver(self, dnsmasq_servers, str, nm_streq(name, "*") ? NULL : name);
         }
     }
 }
@@ -881,7 +885,7 @@ add_ip_config(NMDnsDnsmasq *self, GVariantBuilder *servers, const NMDnsConfigIPD
     for (i = 0; i < num; i++) {
         NMIPAddr a;
 
-        if (!nm_utils_dnsname_parse_assert(ip_data->addr_family, strarr[i], NULL, &a, NULL))
+        if (!nm_utils_dns_uri_get_plain(ip_data->addr_family, strarr[i], NULL, NULL, &a))
             continue;
 
         ip_addr_to_string(ip_data->addr_family, &a, iface, ip_addr_to_string_buf);
