@@ -73,6 +73,10 @@ const char **nm_setting_vpn_get_secret_keys(NMSettingVpn *setting, guint *out_le
 NM_AVAILABLE_IN_1_2
 guint32 nm_setting_vpn_get_timeout(NMSettingVpn *setting);
 
+gboolean nm_connection_is_vpn(NMConnection *connection, gboolean incl_all);
+#define nm_connection_is_any_vpn(x) nm_connection_is_vpn((x), true)
+#define nm_connection_is_vpn_plugin(x) nm_connection_is_vpn((x), false)
+
 G_END_DECLS
 
 #endif /* __NM_SETTING_VPN_H__ */
