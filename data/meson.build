@@ -13,6 +13,9 @@ if install_systemdunitdir
     'NetworkManager.service',
     'nm-priv-helper.service',
     'NetworkManager-wait-online.service',
+    'nm-config-initrd.service',
+    'nm-initrd.service',
+    'nm-wait-online-initrd.service',
   ]
 
   foreach service: services
