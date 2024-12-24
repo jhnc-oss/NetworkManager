@@ -1,0 +1,6 @@
+Add Ignore-Fixes as this was already backported
+
+Already backported as 129f9e5be68. As the "Fixes:" appears a second
+time, it confuses to find-backports. Add Ignore-Fixes.
+
+Ignore-fixes: 830a5a14 ('device: add support for OpenVSwitch devices')
