@@ -31,6 +31,10 @@ USE AT YOUR OWN RISK.  NOT RECOMMENDED FOR PRODUCTION USE!
   DNS over TLS name servers.
 * The initrd-generator understands the "rd.net.dns" option to configure
   global name servers.
+* Dnsconfd plugin can now be used for configuration of system-wide DNS
+  caching resolver.
+* If dnsconfd plugin is enabled and ipv4.routed-dns is set to -1 then
+  adding routes is by default enabled.
 
 =============================================
 NetworkManager-1.50

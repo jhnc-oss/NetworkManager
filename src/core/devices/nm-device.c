@@ -6145,6 +6145,30 @@ nm_device_get_applied_connection(NMDevice *self)
                                  : NULL;
 }
 
+NMActiveConnection *
+nm_device_get_active_connection(NMDevice *self)
+{
+    NMDevicePrivate *priv;
+
+    g_return_val_if_fail(NM_IS_DEVICE(self), NULL);
+
+    priv = NM_DEVICE_GET_PRIVATE(self);
+
+    return priv->act_request.obj ? (NMActiveConnection *) priv->act_request.obj : NULL;
+}
+
+const char *
+nm_device_get_active_connection_dbus_path(NMDevice *self)
+{
+    NMDevicePrivate *priv;
+
+    g_return_val_if_fail(NM_IS_DEVICE(self), NULL);
+
+    priv = NM_DEVICE_GET_PRIVATE(self);
+
+    return priv->act_request.obj ? nm_dbus_track_obj_path_get(&priv->act_request) : NULL;
+}
+
 gboolean
 nm_device_has_unmodified_applied_connection(NMDevice *self, NMSettingCompareFlags compare_flags)
 {
@@ -11163,8 +11187,12 @@ _dev_ipmanual_check_ready(NMDevice *self)
 static void
 _dev_ipmanual_start(NMDevice *self)
 {
-    NMDevicePrivate                        *priv = NM_DEVICE_GET_PRIVATE(self);
-    nm_auto_unref_l3cd_init NML3ConfigData *l3cd = NULL;
+    NMDevicePrivate                        *priv            = NM_DEVICE_GET_PRIVATE(self);
+    nm_auto_unref_l3cd_init NML3ConfigData *l3cd            = NULL;
+    gboolean                                routed_dns_ipv4 = FALSE;
+    gboolean                                routed_dns_ipv6 = FALSE;
+
+    const char *dns_mode = nm_config_data_get_dns_mode(nm_config_get_data(nm_config_get()));
 
     if (priv->ipmanual_data.state_4 != NM_DEVICE_IP_STATE_NONE
         || priv->ipmanual_data.state_6 != NM_DEVICE_IP_STATE_NONE)
@@ -11174,11 +11202,20 @@ _dev_ipmanual_start(NMDevice *self)
         l3cd =
             nm_device_create_l3_config_data_from_connection(self,
                                                             nm_device_get_applied_connection(self));
+        routed_dns_ipv4 =
+            ((_prop_get_ipvx_routed_dns(self, AF_INET) == NM_SETTING_IP_CONFIG_ROUTED_DNS_YES)
+             || (_prop_get_ipvx_routed_dns(self, AF_INET) == NM_SETTING_IP_CONFIG_ROUTED_DNS_DEFAULT
+                 && nm_streq0(dns_mode, "dnsconfd")));
+        routed_dns_ipv6 =
+            ((_prop_get_ipvx_routed_dns(self, AF_INET6) == NM_SETTING_IP_CONFIG_ROUTED_DNS_YES)
+             || (_prop_get_ipvx_routed_dns(self, AF_INET6)
+                     == NM_SETTING_IP_CONFIG_ROUTED_DNS_DEFAULT
+                 && nm_streq0(dns_mode, "dnsconfd")));
 
-        if (_prop_get_ipvx_routed_dns(self, AF_INET) == NM_SETTING_IP_CONFIG_ROUTED_DNS_YES) {
+        if (routed_dns_ipv4) {
             nm_l3_config_data_set_routed_dns(l3cd, AF_INET, TRUE);
         }
-        if (_prop_get_ipvx_routed_dns(self, AF_INET6) == NM_SETTING_IP_CONFIG_ROUTED_DNS_YES) {
+        if (routed_dns_ipv6) {
             nm_l3_config_data_set_routed_dns(l3cd, AF_INET6, TRUE);
         }
     }
@@ -11513,7 +11550,7 @@ _dev_ipdhcpx_start(NMDevice *self, int addr_family)
             }
         }
 
-        config = (NMDhcpClientConfig) {
+        config = (NMDhcpClientConfig){
             .addr_family             = AF_INET,
             .l3cfg                   = nm_device_get_l3cfg(self),
             .iface                   = nm_device_get_ip_iface(self),
@@ -11555,7 +11592,7 @@ _dev_ipdhcpx_start(NMDevice *self, int addr_family)
         iaid = _prop_get_ipvx_dhcp_iaid(self, AF_INET6, connection, FALSE, &iaid_explicit);
         duid = _prop_get_ipv6_dhcp_duid(self, connection, hwaddr, &enforce_duid);
 
-        config = (NMDhcpClientConfig) {
+        config = (NMDhcpClientConfig){
             .addr_family     = AF_INET6,
             .l3cfg           = nm_device_get_l3cfg(self),
             .iface           = nm_device_get_ip_iface(self),

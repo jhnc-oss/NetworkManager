@@ -119,6 +119,7 @@ nm_active_connection_has_unmodified_applied_connection(NMActiveConnection   *sel
                                                        NMSettingCompareFlags compare_flags);
 
 const char *nm_active_connection_get_settings_connection_id(NMActiveConnection *self);
+const char *nm_active_connection_get_settings_connection_uuid(NMActiveConnection *self);
 
 const char *nm_active_connection_get_specific_object(NMActiveConnection *self);
 
