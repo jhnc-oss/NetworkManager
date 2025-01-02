@@ -11,6 +11,7 @@
 #include "nm-act-request.h"
 #include "libnm-core-aux-intern/nm-auth-subject.h"
 #include "libnm-core-intern/nm-keyfile-internal.h"
+#include "libnm-core-intern/nm-core-internal.h"
 #include "nm-core-utils.h"
 #include "nm-dbus-interface.h"
 #include "devices/nm-device.h"
@@ -459,15 +460,71 @@ restore_and_activate_connection(NMCheckpoint *self, DeviceCheckpoint *dev_checkp
     return TRUE;
 }
 
+// Activation priority (bigger means should activate earlier):
+//  * OVS bridge count as 5
+//  * OVS port count as 4
+//  * OVS interface count as 3
+//  * Device without controller counted as 2
+//  * others 0
+static int
+get_activation_priority(NMConnection *conn)
+{
+    const char *conn_type =
+        nm_setting_connection_get_connection_type(nm_connection_get_setting_connection(conn));
+
+    if (g_str_equal(conn_type, NM_SETTING_OVS_BRIDGE_SETTING_NAME)) {
+        return 5;
+    }
+
+    if (g_str_equal(conn_type, NM_SETTING_OVS_PORT_SETTING_NAME)) {
+        return 4;
+    }
+
+    if (g_str_equal(conn_type, NM_SETTING_OVS_INTERFACE_SETTING_NAME)) {
+        return 3;
+    }
+
+    if (nm_setting_connection_get_controller(nm_connection_get_setting_connection(conn)) == NULL) {
+        return 2;
+    }
+
+    return 0;
+}
+
+static int
+compare_device_checkpoint_activation_order(gconstpointer a, gconstpointer b)
+{
+    const DeviceCheckpoint *dev_a             = *((const DeviceCheckpoint **) a);
+    const DeviceCheckpoint *dev_b             = *((const DeviceCheckpoint **) b);
+    int                     activation_prio_a = 0;
+    int                     activation_prio_b = 0;
+
+    if (dev_a->settings_connection) {
+        activation_prio_a = get_activation_priority(dev_a->settings_connection);
+    }
+    if (dev_b->settings_connection) {
+        activation_prio_b = get_activation_priority(dev_b->settings_connection);
+    }
+
+    if (activation_prio_a < activation_prio_b)
+        return 1;
+    else if (activation_prio_a == activation_prio_b)
+        return 0;
+    else
+        return -1;
+}
+
 GVariant *
 nm_checkpoint_rollback(NMCheckpoint *self)
 {
-    NMCheckpointPrivate *priv = NM_CHECKPOINT_GET_PRIVATE(self);
-    DeviceCheckpoint    *dev_checkpoint;
-    GHashTableIter       iter;
-    NMDevice            *device;
-    GVariantBuilder      builder;
-    uint                 i;
+    NMCheckpointPrivate         *priv = NM_CHECKPOINT_GET_PRIVATE(self);
+    DeviceCheckpoint            *dev_checkpoint;
+    GHashTableIter               iter;
+    NMDevice                    *device;
+    GVariantBuilder              builder;
+    uint                         i;
+    guint                        j;
+    gs_unref_ptrarray GPtrArray *dev_checkpoints = g_ptr_array_new();
 
     _LOGI("rollback of %s", nm_dbus_object_get_path(NM_DBUS_OBJECT(self)));
     g_variant_builder_init(&builder, G_VARIANT_TYPE("a{su}"));
@@ -496,11 +553,23 @@ nm_checkpoint_rollback(NMCheckpoint *self)
     /* Start rolling-back each device */
     g_hash_table_iter_init(&iter, priv->devices);
     while (g_hash_table_iter_next(&iter, (gpointer *) &device, (gpointer *) &dev_checkpoint)) {
+        g_ptr_array_add(dev_checkpoints, dev_checkpoint);
+    }
+
+    /* We should activate the controllers first
+     */
+    g_ptr_array_sort(dev_checkpoints, compare_device_checkpoint_activation_order);
+
+    for (j = 0; j < dev_checkpoints->len; ++j) {
         guint32 result = NM_ROLLBACK_RESULT_OK;
 
-        _LOGD("rollback: restoring device %s (state %d, realized %d, explicitly unmanaged %d, "
+        dev_checkpoint = dev_checkpoints->pdata[j];
+        device         = dev_checkpoint->device;
+
+        _LOGD("rollback: restoring device %s(%s) (state %d, realized %d, explicitly unmanaged %d, "
               "connection-unsaved %d, connection-shadowed %d, connection-shadowed-owned %d)",
               dev_checkpoint->original_dev_name,
+              nm_device_get_type_description(device),
               (int) dev_checkpoint->state,
               dev_checkpoint->realized,
               dev_checkpoint->unmanaged_explicit,
