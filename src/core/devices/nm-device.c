@@ -10564,30 +10564,25 @@ lldp_setup(NMDevice *self, NMTernary enabled)
  *       as externally added ones. Don't restart NetworkManager if
  *       you care about that.
  */
-static void
-_routing_rules_sync(NMDevice *self, NMTernary set_mode)
+void
+_routing_rules_sync(NMConnection *applied_connection,
+                    NMTernary     set_mode,
+                    GPtrArray *(*get_extra_rules)(NMDevice *self),
+                    NMDevice *self,
+                    NMNetns  *netns)
 {
-    NMDevicePrivate  *priv               = NM_DEVICE_GET_PRIVATE(self);
-    NMPGlobalTracker *global_tracker     = nm_netns_get_global_tracker(nm_device_get_netns(self));
-    NMDeviceClass    *klass              = NM_DEVICE_GET_CLASS(self);
+    NMPGlobalTracker *global_tracker     = nm_netns_get_global_tracker(netns);
     gboolean          untrack_only_dirty = FALSE;
     gboolean          keep_deleted_rules;
-    gpointer          user_tag_1;
-    gpointer          user_tag_2;
-
-    /* take two arbitrary user-tag pointers that belong to @self. */
-    user_tag_1 = &priv->v4_route_table;
-    user_tag_2 = &priv->v6_route_table;
+    gpointer          user_tag_1 = ((guint32 *) applied_connection) + 1;
+    gpointer          user_tag_2 = ((guint32 *) applied_connection) + 2;
 
     if (set_mode == NM_TERNARY_TRUE) {
-        NMConnection      *applied_connection;
         NMSettingIPConfig *s_ip;
         guint              i, num;
         int                is_ipv4;
 
         untrack_only_dirty = TRUE;
-
-        applied_connection = nm_device_get_applied_connection(self);
 
         for (is_ipv4 = 0; applied_connection && is_ipv4 < 2; is_ipv4++) {
             int addr_family = is_ipv4 ? AF_INET : AF_INET6;
@@ -10627,10 +10622,10 @@ _routing_rules_sync(NMDevice *self, NMTernary set_mode)
             }
         }
 
-        if (klass->get_extra_rules) {
+        if (get_extra_rules) {
             gs_unref_ptrarray GPtrArray *extra_rules = NULL;
 
-            extra_rules = klass->get_extra_rules(self);
+            extra_rules = get_extra_rules(self);
             if (extra_rules) {
                 for (i = 0; i < extra_rules->len; i++) {
                     nmp_global_tracker_track_rule(
@@ -10645,7 +10640,7 @@ _routing_rules_sync(NMDevice *self, NMTernary set_mode)
     }
 
     nmp_global_tracker_untrack_all(global_tracker, user_tag_1, !untrack_only_dirty, TRUE);
-    if (klass->get_extra_rules)
+    if (get_extra_rules)
         nmp_global_tracker_untrack_all(global_tracker, user_tag_2, !untrack_only_dirty, TRUE);
 
     keep_deleted_rules = FALSE;
@@ -10705,13 +10700,14 @@ tc_commit(NMDevice *self)
 static void
 activate_stage2_device_config(NMDevice *self)
 {
-    NMDevicePrivate *priv = NM_DEVICE_GET_PRIVATE(self);
-    NMDeviceClass   *klass;
-    NMActStageReturn ret;
-    NMSettingWired  *s_wired;
-    gboolean         no_firmware = FALSE;
-    PortInfo        *info;
-    NMTernary        accept_all_mac_addresses;
+    NMDevicePrivate             *priv  = NM_DEVICE_GET_PRIVATE(self);
+    NMDeviceClass               *klass = NM_DEVICE_GET_CLASS(self);
+    NMActStageReturn             ret;
+    NMSettingWired              *s_wired;
+    gboolean                     no_firmware = FALSE;
+    PortInfo                    *info;
+    NMTernary                    accept_all_mac_addresses;
+    gs_unref_ptrarray GPtrArray *extra_rules = NULL;
 
     nm_device_state_changed(self, NM_DEVICE_STATE_CONFIG, NM_DEVICE_STATE_REASON_NONE);
 
@@ -10731,7 +10727,11 @@ activate_stage2_device_config(NMDevice *self)
         priv->tc_committed = TRUE;
     }
 
-    _routing_rules_sync(self, NM_TERNARY_TRUE);
+    _routing_rules_sync(nm_device_get_applied_connection(self),
+                        NM_TERNARY_TRUE,
+                        klass->get_extra_rules,
+                        self,
+                        nm_device_get_netns(self));
 
     if (!nm_device_managed_type_is_external_or_assume(self)) {
         if (!nm_device_bring_up_full(self, FALSE, TRUE, &no_firmware)) {
@@ -10743,7 +10743,6 @@ activate_stage2_device_config(NMDevice *self)
         }
     }
 
-    klass = NM_DEVICE_GET_CLASS(self);
     if (klass->act_stage2_config_also_for_external_or_assume
         || !nm_device_managed_type_is_external_or_assume(self)) {
         NMDeviceStateReason failure_reason = NM_DEVICE_STATE_REASON_NONE;
@@ -14019,6 +14018,7 @@ check_and_reapply_connection(NMDevice            *self,
     NMConnection                  *con_new;
     GHashTableIter                 iter;
     NMSettingsConnection          *sett_conn;
+    gs_unref_ptrarray GPtrArray   *extra_rules = NULL;
 
     if (priv->state < NM_DEVICE_STATE_PREPARE || priv->state > NM_DEVICE_STATE_ACTIVATED) {
         g_set_error_literal(error,
@@ -14175,7 +14175,11 @@ check_and_reapply_connection(NMDevice            *self,
 
         nm_device_activate_schedule_stage3_ip_config(self, FALSE);
 
-        _routing_rules_sync(self, NM_TERNARY_TRUE);
+        _routing_rules_sync(nm_device_get_applied_connection(self),
+                            NM_TERNARY_TRUE,
+                            klass->get_extra_rules,
+                            self,
+                            nm_device_get_netns(self));
 
         reactivate_proxy_config(self);
 
@@ -16861,8 +16865,10 @@ _cleanup_generic_post(NMDevice *self, NMDeviceStateReason reason, CleanupType cl
 static void
 nm_device_cleanup(NMDevice *self, NMDeviceStateReason reason, CleanupType cleanup_type)
 {
-    NMDevicePrivate *priv;
-    int              ifindex;
+    NMDevicePrivate             *priv;
+    NMDeviceClass               *klass = NM_DEVICE_GET_CLASS(self);
+    int                          ifindex;
+    gs_unref_ptrarray GPtrArray *extra_rules = NULL;
 
     g_return_if_fail(NM_IS_DEVICE(self));
 
@@ -16886,8 +16892,8 @@ nm_device_cleanup(NMDevice *self, NMDeviceStateReason reason, CleanupType cleanu
     }
 
     /* Call device type-specific deactivation */
-    if (NM_DEVICE_GET_CLASS(self)->deactivate)
-        NM_DEVICE_GET_CLASS(self)->deactivate(self);
+    if (klass->deactivate)
+        klass->deactivate(self);
 
     ifindex = nm_device_get_ip_ifindex(self);
 
@@ -16909,8 +16915,11 @@ nm_device_cleanup(NMDevice *self, NMDeviceStateReason reason, CleanupType cleanu
 
     priv->tc_committed = FALSE;
 
-    _routing_rules_sync(self,
-                        cleanup_type == CLEANUP_TYPE_KEEP ? NM_TERNARY_DEFAULT : NM_TERNARY_FALSE);
+    _routing_rules_sync(nm_device_get_applied_connection(self),
+                        cleanup_type == CLEANUP_TYPE_KEEP ? NM_TERNARY_DEFAULT : NM_TERNARY_FALSE,
+                        klass->get_extra_rules,
+                        self,
+                        nm_device_get_netns(self));
 
     if (ifindex > 0)
         nm_platform_ip4_dev_route_blacklist_set(nm_device_get_platform(self), ifindex, NULL);
@@ -16939,7 +16948,7 @@ nm_device_cleanup(NMDevice *self, NMDeviceStateReason reason, CleanupType cleanu
             /* for other device states (UNAVAILABLE, DISCONNECTED), allow the
              * device to overwrite the reset behavior, so that Wi-Fi can set
              * a randomized MAC address used during scanning. */
-            NM_DEVICE_GET_CLASS(self)->deactivate_reset_hw_addr(self);
+            klass->deactivate_reset_hw_addr(self);
         }
     }
 
