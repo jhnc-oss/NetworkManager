@@ -392,6 +392,17 @@ nm_active_connection_get_settings_connection_id(NMActiveConnection *self)
     return sett_conn ? nm_settings_connection_get_id(sett_conn) : NULL;
 }
 
+const char *
+nm_active_connection_get_settings_connection_uuid(NMActiveConnection *self)
+{
+    NMSettingsConnection *sett_conn;
+
+    g_return_val_if_fail(NM_IS_ACTIVE_CONNECTION(self), NULL);
+
+    sett_conn = NM_ACTIVE_CONNECTION_GET_PRIVATE(self)->settings_connection.obj;
+    return sett_conn ? nm_settings_connection_get_uuid(sett_conn) : NULL;
+}
+
 NMSettingsConnection *
 _nm_active_connection_get_settings_connection(NMActiveConnection *self)
 {

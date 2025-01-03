@@ -269,6 +269,9 @@ GKeyFile *nm_config_data_clone_keyfile_intern(const NMConfigData *self);
 
 const char *const *nm_global_dns_config_get_searches(const NMGlobalDnsConfig *dns_config);
 const char *const *nm_global_dns_config_get_options(const NMGlobalDnsConfig *dns_config);
+const char *nm_global_dns_config_get_certification_authority(const NMGlobalDnsConfig *dns_config);
+guint       nm_global_dns_config_get_resolving_mode(const NMGlobalDnsConfig *dns_config);
+
 guint              nm_global_dns_config_get_num_domains(const NMGlobalDnsConfig *dns_config);
 NMGlobalDnsDomain *nm_global_dns_config_get_domain(const NMGlobalDnsConfig *dns_config, guint i);
 NMGlobalDnsDomain *nm_global_dns_config_lookup_domain(const NMGlobalDnsConfig *dns_config,

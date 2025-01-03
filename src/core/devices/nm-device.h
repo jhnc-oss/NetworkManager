@@ -512,6 +512,8 @@ NMActRequest          *nm_device_get_act_request(NMDevice *dev);
 NMSettingsConnection  *nm_device_get_settings_connection(NMDevice *dev);
 NMConnection          *nm_device_get_settings_connection_get_connection(NMDevice *self);
 NMConnection          *nm_device_get_applied_connection(NMDevice *dev);
+NMActiveConnection    *nm_device_get_active_connection(NMDevice *self);
+const char            *nm_device_get_active_connection_dbus_path(NMDevice *self);
 gboolean               nm_device_has_unmodified_applied_connection(NMDevice             *self,
                                                                    NMSettingCompareFlags compare_flags);
 NMActivationStateFlags nm_device_get_activation_state_flags(NMDevice *self);
