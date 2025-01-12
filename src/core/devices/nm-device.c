@@ -1877,7 +1877,12 @@ _prop_get_ipv4_dhcp_ipv6_only_preferred(NMDevice *self)
         self,
         NM_SETTING_IP4_DHCP_IPV6_ONLY_PREFERRED_NO,
         NM_SETTING_IP4_DHCP_IPV6_ONLY_PREFERRED_YES,
-        NM_SETTING_IP4_DHCP_IPV6_ONLY_PREFERRED_NO);
+#ifdef HAVE_CLAT
+        NM_SETTING_IP4_DHCP_IPV6_ONLY_PREFERRED_YES
+#else
+        NM_SETTING_IP4_DHCP_IPV6_ONLY_PREFERRED_NO
+#endif
+    );
 }
 
 /**
