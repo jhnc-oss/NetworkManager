@@ -49,6 +49,7 @@ install \
     ModemManager-glib-devel \
     audit-libs-devel \
     bluez-libs-devel \
+    bpftool \
     clang \
     dbus-devel \
     dbus-x11 \
@@ -65,11 +66,13 @@ install \
     iptables \
     jansson-devel \
     jq \
+    libbpf-devel \
     libcurl-devel \
     libndp-devel \
     libselinux-devel \
     libtool \
     libuuid-devel \
+    libxdp-devel \
     meson \
     mobile-broadband-provider-info-devel \
     newt-devel \
