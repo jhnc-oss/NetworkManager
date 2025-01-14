@@ -11139,7 +11139,7 @@ _do_wifi_ghz_freqs(const guint *freqs, const char *band)
     int j;
     int i;
 
-    g_assert(NM_IN_STRSET(band, "a", "bg"));
+    g_assert(NM_IN_STRSET(band, "6GHz", "5GHz", "2.4GHz", "a", "bg"));
     g_assert(freqs);
     g_assert(freqs[0] != 0);
 
@@ -11150,7 +11150,7 @@ _do_wifi_ghz_freqs(const guint *freqs, const char *band)
     len = i;
 
     g_assert(nm_utils_wifi_freq_to_channel(0) == 0);
-    g_assert(nm_utils_wifi_channel_to_freq(0, "bg") == -1);
+    g_assert(nm_utils_wifi_channel_to_freq(0, "2.4GHz") == -1);
     g_assert(nm_utils_wifi_channel_to_freq(0, "foo") == 0);
     g_assert(!nm_utils_wifi_is_channel_valid(0, "bg"));
     g_assert(!nm_utils_wifi_is_channel_valid(0, "foo"));
@@ -11175,8 +11175,9 @@ _do_wifi_ghz_freqs(const guint *freqs, const char *band)
 static void
 test_nm_utils_wifi_ghz_freqs(void)
 {
-    _do_wifi_ghz_freqs(nm_utils_wifi_2ghz_freqs(), "bg");
-    _do_wifi_ghz_freqs(nm_utils_wifi_5ghz_freqs(), "a");
+    _do_wifi_ghz_freqs(nm_utils_wifi_2ghz_freqs(), "2.4GHz");
+    _do_wifi_ghz_freqs(nm_utils_wifi_5ghz_freqs(), "5GHz");
+    _do_wifi_ghz_freqs(nm_utils_wifi_6ghz_freqs(), "6GHz");
 }
 
 /*****************************************************************************/
