@@ -170,7 +170,7 @@ new_basic_connection(const char *id, GBytes *ssid, const char *bssid_str)
                  NM_SETTING_WIRELESS_MODE,
                  "infrastructure",
                  NM_SETTING_WIRELESS_BAND,
-                 "bg",
+                 "2.4GHz",
                  NULL);
 
     /* IP4 setting */
