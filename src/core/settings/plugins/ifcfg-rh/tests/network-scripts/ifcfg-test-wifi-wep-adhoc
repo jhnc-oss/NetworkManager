@@ -5,6 +5,7 @@ NM_CONTROLLED=yes
 BOOTPROTO=dhcp
 ESSID=blahblah
 CHANNEL=11
+BAND=bg
 MODE=Ad-Hoc
 RATE=auto
 ONBOOT=no

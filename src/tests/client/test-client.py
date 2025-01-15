@@ -1853,7 +1853,7 @@ class TestNmcli(unittest.TestCase):
                 "mod",
                 "con-xx1",
                 "802-11-wireless.band",
-                "a",
+                "5GHz",
                 "802-11-wireless.mac-address-denylist",
                 "aA:Bb:cC:dd:EE:f",
             ]
