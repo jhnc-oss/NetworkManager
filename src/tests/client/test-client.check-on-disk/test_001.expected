@@ -14,22 +14,20 @@ Use "nmcli device show" to get complete information about known devices and
 Consult nmcli(1) and nmcli-examples(7) manual pages for complete usage details.
 
 <<<
-size: 437
+size: 404
 location: src/tests/client/test-client.py:test_001()/2
 cmd: $NMCLI 
 lang: pl_PL.UTF-8
 returncode: 0
-stdout: 310 bytes
+stdout: 277 bytes
 >>>
 DNS configuration:
 	servers: 1.2.3.4 5.6.7.8
 
-Polecenie „nmcli device show” wyświetli pełne informacje o znanych
-urządzeniach, a „nmcli connection show” wyświetli przegląd aktywnych
-profili połączeń.
+Use "nmcli device show" to get complete information about known devices and
+"nmcli connection show" to get an overview on active connection profiles.
 
-Strony podręcznika nmcli(1) i nmcli-examples(7) zawierają pełne informacje
-o użyciu.
+Consult nmcli(1) and nmcli-examples(7) manual pages for complete usage details.
 
 <<<
 size: 187
@@ -42,14 +40,14 @@ stderr: 33 bytes
 Error: Device 'wlan0' not found.
 
 <<<
-size: 213
+size: 197
 location: src/tests/client/test-client.py:test_001()/4
 cmd: $NMCLI -f AP -mode multiline -p d show wlan0
 lang: pl_PL.UTF-8
 returncode: 10
-stderr: 49 bytes
+stderr: 33 bytes
 >>>
-Błąd: Nie odnaleziono urządzenia „wlan0”.
+Error: Device 'wlan0' not found.
 
 <<<
 size: 119
@@ -82,14 +80,14 @@ stderr: 68 bytes
 Error: argument 'bogus' not understood. Try passing --help instead.
 
 <<<
-size: 220
+size: 201
 location: src/tests/client/test-client.py:test_001()/8
 cmd: $NMCLI bogus s
 lang: pl_PL.UTF-8
 returncode: 2
-stderr: 87 bytes
+stderr: 68 bytes
 >>>
-Błąd: nie zrozumiano parametru „bogus”. Można użyć „--help” zamiast tego.
+Error: argument 'bogus' not understood. Try passing --help instead.
 
 <<<
 size: 1487
@@ -119,31 +117,31 @@ org.freedesktop.NetworkManager.wifi.share.open                    yes
 org.freedesktop.NetworkManager.wifi.share.protected               yes     
 
 <<<
-size: 1516
+size: 1498
 location: src/tests/client/test-client.py:test_001()/10
 cmd: $NMCLI general permissions
 lang: pl_PL.UTF-8
 returncode: 0
-stdout: 1368 bytes
+stdout: 1350 bytes
 >>>
-PERMISSION                                                        VALUE    
-org.freedesktop.NetworkManager.checkpoint-rollback                nieznane 
-org.freedesktop.NetworkManager.enable-disable-connectivity-check  nieznane 
-org.freedesktop.NetworkManager.enable-disable-network             tak      
-org.freedesktop.NetworkManager.enable-disable-statistics          nieznane 
-org.freedesktop.NetworkManager.enable-disable-wifi                tak      
-org.freedesktop.NetworkManager.enable-disable-wimax               tak      
-org.freedesktop.NetworkManager.enable-disable-wwan                tak      
-org.freedesktop.NetworkManager.network-control                    tak      
-org.freedesktop.NetworkManager.reload                             nie      
-org.freedesktop.NetworkManager.settings.modify.global-dns         nie      
-org.freedesktop.NetworkManager.settings.modify.hostname           tak      
-org.freedesktop.NetworkManager.settings.modify.own                tak      
-org.freedesktop.NetworkManager.settings.modify.system             tak      
-org.freedesktop.NetworkManager.sleep-wake                         nie      
-org.freedesktop.NetworkManager.wifi.scan                          nieznane 
-org.freedesktop.NetworkManager.wifi.share.open                    tak      
-org.freedesktop.NetworkManager.wifi.share.protected               tak      
+PERMISSION                                                        VALUE   
+org.freedesktop.NetworkManager.checkpoint-rollback                unknown 
+org.freedesktop.NetworkManager.enable-disable-connectivity-check  unknown 
+org.freedesktop.NetworkManager.enable-disable-network             yes     
+org.freedesktop.NetworkManager.enable-disable-statistics          unknown 
+org.freedesktop.NetworkManager.enable-disable-wifi                yes     
+org.freedesktop.NetworkManager.enable-disable-wimax               yes     
+org.freedesktop.NetworkManager.enable-disable-wwan                yes     
+org.freedesktop.NetworkManager.network-control                    yes     
+org.freedesktop.NetworkManager.reload                             no      
+org.freedesktop.NetworkManager.settings.modify.global-dns         no      
+org.freedesktop.NetworkManager.settings.modify.hostname           yes     
+org.freedesktop.NetworkManager.settings.modify.own                yes     
+org.freedesktop.NetworkManager.settings.modify.system             yes     
+org.freedesktop.NetworkManager.sleep-wake                         no      
+org.freedesktop.NetworkManager.wifi.scan                          unknown 
+org.freedesktop.NetworkManager.wifi.share.open                    yes     
+org.freedesktop.NetworkManager.wifi.share.protected               yes     
 
 <<<
 size: 1617
@@ -173,31 +171,31 @@ org.freedesktop.NetworkManager.wifi.share.open                    [32myes[0m
 org.freedesktop.NetworkManager.wifi.share.protected               [32myes[0m     
 
 <<<
-size: 1645
+size: 1627
 location: src/tests/client/test-client.py:test_001()/12
 cmd: $NMCLI --color yes general permissions
 lang: pl_PL.UTF-8
 returncode: 0
-stdout: 1485 bytes
+stdout: 1467 bytes
 >>>
-PERMISSION                                                        VALUE    
-org.freedesktop.NetworkManager.checkpoint-rollback                nieznane 
-org.freedesktop.NetworkManager.enable-disable-connectivity-check  nieznane 
-org.freedesktop.NetworkManager.enable-disable-network             [32mtak[0m      
-org.freedesktop.NetworkManager.enable-disable-statistics          nieznane 
-org.freedesktop.NetworkManager.enable-disable-wifi                [32mtak[0m      
-org.freedesktop.NetworkManager.enable-disable-wimax               [32mtak[0m      
-org.freedesktop.NetworkManager.enable-disable-wwan                [32mtak[0m      
-org.freedesktop.NetworkManager.network-control                    [32mtak[0m      
-org.freedesktop.NetworkManager.reload                             [31mnie[0m      
-org.freedesktop.NetworkManager.settings.modify.global-dns         [31mnie[0m      
-org.freedesktop.NetworkManager.settings.modify.hostname           [32mtak[0m      
-org.freedesktop.NetworkManager.settings.modify.own                [32mtak[0m      
-org.freedesktop.NetworkManager.settings.modify.system             [32mtak[0m      
-org.freedesktop.NetworkManager.sleep-wake                         [31mnie[0m      
-org.freedesktop.NetworkManager.wifi.scan                          nieznane 
-org.freedesktop.NetworkManager.wifi.share.open                    [32mtak[0m      
-org.freedesktop.NetworkManager.wifi.share.protected               [32mtak[0m      
+PERMISSION                                                        VALUE   
+org.freedesktop.NetworkManager.checkpoint-rollback                unknown 
+org.freedesktop.NetworkManager.enable-disable-connectivity-check  unknown 
+org.freedesktop.NetworkManager.enable-disable-network             [32myes[0m     
+org.freedesktop.NetworkManager.enable-disable-statistics          unknown 
+org.freedesktop.NetworkManager.enable-disable-wifi                [32myes[0m     
+org.freedesktop.NetworkManager.enable-disable-wimax               [32myes[0m     
+org.freedesktop.NetworkManager.enable-disable-wwan                [32myes[0m     
+org.freedesktop.NetworkManager.network-control                    [32myes[0m     
+org.freedesktop.NetworkManager.reload                             [31mno[0m      
+org.freedesktop.NetworkManager.settings.modify.global-dns         [31mno[0m      
+org.freedesktop.NetworkManager.settings.modify.hostname           [32myes[0m     
+org.freedesktop.NetworkManager.settings.modify.own                [32myes[0m     
+org.freedesktop.NetworkManager.settings.modify.system             [32myes[0m     
+org.freedesktop.NetworkManager.sleep-wake                         [31mno[0m      
+org.freedesktop.NetworkManager.wifi.scan                          unknown 
+org.freedesktop.NetworkManager.wifi.share.open                    [32myes[0m     
+org.freedesktop.NetworkManager.wifi.share.protected               [32myes[0m     
 
 <<<
 size: 1694
@@ -231,35 +229,35 @@ org.freedesktop.NetworkManager.wifi.share.open                    yes
 org.freedesktop.NetworkManager.wifi.share.protected               yes     
 
 <<<
-size: 1752
+size: 1704
 location: src/tests/client/test-client.py:test_001()/14
 cmd: $NMCLI --pretty general permissions
 lang: pl_PL.UTF-8
 returncode: 0
-stdout: 1595 bytes
+stdout: 1547 bytes
 >>>
-=====================================
-  Uprawnienia usługi NetworkManager
-=====================================
-PERMISSION                                                        VALUE    
------------------------------------------------------------------------------------------------------------------
-org.freedesktop.NetworkManager.checkpoint-rollback                nieznane 
-org.freedesktop.NetworkManager.enable-disable-connectivity-check  nieznane 
-org.freedesktop.NetworkManager.enable-disable-network             tak      
-org.freedesktop.NetworkManager.enable-disable-statistics          nieznane 
-org.freedesktop.NetworkManager.enable-disable-wifi                tak      
-org.freedesktop.NetworkManager.enable-disable-wimax               tak      
-org.freedesktop.NetworkManager.enable-disable-wwan                tak      
-org.freedesktop.NetworkManager.network-control                    tak      
-org.freedesktop.NetworkManager.reload                             nie      
-org.freedesktop.NetworkManager.settings.modify.global-dns         nie      
-org.freedesktop.NetworkManager.settings.modify.hostname           tak      
-org.freedesktop.NetworkManager.settings.modify.own                tak      
-org.freedesktop.NetworkManager.settings.modify.system             tak      
-org.freedesktop.NetworkManager.sleep-wake                         nie      
-org.freedesktop.NetworkManager.wifi.scan                          nieznane 
-org.freedesktop.NetworkManager.wifi.share.open                    tak      
-org.freedesktop.NetworkManager.wifi.share.protected               tak      
+==============================
+  NetworkManager permissions
+==============================
+PERMISSION                                                        VALUE   
+---------------------------------------------------------------------------------------------------------
+org.freedesktop.NetworkManager.checkpoint-rollback                unknown 
+org.freedesktop.NetworkManager.enable-disable-connectivity-check  unknown 
+org.freedesktop.NetworkManager.enable-disable-network             yes     
+org.freedesktop.NetworkManager.enable-disable-statistics          unknown 
+org.freedesktop.NetworkManager.enable-disable-wifi                yes     
+org.freedesktop.NetworkManager.enable-disable-wimax               yes     
+org.freedesktop.NetworkManager.enable-disable-wwan                yes     
+org.freedesktop.NetworkManager.network-control                    yes     
+org.freedesktop.NetworkManager.reload                             no      
+org.freedesktop.NetworkManager.settings.modify.global-dns         no      
+org.freedesktop.NetworkManager.settings.modify.hostname           yes     
+org.freedesktop.NetworkManager.settings.modify.own                yes     
+org.freedesktop.NetworkManager.settings.modify.system             yes     
+org.freedesktop.NetworkManager.sleep-wake                         no      
+org.freedesktop.NetworkManager.wifi.scan                          unknown 
+org.freedesktop.NetworkManager.wifi.share.open                    yes     
+org.freedesktop.NetworkManager.wifi.share.protected               yes     
 
 <<<
 size: 1823
@@ -293,35 +291,35 @@ org.freedesktop.NetworkManager.wifi.share.open                    [32myes[0m
 org.freedesktop.NetworkManager.wifi.share.protected               [32myes[0m     
 
 <<<
-size: 1881
+size: 1833
 location: src/tests/client/test-client.py:test_001()/16
 cmd: $NMCLI --pretty --color yes general permissions
 lang: pl_PL.UTF-8
 returncode: 0
-stdout: 1712 bytes
+stdout: 1664 bytes
 >>>
-=====================================
-  Uprawnienia usługi NetworkManager
-=====================================
-PERMISSION                                                        VALUE    
------------------------------------------------------------------------------------------------------------------
-org.freedesktop.NetworkManager.checkpoint-rollback                nieznane 
-org.freedesktop.NetworkManager.enable-disable-connectivity-check  nieznane 
-org.freedesktop.NetworkManager.enable-disable-network             [32mtak[0m      
-org.freedesktop.NetworkManager.enable-disable-statistics          nieznane 
-org.freedesktop.NetworkManager.enable-disable-wifi                [32mtak[0m      
-org.freedesktop.NetworkManager.enable-disable-wimax               [32mtak[0m      
-org.freedesktop.NetworkManager.enable-disable-wwan                [32mtak[0m      
-org.freedesktop.NetworkManager.network-control                    [32mtak[0m      
-org.freedesktop.NetworkManager.reload                             [31mnie[0m      
-org.freedesktop.NetworkManager.settings.modify.global-dns         [31mnie[0m      
-org.freedesktop.NetworkManager.settings.modify.hostname           [32mtak[0m      
-org.freedesktop.NetworkManager.settings.modify.own                [32mtak[0m      
-org.freedesktop.NetworkManager.settings.modify.system             [32mtak[0m      
-org.freedesktop.NetworkManager.sleep-wake                         [31mnie[0m      
-org.freedesktop.NetworkManager.wifi.scan                          nieznane 
-org.freedesktop.NetworkManager.wifi.share.open                    [32mtak[0m      
-org.freedesktop.NetworkManager.wifi.share.protected               [32mtak[0m      
+==============================
+  NetworkManager permissions
+==============================
+PERMISSION                                                        VALUE   
+---------------------------------------------------------------------------------------------------------
+org.freedesktop.NetworkManager.checkpoint-rollback                unknown 
+org.freedesktop.NetworkManager.enable-disable-connectivity-check  unknown 
+org.freedesktop.NetworkManager.enable-disable-network             [32myes[0m     
+org.freedesktop.NetworkManager.enable-disable-statistics          unknown 
+org.freedesktop.NetworkManager.enable-disable-wifi                [32myes[0m     
+org.freedesktop.NetworkManager.enable-disable-wimax               [32myes[0m     
+org.freedesktop.NetworkManager.enable-disable-wwan                [32myes[0m     
+org.freedesktop.NetworkManager.network-control                    [32myes[0m     
+org.freedesktop.NetworkManager.reload                             [31mno[0m      
+org.freedesktop.NetworkManager.settings.modify.global-dns         [31mno[0m      
+org.freedesktop.NetworkManager.settings.modify.hostname           [32myes[0m     
+org.freedesktop.NetworkManager.settings.modify.own                [32myes[0m     
+org.freedesktop.NetworkManager.settings.modify.system             [32myes[0m     
+org.freedesktop.NetworkManager.sleep-wake                         [31mno[0m      
+org.freedesktop.NetworkManager.wifi.scan                          unknown 
+org.freedesktop.NetworkManager.wifi.share.open                    [32myes[0m     
+org.freedesktop.NetworkManager.wifi.share.protected               [32myes[0m     
 
 <<<
 size: 1093
@@ -455,31 +453,31 @@ org.freedesktop.NetworkManager.wifi.share.open                    yes
 org.freedesktop.NetworkManager.wifi.share.protected               yes     
 
 <<<
-size: 1531
+size: 1513
 location: src/tests/client/test-client.py:test_001()/22
 cmd: $NMCLI --mode tabular general permissions
 lang: pl_PL.UTF-8
 returncode: 0
-stdout: 1368 bytes
+stdout: 1350 bytes
 >>>
-PERMISSION                                                        VALUE    
-org.freedesktop.NetworkManager.checkpoint-rollback                nieznane 
-org.freedesktop.NetworkManager.enable-disable-connectivity-check  nieznane 
-org.freedesktop.NetworkManager.enable-disable-network             tak      
-org.freedesktop.NetworkManager.enable-disable-statistics          nieznane 
-org.freedesktop.NetworkManager.enable-disable-wifi                tak      
-org.freedesktop.NetworkManager.enable-disable-wimax               tak      
-org.freedesktop.NetworkManager.enable-disable-wwan                tak      
-org.freedesktop.NetworkManager.network-control                    tak      
-org.freedesktop.NetworkManager.reload                             nie      
-org.freedesktop.NetworkManager.settings.modify.global-dns         nie      
-org.freedesktop.NetworkManager.settings.modify.hostname           tak      
-org.freedesktop.NetworkManager.settings.modify.own                tak      
-org.freedesktop.NetworkManager.settings.modify.system             tak      
-org.freedesktop.NetworkManager.sleep-wake                         nie      
-org.freedesktop.NetworkManager.wifi.scan                          nieznane 
-org.freedesktop.NetworkManager.wifi.share.open                    tak      
-org.freedesktop.NetworkManager.wifi.share.protected               tak      
+PERMISSION                                                        VALUE   
+org.freedesktop.NetworkManager.checkpoint-rollback                unknown 
+org.freedesktop.NetworkManager.enable-disable-connectivity-check  unknown 
+org.freedesktop.NetworkManager.enable-disable-network             yes     
+org.freedesktop.NetworkManager.enable-disable-statistics          unknown 
+org.freedesktop.NetworkManager.enable-disable-wifi                yes     
+org.freedesktop.NetworkManager.enable-disable-wimax               yes     
+org.freedesktop.NetworkManager.enable-disable-wwan                yes     
+org.freedesktop.NetworkManager.network-control                    yes     
+org.freedesktop.NetworkManager.reload                             no      
+org.freedesktop.NetworkManager.settings.modify.global-dns         no      
+org.freedesktop.NetworkManager.settings.modify.hostname           yes     
+org.freedesktop.NetworkManager.settings.modify.own                yes     
+org.freedesktop.NetworkManager.settings.modify.system             yes     
+org.freedesktop.NetworkManager.sleep-wake                         no      
+org.freedesktop.NetworkManager.wifi.scan                          unknown 
+org.freedesktop.NetworkManager.wifi.share.open                    yes     
+org.freedesktop.NetworkManager.wifi.share.protected               yes     
 
 <<<
 size: 1632
@@ -509,31 +507,31 @@ org.freedesktop.NetworkManager.wifi.share.open                    [32myes[0m
 org.freedesktop.NetworkManager.wifi.share.protected               [32myes[0m     
 
 <<<
-size: 1660
+size: 1642
 location: src/tests/client/test-client.py:test_001()/24
 cmd: $NMCLI --mode tabular --color yes general permissions
 lang: pl_PL.UTF-8
 returncode: 0
-stdout: 1485 bytes
+stdout: 1467 bytes
 >>>
-PERMISSION                                                        VALUE    
-org.freedesktop.NetworkManager.checkpoint-rollback                nieznane 
-org.freedesktop.NetworkManager.enable-disable-connectivity-check  nieznane 
-org.freedesktop.NetworkManager.enable-disable-network             [32mtak[0m      
-org.freedesktop.NetworkManager.enable-disable-statistics          nieznane 
-org.freedesktop.NetworkManager.enable-disable-wifi                [32mtak[0m      
-org.freedesktop.NetworkManager.enable-disable-wimax               [32mtak[0m      
-org.freedesktop.NetworkManager.enable-disable-wwan                [32mtak[0m      
-org.freedesktop.NetworkManager.network-control                    [32mtak[0m      
-org.freedesktop.NetworkManager.reload                             [31mnie[0m      
-org.freedesktop.NetworkManager.settings.modify.global-dns         [31mnie[0m      
-org.freedesktop.NetworkManager.settings.modify.hostname           [32mtak[0m      
-org.freedesktop.NetworkManager.settings.modify.own                [32mtak[0m      
-org.freedesktop.NetworkManager.settings.modify.system             [32mtak[0m      
-org.freedesktop.NetworkManager.sleep-wake                         [31mnie[0m      
-org.freedesktop.NetworkManager.wifi.scan                          nieznane 
-org.freedesktop.NetworkManager.wifi.share.open                    [32mtak[0m      
-org.freedesktop.NetworkManager.wifi.share.protected               [32mtak[0m      
+PERMISSION                                                        VALUE   
+org.freedesktop.NetworkManager.checkpoint-rollback                unknown 
+org.freedesktop.NetworkManager.enable-disable-connectivity-check  unknown 
+org.freedesktop.NetworkManager.enable-disable-network             [32myes[0m     
+org.freedesktop.NetworkManager.enable-disable-statistics          unknown 
+org.freedesktop.NetworkManager.enable-disable-wifi                [32myes[0m     
+org.freedesktop.NetworkManager.enable-disable-wimax               [32myes[0m     
+org.freedesktop.NetworkManager.enable-disable-wwan                [32myes[0m     
+org.freedesktop.NetworkManager.network-control                    [32myes[0m     
+org.freedesktop.NetworkManager.reload                             [31mno[0m      
+org.freedesktop.NetworkManager.settings.modify.global-dns         [31mno[0m      
+org.freedesktop.NetworkManager.settings.modify.hostname           [32myes[0m     
+org.freedesktop.NetworkManager.settings.modify.own                [32myes[0m     
+org.freedesktop.NetworkManager.settings.modify.system             [32myes[0m     
+org.freedesktop.NetworkManager.sleep-wake                         [31mno[0m      
+org.freedesktop.NetworkManager.wifi.scan                          unknown 
+org.freedesktop.NetworkManager.wifi.share.open                    [32myes[0m     
+org.freedesktop.NetworkManager.wifi.share.protected               [32myes[0m     
 
 <<<
 size: 1709
@@ -567,35 +565,35 @@ org.freedesktop.NetworkManager.wifi.share.open                    yes
 org.freedesktop.NetworkManager.wifi.share.protected               yes     
 
 <<<
-size: 1767
+size: 1719
 location: src/tests/client/test-client.py:test_001()/26
 cmd: $NMCLI --mode tabular --pretty general permissions
 lang: pl_PL.UTF-8
 returncode: 0
-stdout: 1595 bytes
+stdout: 1547 bytes
 >>>
-=====================================
-  Uprawnienia usługi NetworkManager
-=====================================
-PERMISSION                                                        VALUE    
------------------------------------------------------------------------------------------------------------------
-org.freedesktop.NetworkManager.checkpoint-rollback                nieznane 
-org.freedesktop.NetworkManager.enable-disable-connectivity-check  nieznane 
-org.freedesktop.NetworkManager.enable-disable-network             tak      
-org.freedesktop.NetworkManager.enable-disable-statistics          nieznane 
-org.freedesktop.NetworkManager.enable-disable-wifi                tak      
-org.freedesktop.NetworkManager.enable-disable-wimax               tak      
-org.freedesktop.NetworkManager.enable-disable-wwan                tak      
-org.freedesktop.NetworkManager.network-control                    tak      
-org.freedesktop.NetworkManager.reload                             nie      
-org.freedesktop.NetworkManager.settings.modify.global-dns         nie      
-org.freedesktop.NetworkManager.settings.modify.hostname           tak      
-org.freedesktop.NetworkManager.settings.modify.own                tak      
-org.freedesktop.NetworkManager.settings.modify.system             tak      
-org.freedesktop.NetworkManager.sleep-wake                         nie      
-org.freedesktop.NetworkManager.wifi.scan                          nieznane 
-org.freedesktop.NetworkManager.wifi.share.open                    tak      
-org.freedesktop.NetworkManager.wifi.share.protected               tak      
+==============================
+  NetworkManager permissions
+==============================
+PERMISSION                                                        VALUE   
+---------------------------------------------------------------------------------------------------------
+org.freedesktop.NetworkManager.checkpoint-rollback                unknown 
+org.freedesktop.NetworkManager.enable-disable-connectivity-check  unknown 
+org.freedesktop.NetworkManager.enable-disable-network             yes     
+org.freedesktop.NetworkManager.enable-disable-statistics          unknown 
+org.freedesktop.NetworkManager.enable-disable-wifi                yes     
+org.freedesktop.NetworkManager.enable-disable-wimax               yes     
+org.freedesktop.NetworkManager.enable-disable-wwan                yes     
+org.freedesktop.NetworkManager.network-control                    yes     
+org.freedesktop.NetworkManager.reload                             no      
+org.freedesktop.NetworkManager.settings.modify.global-dns         no      
+org.freedesktop.NetworkManager.settings.modify.hostname           yes     
+org.freedesktop.NetworkManager.settings.modify.own                yes     
+org.freedesktop.NetworkManager.settings.modify.system             yes     
+org.freedesktop.NetworkManager.sleep-wake                         no      
+org.freedesktop.NetworkManager.wifi.scan                          unknown 
+org.freedesktop.NetworkManager.wifi.share.open                    yes     
+org.freedesktop.NetworkManager.wifi.share.protected               yes     
 
 <<<
 size: 1838
@@ -629,35 +627,35 @@ org.freedesktop.NetworkManager.wifi.share.open                    [32myes[0m
 org.freedesktop.NetworkManager.wifi.share.protected               [32myes[0m     
 
 <<<
-size: 1896
+size: 1848
 location: src/tests/client/test-client.py:test_001()/28
 cmd: $NMCLI --mode tabular --pretty --color yes general permissions
 lang: pl_PL.UTF-8
 returncode: 0
-stdout: 1712 bytes
+stdout: 1664 bytes
 >>>
-=====================================
-  Uprawnienia usługi NetworkManager
-=====================================
-PERMISSION                                                        VALUE    
------------------------------------------------------------------------------------------------------------------
-org.freedesktop.NetworkManager.checkpoint-rollback                nieznane 
-org.freedesktop.NetworkManager.enable-disable-connectivity-check  nieznane 
-org.freedesktop.NetworkManager.enable-disable-network             [32mtak[0m      
-org.freedesktop.NetworkManager.enable-disable-statistics          nieznane 
-org.freedesktop.NetworkManager.enable-disable-wifi                [32mtak[0m      
-org.freedesktop.NetworkManager.enable-disable-wimax               [32mtak[0m      
-org.freedesktop.NetworkManager.enable-disable-wwan                [32mtak[0m      
-org.freedesktop.NetworkManager.network-control                    [32mtak[0m      
-org.freedesktop.NetworkManager.reload                             [31mnie[0m      
-org.freedesktop.NetworkManager.settings.modify.global-dns         [31mnie[0m      
-org.freedesktop.NetworkManager.settings.modify.hostname           [32mtak[0m      
-org.freedesktop.NetworkManager.settings.modify.own                [32mtak[0m      
-org.freedesktop.NetworkManager.settings.modify.system             [32mtak[0m      
-org.freedesktop.NetworkManager.sleep-wake                         [31mnie[0m      
-org.freedesktop.NetworkManager.wifi.scan                          nieznane 
-org.freedesktop.NetworkManager.wifi.share.open                    [32mtak[0m      
-org.freedesktop.NetworkManager.wifi.share.protected               [32mtak[0m      
+==============================
+  NetworkManager permissions
+==============================
+PERMISSION                                                        VALUE   
+---------------------------------------------------------------------------------------------------------
+org.freedesktop.NetworkManager.checkpoint-rollback                unknown 
+org.freedesktop.NetworkManager.enable-disable-connectivity-check  unknown 
+org.freedesktop.NetworkManager.enable-disable-network             [32myes[0m     
+org.freedesktop.NetworkManager.enable-disable-statistics          unknown 
+org.freedesktop.NetworkManager.enable-disable-wifi                [32myes[0m     
+org.freedesktop.NetworkManager.enable-disable-wimax               [32myes[0m     
+org.freedesktop.NetworkManager.enable-disable-wwan                [32myes[0m     
+org.freedesktop.NetworkManager.network-control                    [32myes[0m     
+org.freedesktop.NetworkManager.reload                             [31mno[0m      
+org.freedesktop.NetworkManager.settings.modify.global-dns         [31mno[0m      
+org.freedesktop.NetworkManager.settings.modify.hostname           [32myes[0m     
+org.freedesktop.NetworkManager.settings.modify.own                [32myes[0m     
+org.freedesktop.NetworkManager.settings.modify.system             [32myes[0m     
+org.freedesktop.NetworkManager.sleep-wake                         [31mno[0m      
+org.freedesktop.NetworkManager.wifi.scan                          unknown 
+org.freedesktop.NetworkManager.wifi.share.open                    [32myes[0m     
+org.freedesktop.NetworkManager.wifi.share.protected               [32myes[0m     
 
 <<<
 size: 1108
@@ -807,47 +805,47 @@ PERMISSION:                             org.freedesktop.NetworkManager.wifi.shar
 VALUE:                                  yes
 
 <<<
-size: 2480
+size: 2473
 location: src/tests/client/test-client.py:test_001()/34
 cmd: $NMCLI --mode multiline general permissions
 lang: pl_PL.UTF-8
 returncode: 0
-stdout: 2315 bytes
+stdout: 2308 bytes
 >>>
 PERMISSION:                             org.freedesktop.NetworkManager.checkpoint-rollback
-VALUE:                                  nieznane
+VALUE:                                  unknown
 PERMISSION:                             org.freedesktop.NetworkManager.enable-disable-connectivity-check
-VALUE:                                  nieznane
+VALUE:                                  unknown
 PERMISSION:                             org.freedesktop.NetworkManager.enable-disable-network
-VALUE:                                  tak
+VALUE:                                  yes
 PERMISSION:                             org.freedesktop.NetworkManager.enable-disable-statistics
-VALUE:                                  nieznane
+VALUE:                                  unknown
 PERMISSION:                             org.freedesktop.NetworkManager.enable-disable-wifi
-VALUE:                                  tak
+VALUE:                                  yes
 PERMISSION:                             org.freedesktop.NetworkManager.enable-disable-wimax
-VALUE:                                  tak
+VALUE:                                  yes
 PERMISSION:                             org.freedesktop.NetworkManager.enable-disable-wwan
-VALUE:                                  tak
+VALUE:                                  yes
 PERMISSION:                             org.freedesktop.NetworkManager.network-control
-VALUE:                                  tak
+VALUE:                                  yes
 PERMISSION:                             org.freedesktop.NetworkManager.reload
-VALUE:                                  nie
+VALUE:                                  no
 PERMISSION:                             org.freedesktop.NetworkManager.settings.modify.global-dns
-VALUE:                                  nie
+VALUE:                                  no
 PERMISSION:                             org.freedesktop.NetworkManager.settings.modify.hostname
-VALUE:                                  tak
+VALUE:                                  yes
 PERMISSION:                             org.freedesktop.NetworkManager.settings.modify.own
-VALUE:                                  tak
+VALUE:                                  yes
 PERMISSION:                             org.freedesktop.NetworkManager.settings.modify.system
-VALUE:                                  tak
+VALUE:                                  yes
 PERMISSION:                             org.freedesktop.NetworkManager.sleep-wake
-VALUE:                                  nie
+VALUE:                                  no
 PERMISSION:                             org.freedesktop.NetworkManager.wifi.scan
-VALUE:                                  nieznane
+VALUE:                                  unknown
 PERMISSION:                             org.freedesktop.NetworkManager.wifi.share.open
-VALUE:                                  tak
+VALUE:                                  yes
 PERMISSION:                             org.freedesktop.NetworkManager.wifi.share.protected
-VALUE:                                  tak
+VALUE:                                  yes
 
 <<<
 size: 2592
@@ -893,47 +891,47 @@ PERMISSION:                             org.freedesktop.NetworkManager.wifi.shar
 VALUE:                                  [32myes[0m
 
 <<<
-size: 2609
+size: 2602
 location: src/tests/client/test-client.py:test_001()/36
 cmd: $NMCLI --mode multiline --color yes general permissions
 lang: pl_PL.UTF-8
 returncode: 0
-stdout: 2432 bytes
+stdout: 2425 bytes
 >>>
 PERMISSION:                             org.freedesktop.NetworkManager.checkpoint-rollback
-VALUE:                                  nieznane
+VALUE:                                  unknown
 PERMISSION:                             org.freedesktop.NetworkManager.enable-disable-connectivity-check
-VALUE:                                  nieznane
+VALUE:                                  unknown
 PERMISSION:                             org.freedesktop.NetworkManager.enable-disable-network
-VALUE:                                  [32mtak[0m
+VALUE:                                  [32myes[0m
 PERMISSION:                             org.freedesktop.NetworkManager.enable-disable-statistics
-VALUE:                                  nieznane
+VALUE:                                  unknown
 PERMISSION:                             org.freedesktop.NetworkManager.enable-disable-wifi
-VALUE:                                  [32mtak[0m
+VALUE:                                  [32myes[0m
 PERMISSION:                             org.freedesktop.NetworkManager.enable-disable-wimax
-VALUE:                                  [32mtak[0m
+VALUE:                                  [32myes[0m
 PERMISSION:                             org.freedesktop.NetworkManager.enable-disable-wwan
-VALUE:                                  [32mtak[0m
+VALUE:                                  [32myes[0m
 PERMISSION:                             org.freedesktop.NetworkManager.network-control
-VALUE:                                  [32mtak[0m
+VALUE:                                  [32myes[0m
 PERMISSION:                             org.freedesktop.NetworkManager.reload
-VALUE:                                  [31mnie[0m
+VALUE:                                  [31mno[0m
 PERMISSION:                             org.freedesktop.NetworkManager.settings.modify.global-dns
-VALUE:                                  [31mnie[0m
+VALUE:                                  [31mno[0m
 PERMISSION:                             org.freedesktop.NetworkManager.settings.modify.hostname
-VALUE:                                  [32mtak[0m
+VALUE:                                  [32myes[0m
 PERMISSION:                             org.freedesktop.NetworkManager.settings.modify.own
-VALUE:                                  [32mtak[0m
+VALUE:                                  [32myes[0m
 PERMISSION:                             org.freedesktop.NetworkManager.settings.modify.system
-VALUE:                                  [32mtak[0m
+VALUE:                                  [32myes[0m
 PERMISSION:                             org.freedesktop.NetworkManager.sleep-wake
-VALUE:                                  [31mnie[0m
+VALUE:                                  [31mno[0m
 PERMISSION:                             org.freedesktop.NetworkManager.wifi.scan
-VALUE:                                  nieznane
+VALUE:                                  unknown
 PERMISSION:                             org.freedesktop.NetworkManager.wifi.share.open
-VALUE:                                  [32mtak[0m
+VALUE:                                  [32myes[0m
 PERMISSION:                             org.freedesktop.NetworkManager.wifi.share.protected
-VALUE:                                  [32mtak[0m
+VALUE:                                  [32myes[0m
 
 <<<
 size: 4045
@@ -999,66 +997,66 @@ VALUE:                                  yes
 -------------------------------------------------------------------------------
 
 <<<
-size: 4067
+size: 4055
 location: src/tests/client/test-client.py:test_001()/38
 cmd: $NMCLI --mode multiline --pretty general permissions
 lang: pl_PL.UTF-8
 returncode: 0
-stdout: 3893 bytes
+stdout: 3881 bytes
 >>>
 ===============================================================================
-                       Uprawnienia usługi NetworkManager
+                          NetworkManager permissions
 ===============================================================================
 PERMISSION:                             org.freedesktop.NetworkManager.checkpoint-rollback
-VALUE:                                  nieznane
+VALUE:                                  unknown
 -------------------------------------------------------------------------------
 PERMISSION:                             org.freedesktop.NetworkManager.enable-disable-connectivity-check
-VALUE:                                  nieznane
+VALUE:                                  unknown
 -------------------------------------------------------------------------------
 PERMISSION:                             org.freedesktop.NetworkManager.enable-disable-network
-VALUE:                                  tak
+VALUE:                                  yes
 -------------------------------------------------------------------------------
 PERMISSION:                             org.freedesktop.NetworkManager.enable-disable-statistics
-VALUE:                                  nieznane
+VALUE:                                  unknown
 -------------------------------------------------------------------------------
 PERMISSION:                             org.freedesktop.NetworkManager.enable-disable-wifi
-VALUE:                                  tak
+VALUE:                                  yes
 -------------------------------------------------------------------------------
 PERMISSION:                             org.freedesktop.NetworkManager.enable-disable-wimax
-VALUE:                                  tak
+VALUE:                                  yes
 -------------------------------------------------------------------------------
 PERMISSION:                             org.freedesktop.NetworkManager.enable-disable-wwan
-VALUE:                                  tak
+VALUE:                                  yes
 -------------------------------------------------------------------------------
 PERMISSION:                             org.freedesktop.NetworkManager.network-control
-VALUE:                                  tak
+VALUE:                                  yes
 -------------------------------------------------------------------------------
 PERMISSION:                             org.freedesktop.NetworkManager.reload
-VALUE:                                  nie
+VALUE:                                  no
 -------------------------------------------------------------------------------
 PERMISSION:                             org.freedesktop.NetworkManager.settings.modify.global-dns
-VALUE:                                  nie
+VALUE:                                  no
 -------------------------------------------------------------------------------
 PERMISSION:                             org.freedesktop.NetworkManager.settings.modify.hostname
-VALUE:                                  tak
+VALUE:                                  yes
 -------------------------------------------------------------------------------
 PERMISSION:                             org.freedesktop.NetworkManager.settings.modify.own
-VALUE:                                  tak
+VALUE:                                  yes
 -------------------------------------------------------------------------------
 PERMISSION:                             org.freedesktop.NetworkManager.settings.modify.system
-VALUE:                                  tak
+VALUE:                                  yes
 -------------------------------------------------------------------------------
 PERMISSION:                             org.freedesktop.NetworkManager.sleep-wake
-VALUE:                                  nie
+VALUE:                                  no
 -------------------------------------------------------------------------------
 PERMISSION:                             org.freedesktop.NetworkManager.wifi.scan
-VALUE:                                  nieznane
+VALUE:                                  unknown
 -------------------------------------------------------------------------------
 PERMISSION:                             org.freedesktop.NetworkManager.wifi.share.open
-VALUE:                                  tak
+VALUE:                                  yes
 -------------------------------------------------------------------------------
 PERMISSION:                             org.freedesktop.NetworkManager.wifi.share.protected
-VALUE:                                  tak
+VALUE:                                  yes
 -------------------------------------------------------------------------------
 
 <<<
@@ -1125,66 +1123,66 @@ VALUE:                                  [32myes[0m
 -------------------------------------------------------------------------------
 
 <<<
-size: 4196
+size: 4184
 location: src/tests/client/test-client.py:test_001()/40
 cmd: $NMCLI --mode multiline --pretty --color yes general permissions
 lang: pl_PL.UTF-8
 returncode: 0
-stdout: 4010 bytes
+stdout: 3998 bytes
 >>>
 ===============================================================================
-                       Uprawnienia usługi NetworkManager
+                          NetworkManager permissions
 ===============================================================================
 PERMISSION:                             org.freedesktop.NetworkManager.checkpoint-rollback
-VALUE:                                  nieznane
+VALUE:                                  unknown
 -------------------------------------------------------------------------------
 PERMISSION:                             org.freedesktop.NetworkManager.enable-disable-connectivity-check
-VALUE:                                  nieznane
+VALUE:                                  unknown
 -------------------------------------------------------------------------------
 PERMISSION:                             org.freedesktop.NetworkManager.enable-disable-network
-VALUE:                                  [32mtak[0m
+VALUE:                                  [32myes[0m
 -------------------------------------------------------------------------------
 PERMISSION:                             org.freedesktop.NetworkManager.enable-disable-statistics
-VALUE:                                  nieznane
+VALUE:                                  unknown
 -------------------------------------------------------------------------------
 PERMISSION:                             org.freedesktop.NetworkManager.enable-disable-wifi
-VALUE:                                  [32mtak[0m
+VALUE:                                  [32myes[0m
 -------------------------------------------------------------------------------
 PERMISSION:                             org.freedesktop.NetworkManager.enable-disable-wimax
-VALUE:                                  [32mtak[0m
+VALUE:                                  [32myes[0m
 -------------------------------------------------------------------------------
 PERMISSION:                             org.freedesktop.NetworkManager.enable-disable-wwan
-VALUE:                                  [32mtak[0m
+VALUE:                                  [32myes[0m
 -------------------------------------------------------------------------------
 PERMISSION:                             org.freedesktop.NetworkManager.network-control
-VALUE:                                  [32mtak[0m
+VALUE:                                  [32myes[0m
 -------------------------------------------------------------------------------
 PERMISSION:                             org.freedesktop.NetworkManager.reload
-VALUE:                                  [31mnie[0m
+VALUE:                                  [31mno[0m
 -------------------------------------------------------------------------------
 PERMISSION:                             org.freedesktop.NetworkManager.settings.modify.global-dns
-VALUE:                                  [31mnie[0m
+VALUE:                                  [31mno[0m
 -------------------------------------------------------------------------------
 PERMISSION:                             org.freedesktop.NetworkManager.settings.modify.hostname
-VALUE:                                  [32mtak[0m
+VALUE:                                  [32myes[0m
 -------------------------------------------------------------------------------
 PERMISSION:                             org.freedesktop.NetworkManager.settings.modify.own
-VALUE:                                  [32mtak[0m
+VALUE:                                  [32myes[0m
 -------------------------------------------------------------------------------
 PERMISSION:                             org.freedesktop.NetworkManager.settings.modify.system
-VALUE:                                  [32mtak[0m
+VALUE:                                  [32myes[0m
 -------------------------------------------------------------------------------
 PERMISSION:                             org.freedesktop.NetworkManager.sleep-wake
-VALUE:                                  [31mnie[0m
+VALUE:                                  [31mno[0m
 -------------------------------------------------------------------------------
 PERMISSION:                             org.freedesktop.NetworkManager.wifi.scan
-VALUE:                                  nieznane
+VALUE:                                  unknown
 -------------------------------------------------------------------------------
 PERMISSION:                             org.freedesktop.NetworkManager.wifi.share.open
-VALUE:                                  [32mtak[0m
+VALUE:                                  [32myes[0m
 -------------------------------------------------------------------------------
 PERMISSION:                             org.freedesktop.NetworkManager.wifi.share.protected
-VALUE:                                  [32mtak[0m
+VALUE:                                  [32myes[0m
 -------------------------------------------------------------------------------
 
 <<<
