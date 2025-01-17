@@ -1362,18 +1362,44 @@ verify(NMSetting *setting, NMConnection *connection, GError **error)
             return FALSE;
         }
 
-        if (priv->channel_width == NM_SETTING_WIRELESS_CHANNEL_WIDTH_80MHZ
-            && !nm_streq0(priv->band, "6GHz") && !nm_streq0(priv->band, "5GHz")
+        if (!nm_streq0(priv->band, "6GHz") && !nm_streq0(priv->band, "5GHz")
             && !nm_streq0(priv->band, "a")) {
-            g_set_error_literal(error,
-                                NM_CONNECTION_ERROR,
-                                NM_CONNECTION_ERROR_INVALID_PROPERTY,
-                                _("80MHz channels are only supported in the 5GHz and 6GHz bands"));
-            g_prefix_error(error,
-                           "%s.%s: ",
-                           NM_SETTING_WIRELESS_SETTING_NAME,
-                           NM_SETTING_WIRELESS_CHANNEL_WIDTH);
-            return FALSE;
+            if (priv->channel_width == NM_SETTING_WIRELESS_CHANNEL_WIDTH_80MHZ) {
+                g_set_error_literal(
+                    error,
+                    NM_CONNECTION_ERROR,
+                    NM_CONNECTION_ERROR_INVALID_PROPERTY,
+                    _("80MHz channels are only supported in the 5GHz and 6GHz bands"));
+                g_prefix_error(error,
+                               "%s.%s: ",
+                               NM_SETTING_WIRELESS_SETTING_NAME,
+                               NM_SETTING_WIRELESS_CHANNEL_WIDTH);
+                return FALSE;
+            } else if (priv->channel_width == NM_SETTING_WIRELESS_CHANNEL_WIDTH_160MHZ) {
+                g_set_error_literal(
+                    error,
+                    NM_CONNECTION_ERROR,
+                    NM_CONNECTION_ERROR_INVALID_PROPERTY,
+                    _("160MHz channels are only supported in the 5GHz and 6GHz bands"));
+                g_prefix_error(error,
+                               "%s.%s: ",
+                               NM_SETTING_WIRELESS_SETTING_NAME,
+                               NM_SETTING_WIRELESS_CHANNEL_WIDTH);
+                return FALSE;
+            }
+
+            if (!nm_streq0(priv->band, "6GHz")
+                && priv->channel_width == NM_SETTING_WIRELESS_CHANNEL_WIDTH_320MHZ) {
+                g_set_error_literal(error,
+                                    NM_CONNECTION_ERROR,
+                                    NM_CONNECTION_ERROR_INVALID_PROPERTY,
+                                    _("320MHz channels are only supported in the 6GHz band"));
+                g_prefix_error(error,
+                               "%s.%s: ",
+                               NM_SETTING_WIRELESS_SETTING_NAME,
+                               NM_SETTING_WIRELESS_CHANNEL_WIDTH);
+                return FALSE;
+            }
         }
     }
 
