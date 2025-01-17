@@ -518,6 +518,8 @@ get_ap_params(guint                         freq,
               int                          *out_max_oper_chwidth,
               guint                        *out_center_freq)
 {
+    guint channel;
+
     *out_ht40             = 0;
     *out_max_oper_chwidth = -1;
     *out_center_freq      = 0;
@@ -529,8 +531,6 @@ get_ap_params(guint                         freq,
         return;
     case NM_SETTING_WIRELESS_CHANNEL_WIDTH_80MHZ:
     {
-        guint channel;
-
         if (freq < 5000) {
             /* the setting is not valid */
             nm_assert_not_reached();
@@ -557,6 +557,51 @@ get_ap_params(guint                         freq,
         return;
     }
 
+    case NM_SETTING_WIRELESS_CHANNEL_WIDTH_160MHZ:
+    {
+        if (freq < 5000) {
+            /* the setting is not valid */
+            nm_assert_not_reached();
+            return;
+        }
+
+        /* Determine the center channel according to the table at
+         * https://en.wikipedia.org/wiki/List_of_WLAN_channels */
+        if (freq > 5950) { /* 6GHz */
+            channel = (freq - 5950) / 5;
+            channel = ((channel / 4 - 1) / 8) * 32 + 18;
+
+            *out_center_freq = 5950 + 5 * channel;
+        } else {
+            channel = (freq - 5000) / 5;
+            channel = ((channel / 4 - 1) / 8) * 32 + 18;
+
+            *out_center_freq = 5000 + 5 * channel;
+        }
+
+        *out_ht40             = 1;
+        *out_max_oper_chwidth = 1;
+
+        return;
+    }
+
+    case NM_SETTING_WIRELESS_CHANNEL_WIDTH_320MHZ:
+        if (freq < 5950) {
+            /* the setting is not valid */
+            nm_assert_not_reached();
+            return;
+        }
+
+        /* Determine the center channel according to the table at
+         * https://en.wikipedia.org/wiki/List_of_WLAN_channels */
+        channel = (freq - 5950) / 5;
+        channel = ((channel / 4 - 1) / 16) * 64 + 63;
+
+        *out_ht40             = 1;
+        *out_max_oper_chwidth = 1;
+        *out_center_freq      = 5950 + 5 * channel;
+
+        return;
     case NM_SETTING_WIRELESS_CHANNEL_WIDTH_AUTO:
     case NM_SETTING_WIRELESS_CHANNEL_WIDTH_20MHZ:
     default:
