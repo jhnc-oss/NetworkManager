@@ -1125,6 +1125,10 @@ class NMTestContext:
     def async_append_job(self, async_job):
         self._async_jobs.append(async_job)
 
+    def fail(self, fail_str, code=-1):
+        print("NMTestContext error:", fail_str)
+        sys.exit(code)
+
     def run_post(self):
         self.async_wait()
 
