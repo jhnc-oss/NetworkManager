@@ -518,6 +518,8 @@ get_ap_params(guint                         freq,
               int                          *out_max_oper_chwidth,
               guint                        *out_center_freq)
 {
+    guint channel;
+
     *out_ht40             = 0;
     *out_max_oper_chwidth = -1;
     *out_center_freq      = 0;
@@ -529,9 +531,7 @@ get_ap_params(guint                         freq,
         return;
     case NM_SETTING_WIRELESS_CHANNEL_WIDTH_80MHZ:
     {
-        guint channel;
-
-        if (freq < 5000) {
+        if (freq < NM_UTILS_MIN_5GHZ) {
             /* the setting is not valid */
             nm_assert_not_reached();
             return;
@@ -539,14 +539,18 @@ get_ap_params(guint                         freq,
 
         /* Determine the center channel according to the table at
          * https://en.wikipedia.org/wiki/List_of_WLAN_channels */
-        if (freq > 5950) { /* 6GHz */
+        if (freq >= NM_UTILS_MIN_6GHZ) {
             channel = (freq - 5950) / 5;
-            channel = ((channel / 4 - 1) / 8) * 32 + 18;
+            channel = ((channel / 4 - 1) / 4) * 16 + 7;
 
             *out_center_freq = 5950 + 5 * channel;
         } else {
             channel = (freq - 5000) / 5;
-            channel = ((channel / 4 - 1) / 8) * 32 + 18;
+            channel = ((channel / 4 - 1) / 4) * 16 + 10;
+
+            /* mitigation for 5730–5735 jump */
+            if (channel > 150)
+                channel++;
 
             *out_center_freq = 5000 + 5 * channel;
         }
@@ -557,10 +561,44 @@ get_ap_params(guint                         freq,
         return;
     }
 
+    case NM_SETTING_WIRELESS_CHANNEL_WIDTH_160MHZ:
+    {
+        if (freq < NM_UTILS_MIN_5GHZ) {
+            /* the setting is not valid */
+            nm_assert_not_reached();
+            return;
+        }
+
+        /* Determine the center channel according to the table at
+         * https://en.wikipedia.org/wiki/List_of_WLAN_channels */
+        if (freq >= NM_UTILS_MIN_6GHZ) {
+            channel = (freq - 5950) / 5;
+            channel = ((channel / 4 - 1) / 8) * 32 + 15;
+
+            *out_center_freq = 5950 + 5 * channel;
+        } else {
+            channel = (freq - 5000) / 5;
+            channel = ((channel / 4 - 1) / 8) * 32 + 18;
+
+            /* mitigation for 5730–5735 jump */
+            if (channel > 150)
+                channel++;
+
+            *out_center_freq = 5000 + 5 * channel;
+        }
+
+        *out_ht40             = 1;
+        *out_max_oper_chwidth = 2;
+
+        return;
+    }
+
     case NM_SETTING_WIRELESS_CHANNEL_WIDTH_AUTO:
     case NM_SETTING_WIRELESS_CHANNEL_WIDTH_20MHZ:
+    case NM_SETTING_WIRELESS_CHANNEL_WIDTH_320MHZ:
     default:
-        /* in case of unknown enum value, fall back to the safest parameters */
+        /* in case of unknown or unsupported enum value, fall back to the safest
+           parameters */
         return;
     }
 }
