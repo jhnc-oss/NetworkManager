@@ -92,7 +92,7 @@
         <property name="channel-width"
                   nmcli-description="Specifies width of the wireless channel in Access Point (AP) mode. When set to &quot;auto&quot; (0) (the default), the channel width is automatically determined. At the moment, this means that the safest (smallest) width is chosen. If the value is not &quot;auto&quot; (0), then the &apos;channel&apos; property must also be set. When using the 2.4GHz band, the width can be at most 40MHz. This property can be set to a value different from &quot;auto&quot; (0) only when the interface is configured in AP mode."
                   format="choice (NMSettingWirelessChannelWidth)"
-                  values="auto (0), 20mhz (20), 40mhz (40), 80mhz (80)" />
+                  values="auto (0), 20mhz (20), 40mhz (40), 80mhz (80), 160mhz (160), 320mhz (320)" />
     </setting>
     <setting name="802-11-wireless-security"
              alias="wifi-sec" >
