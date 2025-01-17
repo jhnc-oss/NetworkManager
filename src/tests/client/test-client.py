@@ -1062,8 +1062,8 @@ class AsyncProcess:
 class NMTestContext:
     MAX_JOBS = 15
 
-    def __init__(self, testMethodName):
-        self.testMethodName = testMethodName
+    def __init__(self, testcase):
+        self.testcase = testcase
         self._calling_num = {}
         self._skip_test_for_l10n_diff = []
         self._async_jobs = []
@@ -1077,7 +1077,7 @@ class NMTestContext:
 
     def srv_start(self, srv_version=None):
         self.srv_shutdown()
-        self.srv = NMStubServer(self.testMethodName, srv_version)
+        self.srv = NMStubServer(self.testcase._testMethodName, srv_version)
 
     def srv_shutdown(self):
         if self.srv is not None:
@@ -1144,7 +1144,7 @@ class NMTestContext:
         filename = os.path.abspath(
             PathConfiguration.srcdir()
             + "/test-client.check-on-disk/"
-            + self.testMethodName
+            + self.testcase._testMethodName
             + ".expected"
         )
 
@@ -1154,7 +1154,7 @@ class NMTestContext:
 
         if results_expect is None:
             if not regenerate:
-                self.fail(
+                self.testcase.fail(
                     "Failed to parse expected file '%s'. Let the test write the file by rerunning with NM_TEST_REGENERATE=1"
                     % (filename)
                 )
@@ -1182,7 +1182,7 @@ class NMTestContext:
                     % (PathConfiguration.canonical_script_filename())
                 )
                 sys.stdout.flush()
-                self.fail(
+                self.testcase.fail(
                     "Unexpected output of command, expected %s. Rerun test with NM_TEST_REGENERATE=1 to regenerate files"
                     % (filename)
                 )
@@ -1209,7 +1209,7 @@ class NMTestContext:
                         % (PathConfiguration.canonical_script_filename())
                     )
                     sys.stdout.flush()
-                    self.fail(
+                    self.testcase.fail(
                         "Unexpected output of command, expected %s. Rerun test with NM_TEST_REGENERATE=1 to regenerate files"
                         % (filename)
                     )
@@ -1221,7 +1221,7 @@ class NMTestContext:
                     with open(filename, "wb") as content_file:
                         content_file.write(content_new)
                 except Exception as e:
-                    self.fail("Failure to write '%s': %s" % (filename, e))
+                    self.testcase.fail("Failure to write '%s': %s" % (filename, e))
 
         if skip_test_for_l10n_diff:
             # nmcli loads translations from the installation path. This failure commonly
@@ -1240,7 +1240,7 @@ class TestNmcli(unittest.TestCase):
     def setUp(self):
         Util.skip_without_dbus_session()
         Util.skip_without_NM()
-        self.ctx = NMTestContext(self._testMethodName)
+        self.ctx = NMTestContext(self)
 
     def call_nmcli_l(
         self,
@@ -1378,7 +1378,7 @@ class TestNmcli(unittest.TestCase):
         elif lang == "pl":
             lang = "pl_PL.UTF-8"
         else:
-            self.fail("invalid language %s" % (lang))
+            self.testcase.fail("invalid language %s" % (lang))
 
         # Running under valgrind is not yet supported for those tests.
         args, valgrind_log = Util.cmd_create_argv(
@@ -2313,7 +2313,7 @@ class TestNmCloudSetup(unittest.TestCase):
     def setUp(self):
         Util.skip_without_dbus_session()
         Util.skip_without_NM()
-        self.ctx = NMTestContext(self._testMethodName)
+        self.ctx = NMTestContext(self)
 
     _mac1 = "cc:00:00:00:00:01"
     _mac2 = "cc:00:00:00:00:02"
