@@ -13,6 +13,11 @@ USE AT YOUR OWN RISK.  NOT RECOMMENDED FOR PRODUCTION USE!
   NetworkManager preserves the SR-IOV parameters set on the device
   when the connection is deactivated, or whether it resets them to
   their default value.
+* Band settings and labels have been reworked for accuracy and consistency.
+* 6GHz band can now be set and preferred for a connection.
+* Supported channel/band combinations have been updated for accuracy and
+  checks have been refactored for consistency.
+* 160MHz and 320MHz bands can now be set.
 
 =============================================
 NetworkManager-1.54
