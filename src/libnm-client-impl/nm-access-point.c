@@ -338,10 +338,13 @@ nm_access_point_connection_valid(NMAccessPoint *ap, NMConnection *connection)
     ap_freq = nm_access_point_get_frequency(ap);
     if (ap_freq) {
         setting_band = nm_setting_wireless_get_band(s_wifi);
-        if (g_strcmp0(setting_band, "a") == 0) {
+        if (nm_streq(setting_band, "6GHz")) {
+            if (ap_freq < 5935 || ap_freq > 7115)
+                return FALSE;
+        } else if (nm_streq(setting_band, "5GHz")) {
             if (ap_freq < 4915 || ap_freq > 5825)
                 return FALSE;
-        } else if (g_strcmp0(setting_band, "bg") == 0) {
+        } else if (nm_streq(setting_band, "2.4GHz")) {
             if (ap_freq < 2412 || ap_freq > 2484)
                 return FALSE;
         }
