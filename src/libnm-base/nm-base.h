@@ -249,6 +249,13 @@ typedef enum {
                          | _NM_VLAN_FLAG_LOOSE_BINDING | _NM_VLAN_FLAG_MVRP,
 } _NMVlanFlags;
 
+typedef enum {    
+    /* Mirrors libnm's NMSettingWifiP2PWfdDevice Mode*/                                          
+    _NM_SETTING_WIFI_P2P_WFD_DEVICE_MODE_NONE        = 0,    
+    _NM_SETTING_WIFI_P2P_WFD_DEVICE_MODE_SOURCE      = 1,
+    _NM_SETTING_WIFI_P2P_WFD_DEVICE_MODE_SINK        = 2,
+} _NMSettingWifiP2pWfdDeviceMode;
+
 /*****************************************************************************/
 
 typedef enum {
