@@ -38,6 +38,7 @@ USE AT YOUR OWN RISK.  NOT RECOMMENDED FOR PRODUCTION USE!
   caching resolver. If dnsconfd plugin is enabled and ipvX.routed-dns is
   set to -1 then adding routes is by default enabled.
 * Add "shared" method to the IPv6 configuration options in nmtui.
+* Added support for CLAT using a BPF program.
 
 =============================================
 NetworkManager-1.50
