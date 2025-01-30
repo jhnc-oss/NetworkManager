@@ -12,7 +12,8 @@ project(
     'c_std=gnu11',
     'warning_level=2' # value "2" will add "-Wall" and "-Wextra" to the compiler flags
   ],
-  meson_version: '>= 0.51.0',
+  # bpf stuff makes extensive use of `find_program`'s `version` option, introduced in 0.52.0
+  meson_version: '>= 0.52.0',
 )
 
 nm_name = meson.project_name()
@@ -485,6 +486,15 @@ else
     enable_ebpf = false
   endif
 endif
+
+# CLAT support
+enable_clat = get_option('clat')
+if enable_clat
+  libbpf = dependency('libbpf', version: '>= 0.1.0', required: false)
+  assert(libbpf.found(), 'You must have libbpf installed to build. Use -Dclat=false to disable use of it')
+  libxdp = dependency('libxdp', version: '>= 0.1.0', required: false)
+endif
+config_h.set10('HAVE_CLAT', enable_clat)
 
 # libaudit support
 libaudit = get_option('libaudit')
@@ -1172,5 +1182,6 @@ output += '  sanitizers: ' + get_option('b_sanitize') + '\n'
 output += '  Mozilla Public Suffix List: ' + enable_libpsl.to_string() + '\n'
 output += '  vapi: ' + enable_vapi.to_string() + '\n'
 output += '  ebpf: ' + enable_ebpf.to_string() + '\n'
+output += '  clat: ' + enable_clat.to_string() + '\n'
 output += '  readline: ' + with_readline + '\n'
 message(output)
