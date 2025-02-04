@@ -363,8 +363,6 @@ check_connection_compatible(NMDevice     *device,
     } else {
         s_wired =
             _nm_connection_check_main_setting(connection, NM_SETTING_WIRED_SETTING_NAME, error);
-        if (!s_wired)
-            return FALSE;
     }
 
     if (s_wired) {
