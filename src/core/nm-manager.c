@@ -6703,10 +6703,6 @@ impl_manager_activate_connection(NMDBusObject                      *obj,
     return;
 
 error:
-    if (device && nm_device_is_software(device)) {
-        if (_check_remove_dev_on_link_deleted(self, device))
-            remove_device(self, device, FALSE);
-    }
     if (sett_conn) {
         nm_audit_log_connection_op(NM_AUDIT_OP_CONN_ACTIVATE,
                                    sett_conn,
@@ -6814,11 +6810,12 @@ _add_and_activate_auth_done(NMManager                      *self,
         g_dbus_method_invocation_take_error(invocation, error);
 
         device = nm_active_connection_get_device(active);
-        if (device && nm_device_is_software(device)) {
-            if (_check_remove_dev_on_link_deleted(self, device))
-                remove_device(self, device, FALSE);
+
+        if (device && nm_device_is_software(device)
+            && !nm_device_managed_type_is_external_or_assume(device)
+            && _check_remove_dev_on_link_deleted(self, device)) {
+            remove_device(self, device, FALSE);
         }
-        return;
     }
 
     priv = NM_MANAGER_GET_PRIVATE(self);
