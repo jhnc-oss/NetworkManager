@@ -4265,18 +4265,20 @@ _l3cfg_update_combined_config(NML3Cfg               *self,
             const NMPlatformIP6Route   *best_v6_route;
             const NMPlatformIP6Address *ip6_entry;
 
+            const char *network_id = nm_l3_config_data_get_network_id(l3cd);
+
             /* We need to assign an additional v6 /64 address for ourselves, according
                to the spec: https://www.rfc-editor.org/rfc/rfc6877#section-6.3 */
-            if (!self->priv.p->clat_address_6_valid) {
+            if (!self->priv.p->clat_address_6_valid && network_id) {
                 nm_l3_config_data_iter_ip6_address_for_each (&iter, l3cd, &ip6_entry) {
                     if (ip6_entry->addr_source == NM_IP_CONFIG_SOURCE_NDISC
                         && ip6_entry->plen == 64) {
                         ip6 = ip6_entry->address;
 
-                        nm_utils_ipv6_addr_set_stable_privacy(NM_UTILS_STABLE_TYPE_RANDOM,
+                        nm_utils_ipv6_addr_set_stable_privacy(NM_UTILS_STABLE_TYPE_CLAT,
                                                               &ip6,
                                                               nm_l3cfg_get_ifname(self, TRUE),
-                                                              "TODO: Mary fixme",
+                                                              network_id,
                                                               0);
                         self->priv.p->clat_address_6 = (NMPlatformIP6Address) {
                             .ifindex      = self->priv.ifindex,
