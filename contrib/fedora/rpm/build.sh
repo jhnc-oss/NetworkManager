@@ -1,6 +1,8 @@
 #!/bin/bash
 
 #set -vx
+set -e
+set -o pipefail
 
 # Set arguments via environment variables.
 # Argument can be omitted and defaults will be detected.
