@@ -287,6 +287,11 @@ gboolean nm_ip6_addr_is_ula(const struct in6_addr *address);
 #define NM_IPV4LO_NETMASK   ((in_addr_t) htonl(0xFF000000lu)) /* 255.0.0.0 */
 #define NM_IPV4LO_PREFIXLEN 8
 #define NM_IPV4LO_ADDR1     ((in_addr_t) htonl(0x7F000001lu)) /* 127.0.0.1 */
+#define NM_IPV4DSL_NETWORK  ((in_addr_t) htonl(0xC0000000lu)) /* 192.0.0.0 */
+#define NM_IPV4DSL_NETMASK  ((in_addr_t) htonl(0xFFFFFFF8lu)) /* 255.255.255.248 */
+
+#define NM_IPV4DSL_PREFIXLEN 29
+#define NM_IPV4DSL_ADDRCOUNT 8
 
 static inline gboolean
 nm_ip4_addr_is_loopback(in_addr_t addr)

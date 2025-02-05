@@ -37,6 +37,7 @@ USE AT YOUR OWN RISK.  NOT RECOMMENDED FOR PRODUCTION USE!
 * Dnsconfd plugin can now be used for configuration of system-wide DNS
   caching resolver. If dnsconfd plugin is enabled and ipvX.routed-dns is
   set to -1 then adding routes is by default enabled.
+* Added support for CLAT using a BPF program.
 
 =============================================
 NetworkManager-1.50

@@ -44,6 +44,9 @@ option('nmtui', type: 'boolean', value: true, description: 'Build nmtui')
 option('nm_cloud_setup', type: 'boolean', value: true, description: 'Build nm-cloud-setup, a tool for automatically configuring networking in cloud')
 option('bluez5_dun', type: 'boolean', value: false, description: 'enable Bluez5 DUN support')
 option('ebpf', type: 'combo', choices: ['auto', 'true', 'false'], description: 'Enable eBPF support')
+option('clat', type: 'boolean', value: true, description: 'Build with CLAT support')
+option('bpf-compiler', type : 'combo', choices : ['auto', 'clang', 'gcc'],
+       description : 'compiler used to build BPF programs')
 
 # configuration plugins
 option('config_plugins_default', type: 'string', value: '', description: 'Default configuration option for main.plugins setting, used as fallback if the configuration option is unset')
