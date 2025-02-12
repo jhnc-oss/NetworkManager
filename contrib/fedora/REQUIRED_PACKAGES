@@ -84,7 +84,7 @@ install \
 
 # Some packages don't exist in certain distributions. Ignore errors
 # installing them, but still drag them in when available.
-install --skip-unavailable \
+install --skip-broken \
     black \
     dbus-python \
     dhclient \
