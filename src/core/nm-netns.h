@@ -51,6 +51,10 @@ NMNetnsSharedIPHandle *nm_netns_shared_ip_reserve(NMNetns *self);
 
 void nm_netns_shared_ip_release(NMNetnsSharedIPHandle *handle);
 
+NMNetnsSharedIPHandle *nm_netns_clat_ip_reserve(NMNetns *self);
+
+void nm_netns_clat_ip_release(NMNetnsSharedIPHandle *handle);
+
 /*****************************************************************************/
 
 void nm_netns_ip_route_ecmp_register(NMNetns *self, NML3Cfg *l3cfg, const NMPObject *obj);
