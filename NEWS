@@ -43,6 +43,7 @@ Overview of changes since NetworkManager-1.50
   caching resolver. If dnsconfd plugin is enabled and ipvX.routed-dns is
   set to -1 then adding routes is by default enabled.
 * Add "shared" method to the IPv6 configuration options in nmtui.
+* Added systemd services to provide networking in the initrd.
 
 =============================================
 NetworkManager-1.50
