@@ -69,6 +69,7 @@ typedef struct {
     NMPGlobalTracker *global_tracker;
     GHashTable       *l3cfgs;
     GHashTable       *shared_ips;
+    GHashTable       *clat_ips;
     GHashTable       *ecmp_track_by_obj;
     GHashTable       *ecmp_track_by_ecmpid;
 
@@ -668,6 +669,110 @@ nm_netns_shared_ip_release(NMNetnsSharedIPHandle *handle)
     }
 
     _LOGD("shared-ip4: release IP address range %s/24", nm_inet4_ntop(handle->addr, sbuf_addr));
+
+    handle->_self = NULL;
+    nm_g_slice_free(handle);
+}
+
+/*****************************************************************************/
+
+NMNetnsSharedIPHandle *
+nm_netns_clat_ip_reserve(NMNetns *self)
+{
+    NMNetnsPrivate        *priv;
+    NMNetnsSharedIPHandle *handle;
+    const in_addr_t        addr_start = NM_IPV4DSL_NETWORK; /* 192.0.0.0 */
+    in_addr_t              addr;
+    char                   sbuf_addr[NM_INET_ADDRSTRLEN];
+
+    /* Find an unused address in the 192.0.0.0-7 range */
+
+    g_return_val_if_fail(NM_IS_NETNS(self), NULL);
+
+    priv = NM_NETNS_GET_PRIVATE(self);
+
+    if (!priv->clat_ips) {
+        addr           = addr_start;
+        priv->clat_ips = g_hash_table_new(nm_puint32_hash, nm_puint32_equal);
+        g_object_ref(self);
+    } else {
+        guint32 count;
+
+        nm_assert(g_hash_table_size(priv->clat_ips) > 0);
+
+        count = 0u;
+        for (;;) {
+            addr = addr_start + htonl(count);
+
+            handle = g_hash_table_lookup(priv->clat_ips, &addr);
+            if (!handle)
+                break;
+
+            count++;
+
+            if (count >= NM_IPV4DSL_ADDRCOUNT) {
+                if (handle->_ref_count == 1) {
+                    _LOGE("clat-ip4: ran out of clat IP addresses. Reuse %s/29",
+                          nm_inet4_ntop(handle->addr, sbuf_addr));
+                } else {
+                    _LOGD("clat-ip4: reserved IP address range %s/29 (duplicate)",
+                          nm_inet4_ntop(handle->addr, sbuf_addr));
+                }
+                handle->_ref_count++;
+                return handle;
+            }
+        }
+    }
+
+    handle  = g_slice_new(NMNetnsSharedIPHandle);
+    *handle = (NMNetnsSharedIPHandle) {
+        .addr       = addr,
+        ._ref_count = 1,
+        ._self      = self,
+    };
+
+    g_hash_table_add(priv->clat_ips, handle);
+
+    _LOGD("clat-ip4: reserved IP address range %s/29", nm_inet4_ntop(handle->addr, sbuf_addr));
+    return handle;
+}
+
+void
+nm_netns_clat_ip_release(NMNetnsSharedIPHandle *handle)
+{
+    NMNetns        *self;
+    NMNetnsPrivate *priv;
+    char            sbuf_addr[NM_INET_ADDRSTRLEN];
+
+    g_return_if_fail(handle);
+
+    self = handle->_self;
+
+    g_return_if_fail(NM_IS_NETNS(self));
+
+    priv = NM_NETNS_GET_PRIVATE(self);
+
+    nm_assert(handle->_ref_count > 0);
+    nm_assert(handle == nm_g_hash_table_lookup(priv->clat_ips, handle));
+
+    if (handle->_ref_count > 1) {
+        nm_assert(handle->addr == NM_IPV4DSL_NETWORK + htonl(7)); /* 192.0.0.7 */
+        handle->_ref_count--;
+        _LOGD("clat-ip4: release IP address range %s/29 (%d more references held)",
+              nm_inet4_ntop(handle->addr, sbuf_addr),
+              handle->_ref_count);
+        return;
+    }
+
+    if (!g_hash_table_remove(priv->clat_ips, handle))
+        nm_assert_not_reached();
+
+    if (g_hash_table_size(priv->clat_ips) == 0) {
+        nm_clear_pointer(&priv->clat_ips, g_hash_table_unref);
+        g_object_unref(self);
+    }
+
+    _LOGD("clat-ip4: release IP address range %s/29", nm_inet4_ntop(handle->addr, sbuf_addr));
 
     handle->_self = NULL;
     nm_g_slice_free(handle);
@@ -1561,6 +1666,7 @@ dispose(GObject *object)
     nm_assert(nm_g_hash_table_size(priv->l3cfgs) == 0);
     nm_assert(c_list_is_empty(&priv->l3cfg_signal_pending_lst_head));
     nm_assert(!priv->shared_ips);
+    nm_assert(!priv->clat_ips);
     nm_assert(nm_g_hash_table_size(priv->watcher_idx) == 0);
     nm_assert(nm_g_hash_table_size(priv->watcher_by_tag_idx) == 0);
     nm_assert(nm_g_hash_table_size(priv->watcher_ip_data_idx) == 0);
