@@ -153,7 +153,7 @@ void c_rbtree_add(CRBTree *t, CRBNode *p, CRBNode **l, CRBNode *n);
  * in all cases.
  *
  * You are *NOT* required to call this on your node. :c:func:`c_rbtree_add()`
- * ca handle uninitialized nodes just fine. However, calling this allows to use
+ * ca handle uninitialized nodes just fine. However, calling this allows one to use
  * :c:func:`c_rbnode_is_linked()` to check for the state of a node.
  * Furthermore, iterators and accessors can be called on initialized (yet
  * unlinked) nodes.
