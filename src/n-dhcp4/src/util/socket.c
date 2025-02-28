@@ -24,7 +24,7 @@
  * zero-terminates the result.
  *
  * This function is similar to if_indextoname(3) provided by glibc, but it
- * allows to specify the target socket explicitly. This allows the caller to
+ * allows one to specify the target socket explicitly. This allows the caller to
  * control the target network-namespace, rather than relying on the network
  * namespace of the running process.
  *
