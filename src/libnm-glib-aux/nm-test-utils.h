@@ -279,8 +279,8 @@ struct __nmtst_testdata_track {
 
 struct __nmtst_internal {
     GRand      *rand0;
-    guint32     rand_seed;
     GRand      *rand;
+    guint32     rand_seed;
     gboolean    is_debug;
     gboolean    assert_logging;
     gboolean    no_expect_message;

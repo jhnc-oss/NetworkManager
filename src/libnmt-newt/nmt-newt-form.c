@@ -30,11 +30,11 @@ typedef struct {
     newtComponent  form;
     NmtNewtWidget *content;
 
+    char    *title_lc;
     guint    x, y, width, height;
     guint    padding;
     gboolean fixed_x, fixed_y;
     gboolean fixed_width, fixed_height;
-    char    *title_lc;
 
     gboolean       dirty;
     NmtNewtWidget *focus;

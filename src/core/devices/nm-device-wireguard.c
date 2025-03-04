@@ -82,6 +82,8 @@ typedef struct {
 
     NMSockAddrUnion sockaddr;
 
+    guint resolv_fail_count;
+
     /* the timestamp (in nm_utils_get_monotonic_timestamp_nsec() scale) when we want
      * to retry resolving the endpoint (again).
      *
@@ -92,8 +94,6 @@ typedef struct {
      *   - @next_try_at_nsec set to a positive value, indicating when
      *     we ought to retry. */
     gint64 next_try_at_nsec;
-
-    guint resolv_fail_count;
 } PeerEndpointResolveData;
 
 typedef struct {
