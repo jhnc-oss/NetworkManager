@@ -43,9 +43,9 @@ NM_GOBJECT_PROPERTIES_DEFINE(NMDeviceIPTunnel,
                              PROP_FLAGS, );
 
 typedef struct {
-    NMIPTunnelMode  mode;
     char           *local;
     char           *remote;
+    NMIPTunnelMode  mode;
     guint8          ttl;
     guint8          tos;
     gboolean        path_mtu_discovery;

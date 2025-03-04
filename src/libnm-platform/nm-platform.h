@@ -1029,10 +1029,10 @@ typedef void (*NMPlatformAsyncCallback)(GError *error, gpointer user_data);
 
 typedef struct {
     __NMPlatformObjWithIfindex_COMMON;
+    NMIPAddr addr;
     guint32  id;
     guint32  flags;
     guint16  port;
-    NMIPAddr addr;
     gint8    addr_family;
 } NMPlatformMptcpAddr;
 
