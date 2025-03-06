@@ -2108,6 +2108,33 @@ _prop_get_ipvx_dhcp_send_hostname(NMDevice *self, int addr_family)
     return send_hostname_v2;
 }
 
+NMSettingIPConfigForwarding
+nm_device_get_ipv4_forwarding(NMDevice *self)
+{
+    NMSettingIPConfig          *s_ip;
+    NMSettingIPConfigForwarding forwarding;
+
+    g_return_val_if_fail(NM_IS_DEVICE(self), NM_SETTING_IP_CONFIG_FORWARDING_AUTO);
+
+    s_ip = nm_device_get_applied_setting(self, NM_TYPE_SETTING_IP4_CONFIG);
+    if (s_ip)
+        forwarding = nm_setting_ip_config_get_forwarding(s_ip);
+    else
+        forwarding = NM_SETTING_IP_CONFIG_FORWARDING_DEFAULT;
+
+    if (forwarding == NM_SETTING_IP_CONFIG_FORWARDING_DEFAULT) {
+        forwarding =
+            nm_config_data_get_connection_default_int64(NM_CONFIG_GET_DATA,
+                                                        NM_CON_DEFAULT("ipv4.forwarding"),
+                                                        self,
+                                                        NM_SETTING_IP_CONFIG_FORWARDING_NO,
+                                                        NM_SETTING_IP_CONFIG_FORWARDING_IGNORE,
+                                                        NM_SETTING_IP_CONFIG_FORWARDING_AUTO);
+    }
+
+    return forwarding;
+}
+
 static gboolean
 _prop_get_connection_ip_ping_addresses_require_all(NMDevice *self, NMSettingConnection *s_con)
 {
@@ -3727,7 +3754,7 @@ nm_device_assume_state_reset(NMDevice *self)
 
 /*****************************************************************************/
 
-static char *
+char *
 nm_device_sysctl_ip_conf_get(NMDevice *self, int addr_family, const char *property)
 {
     const char *ifname;
@@ -6586,7 +6613,7 @@ concheck_update_state(NMDevice           *self,
         _dev_l3_register_l3cds(self, priv->l3cfg, TRUE, NM_TERNARY_DEFAULT);
 }
 
-static const char *
+const char *
 nm_device_get_effective_ip_config_method(NMDevice *self, int addr_family)
 {
     NMDeviceClass *klass;
@@ -13060,6 +13087,13 @@ activate_stage3_ip_config_for_addr_family(NMDevice *self, int addr_family)
         goto out_devip;
 
     if (IS_IPv4) {
+        NMSettingIPConfigForwarding ipv4_forwarding = nm_device_get_ipv4_forwarding(self);
+
+        if (NM_IN_SET(ipv4_forwarding,
+                      NM_SETTING_IP_CONFIG_FORWARDING_NO,
+                      NM_SETTING_IP_CONFIG_FORWARDING_YES)) {
+            nm_device_sysctl_ip_conf_set(self, AF_INET, "forwarding", ipv4_forwarding ? "1" : "0");
+        }
         priv->ipll_data_4.v4.mode = _prop_get_ipv4_link_local(self);
         if (priv->ipll_data_4.v4.mode == NM_SETTING_IP4_LL_ENABLED)
             _dev_ipll4_start(self);
@@ -13487,19 +13521,6 @@ _dev_ipshared4_init(NMDevice *self)
     default:
         nm_assert_not_reached();
         break;
-    }
-
-    if (nm_platform_sysctl_get_int32(nm_device_get_platform(self),
-                                     NMP_SYSCTL_PATHID_ABSOLUTE("/proc/sys/net/ipv4/ip_forward"),
-                                     -1)
-        == 1) {
-        /* nothing to do. */
-    } else if (!nm_platform_sysctl_set(nm_device_get_platform(self),
-                                       NMP_SYSCTL_PATHID_ABSOLUTE("/proc/sys/net/ipv4/ip_forward"),
-                                       "1")) {
-        errsv = errno;
-        _LOGW_ipshared(AF_INET, "error enabling IPv4 forwarding: %s", nm_strerror_native(errsv));
-        return FALSE;
     }
 
     if (nm_platform_sysctl_get_int32(nm_device_get_platform(self),
@@ -16881,6 +16902,7 @@ nm_device_cleanup(NMDevice *self, NMDeviceStateReason reason, CleanupType cleanu
     NMDevicePrivate *priv;
     NMDeviceClass   *klass = NM_DEVICE_GET_CLASS(self);
     int              ifindex;
+    gint32           default_forwarding_v4;
 
     g_return_if_fail(NM_IS_DEVICE(self));
 
@@ -16902,6 +16924,17 @@ nm_device_cleanup(NMDevice *self, NMDeviceStateReason reason, CleanupType cleanu
         _dev_sysctl_set_disable_ipv6(self, TRUE);
         nm_device_sysctl_ip_conf_set(self, AF_INET6, "use_tempaddr", "0");
     }
+
+    /* Restoring the device's forwarding to the sysctl default is necessary because
+     * `refresh_forwarding()` only updates forwarding on activated devices. */
+    default_forwarding_v4 = nm_platform_sysctl_get_int32(
+        nm_device_get_platform(self),
+        NMP_SYSCTL_PATHID_ABSOLUTE("/proc/sys/net/ipv4/conf/default/forwarding"),
+        0);
+    nm_device_sysctl_ip_conf_set(self,
+                                 AF_INET,
+                                 "forwarding",
+                                 default_forwarding_v4 == 1 ? "1" : "0");
 
     /* Call device type-specific deactivation */
     if (klass->deactivate)
