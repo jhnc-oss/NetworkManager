@@ -163,8 +163,8 @@ typedef enum {
 /*****************************************************************************/
 
 typedef struct {
-    bool          is_ip4;
     NMPObjectType obj_type;
+    bool          is_ip4;
     gint8         addr_family;
     guint8        sizeof_address;
     int (*address_cmp)(const NMPlatformIPXAddress *a,

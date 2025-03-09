@@ -95,9 +95,9 @@ NM_GOBJECT_PROPERTIES_DEFINE_BASE(PROP_PARENT_IFACE, );
 typedef struct {
     GPid pid;
 
+    int   ifindex;
     char *parent_iface;
     char *ip_iface;
-    int   ifindex;
 
     NMActRequest                 *act_req;
     GDBusMethodInvocation        *pending_secrets_context;

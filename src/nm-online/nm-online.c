@@ -37,16 +37,16 @@ typedef struct {
     GMainLoop    *loop;
     NMClient     *client;
     GCancellable *client_new_cancellable;
+    gulong        client_notify_id;
     guint         client_new_timeout_id;
     guint         handle_timeout_id;
-    gulong        client_notify_id;
     gboolean      exit_no_nm;
     gboolean      wait_startup;
     gboolean      quiet;
+    int           retval;
     gint64        start_timestamp_ms;
     gint64        end_timestamp_ms;
     gint64        progress_step_duration;
-    int           retval;
 } OnlineData;
 
 static gint64

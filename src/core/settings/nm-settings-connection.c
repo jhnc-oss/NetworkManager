@@ -699,12 +699,12 @@ typedef enum {
 } CallIdType;
 
 struct _NMSettingsConnectionCallId {
-    NMSettingsConnection           *self;
     CList                           call_ids_lst;
-    gboolean                        had_applied_connection;
+    NMSettingsConnection           *self;
     NMConnection                   *applied_connection;
     NMSettingsConnectionSecretsFunc callback;
     gpointer                        callback_data;
+    gboolean                        had_applied_connection;
 
     CallIdType type;
     union {

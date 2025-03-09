@@ -732,6 +732,10 @@ typedef struct _NMDevicePrivate {
     NMConnectivity *concheck_mgr;
     CList           concheck_lst_head;
     struct {
+        /* the timestamp, when we last scheduled the timer p_cur_id with current interval
+         * p_cur_interval. */
+        gint64 p_cur_basetime_ns;
+
         /* if periodic checks are enabled, this is the source id for the next check. */
         guint p_cur_id;
 
@@ -741,10 +745,6 @@ typedef struct _NMDevicePrivate {
         /* the current interval. If we are probing, the interval might be lower
          * then the configured max interval. */
         guint p_cur_interval;
-
-        /* the timestamp, when we last scheduled the timer p_cur_id with current interval
-         * p_cur_interval. */
-        gint64 p_cur_basetime_ns;
 
         NMConnectivityState state;
     } concheck_x[2];
@@ -14960,13 +14960,13 @@ _dispatcher_complete_proceed_state(NMDispatcherCallId *call_id, gpointer user_da
 /*****************************************************************************/
 
 typedef struct {
-    NMLogDomain log_domain;
     NMDevice   *device;
-    gboolean    ping_addresses_require_all;
-    GSource    *watch;
+    NMLogDomain log_domain;
     GPid        pid;
+    GSource    *watch;
     char       *binary;
     char       *address;
+    gboolean    ping_addresses_require_all;
     guint       deadline;
 } PingOperation;
 

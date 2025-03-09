@@ -56,9 +56,9 @@ newtComponentGetPosition(newtComponent component, int *left, int *top)
 
 #ifndef HAVE_NEWTENTRYGETCURSORPOSITION
 struct newtEntry_0_52_15_struct_hack {
-    int          flags;
     char        *buf;
     const char **resultPtr;
+    int          flags;
     int          bufAlloced;
     int          bufUsed;
     int          cursorPosition;
