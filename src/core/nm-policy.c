@@ -2044,7 +2044,8 @@ refresh_forwarding(NMPolicy *self, NMDevice *device, gboolean is_ipv4_method_sha
 
             ipv4_forwarding = nm_device_get_ipv4_forwarding(tmp_device);
 
-            if (ipv4_forwarding == NM_SETTING_IP_CONFIG_FORWARDING_AUTO) {
+            if (ipv4_forwarding == NM_SETTING_IP_CONFIG_FORWARDING_AUTO
+                || (device == tmp_device && is_ipv4_method_shared)) {
                 gs_free char *sysctl_value = NULL;
 
                 sysctl_value = nm_device_sysctl_ip_conf_get(tmp_device, AF_INET, "forwarding");
@@ -2061,7 +2062,7 @@ refresh_forwarding(NMPolicy *self, NMDevice *device, gboolean is_ipv4_method_sha
 
         ipv4_forwarding = nm_device_get_ipv4_forwarding(device);
 
-        if (ipv4_forwarding == NM_SETTING_IP_CONFIG_FORWARDING_AUTO) {
+        if (ipv4_forwarding == NM_SETTING_IP_CONFIG_FORWARDING_AUTO || is_ipv4_method_shared) {
             gs_free char *sysctl_value = NULL;
 
             sysctl_value = nm_device_sysctl_ip_conf_get(device, AF_INET, "forwarding");
