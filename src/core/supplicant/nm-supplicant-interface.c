@@ -1033,6 +1033,14 @@ _peer_info_add(NMSupplicantInterface *self, const char *object_path)
 
     if (peer_info) {
         peer_info->_peer_dirty = FALSE;
+        nm_dbus_connection_call_get_all(priv->dbus_connection,
+                                        priv->name_owner->str,
+                                        peer_info->peer_path->str,
+                                        NM_WPAS_DBUS_IFACE_PEER,
+                                        5000,
+                                        peer_info->_init_cancellable,
+                                        _peer_info_get_all_cb,
+                                        peer_info);
         return;
     }
 
