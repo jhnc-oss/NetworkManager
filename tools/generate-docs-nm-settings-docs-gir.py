@@ -10,14 +10,22 @@ import os
 import gi
 import re
 
-gi.require_version("GIRepository", "2.0")
-from gi.repository import GIRepository
+try:
+    gi.require_version("GIRepository", "3.0")
+    from gi.repository import GIRepository
+
+    repo = GIRepository.Repository()
+except ValueError:
+    gi.require_version("GIRepository", "2.0")
+    from gi.repository import GIRepository
+
+    repo = GIRepository.Repository
 
 try:
     libs = os.environ["LD_LIBRARY_PATH"].split(":")
     libs.reverse()
     for lib in libs:
-        GIRepository.Repository.prepend_library_path(lib)
+        repo.prepend_library_path(lib)
 except AttributeError:
     # An old GI version, that has no prepend_library_path
     # It's alright, it probably interprets LD_LIBRARY_PATH
@@ -386,6 +394,6 @@ if __name__ == "__main__":
 
     if args.lib_path:
         for lib in args.lib_path:
-            GIRepository.Repository.prepend_library_path(lib)
+            repo.prepend_library_path(lib)
 
     main(args.gir, args.output, args.target)
