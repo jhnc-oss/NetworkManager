@@ -1976,4 +1976,6 @@ global:
 	nm_sriov_eswitch_encap_mode_get_type;
 	nm_sriov_eswitch_inline_mode_get_type;
 	nm_sriov_eswitch_mode_get_type;
+	nm_setting_ethtool_fec_mode_get_type;
+	nm_ethtool_optname_is_fec;
 } libnm_1_44_0;
