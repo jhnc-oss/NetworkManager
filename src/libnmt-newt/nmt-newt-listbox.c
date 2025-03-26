@@ -30,12 +30,12 @@ G_DEFINE_TYPE(NmtNewtListbox, nmt_newt_listbox, NMT_TYPE_NEWT_COMPONENT)
     (G_TYPE_INSTANCE_GET_PRIVATE((o), NMT_TYPE_NEWT_LISTBOX, NmtNewtListboxPrivate))
 
 typedef struct {
+    GPtrArray *entries;
+    GPtrArray *keys;
+
     int                 height, alloc_height, width;
     gboolean            fixed_height;
     NmtNewtListboxFlags flags;
-
-    GPtrArray *entries;
-    GPtrArray *keys;
 
     int      active;
     gpointer active_key;

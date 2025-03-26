@@ -19,6 +19,7 @@
 typedef struct {
     char    *group_name;
     gboolean stop_match;
+    gboolean is_device;
     struct {
         /* have a separate boolean field @has, because a @spec with
          * value %NULL does not necessarily mean, that the property
@@ -32,7 +33,6 @@ typedef struct {
             gboolean allowed_connections_has;
         } device;
     };
-    gboolean is_device;
 
     /* List of key/value pairs in the section, sorted by key */
     gsize                    lookup_len;
@@ -50,8 +50,8 @@ struct _NMGlobalDnsConfig {
     char           **options;
     GHashTable      *domains;
     const char     **domain_list;
-    gboolean         internal;
     char            *cert_authority;
+    gboolean         internal;
     NMDnsResolveMode resolve_mode;
 };
 

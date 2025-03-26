@@ -577,6 +577,8 @@ typedef struct {
          * by type. */
         int refresh_all_in_progress[_REFRESH_ALL_TYPE_NUM];
 
+        int is_handling;
+
         GPtrArray *list_controller_connected;
         GPtrArray *list_refresh_link;
         union {
@@ -586,8 +588,6 @@ typedef struct {
             };
             GArray *list_wait_for_response_x[_NMP_NETLINK_NUM];
         };
-
-        int is_handling;
     } delayed_action;
 
     /* This is the receive buffer for netlink messages. This buffer should be large
@@ -723,9 +723,9 @@ static gboolean event_handler_read_netlink(NMPlatform        *platform,
 
 static const struct {
     gint8             netlink_protocol;
+    const char        name[5];
     DelayedActionType delayed_action_type_read;
     DelayedActionType delayed_action_type_wait_for_response;
-    const char        name[5];
 } _nmp_netlink_protocol_infos[_NMP_NETLINK_NUM] = {
     [NMP_NETLINK_ROUTE] =
         {

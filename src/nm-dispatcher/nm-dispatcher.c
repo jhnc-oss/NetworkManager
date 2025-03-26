@@ -38,21 +38,21 @@ typedef struct {
     GDBusConnection *dbus_connection;
     GCancellable    *quit_cancellable;
 
-    bool log_verbose;
-    bool log_stdout;
-
     GSource *source_idle_timeout;
 
     gint64 start_timestamp_msec;
+
+    Request *current_request;
+    GQueue  *requests_waiting;
+    int      num_requests_pending;
 
     guint request_id_counter;
     guint service_regist_id;
 
     gboolean persist;
 
-    Request *current_request;
-    GQueue  *requests_waiting;
-    int      num_requests_pending;
+    bool log_verbose;
+    bool log_stdout;
 
     bool exit_with_failure;
 
@@ -83,8 +83,6 @@ typedef struct {
 } ScriptInfo;
 
 struct Request {
-    guint request_id;
-
     GDBusMethodInvocation *context;
     char                  *action;
     char                  *iface;
@@ -92,6 +90,8 @@ struct Request {
     gboolean               debug;
     gboolean               is_action2;
     gboolean               is_device_handler;
+
+    guint request_id;
 
     GPtrArray *scripts; /* list of ScriptInfo */
     guint      idx;
