@@ -3860,6 +3860,11 @@ check_valid_name_toplevel(const char *val, const char **port_type, GError **erro
         return NM_SETTING_WIRED_SETTING_NAME;
     }
 
+    if (nm_streq(str, "ovs-port"))
+        NM_SET_OUT(port_type, NM_SETTING_OVS_BRIDGE_SETTING_NAME);
+    else if (NM_IN_STRSET(str, "ovs-interface", "ovs-patch"))
+        NM_SET_OUT(port_type, NM_SETTING_OVS_PORT_SETTING_NAME);
+
     setting_info = nm_meta_setting_info_editor_find_by_name(str, TRUE);
     if (setting_info)
         return setting_info->general->setting_name;
@@ -4615,8 +4620,11 @@ set_connection_type(NmCli            *nmc,
                     gboolean          allow_reset,
                     GError          **error)
 {
-    GError     *local     = NULL;
-    const char *port_type = NULL;
+    NMSettingConnection *s_con     = nm_connection_get_setting_connection(con);
+    GError              *local     = NULL;
+    const char          *port_type = NULL;
+
+    nm_assert(s_con);
 
     value = check_valid_name_toplevel(value, &port_type, &local);
     if (!value) {
@@ -4631,7 +4639,7 @@ set_connection_type(NmCli            *nmc,
         return FALSE;
     }
 
-    if (port_type) {
+    if (!nm_setting_connection_get_port_type(s_con) && port_type) {
         if (!set_property(nmc->client,
                           con,
                           NM_SETTING_CONNECTION_SETTING_NAME,
@@ -5228,19 +5236,88 @@ get_value(const char        **value,
     return TRUE;
 }
 
-gboolean
-nmc_process_connection_properties(NmCli              *nmc,
-                                  NMConnection       *connection,
-                                  int                *argc,
-                                  const char *const **argv,
-                                  gboolean            allow_setting_removal,
-                                  GError            **error)
+static int
+_copy_connection_properties(const char      ***dst,
+                            const char *const *args,
+                            gboolean           props_neg,
+                            const char *const *options)
 {
+    const char *option;
+    gboolean    match;
+    int         count = 0;
+
+    while (*args) {
+        option = (**args == '+' || **args == '-') ? *args + 1 : *args;
+        match  = _nm_g_strv_contains(options, option);
+        match  = props_neg ? !match : match;
+        if (match) {
+            *((*dst)++) = args[0];
+            *((*dst)++) = args[1];
+            count += 2;
+        }
+        args++;
+        if (*args) /* Might be the NULL termination, already */
+            args++;
+    }
+
+    return count;
+}
+
+gboolean
+nmc_process_connection_properties(NmCli             *nmc,
+                                  NMConnection      *connection,
+                                  int                argc,
+                                  const char *const *argv,
+                                  gboolean           allow_setting_removal,
+                                  GError           **error)
+{
+    gs_free const char **to_free = NULL;
+
+    if (argc == 0)
+        return TRUE;
+
     /* First check if we have a port-type, as this would mean we will not
      * have ip properties but possibly others, port-type specific.
+     * Then check connection.type, as port-type might be deduced from it.
+     * Don't reorder if we are doing CLI argument completion, as it might give
+     * unexpected results
      */
+    if (!nmc->complete) {
+        const char **dst;
+
+        dst = to_free = g_malloc(argc * sizeof(const char *) + 1);
+
+        argc = _copy_connection_properties(
+            &dst,
+            argv,
+            FALSE,
+            NM_MAKE_STRV(NM_SETTING_CONNECTION_SETTING_NAME "." NM_SETTING_CONNECTION_PORT_TYPE,
+                         "port-type", /* alias */
+                         NM_SETTING_CONNECTION_SETTING_NAME "." NM_SETTING_CONNECTION_SLAVE_TYPE,
+                         "slave-type" /* alias */));
+        argc += _copy_connection_properties(&dst,
+                                            argv,
+                                            FALSE,
+                                            NM_MAKE_STRV(NM_SETTING_CONNECTION_SETTING_NAME
+                                                         "." NM_SETTING_CONNECTION_TYPE,
+                                                         "type" /* alias */));
+        argc += _copy_connection_properties(
+            &dst,
+            argv,
+            TRUE,
+            NM_MAKE_STRV(NM_SETTING_CONNECTION_SETTING_NAME "." NM_SETTING_CONNECTION_PORT_TYPE,
+                         "port-type",
+                         NM_SETTING_CONNECTION_SETTING_NAME "." NM_SETTING_CONNECTION_SLAVE_TYPE,
+                         "slave-type",
+                         NM_SETTING_CONNECTION_SETTING_NAME "." NM_SETTING_CONNECTION_TYPE,
+                         "type"));
+
+        *dst = NULL; /* NULL terminated as expected by get_value() */
+        argv = to_free;
+    }
+
     /* Go through arguments and set properties */
-    do {
+    while (argc) {
         const NMMetaSettingValidPartItem *const *type_settings;
         const NMMetaSettingValidPartItem *const *port_settings;
         NMMetaAccessorModifier                   modifier;
@@ -5259,7 +5336,7 @@ nmc_process_connection_properties(NmCli              *nmc,
         ensure_settings(connection, port_settings);
         ensure_settings(connection, type_settings);
 
-        if (*argc <= 0) {
+        if (argc <= 0) {
             g_set_error_literal(error,
                                 NMCLI_ERROR,
                                 NMC_RESULT_ERROR_USER_INPUT,
@@ -5267,11 +5344,7 @@ nmc_process_connection_properties(NmCli              *nmc,
             return FALSE;
         }
 
-        nm_assert(argv);
-        nm_assert(*argv);
-        nm_assert(**argv);
-
-        option_orig = **argv;
+        option_orig = *argv;
 
         switch (option_orig[0]) {
         case '+':
@@ -5293,15 +5366,15 @@ nmc_process_connection_properties(NmCli              *nmc,
             NMSetting  *ss;
             const char *setting_name;
 
-            (*argc)--;
-            (*argv)++;
+            argc--;
+            argv++;
 
-            if (*argc == 1 && nmc->complete) {
+            if (argc == 1 && nmc->complete) {
                 complete_existing_setting(nmc, connection, value);
-                return TRUE;
+                break;
             }
 
-            if (!*argc) {
+            if (!argc) {
                 g_set_error_literal(error,
                                     NMCLI_ERROR,
                                     NMC_RESULT_ERROR_USER_INPUT,
@@ -5309,9 +5382,9 @@ nmc_process_connection_properties(NmCli              *nmc,
                 return FALSE;
             }
 
-            setting_name = **argv;
-            (*argc)--;
-            (*argv)++;
+            setting_name = *argv;
+            argc--;
+            argv++;
 
             ss = is_setting_valid(connection, type_settings, port_settings, setting_name);
             if (!ss) {
@@ -5341,7 +5414,7 @@ nmc_process_connection_properties(NmCli              *nmc,
             /* This seems like a <setting>.<property> (such as "connection.id" or "bond.mode"),
              * optionally prefixed with "+| or "-". */
 
-            if (*argc == 1 && nmc->complete)
+            if (argc == 1 && nmc->complete)
                 complete_property_name(nmc, connection, modifier, option_sett, option_prop);
 
             option_sett_expanded =
@@ -5357,14 +5430,14 @@ nmc_process_connection_properties(NmCli              *nmc,
                 return FALSE;
             }
 
-            (*argc)--;
-            (*argv)++;
-            if (!get_value(&value, argc, argv, option_orig, error))
+            argc--;
+            argv++;
+            if (!get_value(&value, &argc, &argv, option_orig, error))
                 return FALSE;
 
-            if (!*argc && nmc->complete) {
+            if (!argc && nmc->complete) {
                 complete_property(nmc, option_sett, option_prop, value ?: "", connection);
-                return TRUE;
+                break;
             }
 
             if (!set_property(nmc->client,
@@ -5446,7 +5519,7 @@ nmc_process_connection_properties(NmCli              *nmc,
         }
 
         if (!chosen) {
-            if (*argc == 1 && nmc->complete) {
+            if (argc == 1 && nmc->complete) {
                 if (allow_setting_removal && g_str_has_prefix("remove", option))
                     nmc_print("remove\n");
                 complete_property_name(nmc, connection, modifier, option, NULL);
@@ -5459,21 +5532,20 @@ nmc_process_connection_properties(NmCli              *nmc,
             return FALSE;
         }
 
-        if (*argc == 1 && nmc->complete)
+        if (argc == 1 && nmc->complete)
             complete_property_name(nmc, connection, modifier, option, NULL);
 
-        (*argc)--;
-        (*argv)++;
-        if (!get_value(&value, argc, argv, option_orig, error))
+        argc--;
+        argv++;
+        if (!get_value(&value, &argc, &argv, option_orig, error))
             return FALSE;
 
-        if (!*argc && nmc->complete)
+        if (!argc && nmc->complete)
             complete_option(nmc, chosen, value ?: "", connection);
 
         if (!set_option(nmc, connection, chosen, value, TRUE, error))
             return FALSE;
-
-    } while (*argc);
+    }
 
     return TRUE;
 }
@@ -5910,6 +5982,7 @@ nmc_add_connection(NmCli *nmc, NMConnection *connection, gboolean temporary)
 static void
 do_connection_add(const NMCCommand *cmd, NmCli *nmc, int argc, const char *const *argv)
 {
+    gs_unref_ptrarray GPtrArray  *props;
     gs_unref_object NMConnection *connection = NULL;
     NMSettingConnection          *s_con;
     gs_free_error GError         *error          = NULL;
@@ -5928,16 +6001,21 @@ do_connection_add(const NMCCommand *cmd, NmCli *nmc, int argc, const char *const
     s_con = (NMSettingConnection *) nm_setting_connection_new();
     nm_connection_add_setting(connection, NM_SETTING(s_con));
 
-read_properties:
-    g_clear_error(&error);
-    /* Get the arguments from the command line if any */
-    if (argc && !nmc_process_connection_properties(nmc, connection, &argc, &argv, FALSE, &error)) {
-        if (nm_streq0(*argv, "--") && !seen_dash_dash) {
+    props = g_ptr_array_new_full(sizeof(const char *) * (argc + 1), NULL);
+
+    while (argc) {
+        if (nm_streq0(*argv, "--")) {
             /* This is for compatibility with older nmcli that required
              * options and properties to be separated with "--" */
-            seen_dash_dash = TRUE;
-            next_arg(nmc, &argc, &argv, NULL);
-            goto read_properties;
+            if (seen_dash_dash) {
+                g_string_printf(nmc->return_text,
+                                _("Error: argument '--' can only be passed once"));
+                nmc->return_value = NMC_RESULT_ERROR_USER_INPUT;
+                goto finish;
+            } else {
+                seen_dash_dash = TRUE;
+                next_arg(nmc, &argc, &argv, NULL);
+            }
         } else if (nm_streq0(*argv, "save")) {
             /* It would be better if "save" was a separate argument and not
              * mixed with properties, but there's not much we can do about it now. */
@@ -5950,16 +6028,31 @@ read_properties:
                 nmc->return_value = NMC_RESULT_ERROR_USER_INPUT;
                 goto finish;
             }
-            g_clear_error(&error);
             if (!nmc_string_to_bool(*argv, &save_bool, &error)) {
                 g_string_printf(nmc->return_text, _("Error: 'save': %s."), error->message);
                 nmc->return_value = NMC_RESULT_ERROR_USER_INPUT;
                 goto finish;
             }
             next_arg(nmc, &argc, &argv, NULL);
-            goto read_properties;
+        } else {
+            g_ptr_array_add(props, (gpointer) *argv);
+            argc--;
+            argv++;
+            if (argc > 0) {
+                g_ptr_array_add(props, (gpointer) *argv);
+                argc--;
+                argv++;
+            }
         }
+    }
+    g_ptr_array_add(props, NULL); /* Must be NULL terminated */
 
+    if (!nmc_process_connection_properties(nmc,
+                                           connection,
+                                           props->len - 1,
+                                           (const char *const *) props->pdata,
+                                           FALSE,
+                                           &error)) {
         g_string_assign(nmc->return_text, error->message);
         nmc->return_value = error->code;
         goto finish;
@@ -9250,7 +9343,7 @@ do_connection_modify(const NMCCommand *cmd, NmCli *nmc, int argc, const char *co
 
     /* Don't insist on having argument if we're running in offline mode. */
     if (!nmc->nmc_config.offline || argc > 0) {
-        if (!nmc_process_connection_properties(nmc, connection, &argc, &argv, TRUE, &error)) {
+        if (!nmc_process_connection_properties(nmc, connection, argc, argv, TRUE, &error)) {
             g_string_assign(nmc->return_text, error->message);
             nmc->return_value = error->code;
             return;
