@@ -51,11 +51,11 @@ nm_connectivity_state_to_string(NMConnectivityState state)
 /*****************************************************************************/
 
 typedef struct {
-    guint ref_count;
     char *uri;
     char *host;
     char *port;
     char *response;
+    guint ref_count;
     guint timeout;
 } ConConfig;
 

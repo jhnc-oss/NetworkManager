@@ -542,12 +542,12 @@ add_wireguard_secrets(RequestData *request, GPtrArray *secrets, char **msg, GErr
 }
 
 typedef struct {
-    GPid           auth_dialog_pid;
     GString       *auth_dialog_response;
     RequestData   *request;
     GPtrArray     *secrets;
     GCancellable  *cancellable;
     gulong         cancellable_id;
+    GPid           auth_dialog_pid;
     guint          child_watch_id;
     GInputStream  *input_stream;
     GOutputStream *output_stream;

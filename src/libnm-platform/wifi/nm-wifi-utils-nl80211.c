@@ -425,10 +425,10 @@ nl80211_xbm_to_percent(gint32 xbm, guint32 divisor)
 struct nl80211_station_info {
     gboolean valid;
     guint8   bssid[ETH_ALEN];
-    guint32  txrate;
-    gboolean txrate_valid;
     guint8   signal;
     gboolean signal_valid;
+    guint32  txrate;
+    gboolean txrate_valid;
 };
 
 static int
@@ -564,8 +564,8 @@ nla_put_failure:
 
 struct nl80211_device_info {
     NMWifiUtilsNl80211 *self;
-    int                 phy;
     Nl80211Freq        *freqs;
+    int                 phy;
     int                 num_freqs;
     int                 num_freqs_alloc;
     guint32             freq;
