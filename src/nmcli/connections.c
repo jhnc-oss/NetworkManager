@@ -3803,7 +3803,7 @@ check_valid_name(const char                              *val,
 }
 
 static const char *
-check_valid_name_toplevel(const char *val, const char **port_type, GError **error)
+check_valid_name_toplevel(const char *val, GError **error)
 {
     gs_unref_ptrarray GPtrArray   *tmp_arr = NULL;
     const NMMetaSettingInfoEditor *setting_info;
@@ -3811,8 +3811,6 @@ check_valid_name_toplevel(const char *val, const char **port_type, GError **erro
     GType                          gtype   = G_TYPE_INVALID;
     const char                    *str;
     int                            i;
-
-    NM_SET_OUT(port_type, NULL);
 
     /* Create a temporary array that can be used in nmc_string_is_valid() */
     tmp_arr = g_ptr_array_sized_new(32);
@@ -3847,17 +3845,6 @@ check_valid_name_toplevel(const char *val, const char **port_type, GError **erro
             g_set_error(error, 1, 0, _("'%s' not among [%s]"), val, err_str);
         }
         return NULL;
-    }
-
-    if (nm_streq(str, "bond-slave")) {
-        NM_SET_OUT(port_type, NM_SETTING_BOND_SETTING_NAME);
-        return NM_SETTING_WIRED_SETTING_NAME;
-    } else if (nm_streq(str, "bridge-slave")) {
-        NM_SET_OUT(port_type, NM_SETTING_BRIDGE_SETTING_NAME);
-        return NM_SETTING_WIRED_SETTING_NAME;
-    } else if (nm_streq(str, "team-slave")) {
-        NM_SET_OUT(port_type, NM_SETTING_TEAM_SETTING_NAME);
-        return NM_SETTING_WIRED_SETTING_NAME;
     }
 
     setting_info = nm_meta_setting_info_editor_find_by_name(str, TRUE);
@@ -4615,10 +4602,9 @@ set_connection_type(NmCli            *nmc,
                     gboolean          allow_reset,
                     GError          **error)
 {
-    GError     *local     = NULL;
-    const char *port_type = NULL;
+    GError *local = NULL;
 
-    value = check_valid_name_toplevel(value, &port_type, &local);
+    value = check_valid_name_toplevel(value, &local);
     if (!value) {
         if (!allow_reset)
             return TRUE;
@@ -4629,18 +4615,6 @@ set_connection_type(NmCli            *nmc,
                     local->message);
         g_clear_error(&local);
         return FALSE;
-    }
-
-    if (port_type) {
-        if (!set_property(nmc->client,
-                          con,
-                          NM_SETTING_CONNECTION_SETTING_NAME,
-                          NM_SETTING_CONNECTION_PORT_TYPE,
-                          port_type,
-                          NM_META_ACCESSOR_MODIFIER_SET,
-                          error)) {
-            return FALSE;
-        }
     }
 
     if (!set_property(nmc->client,
@@ -4707,17 +4681,7 @@ set_connection_controller(NmCli            *nmc,
 
     port_type   = nm_setting_connection_get_port_type(s_con);
     connections = nmc_get_connections(nmc);
-    value       = normalized_controller_for_port(connections, value, port_type, &port_type);
-
-    if (!set_property(nmc->client,
-                      con,
-                      NM_SETTING_CONNECTION_SETTING_NAME,
-                      NM_SETTING_CONNECTION_PORT_TYPE,
-                      port_type,
-                      NM_META_ACCESSOR_MODIFIER_SET,
-                      error)) {
-        return FALSE;
-    }
+    value       = normalized_controller_for_port(connections, value, port_type, NULL);
 
     return set_property(nmc->client,
                         con,
@@ -5236,9 +5200,9 @@ nmc_process_connection_properties(NmCli              *nmc,
                                   gboolean            allow_setting_removal,
                                   GError            **error)
 {
-    /* First check if we have a port-type, as this would mean we will not
-     * have ip properties but possibly others, port-type specific.
-     */
+    NMSettingConnection *s_con;
+    const char          *controller;
+
     /* Go through arguments and set properties */
     do {
         const NMMetaSettingValidPartItem *const *type_settings;
@@ -5474,6 +5438,38 @@ nmc_process_connection_properties(NmCli              *nmc,
             return FALSE;
 
     } while (*argc);
+
+    /* Bond, bridge and team ports must specify their port-type. If the user didn't
+     * set it, find the controller device and use its type as port-type.
+     * The daemon doesn't do this because the device might not exist, but let's do
+     * it here for user's convenience. If the controller doesn't exist, the daemon
+     * will raise a "missing port-type" error.
+     * For OVS ports this is not needed, the port-type is implicit from the type and
+     * the daemon knows how to handle it. */
+    s_con = nm_connection_get_setting_connection(connection);
+    nm_assert(s_con);
+    controller = nm_setting_connection_get_controller(s_con);
+    if (controller && !nm_setting_connection_get_port_type(s_con)) {
+        const char *port_type = NULL;
+
+        controller =
+            normalized_controller_for_port(nmc_get_connections(nmc), controller, NULL, &port_type);
+        nm_assert(controller); /* This was already successful, so it should not fail here */
+        if (NM_IN_STRSET(port_type,
+                         NM_SETTING_BOND_SETTING_NAME,
+                         NM_SETTING_BRIDGE_SETTING_NAME,
+                         NM_SETTING_TEAM_SETTING_NAME)) {
+            if (!set_property(nmc->client,
+                              connection,
+                              NM_SETTING_CONNECTION_SETTING_NAME,
+                              NM_SETTING_CONNECTION_PORT_TYPE,
+                              port_type,
+                              NM_META_ACCESSOR_MODIFIER_SET,
+                              error)) {
+                return FALSE;
+            }
+        }
+    }
 
     return TRUE;
 }
@@ -5980,7 +5976,7 @@ read_properties:
 
     /* Traditionally, we didn't ask for these options for ethernet ports. They don't
      * make much sense, since these are likely to be set by the controller anyway. */
-    if (nm_setting_connection_get_port_type(s_con)) {
+    if (nm_setting_connection_get_port_type(s_con) || nm_setting_connection_get_controller(s_con)) {
         disable_options(NM_SETTING_WIRED_SETTING_NAME, NM_SETTING_WIRED_MTU);
         disable_options(NM_SETTING_WIRED_SETTING_NAME, NM_SETTING_WIRED_MAC_ADDRESS);
         disable_options(NM_SETTING_WIRED_SETTING_NAME, NM_SETTING_WIRED_CLONED_MAC_ADDRESS);
@@ -9110,7 +9106,7 @@ do_connection_edit(const NMCCommand *cmd, NmCli *nmc, int argc, const char *cons
             return;
         }
 
-        connection_type = check_valid_name_toplevel(type, &port_type, &err1);
+        connection_type = check_valid_name_toplevel(type, &err1);
         tmp_str         = get_valid_options_string_toplevel();
 
         while (!connection_type) {
@@ -9124,7 +9120,7 @@ do_connection_edit(const NMCCommand *cmd, NmCli *nmc, int argc, const char *cons
 
             type_ask = nmc_readline(&nmc->nmc_config, EDITOR_PROMPT_CON_TYPE);
             type = type_ask = nm_strstrip(type_ask);
-            connection_type = check_valid_name_toplevel(type_ask, &port_type, &err1);
+            connection_type = check_valid_name_toplevel(type_ask, &err1);
         }
         nm_clear_g_free(&tmp_str);
 
