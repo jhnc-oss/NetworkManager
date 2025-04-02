@@ -11,6 +11,7 @@ USE AT YOUR OWN RISK.  NOT RECOMMENDED FOR PRODUCTION USE!
 * Add systemd services to provide networking in the initrd.
 * Introduce a new "ovs-dpdk.lsc-interrupt" property to configure the
   Link State Change (LSC) detection mode for OVS DPDK interfaces.
+* Support configuring loopback interfaces in nmtui.
 
 =============================================
 NetworkManager-1.52
