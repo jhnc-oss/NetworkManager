@@ -47,7 +47,8 @@ NM_GOBJECT_PROPERTIES_DEFINE_BASE(PROP_AUTO_CONFIG,
                                   PROP_INITIAL_EPS_REFUSE_PAP,
                                   PROP_INITIAL_EPS_REFUSE_CHAP,
                                   PROP_INITIAL_EPS_REFUSE_MSCHAP,
-                                  PROP_INITIAL_EPS_REFUSE_MSCHAPV2, );
+                                  PROP_INITIAL_EPS_REFUSE_MSCHAPV2,
+                                  PROP_DEVICE_NAME, );
 
 typedef struct {
     char   *number;
@@ -75,6 +76,7 @@ typedef struct {
     bool    auto_config;
     bool    home_only;
     bool    initial_eps_config;
+    char   *device_name;
 } NMSettingGsmPrivate;
 
 /**
@@ -465,6 +467,22 @@ nm_setting_gsm_get_initial_eps_refuse_mschapv2(NMSettingGsm *setting)
     return NM_SETTING_GSM_GET_PRIVATE(setting)->initial_eps_refuse_mschapv2;
 }
 
+/**
+ * nm_setting_gsm_get_device_name:
+ * @setting: the #NMSettingGsm
+ *
+ * Returns: the #NMSettingGsm:device-name property of the setting
+ *
+ * Since: 1.54
+ **/
+const char *
+nm_setting_gsm_get_device_name(NMSettingGsm *setting)
+{
+    g_return_val_if_fail(NM_IS_SETTING_GSM(setting), NULL);
+
+    return NM_SETTING_GSM_GET_PRIVATE(setting)->device_name;
+}
+
 static gboolean
 _verify_apn(const char *apn, gboolean allow_empty, const char *property_name, GError **error)
 {
@@ -649,6 +667,15 @@ verify(NMSetting *setting, NMConnection *connection, GError **error)
                             _("can't be enabled when manual configuration is present"));
         g_prefix_error(error, "%s.%s: ", NM_SETTING_GSM_SETTING_NAME, NM_SETTING_GSM_AUTO_CONFIG);
         return NM_SETTING_VERIFY_NORMALIZABLE_ERROR;
+    }
+
+    if (priv->device_name && !priv->device_name[0]) {
+        g_set_error_literal(error,
+                            NM_CONNECTION_ERROR,
+                            NM_CONNECTION_ERROR_INVALID_PROPERTY,
+                            _("property is empty"));
+        g_prefix_error(error, "%s.%s: ", NM_SETTING_GSM_SETTING_NAME, NM_SETTING_GSM_DEVICE_NAME);
+        return FALSE;
     }
 
     return TRUE;
@@ -1148,6 +1175,24 @@ nm_setting_gsm_class_init(NMSettingGsmClass *klass)
                                                NM_SETTING_PARAM_NONE,
                                                NMSettingGsmPrivate,
                                                initial_eps_refuse_mschapv2);
+
+    /**
+     * NMSettingGsm:device-name:
+     *
+     * The device name (as given by the WWAN management service)
+     * which this connection applies to.  If given, the connection will only
+     * apply to the specified device.
+     *
+     * Since: 1.54
+     **/
+    _nm_setting_property_define_direct_string(properties_override,
+                                              obj_properties,
+                                              NM_SETTING_GSM_DEVICE_NAME,
+                                              PROP_DEVICE_NAME,
+                                              NM_SETTING_PARAM_NONE,
+                                              NMSettingGsmPrivate,
+                                              device_name,
+                                              .direct_string_allow_empty = TRUE);
 
     /* Ignore incoming deprecated properties */
     _nm_properties_override_dbus(properties_override,
