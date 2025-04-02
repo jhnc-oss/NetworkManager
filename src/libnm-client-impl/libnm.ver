@@ -2055,4 +2055,5 @@ global:
 	nm_setting_ip_config_get_forwarding;
 	nm_setting_ovs_dpdk_get_lsc_interrupt;
 	nm_setting_ovs_dpdk_lsc_interrupt_get_type;
+	nm_setting_gsm_get_device_name;
 } libnm_1_52_0;

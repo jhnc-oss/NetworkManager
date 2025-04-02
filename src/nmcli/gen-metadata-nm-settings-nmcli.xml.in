@@ -1198,6 +1198,9 @@
                   nmcli-description="For LTE modems, this disables MSCHAPV2 authentication method for the initial EPS bearer that is set up when attaching to the network."
                   format="boolean"
                   values="true/yes/on, false/no/off" />
+        <property name="device-name"
+                  nmcli-description="The device name (as given by the WWAN management service) which this connection applies to.  If given, the connection will only apply to the specified device."
+                  format="string" />
     </setting>
     <setting name="hostname" >
         <property name="priority"
