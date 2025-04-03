@@ -6585,11 +6585,18 @@ concheck_update_state(NMDevice           *self,
     }
 
     if (priv->concheck_x[IS_IPv4].state == state) {
-        /* we got a connectivity update, but the state didn't change. If we were probing,
-         * we bump the probe frequency. */
-        if (allow_periodic_bump)
-            concheck_periodic_schedule_set(self, addr_family, CONCHECK_SCHEDULE_RETURNED_BUMP);
-        return;
+        if (state == NM_CONNECTIVITY_FULL
+            && nm_manager_get_state(priv->manager) != NM_STATE_CONNECTED_GLOBAL) {
+            _LOGW(LOGD_CONCHECK,
+                  "connectivity: inconsistent state, device connexion FULL but NM "
+                  "state not GLOBAL");
+        } else {
+            /* we got a connectivity update, but the state didn't change. If we were probing,
+            * we bump the probe frequency. */
+            if (allow_periodic_bump)
+                concheck_periodic_schedule_set(self, addr_family, CONCHECK_SCHEDULE_RETURNED_BUMP);
+            return;
+        }
     }
     /* we need to update the probe interval before emitting signals. Emitting
      * a signal might call back into NMDevice and change the probe settings.
