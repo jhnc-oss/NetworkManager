@@ -15,7 +15,6 @@
 
 #include "libnm-core-aux-intern/nm-libnm-core-utils.h"
 #include "nmt-device-entry.h"
-#include "nmt-mac-entry.h"
 #include "nmt-mtu-entry.h"
 
 G_DEFINE_TYPE(NmtPageLoopback, nmt_page_loopback, NMT_TYPE_EDITOR_PAGE_DEVICE)
@@ -36,22 +35,22 @@ nmt_page_loopback_new(NMConnection *conn, NmtDeviceEntry *deventry)
 static void
 nmt_page_loopback_constructed(GObject *object)
 {
-    NmtPageLoopback  *loopback = NMT_PAGE_LOOPBACK(object);
-    NmtEditorSection *section;
-    NmtEditorGrid    *grid;
-    NMSettingWired   *s_wired;
-    NmtNewtWidget    *widget;
-    NMConnection     *conn;
+    NmtPageLoopback   *loopback = NMT_PAGE_LOOPBACK(object);
+    NmtEditorSection  *section;
+    NmtEditorGrid     *grid;
+    NMSettingLoopback *s_loopback;
+    NmtNewtWidget     *widget;
+    NMConnection      *conn;
 
-    conn    = nmt_editor_page_get_connection(NMT_EDITOR_PAGE(loopback));
-    s_wired = _nm_connection_ensure_setting(conn, NM_TYPE_SETTING_WIRED);
+    conn       = nmt_editor_page_get_connection(NMT_EDITOR_PAGE(loopback));
+    s_loopback = _nm_connection_ensure_setting(conn, NM_TYPE_SETTING_LOOPBACK);
 
-    section = nmt_editor_section_new(_("ETHERNET"), NULL, FALSE);
+    section = nmt_editor_section_new(_("LOOPBACK"), NULL, FALSE);
     grid    = nmt_editor_section_get_body(section);
 
     widget = nmt_mtu_entry_new();
-    g_object_bind_property(s_wired,
-                           NM_SETTING_WIRED_MTU,
+    g_object_bind_property(s_loopback,
+                           NM_SETTING_LOOPBACK_MTU,
                            widget,
                            "mtu",
                            G_BINDING_BIDIRECTIONAL | G_BINDING_SYNC_CREATE);
