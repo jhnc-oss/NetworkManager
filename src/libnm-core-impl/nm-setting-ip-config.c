@@ -643,8 +643,8 @@ nm_ip_route_new(int         family,
         .dest     = canonicalize_ip_binary(family, &dest_bin, FALSE),
         .prefix   = prefix,
         .next_hop = canonicalize_ip_binary(family,
-                                            (next_hop && *next_hop != '\0') ? &next_hop_bin : NULL,
-                                            TRUE),
+                                           (next_hop && *next_hop != '\0') ? &next_hop_bin : NULL,
+                                           TRUE),
         .metric   = metric,
     };
 
