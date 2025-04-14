@@ -401,7 +401,7 @@ nm_config_data_get_ignore_carrier_for_port(const NMConfigData *self,
     if (!nm_utils_ifname_valid_kernel(controller, NULL))
         goto out_default;
 
-    match_data = (NMMatchSpecDeviceData) {
+    match_data = (NMMatchSpecDeviceData){
         .interface_name = controller,
         .device_type    = port_type,
     };
@@ -1111,7 +1111,8 @@ nm_global_dns_config_update_checksum(const NMGlobalDnsConfig *dns_config, GCheck
     v8 = NM_HASH_COMBINE_BOOLS(guint8,
                                !dns_config->searches,
                                !dns_config->options,
-                               !dns_config->domain_list);
+                               !dns_config->domain_list,
+                               !dns_config->cert_authority);
     g_checksum_update(sum, (guchar *) &v8, 1);
 
     if (dns_config->searches) {
@@ -1126,6 +1127,12 @@ nm_global_dns_config_update_checksum(const NMGlobalDnsConfig *dns_config, GCheck
                               (guchar *) dns_config->options[i],
                               strlen(dns_config->options[i]) + 1);
     }
+    if (dns_config->cert_authority) {
+        g_checksum_update(sum,
+                          (guchar *) dns_config->cert_authority,
+                          strlen(dns_config->cert_authority) + 1);
+    }
+    g_checksum_update(sum, (guchar *) &dns_config->resolve_mode, sizeof(dns_config->resolve_mode));
 
     if (dns_config->domain_list) {
         for (i = 0; dns_config->domain_list[i]; i++) {
@@ -1991,7 +1998,7 @@ _match_section_info_init(MatchSectionInfo *connection_info,
         if (!value)
             continue;
 
-        vals[j++] = (NMUtilsNamedValue) {
+        vals[j++] = (NMUtilsNamedValue){
             .name      = g_steal_pointer(&key),
             .value_str = value,
         };
