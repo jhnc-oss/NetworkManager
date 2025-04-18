@@ -631,7 +631,7 @@ nm_ip_route_new(int         family,
         return NULL;
     if (!valid_prefix(family, prefix, error))
         return NULL;
-    if (next_hop && !valid_ip(family, next_hop, &next_hop_bin, error))
+    if (next_hop && *next_hop != '\0' && !valid_ip(family, next_hop, &next_hop_bin, error))
         return NULL;
     if (!valid_metric(metric, error))
         return NULL;
@@ -642,7 +642,9 @@ nm_ip_route_new(int         family,
         .family   = family,
         .dest     = canonicalize_ip_binary(family, &dest_bin, FALSE),
         .prefix   = prefix,
-        .next_hop = canonicalize_ip_binary(family, next_hop ? &next_hop_bin : NULL, TRUE),
+        .next_hop = canonicalize_ip_binary(family,
+                                           (next_hop && *next_hop != '\0') ? &next_hop_bin : NULL,
+                                           TRUE),
         .metric   = metric,
     };
 
