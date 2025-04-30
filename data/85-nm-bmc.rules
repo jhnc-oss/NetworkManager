@@ -1,0 +1,12 @@
+# Do not modify this file, it will get overwritten on updates.
+# To override or extend the rules place a file in /etc/udev/rules.d
+
+ACTION!="add|change|move", GOTO="nm_bmc_end"
+
+# On ASRock Rack systems, the BMC supports a USB Virtual NIC which terminates
+#   in the BMC. Help identify this with 'bmc'
+SUBSYSTEM=="net", SUBSYSTEMS=="usb", ATTRS{idVendor}=="26ce", ATTRS{idProduct}=="00a0", NAME="bmc", ENV{NM_AUTO_DEFAULT_LINK_LOCAL_ONLY}="1"
+# Same for OpenBMC
+SUBSYSTEM=="net", SUBSYSTEMS=="usb", ATTRS{idVendor}=="0525", ATTRS{idProduct}=="a4a2", NAME="bmc", ENV{NM_AUTO_DEFAULT_LINK_LOCAL_ONLY}="1"
+
+LABEL="nm_bmc_end"

@@ -45,6 +45,7 @@ if install_udevdir
   data = files(
     '84-nm-drivers.rules',
     '85-nm-unmanaged.rules',
+    '85-nm-bmc.rules',
     '90-nm-thunderbolt.rules',
   )
 
