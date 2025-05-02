@@ -29,7 +29,7 @@ global:
 	nm_modem_manager_name_owner_ref;
 	nm_modem_manager_name_owner_unref;
 	nm_modem_owns_port;
-	nm_modem_set_mm_enabled;
+	nm_modem_set_enabled;
 	nm_modem_stage3_ip_config_start;
 	nm_modem_state_to_string;
 	nm_modem_unclaim;

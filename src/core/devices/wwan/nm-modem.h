@@ -126,7 +126,7 @@ typedef struct {
 
     void (*stage3_ip_config_start)(NMModem *self, int addr_family, NMModemIPMethod method);
 
-    void (*set_mm_enabled)(NMModem *self, gboolean enabled);
+    void (*set_enabled)(NMModem *self, gboolean enabled);
 
     void (*disconnect)(NMModem                   *self,
                        gboolean                   warn,
@@ -208,7 +208,7 @@ void nm_modem_deactivate_async(NMModem                  *self,
 void
 nm_modem_device_state_changed(NMModem *modem, NMDeviceState new_state, NMDeviceState old_state);
 
-void nm_modem_set_mm_enabled(NMModem *self, gboolean enabled);
+void nm_modem_set_enabled(NMModem *self, gboolean enabled);
 
 NMModemState nm_modem_get_state(NMModem *self);
 void         nm_modem_set_state(NMModem *self, NMModemState new_state, const char *reason);
