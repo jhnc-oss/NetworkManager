@@ -8822,6 +8822,7 @@ nm_manager_update_shared_connection(NMManager *self, int addr_family, gboolean e
         return;
 
     if (enabled) {
+        g_return_if_fail(priv->shared_connections_ip4_count < G_MAXUINT);
         priv->shared_connections_ip4_count++;
         state_changed = priv->shared_connections_ip4_count == 1;
     } else {
