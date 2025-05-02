@@ -57,7 +57,7 @@ typedef struct {
     char *imsi;
 
     gboolean modem_online;
-    gboolean connman_powered;
+    gboolean modem_powered;
     gboolean gprs_attached;
 
     NML3ConfigData *l3cd_4;
@@ -155,15 +155,13 @@ update_modem_state(NMModemOfono *self)
     _LOGI("'Attached': %s 'Online': %s 'Powered': %s 'IMSI': %s",
           priv->gprs_attached ? "true" : "false",
           priv->modem_online ? "true" : "false",
-          priv->connman_powered ? "true" : "false",
+          priv->modem_powered ? "true" : "false",
           priv->imsi);
 
     if (priv->modem_online == FALSE) {
         reason = "modem 'Online=false'";
-    } else if (priv->connman_powered == FALSE) {
-        reason = "ConnectionManager 'Powered=false'";
-    } else if (priv->imsi == NULL && state != NM_MODEM_STATE_ENABLING) {
-        reason = "modem not ready";
+    } else if (priv->modem_powered == FALSE) {
+        reason = "modem 'Powered=false'";
     } else if (priv->gprs_attached == FALSE) {
         new_state = NM_MODEM_STATE_SEARCHING;
         reason    = "modem searching";
@@ -307,6 +305,40 @@ deactivate_cleanup(NMModem *modem, NMDevice *device, gboolean stop_ppp_manager)
 
     NM_MODEM_CLASS(nm_modem_ofono_parent_class)
         ->deactivate_cleanup(modem, device, stop_ppp_manager);
+}
+
+static void
+powered_done(GObject *source, GAsyncResult *result, gpointer user_data)
+{
+    NMModemOfono        *self = NM_MODEM_OFONO(user_data);
+    NMModemOfonoPrivate *priv = NM_MODEM_OFONO_GET_PRIVATE(self);
+
+    if (nm_modem_get_state(NM_MODEM(user_data)) == NM_MODEM_STATE_ENABLING) {
+        g_dbus_proxy_call(priv->modem_proxy,
+                          "SetProperty",
+                          g_variant_new("(sv)", "Online", g_variant_new("b", TRUE)),
+                          G_DBUS_CALL_FLAGS_NONE,
+                          20000,
+                          NULL,
+                          NULL,
+                          NULL);
+    }
+}
+
+static void
+set_ofono_enabled(NMModem *modem, gboolean enabled)
+{
+    NMModemOfono        *self = NM_MODEM_OFONO(modem);
+    NMModemOfonoPrivate *priv = NM_MODEM_OFONO_GET_PRIVATE(self);
+
+    g_dbus_proxy_call(priv->modem_proxy,
+                      "SetProperty",
+                      g_variant_new("(sv)", "Powered", g_variant_new("b", enabled)),
+                      G_DBUS_CALL_FLAGS_NONE,
+                      20000,
+                      NULL,
+                      powered_done,
+                      self);
 }
 
 static gboolean
@@ -525,19 +557,6 @@ handle_connman_property(GDBusProxy *proxy, const char *property, GVariant *v, gp
 
             update_modem_state(self);
         }
-    } else if (nm_streq(property, "Powered") && VARIANT_IS_OF_TYPE_BOOLEAN(v)) {
-        gboolean powered     = g_variant_get_boolean(v);
-        gboolean old_powered = priv->connman_powered;
-
-        _LOGD("Powered: %s", powered ? "True" : "False");
-
-        if (old_powered != powered) {
-            priv->connman_powered = powered;
-
-            _LOGI("Powered %s -> %s", old_powered ? "true" : "false", powered ? "true" : "false");
-
-            update_modem_state(self);
-        }
     }
 }
 
@@ -680,7 +699,7 @@ add_or_update_connection(NMModemOfono *self, const char *context_name, const cha
                                       connection,
                                       NM_SETTINGS_CONNECTION_PERSIST_MODE_IN_MEMORY_ONLY,
                                       NM_SETTINGS_CONNECTION_INT_FLAGS_NM_GENERATED,
-                                      NM_SETTINGS_CONNECTION_INT_FLAGS_NONE,
+                                      NM_SETTINGS_CONNECTION_INT_FLAGS_NM_GENERATED,
                                       NM_SETTINGS_CONNECTION_UPDATE_REASON_NONE,
                                       /* log_context_name */ "ofono",
                                       &error);
@@ -1069,12 +1088,28 @@ handle_modem_property(GDBusProxy *proxy, const char *property, GVariant *v, gpoi
     NMModemOfono        *self = NM_MODEM_OFONO(user_data);
     NMModemOfonoPrivate *priv = NM_MODEM_OFONO_GET_PRIVATE(self);
 
-    if ((g_strcmp0(property, "Online") == 0) && VARIANT_IS_OF_TYPE_BOOLEAN(v)) {
+    if (nm_streq(property, "Powered") && VARIANT_IS_OF_TYPE_BOOLEAN(v)) {
+        gboolean powered     = g_variant_get_boolean(v);
+        gboolean old_powered = priv->modem_powered;
+
+        _LOGI("Powered: %s", powered ? "True" : "False");
+
+        if (old_powered != powered) {
+            priv->modem_powered = powered;
+
+            _LOGI("Powered %s -> %s", old_powered ? "true" : "false", powered ? "true" : "false");
+
+            update_modem_state(self);
+        }
+    } else if ((g_strcmp0(property, "Online") == 0) && VARIANT_IS_OF_TYPE_BOOLEAN(v)) {
         gboolean online = g_variant_get_boolean(v);
 
-        _LOGD("Online: %s", online ? "True" : "False");
+        _LOGI("Online: %s, and state: %d",
+              online ? "True" : "False",
+              nm_modem_get_state(NM_MODEM(self)));
 
-        if (online != priv->modem_online) {
+        if (online != priv->modem_online
+            || nm_modem_get_state(NM_MODEM(self)) == NM_MODEM_STATE_INITIALIZING) {
             priv->modem_online = online;
             _LOGI("modem is now %s", online ? "Online" : "Offline");
             update_modem_state(self);
@@ -1736,6 +1771,7 @@ nm_modem_ofono_class_init(NMModemOfonoClass *klass)
     modem_class->get_capabilities                       = get_capabilities;
     modem_class->disconnect                             = disconnect;
     modem_class->deactivate_cleanup                     = deactivate_cleanup;
+    modem_class->set_enabled                            = set_ofono_enabled;
     modem_class->check_connection_compatible_with_modem = check_connection_compatible_with_modem;
 
     modem_class->modem_act_stage1_prepare = modem_act_stage1_prepare;
