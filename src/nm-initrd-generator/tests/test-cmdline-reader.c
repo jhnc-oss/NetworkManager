@@ -1163,6 +1163,48 @@ test_bond_ip(void)
 }
 
 static void
+test_bond_arp_ip_targets(void)
+{
+    gs_unref_hashtable GHashTable *connections = NULL;
+    const char *const             *ARGV        = NM_MAKE_STRV(
+        "bond=bond0:eth0,eth1:arp_ip_target=192.168.1.1;192.168.1.254,arp_interval=200");
+    NMConnection      *connection;
+    NMSettingIPConfig *s_ip4;
+    NMSettingIPConfig *s_ip6;
+    NMSettingBond     *s_bond;
+    const char        *controller_uuid;
+
+    connections = _parse_cons(ARGV);
+    g_assert_cmpint(g_hash_table_size(connections), ==, 3);
+
+    connection = g_hash_table_lookup(connections, "bond0");
+    nmtst_assert_connection_verifies_without_normalization(connection);
+    g_assert_cmpstr(nm_connection_get_connection_type(connection),
+                    ==,
+                    NM_SETTING_BOND_SETTING_NAME);
+    g_assert_cmpstr(nm_connection_get_id(connection), ==, "bond0");
+    controller_uuid = nm_connection_get_uuid(connection);
+    g_assert(controller_uuid);
+
+    s_ip4 = nm_connection_get_setting_ip4_config(connection);
+    g_assert(s_ip4);
+    g_assert_cmpstr(nm_setting_ip_config_get_method(s_ip4), ==, NM_SETTING_IP4_CONFIG_METHOD_AUTO);
+
+    s_ip6 = nm_connection_get_setting_ip6_config(connection);
+    g_assert(s_ip6);
+    g_assert_cmpstr(nm_setting_ip_config_get_method(s_ip6), ==, NM_SETTING_IP6_CONFIG_METHOD_AUTO);
+
+    s_bond = nm_connection_get_setting_bond(connection);
+    g_assert(s_bond);
+    g_assert_cmpint(nm_setting_bond_get_num_options(s_bond), ==, 3);
+    g_assert_cmpstr(nm_setting_bond_get_option_by_name(s_bond, "mode"), ==, "balance-rr");
+    g_assert_cmpstr(nm_setting_bond_get_option_by_name(s_bond, "arp_ip_target"),
+                    ==,
+                    "192.168.1.1,192.168.1.254");
+    g_assert_cmpstr(nm_setting_bond_get_option_by_name(s_bond, "arp_interval"), ==, "200");
+}
+
+static void
 test_bond_default(void)
 {
     gs_unref_hashtable GHashTable *connections = NULL;
@@ -2702,6 +2744,7 @@ main(int argc, char **argv)
     g_test_add_func("/initrd/cmdline/bond", test_bond);
     g_test_add_func("/initrd/cmdline/bond/ip", test_bond_ip);
     g_test_add_func("/initrd/cmdline/bond/default", test_bond_default);
+    g_test_add_func("/initrd/cmdline/bond/arp_ip_targets", test_bond_arp_ip_targets);
     g_test_add_func("/initrd/cmdline/team", test_team);
     g_test_add_func("/initrd/cmdline/vlan", test_vlan);
     g_test_add_func("/initrd/cmdline/vlan/dhcp-on-parent", test_vlan_with_dhcp_on_parent);

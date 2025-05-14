@@ -912,6 +912,15 @@ reader_parse_controller(Reader     *reader,
             opt      = get_word(&opts, ',');
             opt_name = get_word(&opt, '=');
 
+            /* Replace ";" with "," for arp_ip_targets from dracut */
+            if (nm_streq(opt_name, NM_SETTING_BOND_OPTION_ARP_IP_TARGET)
+                || nm_streq(opt_name, NM_SETTING_BOND_OPTION_NS_IP6_TARGET)) {
+                for (char *p = opt; *p; p++) {
+                    if (*p == ';')
+                        *p = ',';
+                }
+            }
+
             if (!_nm_setting_bond_validate_option(opt_name, opt, &error)) {
                 _LOGW(LOGD_CORE,
                       "Ignoring invalid bond option: %s%s%s = %s%s%s: %s",
