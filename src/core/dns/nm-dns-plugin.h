@@ -21,6 +21,56 @@
 
 #define NM_DNS_PLUGIN_UPDATE_PENDING_CHANGED "update-pending-changed"
 
+/**
+ * NMDnsManagerResolvConfManager
+ * @NM_DNS_MANAGER_RESOLV_CONF_MAN_UNKNOWN: unspecified rc-manager.
+ * @NM_DNS_MANAGER_RESOLV_CONF_MAN_UNMANAGED: do not touch /etc/resolv.conf
+ *   (but still write the internal copy -- unless it is symlinked by
+ *   /etc/resolv.conf)
+ * @NM_DNS_MANAGER_RESOLV_CONF_MAN_AUTO: if /etc/resolv.conf is marked
+ *   as an immutable file, use "unmanaged" and don't touch /etc/resolv.conf.
+ *   Otherwise, if "systemd-resolved" is enabled (or detected), configure systemd-resolved via D-Bus
+ *   and don't touch /etc/resolv.conf.
+ *   Otherwise, if "resolvconf" application is found, use it.
+ *   As last resort, fallback to "symlink" which writes to /etc/resolv.conf
+ *   if (and only if) the file is missing or not a symlink.
+ * @NM_DNS_MANAGER_RESOLV_CONF_MAN_IMMUTABLE: similar to "unmanaged",
+ *   but indicates that resolv.conf cannot be modified.
+ * @NM_DNS_MANAGER_RESOLV_CONF_MAN_SYMLINK: NM writes /etc/resolv.conf
+ *   if the file is missing or not a symlink. An existing symlink is
+ *   left untouched.
+ * @NM_DNS_MANAGER_RESOLV_CONF_MAN_FILE: Write to /etc/resolv.conf directly.
+ *   If it is a file, write it as file, otherwise follow symlinks.
+ * @NM_DNS_MANAGER_RESOLV_CONF_MAN_RESOLVCONF: NM is managing resolv.conf
+     through resolvconf
+ * @NM_DNS_MANAGER_RESOLV_CONF_MAN_NETCONFIG: NM is managing resolv.conf
+     through netconfig
+ *
+ * NMDnsManager's management of resolv.conf
+ */
+typedef enum {
+    NM_DNS_MANAGER_RESOLV_CONF_MAN_UNKNOWN,
+    NM_DNS_MANAGER_RESOLV_CONF_MAN_AUTO,
+    NM_DNS_MANAGER_RESOLV_CONF_MAN_UNMANAGED,
+    NM_DNS_MANAGER_RESOLV_CONF_MAN_IMMUTABLE,
+    NM_DNS_MANAGER_RESOLV_CONF_MAN_SYMLINK,
+    NM_DNS_MANAGER_RESOLV_CONF_MAN_FILE,
+    NM_DNS_MANAGER_RESOLV_CONF_MAN_RESOLVCONF,
+    NM_DNS_MANAGER_RESOLV_CONF_MAN_NETCONFIG,
+} NMDnsManagerResolvConfManager;
+
+const char *_rc_manager_to_string(NMDnsManagerResolvConfManager val);
+
+typedef struct {
+    const CList                  *ip_data_lst_head;
+    gboolean                      caching_successful;
+    gboolean                      resolved_used;
+    gboolean                      resolver_depends_on_nm;
+    NMDnsManagerResolvConfManager rc_manager;
+    const char                   *hostdomain;
+    NMGlobalDnsConfig            *global_config;
+} NMDnsUpdateData;
+
 struct _NMDnsPluginPrivate;
 
 typedef struct {
@@ -36,11 +86,7 @@ typedef struct {
      * 'global_config' is the optional global DNS
      * configuration.
      */
-    gboolean (*update)(NMDnsPlugin             *self,
-                       const NMGlobalDnsConfig *global_config,
-                       const CList             *ip_config_lst_head,
-                       const char              *hostdomain,
-                       GError                 **error);
+    gboolean (*update)(NMDnsPlugin *plugin, NMDnsUpdateData *update_data, GError **error);
 
     void (*stop)(NMDnsPlugin *self);
 
@@ -54,6 +100,15 @@ typedef struct {
      */
     bool is_caching : 1;
 
+    guint8 hash[NM_UTILS_CHECKSUM_LENGTH_SHA1]; /* SHA1 hash of current plugin config */
+
+    /* Each way to set up resolution can be sensitive to different
+     * options or data, this function ensures that update is done
+     * only when relevant data change */
+    void (*checksum)(const NML3ConfigData *l3cd,
+                     GChecksum            *sum,
+                     int                   addr_family,
+                     NMDnsIPConfigType     dns_ip_config_type);
 } NMDnsPluginClass;
 
 GType nm_dns_plugin_get_type(void);
@@ -62,11 +117,17 @@ gboolean nm_dns_plugin_is_caching(NMDnsPlugin *self);
 
 const char *nm_dns_plugin_get_name(NMDnsPlugin *self);
 
-gboolean nm_dns_plugin_update(NMDnsPlugin             *self,
-                              const NMGlobalDnsConfig *global_config,
-                              const CList             *ip_config_lst_head,
-                              const char              *hostname,
-                              GError                 **error);
+const guint8 *nm_dns_plugin_get_hash(NMDnsPlugin *self);
+
+void nm_dns_plugin_set_hash(NMDnsPlugin *self, guint8 *hash);
+
+gboolean nm_dns_plugin_update(NMDnsPlugin *self, NMDnsUpdateData *update_data, GError **error);
+
+void nm_dns_plugin_checksum(NMDnsPlugin          *self,
+                            const NML3ConfigData *l3cd,
+                            GChecksum            *sum,
+                            int                   addr_family,
+                            NMDnsIPConfigType     dns_ip_config_type);
 
 void nm_dns_plugin_stop(NMDnsPlugin *self);
 
