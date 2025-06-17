@@ -564,6 +564,12 @@ void nm_l3_config_data_set_allow_routes_without_address(NML3ConfigData *self,
 gboolean nm_l3_config_data_get_routed_dns(const NML3ConfigData *self, int addr_family);
 void     nm_l3_config_data_set_routed_dns(NML3ConfigData *self, int addr_family, gboolean value);
 
+void nm_l3_config_data_get_dns_domains(GPtrArray            *array,
+                                       int                   addr_family,
+                                       const NML3ConfigData *l3cd,
+                                       gboolean              include_routing,
+                                       gboolean              dup);
+
 NMProxyConfigMethod nm_l3_config_data_get_proxy_method(const NML3ConfigData *self);
 
 gboolean nm_l3_config_data_set_proxy_method(NML3ConfigData *self, NMProxyConfigMethod value);
@@ -611,10 +617,5 @@ nmtst_l3_config_data_get_best_gateway(const NML3ConfigData *self, int addr_famil
 
     return nm_platform_ip_route_get_gateway(addr_family, NMP_OBJECT_CAST_IP_ROUTE(rt));
 }
-
-void nm_l3_config_data_hash_dns(const NML3ConfigData *l3cd,
-                                GChecksum            *sum,
-                                int                   addr_family,
-                                NMDnsIPConfigType     dns_ip_config_type);
 
 #endif /* __NM_L3_CONFIG_DATA_H__ */
