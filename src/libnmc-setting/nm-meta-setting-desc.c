@@ -4291,8 +4291,9 @@ _set_fcn_wireless_channel(ARGS_SET_FCN)
         return FALSE;
     }
 
-    if (!nm_utils_wifi_is_channel_valid(chan_int, "a")
-        && !nm_utils_wifi_is_channel_valid(chan_int, "bg")) {
+    if (!nm_utils_wifi_is_channel_valid(chan_int, "6GHz")
+        && !nm_utils_wifi_is_channel_valid(chan_int, "5GHz")
+        && !nm_utils_wifi_is_channel_valid(chan_int, "2.4GHz")) {
         nm_utils_error_set(error,
                            NM_UTILS_ERROR_UNKNOWN,
                            _("'%ld' is not a valid channel"),
@@ -8518,7 +8519,7 @@ static const NMMetaPropertyInfo *const property_infos_WIRELESS[] = {
     PROPERTY_INFO_WITH_DESC (NM_SETTING_WIRELESS_BAND,
         .property_type =                &_pt_gobject_string,
         .property_typ_data = DEFINE_PROPERTY_TYP_DATA (
-            .values_static =            NM_MAKE_STRV ("a", "bg"),
+            .values_static =            NM_MAKE_STRV ("6GHz", "5GHz", "2.4GHz", "a", "bg"),
         ),
     ),
     PROPERTY_INFO_WITH_DESC (NM_SETTING_WIRELESS_CHANNEL,
