@@ -2349,14 +2349,16 @@ need_new_wpa_psk(NMDeviceWifi              *self,
     g_return_val_if_fail(connection, FALSE);
 
     /* A bad PSK will cause the supplicant to disconnect during the 4-way handshake */
-    if (old_state != NM_SUPPLICANT_INTERFACE_STATE_4WAY_HANDSHAKE)
+    /* or authenticating phase in case of SAE */
+    if (old_state != NM_SUPPLICANT_INTERFACE_STATE_4WAY_HANDSHAKE
+        && old_state != NM_SUPPLICANT_INTERFACE_STATE_AUTHENTICATING)
         return FALSE;
 
     s_wsec = nm_connection_get_setting_wireless_security(connection);
     if (s_wsec)
         key_mgmt = nm_setting_wireless_security_get_key_mgmt(s_wsec);
 
-    if (g_strcmp0(key_mgmt, "wpa-psk") == 0) {
+    if (g_strcmp0(key_mgmt, "wpa-psk") == 0 || g_strcmp0(key_mgmt, "sae") == 0) {
 /* -4 (locally-generated WLAN_REASON_DISASSOC_DUE_TO_INACTIVITY) usually
          * means the driver missed beacons from the AP.  This usually happens
          * due to driver bugs or faulty power-save management.  It doesn't
