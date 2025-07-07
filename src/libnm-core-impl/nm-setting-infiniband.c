@@ -206,13 +206,6 @@ verify(NMSetting *setting, NMConnection *connection, GError **error)
             g_error_free(tmp_error);
             return FALSE;
         }
-        if (priv->p_key == -1) {
-            g_set_error_literal(error,
-                                NM_CONNECTION_ERROR,
-                                NM_CONNECTION_ERROR_INVALID_PROPERTY,
-                                _("Must specify a P_Key if specifying parent"));
-            g_prefix_error(error, "%s: ", NM_SETTING_INFINIBAND_PARENT);
-        }
     }
 
     if (priv->p_key != -1) {
