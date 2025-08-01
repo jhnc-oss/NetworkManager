@@ -9,6 +9,9 @@ the later release.
 USE AT YOUR OWN RISK.  NOT RECOMMENDED FOR PRODUCTION USE!
 
 * nmcli now supports viewing and managing WireGuard peers.
+* Fix a bug that makes broadband connections auto-connect getting 
+  blocked if the connection tries to reconnect when modem status is 
+  "disconnecting" / "disconnected".
 
 =============================================
 NetworkManager-1.54
