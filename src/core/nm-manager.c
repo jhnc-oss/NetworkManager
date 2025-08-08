@@ -2425,6 +2425,12 @@ find_parent_device_for_connection(NMManager       *self,
 
     /* Maybe a connection UUID */
     parent_connection = nm_settings_get_connection_by_uuid(priv->settings, parent_name);
+
+    /* Try connection ID */
+    if (!parent_connection) {
+        parent_connection = nm_settings_get_connection_by_id(priv->settings, parent_name);
+    }
+
     if (!parent_connection)
         return NULL;
 
@@ -2439,8 +2445,9 @@ find_parent_device_for_connection(NMManager       *self,
         if (nm_device_is_real(candidate) && !nm_device_get_managed(candidate, FALSE))
             continue;
 
-        if (nm_device_get_settings_connection(candidate) == parent_connection)
+        if (nm_device_get_settings_connection(candidate) == parent_connection) {
             return candidate;
+        }
 
         if (!first_compatible
             && nm_device_check_connection_compatible(

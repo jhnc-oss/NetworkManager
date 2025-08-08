@@ -120,6 +120,8 @@ NMSettingsConnection *nm_settings_get_connection_by_path(NMSettings *settings, c
 
 NMSettingsConnection *nm_settings_get_connection_by_uuid(NMSettings *settings, const char *uuid);
 
+NMSettingsConnection *nm_settings_get_connection_by_id(NMSettings *settings, const char *id);
+
 const char *nm_settings_get_dbus_path_for_uuid(NMSettings *self, const char *uuid);
 
 gboolean nm_settings_has_connection(NMSettings *self, NMSettingsConnection *connection);
