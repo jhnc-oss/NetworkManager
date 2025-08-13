@@ -3116,6 +3116,28 @@ nm_settings_get_connection_by_uuid(NMSettings *self, const char *uuid)
     return _sett_conn_entry_get_conn(_sett_conn_entries_get(self, uuid));
 }
 
+NMSettingsConnection *
+nm_settings_get_connection_by_id(NMSettings *self, const char *id)
+{
+    NMSettingsPrivate *priv;
+    GHashTableIter     iter;
+    SettConnEntry     *entry;
+
+    g_return_val_if_fail(NM_IS_SETTINGS(self), NULL);
+    g_return_val_if_fail(id != NULL, NULL);
+
+    priv = NM_SETTINGS_GET_PRIVATE(self);
+    g_hash_table_iter_init(&iter, priv->sce_idx);
+
+    while (g_hash_table_iter_next(&iter, (gpointer *) &entry, NULL)) {
+        if (nm_streq0(nm_settings_connection_get_id(entry->sett_conn), id)) {
+            return entry->sett_conn;
+        }
+    }
+
+    return NULL;
+}
+
 const char *
 nm_settings_get_dbus_path_for_uuid(NMSettings *self, const char *uuid)
 {
