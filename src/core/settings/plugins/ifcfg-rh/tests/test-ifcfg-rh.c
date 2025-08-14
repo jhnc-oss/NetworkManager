@@ -3956,14 +3956,16 @@ test_write_wired_auto_negotiate_on(void)
 }
 
 static void
-test_read_wifi_band_a(void)
+test_read_wifi_band_5ghz(void)
 {
     gs_unref_object NMConnection *connection = NULL;
     NMSettingConnection          *s_con;
     NMSettingWireless            *s_wifi;
 
-    connection =
-        _connection_from_file(TEST_IFCFG_DIR "/ifcfg-test-wifi-band-a", NULL, TYPE_WIRELESS, NULL);
+    connection = _connection_from_file(TEST_IFCFG_DIR "/ifcfg-test-wifi-band-5ghz",
+                                       NULL,
+                                       TYPE_WIRELESS,
+                                       NULL);
 
     s_con = nmtst_connection_assert_setting(connection, NM_TYPE_SETTING_CONNECTION);
     g_assert_cmpstr(nm_setting_connection_get_connection_type(s_con),
@@ -3971,11 +3973,11 @@ test_read_wifi_band_a(void)
                     NM_SETTING_WIRELESS_SETTING_NAME);
 
     s_wifi = nmtst_connection_assert_setting(connection, NM_TYPE_SETTING_WIRELESS);
-    g_assert_cmpstr(nm_setting_wireless_get_band(s_wifi), ==, "a");
+    g_assert_cmpstr(nm_setting_wireless_get_band(s_wifi), ==, "5GHz");
 }
 
 static void
-test_write_wifi_band_a(void)
+test_write_wifi_band_5ghz(void)
 {
     nmtst_auto_unlinkfile char   *testfile   = NULL;
     gs_unref_object NMConnection *connection = NULL;
@@ -3991,7 +3993,7 @@ test_write_wifi_band_a(void)
     s_con = _nm_connection_new_setting(connection, NM_TYPE_SETTING_CONNECTION);
     g_object_set(s_con,
                  NM_SETTING_CONNECTION_ID,
-                 "Test Write Wi-Fi Band A",
+                 "Test Write Wi-Fi Band 5GHz",
                  NM_SETTING_CONNECTION_UUID,
                  nm_uuid_generate_random_str_a(),
                  NM_SETTING_CONNECTION_TYPE,
@@ -4005,18 +4007,89 @@ test_write_wifi_band_a(void)
                  NM_SETTING_WIRELESS_MODE,
                  "infrastructure",
                  NM_SETTING_WIRELESS_BAND,
-                 "a",
+                 "5GHz",
                  NULL);
 
     nmtst_assert_connection_verifies(connection);
 
     _writer_new_connec_exp(connection,
                            TEST_SCRATCH_DIR,
-                           TEST_IFCFG_DIR "/ifcfg-Test_Write_WiFi_Band_A.cexpected",
+                           TEST_IFCFG_DIR "/ifcfg-Test_Write_WiFi_Band_5ghz.cexpected",
                            &testfile);
 
     f = _svOpenFile(testfile);
     _svGetValue_check(f, "BAND", "a");
+    svCloseFile(f);
+
+    reread = _connection_from_file(testfile, NULL, TYPE_WIRELESS, NULL);
+
+    nmtst_assert_connection_equals(connection, TRUE, reread, FALSE);
+}
+
+static void
+test_read_wifi_band_6ghz(void)
+{
+    gs_unref_object NMConnection *connection = NULL;
+    NMSettingConnection          *s_con;
+    NMSettingWireless            *s_wifi;
+
+    connection = _connection_from_file(TEST_IFCFG_DIR "/ifcfg-test-wifi-band-6ghz",
+                                       NULL,
+                                       TYPE_WIRELESS,
+                                       NULL);
+
+    s_con = nmtst_connection_assert_setting(connection, NM_TYPE_SETTING_CONNECTION);
+    g_assert_cmpstr(nm_setting_connection_get_connection_type(s_con),
+                    ==,
+                    NM_SETTING_WIRELESS_SETTING_NAME);
+
+    s_wifi = nmtst_connection_assert_setting(connection, NM_TYPE_SETTING_WIRELESS);
+    g_assert_cmpstr(nm_setting_wireless_get_band(s_wifi), ==, "6GHz");
+}
+
+static void
+test_write_wifi_band_6ghz(void)
+{
+    nmtst_auto_unlinkfile char   *testfile   = NULL;
+    gs_unref_object NMConnection *connection = NULL;
+    gs_unref_object NMConnection *reread     = NULL;
+    NMSettingConnection          *s_con;
+    NMSettingWireless            *s_wifi;
+    shvarFile                    *f;
+    gs_unref_bytes GBytes        *ssid =
+        nmtst_gbytes_from_arr(0x54, 0x65, 0x73, 0x74, 0x20, 0x53, 0x53, 0x49, 0x44);
+
+    connection = nm_simple_connection_new();
+
+    s_con = _nm_connection_new_setting(connection, NM_TYPE_SETTING_CONNECTION);
+    g_object_set(s_con,
+                 NM_SETTING_CONNECTION_ID,
+                 "Test Write Wi-Fi Band 6GHz",
+                 NM_SETTING_CONNECTION_UUID,
+                 nm_uuid_generate_random_str_a(),
+                 NM_SETTING_CONNECTION_TYPE,
+                 NM_SETTING_WIRELESS_SETTING_NAME,
+                 NULL);
+
+    s_wifi = _nm_connection_new_setting(connection, NM_TYPE_SETTING_WIRELESS);
+    g_object_set(s_wifi,
+                 NM_SETTING_WIRELESS_SSID,
+                 ssid,
+                 NM_SETTING_WIRELESS_MODE,
+                 "infrastructure",
+                 NM_SETTING_WIRELESS_BAND,
+                 "6GHz",
+                 NULL);
+
+    nmtst_assert_connection_verifies(connection);
+
+    _writer_new_connec_exp(connection,
+                           TEST_SCRATCH_DIR,
+                           TEST_IFCFG_DIR "/ifcfg-Test_Write_WiFi_Band_6ghz.cexpected",
+                           &testfile);
+
+    f = _svOpenFile(testfile);
+    _svGetValue_check(f, "BAND", "6GHz");
     svCloseFile(f);
 
     reread = _connection_from_file(testfile, NULL, TYPE_WIRELESS, NULL);
@@ -4053,9 +4126,9 @@ test_write_wifi_ap_mode(void)
                  NM_SETTING_WIRELESS_MODE,
                  "ap",
                  NM_SETTING_WIRELESS_BAND,
-                 "a",
+                 "5GHz",
                  NM_SETTING_WIRELESS_CHANNEL,
-                 (guint) 196,
+                 (guint) 52,
                  NM_SETTING_WIRELESS_AP_ISOLATION,
                  NM_TERNARY_TRUE,
                  NULL);
@@ -4073,11 +4146,11 @@ test_write_wifi_ap_mode(void)
 }
 
 static void
-test_read_wifi_band_a_channel_mismatch(void)
+test_read_wifi_band_6ghz_channel_mismatch(void)
 {
     gs_free_error GError *error = NULL;
 
-    _connection_from_file_fail(TEST_IFCFG_DIR "/ifcfg-test-wifi-band-a-channel-mismatch",
+    _connection_from_file_fail(TEST_IFCFG_DIR "/ifcfg-test-wifi-band-6ghz-channel-mismatch",
                                NULL,
                                TYPE_WIRELESS,
                                &error);
@@ -4085,11 +4158,23 @@ test_read_wifi_band_a_channel_mismatch(void)
 }
 
 static void
-test_read_wifi_band_bg_channel_mismatch(void)
+test_read_wifi_band_5ghz_channel_mismatch(void)
 {
     gs_free_error GError *error = NULL;
 
-    _connection_from_file_fail(TEST_IFCFG_DIR "/ifcfg-test-wifi-band-bg-channel-mismatch",
+    _connection_from_file_fail(TEST_IFCFG_DIR "/ifcfg-test-wifi-band-5ghz-channel-mismatch",
+                               NULL,
+                               TYPE_WIRELESS,
+                               &error);
+    g_assert_error(error, NM_SETTINGS_ERROR, NM_SETTINGS_ERROR_INVALID_CONNECTION);
+}
+
+static void
+test_read_wifi_band_2ghz_channel_mismatch(void)
+{
+    gs_free_error GError *error = NULL;
+
+    _connection_from_file_fail(TEST_IFCFG_DIR "/ifcfg-test-wifi-band-2ghz-channel-mismatch",
                                NULL,
                                TYPE_WIRELESS,
                                &error);
@@ -5732,7 +5817,7 @@ test_write_wifi_open(void)
                  NM_SETTING_WIRELESS_MODE,
                  "infrastructure",
                  NM_SETTING_WIRELESS_BAND,
-                 "bg",
+                 "2.4GHz",
                  NM_SETTING_WIRELESS_CHANNEL,
                  (guint32) 9,
                  NM_SETTING_WIRELESS_MTU,
@@ -6509,7 +6594,7 @@ test_write_wifi_wpa_psk_adhoc(void)
                  NM_SETTING_WIRELESS_CHANNEL,
                  11,
                  NM_SETTING_WIRELESS_BAND,
-                 "bg",
+                 "2.4GHz",
                  NULL);
 
     s_wsec = _nm_connection_new_setting(connection, NM_TYPE_SETTING_WIRELESS_SECURITY);
@@ -10675,11 +10760,14 @@ main(int argc, char **argv)
     g_test_add_func(TPATH "wifi/read/wpa/eap-suite-b-192/tls",
                     test_read_wifi_wpa_eap_suite_b_192_tls);
     g_test_add_func(TPATH "wifi/read/dynamic-wep/eap/ttls/chap", test_read_wifi_wep_eap_ttls_chap);
-    g_test_add_func(TPATH "wifi/read-band-a", test_read_wifi_band_a);
-    g_test_add_func(TPATH "wifi/read-band-a-channel-mismatch",
-                    test_read_wifi_band_a_channel_mismatch);
-    g_test_add_func(TPATH "wifi/read-band-bg-channel-mismatch",
-                    test_read_wifi_band_bg_channel_mismatch);
+    g_test_add_func(TPATH "wifi/read-band-6ghz", test_read_wifi_band_6ghz);
+    g_test_add_func(TPATH "wifi/read-band-5ghz", test_read_wifi_band_5ghz);
+    g_test_add_func(TPATH "wifi/read-band-6ghz-channel-mismatch",
+                    test_read_wifi_band_6ghz_channel_mismatch);
+    g_test_add_func(TPATH "wifi/read-band-5ghz-channel-mismatch",
+                    test_read_wifi_band_5ghz_channel_mismatch);
+    g_test_add_func(TPATH "wifi/read-band-2ghz-channel-mismatch",
+                    test_read_wifi_band_2ghz_channel_mismatch);
     g_test_add_func(TPATH "wifi/read-hidden", test_read_wifi_hidden);
 
     nmtst_add_test_func(TPATH "wifi/read-mac-random-always",
@@ -10851,7 +10939,8 @@ main(int argc, char **argv)
     g_test_add_func(TPATH "wifi/write-wpa-then-wep-with-perms",
                     test_write_wifi_wpa_then_wep_with_perms);
     g_test_add_func(TPATH "wifi/write-hidden", test_write_wifi_hidden);
-    g_test_add_func(TPATH "wifi/write-band-a", test_write_wifi_band_a);
+    g_test_add_func(TPATH "wifi/write-band-5ghz", test_write_wifi_band_5ghz);
+    g_test_add_func(TPATH "wifi/write-band-6ghz", test_write_wifi_band_6ghz);
     g_test_add_func(TPATH "wifi/write-ap-mode", test_write_wifi_ap_mode);
 
     g_test_add_func(TPATH "s390/read-qeth-static", test_read_wired_qeth_static);

@@ -23,7 +23,7 @@ s_wifi = dbus.Dictionary(
     {
         "ssid": dbus.ByteArray("My Hotspot".encode("utf-8")),
         "mode": "ap",
-        "band": "bg",
+        "band": "2.4GHz",
         "channel": dbus.UInt32(1),
     }
 )

@@ -9,6 +9,12 @@ the later release.
 USE AT YOUR OWN RISK.  NOT RECOMMENDED FOR PRODUCTION USE!
 
 * nmcli now supports viewing and managing WireGuard peers.
+* Add a new "sriov.preserve-on-down" property that controls whether
+  NetworkManager preserves the SR-IOV parameters set on the device
+  when the connection is deactivated, or whether it resets them to
+  their default value.
+* 6GHz band can now be set and preferred for a connection.
+* 160MHz and 320MHz channel widths can now be used for connections.
 
 =============================================
 NetworkManager-1.54
