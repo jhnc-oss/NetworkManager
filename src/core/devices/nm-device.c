@@ -9194,6 +9194,8 @@ is_available(NMDevice *self, NMDeviceCheckDevAvailableFlags flags)
  * %TRUE. (But note that it can still be %NM_DEVICE_STATE_UNMANAGED
  * when it is available.)
  *
+ * The device must be realized.
+ *
  * Returns: %TRUE or %FALSE
  */
 gboolean
@@ -9201,10 +9203,32 @@ nm_device_is_available(NMDevice *self, NMDeviceCheckDevAvailableFlags flags)
 {
     NMDevicePrivate *priv = NM_DEVICE_GET_PRIVATE(self);
 
+    nm_assert(nm_device_is_real(self));
+
     if (priv->firmware_missing)
         return FALSE;
 
     return NM_DEVICE_GET_CLASS(self)->is_available(self, flags);
+}
+
+/**
+ * nm_device_is_unrealized_ready:
+ * @self: the #NMDevice
+ *
+ * Checks if unrealized device @self would currently be capable of activating a
+ * connection.
+ *
+ * Returns: %TRUE or %FALSE
+ */
+gboolean
+nm_device_is_unrealized_ready(NMDevice *self)
+{
+    nm_assert(!nm_device_is_real(self));
+
+    if (NM_DEVICE_GET_CLASS(self)->is_unrealized_ready)
+        return NM_DEVICE_GET_CLASS(self)->is_unrealized_ready(self);
+
+    return TRUE;
 }
 
 gboolean
