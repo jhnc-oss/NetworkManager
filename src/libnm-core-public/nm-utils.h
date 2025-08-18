@@ -143,6 +143,8 @@ NM_AVAILABLE_IN_1_2
 const guint *nm_utils_wifi_2ghz_freqs(void);
 NM_AVAILABLE_IN_1_2
 const guint *nm_utils_wifi_5ghz_freqs(void);
+NM_AVAILABLE_IN_1_52
+const guint *nm_utils_wifi_6ghz_freqs(void);
 
 const char *nm_utils_wifi_strength_bars(guint8 strength);
 
@@ -260,6 +262,20 @@ nm_utils_base64secret_decode(const char *base64_key, gsize required_key_len, gui
 
 NM_AVAILABLE_IN_1_42
 void nm_utils_ensure_gtypes(void);
+
+NM_AVAILABLE_IN_1_56
+#define NM_UTILS_MIN_6GHZ      5955
+#define NM_UTILS_MAX_6GHZ      7115
+#define NM_UTILS_MIN_5GHZ      5170
+#define NM_UTILS_MAX_5GHZ      5885
+#define NM_UTILS_MIN_2GHZ      2412
+#define NM_UTILS_MAX_2GHZ      2484
+#define NM_UTILS_MAX_FREQUENCY NM_UTILS_MAX_6GHZ
+
+#define NM_UTILS_MAX_CHAN_2GHZ 14
+#define NM_UTILS_MAX_CHAN_5GHZ 177
+#define NM_UTILS_MAX_CHAN_6GHZ 233
+#define NM_UTILS_MAX_CHANNEL   NM_UTILS_MAX_CHAN_6GHZ
 
 G_END_DECLS
 

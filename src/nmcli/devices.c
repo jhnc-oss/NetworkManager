@@ -848,29 +848,29 @@ static guint progress_id = 0; /* ID of event source for displaying progress */
 static void
 usage(void)
 {
-    nmc_printerr(
-        _("Usage: nmcli device { COMMAND | help }\n\n"
-          "COMMAND := { status | show | set | connect | reapply | modify | disconnect | "
-          "delete | monitor | wifi | lldp }\n\n"
-          "  status\n\n"
-          "  show [<ifname>]\n\n"
-          "  set [ifname] <ifname> [autoconnect yes|no] [managed yes|no]\n\n"
-          "  connect <ifname>\n\n"
-          "  reapply <ifname>\n\n"
-          "  modify <ifname> ([+|-]<setting>.<property> <value>)+\n\n"
-          "  disconnect <ifname> ...\n\n"
-          "  delete <ifname> ...\n\n"
-          "  monitor <ifname> ...\n\n"
-          "  wifi [list [ifname <ifname>] [bssid <BSSID>] [--rescan yes|no|auto]]\n\n"
-          "  wifi connect <(B)SSID> [password <password>] [wep-key-type key|phrase] [ifname "
-          "<ifname>]\n"
-          "                         [bssid <BSSID>] [name <name>] [private yes|no] [hidden "
-          "yes|no]\n\n"
-          "  wifi hotspot [ifname <ifname>] [con-name <name>] [ssid <SSID>] [band a|bg] "
-          "[channel <channel>] [password <password>]\n\n"
-          "  wifi rescan [ifname <ifname>] [[ssid <SSID to scan>] ...]\n\n"
-          "  wifi show-password [ifname <ifname>]\n\n"
-          "  lldp [list [ifname <ifname>]]\n\n"));
+    nmc_printerr(_(
+        "Usage: nmcli device { COMMAND | help }\n\n"
+        "COMMAND := { status | show | set | connect | reapply | modify | disconnect | "
+        "delete | monitor | wifi | lldp }\n\n"
+        "  status\n\n"
+        "  show [<ifname>]\n\n"
+        "  set [ifname] <ifname> [autoconnect yes|no] [managed yes|no]\n\n"
+        "  connect <ifname>\n\n"
+        "  reapply <ifname>\n\n"
+        "  modify <ifname> ([+|-]<setting>.<property> <value>)+\n\n"
+        "  disconnect <ifname> ...\n\n"
+        "  delete <ifname> ...\n\n"
+        "  monitor <ifname> ...\n\n"
+        "  wifi [list [ifname <ifname>] [bssid <BSSID>] [--rescan yes|no|auto]]\n\n"
+        "  wifi connect <(B)SSID> [password <password>] [wep-key-type key|phrase] [ifname "
+        "<ifname>]\n"
+        "                         [bssid <BSSID>] [name <name>] [private yes|no] [hidden "
+        "yes|no]\n\n"
+        "  wifi hotspot [ifname <ifname>] [con-name <name>] [ssid <SSID>] [band 6GHz|5GHz|2.4GHz] "
+        "[channel <channel>] [password <password>]\n\n"
+        "  wifi rescan [ifname <ifname>] [[ssid <SSID to scan>] ...]\n\n"
+        "  wifi show-password [ifname <ifname>]\n\n"
+        "  lldp [list [ifname <ifname>]]\n\n"));
 }
 
 static void
@@ -1021,7 +1021,7 @@ usage_device_wifi(void)
           "It is also assumed that IP configuration is obtained via DHCP.\n"
           "\n"
           "ARGUMENTS := hotspot [ifname <ifname>] [con-name <name>] [ssid <SSID>]\n"
-          "                     [band a|bg] [channel <channel>] [password <password>]\n"
+          "                     [band 6GHz|5GHz|2.4GHz] [channel <channel>] [password <password>]\n"
           "\n"
           "Create a Wi-Fi hotspot. Use 'connection down' or 'device disconnect'\n"
           "to stop the hotspot.\n"
@@ -4412,10 +4412,12 @@ do_device_wifi_hotspot(const NMCCommand *cmd, NmCli *nmc, int argc, const char *
             }
             band = *argv;
             if (argc == 1 && nmc->complete)
-                nmc_complete_strings(band, "a", "bg");
-            if (strcmp(band, "a") && strcmp(band, "bg")) {
+                nmc_complete_strings(band, "6GHz", "5GHz", "2.4GHz");
+            if (!nm_streq0(band, "6GHz") && !nm_streq0(band, "5GHz") && !nm_streq0(band, "2.4GHz")
+                && !nm_streq0(band, "a") && !nm_streq0(band, "bg")) {
                 g_string_printf(nmc->return_text,
-                                _("Error: band argument value '%s' is invalid; use 'a' or 'bg'."),
+                                _("Error: band argument value '%s' is invalid; use '6GHz', '5GHz', "
+                                  "or '2.4GHz'."),
                                 band);
                 nmc->return_value = NMC_RESULT_ERROR_USER_INPUT;
                 return;
@@ -4463,7 +4465,7 @@ do_device_wifi_hotspot(const NMCCommand *cmd, NmCli *nmc, int argc, const char *
             nmc->return_value = NMC_RESULT_ERROR_USER_INPUT;
             return;
         }
-        if (!nmc_string_to_uint(channel, TRUE, 1, 5825, &value)
+        if (!nmc_string_to_uint(channel, TRUE, 1, NM_UTILS_MAX_FREQUENCY, &value)
             || !nm_utils_wifi_is_channel_valid(value, band)) {
             g_string_printf(nmc->return_text,
                             _("Error: channel '%s' not valid for band '%s'."),

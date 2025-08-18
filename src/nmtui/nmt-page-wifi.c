@@ -54,10 +54,12 @@ static NmtNewtPopupEntry wifi_mode[] = {{NC_("Wi-Fi", "Client"), NM_SETTING_WIRE
                                         {NULL, NULL}};
 
 static NmtNewtPopupEntry wifi_band[] = {{NC_("Wi-Fi", "Automatic"), NULL},
-                                        /* 802.11a Wi-Fi network */
-                                        {N_("A (5 GHz)"), "a"},
-                                        /* 802.11b / 802.11g Wi-Fi network */
-                                        {N_("B/G (2.4 GHz)"), "bg"},
+                                        /* 6GHz Wi-Fi network */
+                                        {N_("6 GHz"), "6GHz"},
+                                        /* 5GHz Wi-Fi network */
+                                        {N_("5 GHz"), "5GHz"},
+                                        /* 2.4GHz Wi-Fi network */
+                                        {N_("2.4 GHz"), "2.4GHz"},
                                         {NULL, NULL}};
 
 static struct {
