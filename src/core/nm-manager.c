@@ -4692,11 +4692,13 @@ found_better:
         if (nm_g_hash_table_contains(exclude_devices, device))
             continue;
 
-        if (!nm_device_is_available(device,
-                                    for_user_request
-                                        ? NM_DEVICE_CHECK_DEV_AVAILABLE_FOR_USER_REQUEST
-                                        : NM_DEVICE_CHECK_DEV_AVAILABLE_NONE))
-            continue;
+        if (nm_device_get_device_type(device) == NM_DEVICE_TYPE_OVS_INTERFACE) {
+            if (!nm_device_is_available(device,
+                                        for_user_request
+                                            ? NM_DEVICE_CHECK_DEV_AVAILABLE_FOR_USER_REQUEST
+                                            : NM_DEVICE_CHECK_DEV_AVAILABLE_NONE))
+                continue;
+        }
 
         /* determine the priority of this device. Currently, this priority is independent
          * of the profile (connection) and the device's details (aside the state).
