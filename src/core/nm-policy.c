@@ -2289,6 +2289,8 @@ device_state_changed(NMDevice           *device,
     NMSettingsConnection *sett_conn                  = nm_device_get_settings_connection(device);
     NMSettingConnection  *s_con                      = NULL;
     gboolean              is_activated_shared_device = FALSE;
+    NMSettingIP4Config   *s_ip4;
+    const char           *method;
 
     switch (nm_device_state_reason_check(reason)) {
     case NM_DEVICE_STATE_REASON_GSM_SIM_PIN_REQUIRED:
@@ -2353,6 +2355,19 @@ device_state_changed(NMDevice           *device,
                         NM_SETTINGS_AUTOCONNECT_BLOCKED_REASON_NO_SECRETS,
                         TRUE);
                     blocked = TRUE;
+                } else {
+                    s_ip4 = nm_device_get_applied_setting(self, NM_TYPE_SETTING_IP4_CONFIG);
+                    if (s_ip4) {
+                        method = nm_setting_ip_config_get_method((NMSettingIPConfig *) s_ip4);
+                        if (!nm_streq(method, NM_SETTING_IP4_CONFIG_METHOD_DISABLED)) {
+                            _LOGD(LOGD_DEVICE, "block-autoconnect: IP4 is disabled");
+                            nm_settings_connection_autoconnect_blocked_reason_set(
+                                sett_conn,
+                                NM_SETTINGS_AUTOCONNECT_BLOCKED_REASON_NO_SECRETS,
+                                TRUE);
+                                blocked = TRUE;
+                        }
+                    }
                 }
                 break;
             case NM_DEVICE_STATE_REASON_DEPENDENCY_FAILED:
