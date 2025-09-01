@@ -186,6 +186,9 @@ _update_pending_unblock_cb(gpointer user_data)
     _LOGW(
         "update-pending changed: DNS plugin did not become ready again. Assume something is wrong");
 
+    /* If previous update left this field as TRUE and we have to clear it, so the next
+     * update is again allowed the 5 seconds timeout */
+    priv->update_pending = FALSE;
     _notify(self, PROP_UPDATE_PENDING);
     return G_SOURCE_CONTINUE;
 }
@@ -227,7 +230,6 @@ nm_dns_manager_get_update_pending(NMDnsManager *self)
     g_return_val_if_fail(NM_IS_DNS_MANAGER(self), FALSE);
 
     priv = NM_DNS_MANAGER_GET_PRIVATE(self);
-    nm_assert(priv->update_pending == _update_pending_detect(self));
     nm_assert(priv->update_pending || !priv->update_pending_unblock);
 
     /* update-pending can only be TRUE for a certain time (before we assume
