@@ -2018,7 +2018,7 @@ supplicant_iface_bss_changed_cb(NMSupplicantInterface *iface,
     }
 
     if (found_ap) {
-        if (!nm_wifi_ap_update_from_properties(found_ap, bss_info, found_ap != priv->current_ap))
+        if (!nm_wifi_ap_update_from_properties(found_ap, bss_info))
             return;
         _ap_dump(self, LOGL_DEBUG, found_ap, "updated", 0);
     } else {
