@@ -13,6 +13,9 @@ USE AT YOUR OWN RISK.  NOT RECOMMENDED FOR PRODUCTION USE!
   "sriov.total-vfs" is not changed.
 * Add support for configuring systemd-resolved's DNSSEC option 
   per-connection via the "connection.dnssec" connection property.
+* Fix some connection properties not being applied to vpn connections
+  (connection.mdns, connection.llmnr, connection.dns-over-tls,
+   connection.mptcp-flags, ipv6.ip6-privacy)
 
 =============================================
 NetworkManager-1.54
