@@ -473,7 +473,7 @@ nm_setting_gsm_get_initial_eps_refuse_mschapv2(NMSettingGsm *setting)
  *
  * Returns: the #NMSettingGsm:device-name property of the setting
  *
- * Since: 1.54
+ * Since: 1.56
  **/
 const char *
 nm_setting_gsm_get_device_name(NMSettingGsm *setting)
@@ -1183,7 +1183,7 @@ nm_setting_gsm_class_init(NMSettingGsmClass *klass)
      * which this connection applies to.  If given, the connection will only
      * apply to the specified device.
      *
-     * Since: 1.54
+     * Since: 1.56
      **/
     _nm_setting_property_define_direct_string(properties_override,
                                               obj_properties,
