@@ -6213,7 +6213,7 @@ static const NMMetaPropertyInfo *const property_infos_GSM[] = {
     PROPERTY_INFO_WITH_DESC (NM_SETTING_GSM_INITIAL_EPS_BEARER_REFUSE_MSCHAPV2,
         .property_type =                &_pt_gobject_bool,
     ),
-    PROPERTY_INFO_WITH_DESC (NM_SETTING_GSM_DEVICE_NAME,
+    PROPERTY_INFO_WITH_DESC (NM_SETTING_GSM_DEVICE_UID,
         .property_type =                &_pt_gobject_string,
     ),
     NULL

@@ -324,7 +324,7 @@ gsm.initial-eps-bearer-refuse-pap:      no
 gsm.initial-eps-bearer-refuse-chap:     no
 gsm.initial-eps-bearer-refuse-mschap:   no
 gsm.initial-eps-bearer-refuse-mschapv2: no
-gsm.device-name:                        --
+gsm.device-uid:                         --
 proxy.method:                           none
 proxy.browser-only:                     no
 proxy.pac-url:                          --
@@ -473,7 +473,7 @@ gsm.initial-eps-bearer-refuse-pap:      nie
 gsm.initial-eps-bearer-refuse-chap:     nie
 gsm.initial-eps-bearer-refuse-mschap:   nie
 gsm.initial-eps-bearer-refuse-mschapv2: nie
-gsm.device-name:                        --
+gsm.device-uid:                         --
 proxy.method:                           none
 proxy.browser-only:                     nie
 proxy.pac-url:                          --
@@ -652,7 +652,7 @@ gsm.initial-eps-bearer-refuse-pap:      no
 gsm.initial-eps-bearer-refuse-chap:     no
 gsm.initial-eps-bearer-refuse-mschap:   no
 gsm.initial-eps-bearer-refuse-mschapv2: no
-gsm.device-name:                        --
+gsm.device-uid:                         --
 proxy.method:                           none
 proxy.browser-only:                     no
 proxy.pac-url:                          --
@@ -801,7 +801,7 @@ gsm.initial-eps-bearer-refuse-pap:      nie
 gsm.initial-eps-bearer-refuse-chap:     nie
 gsm.initial-eps-bearer-refuse-mschap:   nie
 gsm.initial-eps-bearer-refuse-mschapv2: nie
-gsm.device-name:                        --
+gsm.device-uid:                         --
 proxy.method:                           none
 proxy.browser-only:                     nie
 proxy.pac-url:                          --
@@ -980,7 +980,7 @@ gsm.initial-eps-bearer-refuse-pap:      no
 gsm.initial-eps-bearer-refuse-chap:     no
 gsm.initial-eps-bearer-refuse-mschap:   no
 gsm.initial-eps-bearer-refuse-mschapv2: no
-gsm.device-name:                        --
+gsm.device-uid:                         --
 proxy.method:                           none
 proxy.browser-only:                     no
 proxy.pac-url:                          --
@@ -1129,7 +1129,7 @@ gsm.initial-eps-bearer-refuse-pap:      nie
 gsm.initial-eps-bearer-refuse-chap:     nie
 gsm.initial-eps-bearer-refuse-mschap:   nie
 gsm.initial-eps-bearer-refuse-mschapv2: nie
-gsm.device-name:                        --
+gsm.device-uid:                         --
 proxy.method:                           none
 proxy.browser-only:                     nie
 proxy.pac-url:                          --

@@ -1393,7 +1393,7 @@
                   dbus-type="s"
                   gprop-type="gchararray"
                   />
-        <property name="device-name"
+        <property name="device-uid"
                   dbus-type="s"
                   gprop-type="gchararray"
                   />
