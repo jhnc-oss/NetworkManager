@@ -6242,6 +6242,23 @@ static const NMMetaPropertyInfo *const property_infos_HSR[] = {
     PROPERTY_INFO_WITH_DESC (NM_SETTING_HSR_PRP,
         .property_type =                &_pt_gobject_bool,
     ),
+    PROPERTY_INFO_WITH_DESC (NM_SETTING_HSR_PROTOCOL_VERSION,
+        .property_type =                &_pt_gobject_enum,
+        .property_typ_data = DEFINE_PROPERTY_TYP_DATA (
+            PROPERTY_TYP_DATA_SUBTYPE (gobject_enum,
+                .value_infos = ENUM_VALUE_INFOS (
+                    {
+                        .value = NM_SETTING_HSR_PROTOCOL_VERSION_HSR_2010,
+                        .nick = "hsr-2010",
+                    },
+                    {
+                        .value = NM_SETTING_HSR_PROTOCOL_VERSION_HSR_2012,
+                        .nick = "hsr-2012",
+                    },
+                ),
+            ),
+        ),
+    ),
     NULL
 };
 
