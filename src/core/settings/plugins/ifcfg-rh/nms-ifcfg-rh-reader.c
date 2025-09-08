@@ -643,6 +643,11 @@ make_connection_setting(const char *file,
         PARSE_WARNING("invalid DNS_OVER_TLS setting");
     g_object_set(s_con, NM_SETTING_CONNECTION_DNS_OVER_TLS, i_val, NULL);
 
+    i_val = NM_SETTING_CONNECTION_DNSSEC_DEFAULT;
+    if (!svGetValueEnum(ifcfg, "DNSSEC", nm_setting_connection_dnssec_get_type(), &i_val, NULL))
+        PARSE_WARNING("invalid DNSSEC setting");
+    g_object_set(s_con, NM_SETTING_CONNECTION_DNSSEC, i_val, NULL);
+
     i_val = NM_MPTCP_FLAGS_NONE;
     if (!svGetValueEnum(ifcfg, "MPTCP_FLAGS", nm_mptcp_flags_get_type(), &i_val, NULL))
         PARSE_WARNING("invalid MPTCP_FLAGS setting");
