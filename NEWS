@@ -18,6 +18,8 @@ USE AT YOUR OWN RISK.  NOT RECOMMENDED FOR PRODUCTION USE!
 * Add support for a new rd.net.dhcp.client-id option in
   nm-initrd-generator.
 * Add gsm device-uid setting to restrict the devices the connection applies to.
+* Add support for configuring systemd-resolved's DNSSEC option
+  per-connection via the "connection.dnssec" connection property.
 
 =============================================
 NetworkManager-1.54
