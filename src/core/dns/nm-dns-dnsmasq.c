@@ -22,6 +22,7 @@
 #include "nm-dbus-manager.h"
 #include "NetworkManagerUtils.h"
 #include "nm-l3-config-data.h"
+#include "nm-l3cfg.h"
 
 #define PIDFILE NMRUNDIR "/dnsmasq.pid"
 #define CONFDIR NMCONFDIR "/dnsmasq.d"
@@ -1206,11 +1207,7 @@ start_dnsmasq(NMDnsDnsmasq *self, gboolean force_start, GError **error)
 }
 
 static gboolean
-update(NMDnsPlugin             *plugin,
-       const NMGlobalDnsConfig *global_config,
-       const CList             *ip_data_lst_head,
-       const char              *hostdomain,
-       GError                 **error)
+update(NMDnsPlugin *plugin, NMDnsUpdateData *update_data, GError **error)
 {
     NMDnsDnsmasq        *self = NM_DNS_DNSMASQ(plugin);
     NMDnsDnsmasqPrivate *priv = NM_DNS_DNSMASQ_GET_PRIVATE(self);
@@ -1219,14 +1216,86 @@ update(NMDnsPlugin             *plugin,
         return FALSE;
 
     nm_clear_pointer(&priv->set_server_ex_args, g_variant_unref);
-    priv->set_server_ex_args =
-        g_variant_ref_sink(create_update_args(self, global_config, ip_data_lst_head, hostdomain));
+    priv->set_server_ex_args       = g_variant_ref_sink(create_update_args(self,
+                                                                     update_data->global_config,
+                                                                     update_data->ip_data_lst_head,
+                                                                     update_data->hostdomain));
     priv->set_server_ex_args_dirty = TRUE;
 
     send_dnsmasq_update(self);
 
     _update_pending_maybe_changed(self);
     return TRUE;
+}
+
+static void
+dnsmasq_checksum(const NML3ConfigData *l3cd,
+                 GChecksum            *sum,
+                 int                   addr_family,
+                 NMDnsIPConfigType     dns_ip_config_type)
+{
+    guint                    i;
+    NMDedupMultiIter         ipconf_iter;
+    const NMPObject         *obj;
+    const NMPlatformIPRoute *route;
+    const char *const       *strarr;
+    const in_addr_t         *wins;
+    guint                    element_num;
+    int                      prio  = 0;
+    gboolean                 empty = TRUE;
+
+    g_return_if_fail(l3cd);
+    g_return_if_fail(sum);
+
+    strarr = nm_l3_config_data_get_nameservers(l3cd, addr_family, &element_num);
+    for (i = 0; i < element_num; i++) {
+        g_checksum_update(sum, (gpointer) strarr[i], strlen(strarr[i]));
+        empty = FALSE;
+    }
+
+    if (addr_family == AF_INET) {
+        wins = nm_l3_config_data_get_wins(l3cd, &element_num);
+        for (i = 0; i < element_num; i++) {
+            g_checksum_update(sum, (guint8 *) &wins[i], 4);
+            empty = FALSE;
+        }
+    }
+
+    /* Without servers, the sum should be zero, as Dnsmasq plugin depends on servers */
+    if (empty) {
+        return;
+    }
+
+    strarr = nm_l3_config_data_get_searches(l3cd, addr_family, &element_num);
+    for (i = 0; i < element_num; i++) {
+        g_checksum_update(sum, (const guint8 *) strarr[i], strlen(strarr[i]));
+    }
+
+    /* If we've got searches, then we do not care about domains, because
+     * searches have higher priority */
+    if (!element_num) {
+        strarr = nm_l3_config_data_get_domains(l3cd, addr_family, &element_num);
+        for (i = 0; i < element_num; i++) {
+            g_checksum_update(sum, (const guint8 *) strarr[i], strlen(strarr[i]));
+        }
+    }
+
+    /* Dnsmasq consumes reverse dns domains, thus it depends on routes */
+    nm_l3_config_data_iter_obj_for_each (&ipconf_iter,
+                                         l3cd,
+                                         &obj,
+                                         NMP_OBJECT_TYPE_IP_ROUTE(NM_IS_IPv4(addr_family))) {
+        route = NMP_OBJECT_CAST_IP_ROUTE(obj);
+        if (NM_PLATFORM_IP_ROUTE_IS_DEFAULT(route)
+            || route->table_coerced == NM_DNS_ROUTES_FWMARK_TABLE_PRIO) {
+            continue;
+        }
+        g_checksum_update(sum, (const guint8 *) route, sizeof(*route));
+    }
+
+    g_checksum_update(sum, (const guint8 *) &dns_ip_config_type, sizeof(dns_ip_config_type));
+    nm_l3_config_data_get_dns_priority(l3cd, addr_family, &prio);
+    g_checksum_update(sum, (const guint8 *) &prio, sizeof(prio));
 }
 
 /*****************************************************************************/
@@ -1292,4 +1361,5 @@ nm_dns_dnsmasq_class_init(NMDnsDnsmasqClass *dns_class)
     plugin_class->stop               = stop;
     plugin_class->update             = update;
     plugin_class->get_update_pending = get_update_pending;
+    plugin_class->checksum           = dnsmasq_checksum;
 }

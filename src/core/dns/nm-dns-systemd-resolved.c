@@ -777,11 +777,7 @@ start_resolve:
 }
 
 static gboolean
-update(NMDnsPlugin             *plugin,
-       const NMGlobalDnsConfig *global_config,
-       const CList             *ip_data_lst_head,
-       const char              *hostdomain,
-       GError                 **error)
+update(NMDnsPlugin *plugin, NMDnsUpdateData *update_data, GError **error)
 {
     NMDnsSystemdResolved          *self       = NM_DNS_SYSTEMD_RESOLVED(plugin);
     NMDnsSystemdResolvedPrivate   *priv       = NM_DNS_SYSTEMD_RESOLVED_GET_PRIVATE(self);
@@ -802,7 +798,7 @@ update(NMDnsPlugin             *plugin,
     interfaces =
         g_hash_table_new_full(nm_direct_hash, NULL, NULL, (GDestroyNotify) _interface_config_free);
 
-    c_list_for_each_entry (ip_data, ip_data_lst_head, ip_data_lst) {
+    c_list_for_each_entry (ip_data, update_data->ip_data_lst_head, ip_data_lst) {
         InterfaceConfig *ic      = NULL;
         int              ifindex = ip_data->data->ifindex;
 
@@ -1217,6 +1213,68 @@ nm_dns_systemd_resolved_resolve_cancel(NMDnsSystemdResolvedResolveHandle *handle
     _resolve_complete_error(handle, error);
 }
 
+static void
+resolved_checksum(const NML3ConfigData *l3cd,
+                  GChecksum            *sum,
+                  int                   addr_family,
+                  NMDnsIPConfigType     dns_ip_config_type)
+{
+    guint              i;
+    int                val;
+    const char *const *strarr;
+    const in_addr_t   *wins;
+    guint              num_elements;
+
+    g_return_if_fail(l3cd);
+    g_return_if_fail(sum);
+
+    strarr = nm_l3_config_data_get_nameservers(l3cd, addr_family, &num_elements);
+    for (i = 0; i < num_elements; i++) {
+        g_checksum_update(sum, (gpointer) strarr[i], strlen(strarr[i]));
+    }
+
+    if (addr_family == AF_INET) {
+        wins = nm_l3_config_data_get_wins(l3cd, &num_elements);
+        for (i = 0; i < num_elements; i++) {
+            g_checksum_update(sum, (guint8 *) &wins[i], 4);
+        }
+    }
+
+    strarr = nm_l3_config_data_get_domains(l3cd, addr_family, &num_elements);
+    for (i = 0; i < num_elements; i++) {
+        g_checksum_update(sum, (const guint8 *) strarr[i], strlen(strarr[i]));
+    }
+
+    strarr = nm_l3_config_data_get_searches(l3cd, addr_family, &num_elements);
+    for (i = 0; i < num_elements; i++) {
+        g_checksum_update(sum, (const guint8 *) strarr[i], strlen(strarr[i]));
+    }
+
+    val = nm_l3_config_data_get_mdns(l3cd);
+    if (val != NM_SETTING_CONNECTION_MDNS_DEFAULT) {
+        g_checksum_update(sum, (const guint8 *) &val, sizeof(val));
+    }
+
+    val = nm_l3_config_data_get_llmnr(l3cd);
+    if (val != NM_SETTING_CONNECTION_LLMNR_DEFAULT) {
+        g_checksum_update(sum, (const guint8 *) &val, sizeof(val));
+    }
+
+    val = nm_l3_config_data_get_dns_over_tls(l3cd);
+    if (val != NM_SETTING_CONNECTION_DNS_OVER_TLS_DEFAULT) {
+        g_checksum_update(sum, (const guint8 *) &val, sizeof(val));
+    }
+
+    /* Priority has to be included everytime, because even if mdns/llmnr is
+     * left to default value, it could be enabled by default and priority
+     * would decide which interface should be used for mdns/llmnr */
+
+    val = 0;
+    g_checksum_update(sum, (const guint8 *) &dns_ip_config_type, sizeof(dns_ip_config_type));
+    nm_l3_config_data_get_dns_priority(l3cd, addr_family, &val);
+    g_checksum_update(sum, (const guint8 *) &val, sizeof(val));
+}
+
 /*****************************************************************************/
 
 static void
@@ -1330,4 +1388,5 @@ nm_dns_systemd_resolved_class_init(NMDnsSystemdResolvedClass *dns_class)
     plugin_class->stop               = stop;
     plugin_class->update             = update;
     plugin_class->get_update_pending = get_update_pending;
+    plugin_class->checksum           = resolved_checksum;
 }
