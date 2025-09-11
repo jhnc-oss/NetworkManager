@@ -2176,6 +2176,7 @@ write_connection_setting(NMSettingConnection *s_con, shvarFile *ifcfg, const cha
     NMSettingConnectionMdns       mdns;
     NMSettingConnectionLlmnr      llmnr;
     NMSettingConnectionDnsOverTls dns_over_tls;
+    NMSettingConnectionDnssec     dnssec;
     NMMptcpFlags                  mptcp_flags;
     guint32                       vuint32;
     const char                   *tmp, *mud_url;
@@ -2376,6 +2377,11 @@ write_connection_setting(NMSettingConnection *s_con, shvarFile *ifcfg, const cha
                        "DNS_OVER_TLS",
                        nm_setting_connection_dns_over_tls_get_type(),
                        dns_over_tls);
+    }
+
+    dnssec = nm_setting_connection_get_dnssec(s_con);
+    if (dnssec != NM_SETTING_CONNECTION_DNSSEC_DEFAULT) {
+        svSetValueEnum(ifcfg, "DNSSEC", nm_setting_connection_dnssec_get_type(), dnssec);
     }
 
     mptcp_flags = nm_setting_connection_get_mptcp_flags(s_con);

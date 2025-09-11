@@ -11,6 +11,8 @@ USE AT YOUR OWN RISK.  NOT RECOMMENDED FOR PRODUCTION USE!
 * nmcli now supports viewing and managing WireGuard peers.
 * Support reapplying the "sriov.vfs" property as long as
   "sriov.total-vfs" is not changed.
+* Add support for configuring systemd-resolved's DNSSEC option 
+  per-connection via the "connection.dnssec" connection property.
 
 =============================================
 NetworkManager-1.54
