@@ -342,12 +342,150 @@ listbox_active_changed(GObject *object, GParamSpec *pspec, gpointer button)
     }
 }
 
+typedef struct {
+    NmtNewtForm   *rescan_form;
+    gpointer      *listbox;
+    NmtNewtButton *button;
+    gint           pending_scans;
+} RescanData;
+
+static const GPtrArray *
+active_wifi_devices(void)
+{
+    GPtrArray *devices;
+    GPtrArray *active_wifi_devices;
+
+    devices             = nm_client_get_devices(nm_client);
+    active_wifi_devices = g_ptr_array_new();
+
+    if (!devices)
+        return active_wifi_devices;
+
+    /*find all active wifi devices*/
+    for (guint i = 0; i < devices->len; i++) {
+        NMDevice              *dev      = g_ptr_array_index((GPtrArray *) devices, i);
+        NMDeviceInterfaceFlags devflags = nm_device_get_interface_flags(dev);
+
+        if ((devflags & NM_DEVICE_INTERFACE_FLAG_UP) == 0)
+            continue;
+
+        if (NM_IS_DEVICE_WIFI(dev) && nm_device_get_state(dev) != NM_DEVICE_STATE_UNAVAILABLE
+            && nm_device_get_state(dev) != NM_DEVICE_STATE_UNMANAGED
+            && nm_device_get_state(dev) != NM_DEVICE_STATE_FAILED) {
+            g_ptr_array_add((GPtrArray *) active_wifi_devices, g_object_ref(dev));
+        }
+    }
+    return active_wifi_devices;
+}
+
+static gboolean
+rescan_complete_callback(const gpointer rescan_data)
+{
+    RescanData *data = (RescanData *) rescan_data;
+
+    if (data->rescan_form) {
+        /* User quit early (Esc). Make sure we don't quit again later. */
+        if (nmt_newt_widget_get_realized(NMT_NEWT_WIDGET(data->rescan_form)))
+            nmt_newt_form_quit(data->rescan_form);
+        g_object_unref(data->rescan_form);
+        data->rescan_form = NULL;
+    }
+
+    NmtConnectConnectionList *list = NMT_CONNECT_CONNECTION_LIST(data->listbox);
+    nmt_newt_listbox_clear(NMT_NEWT_LISTBOX(list));
+
+    g_object_notify(G_OBJECT(nm_client), NM_CLIENT_CONNECTIONS);
+    nmt_newt_component_set_sensitive(NMT_NEWT_COMPONENT(data->listbox), TRUE);
+    nmt_newt_component_set_sensitive(NMT_NEWT_COMPONENT(data->button), TRUE);
+
+    g_free(data);
+    return G_SOURCE_REMOVE;
+}
+
+static void
+wifi_scan_callback(GObject *source_object, GAsyncResult *result, gpointer rescan_data)
+{
+    NMDeviceWifi *wifi_device;
+    RescanData   *data;
+    GError       *error;
+
+    wifi_device = NM_DEVICE_WIFI(source_object);
+    error       = NULL;
+    if (!nm_device_wifi_request_scan_finish(wifi_device, result, &error)) {
+        g_warning("Wi-Fi scan failed: %s", error->message);
+        g_clear_error(&error);
+    }
+
+    data = (RescanData *) rescan_data;
+    /* Decrement counter and check if all scans are complete */
+    data->pending_scans--;
+    if (data->pending_scans == 0) {
+        /* All scans complete, now refresh the UI */
+        g_timeout_add_seconds(1, rescan_complete_callback, data);
+    }
+}
+
+static void
+wifi_rescan(NmtNewtButton *button, gpointer listbox)
+{
+    GPtrArray     *devices;
+    NmtNewtForm   *rescan_form;
+    NmtNewtWidget *label;
+    NmtNewtWidget *activate_button;
+
+    devices         = active_wifi_devices();
+    activate_button = g_object_get_data(G_OBJECT(listbox), "activate-button");
+
+    if (!devices || devices->len == 0) {
+        nmt_newt_message_dialog(_("No active Wi-Fi devices found"));
+        if (devices)
+            g_ptr_array_free(devices, TRUE);
+        return;
+    }
+
+    nmt_newt_component_set_sensitive(NMT_NEWT_COMPONENT(listbox), FALSE);
+    nmt_newt_component_set_sensitive(NMT_NEWT_COMPONENT(button), FALSE);
+    nmt_newt_component_set_sensitive(NMT_NEWT_COMPONENT(activate_button), FALSE);
+
+    /* open the scanning form*/
+    rescan_form = g_object_new(NMT_TYPE_NEWT_FORM, NULL);
+    label       = nmt_newt_label_new(_("Rescanning Wi-Fi devices..."));
+    nmt_newt_form_set_content(rescan_form, label);
+    nmt_newt_form_show(rescan_form);
+
+    RescanData *data    = g_malloc0(sizeof(RescanData));
+    data->rescan_form   = rescan_form;
+    data->listbox       = listbox;
+    data->pending_scans = 0;
+    data->button        = button;
+
+    for (guint i = 0; i < devices->len; i++) {
+        NMDevice *dev = g_ptr_array_index(devices, i);
+        if (NM_IS_DEVICE_WIFI(dev)) {
+            data->pending_scans++;
+            nm_device_wifi_request_scan_async(NM_DEVICE_WIFI(dev), NULL, wifi_scan_callback, data);
+        }
+    }
+
+    if (data->pending_scans == 0) {
+        /* No scans started; clean up immediately */
+        if (nmt_newt_widget_get_realized(NMT_NEWT_WIDGET(rescan_form)))
+            nmt_newt_form_quit(rescan_form);
+        g_object_unref(rescan_form);
+        data->rescan_form = NULL;
+        g_free(data);
+        nmt_newt_component_set_sensitive(NMT_NEWT_COMPONENT(listbox), TRUE);
+        nmt_newt_component_set_sensitive(NMT_NEWT_COMPONENT(button), TRUE);
+    }
+}
+
 static NmtNewtForm *
 nmt_connect_connection_list(gboolean is_top)
 {
-    int            screen_width, screen_height;
-    NmtNewtForm   *form;
-    NmtNewtWidget *list, *activate, *quit, *bbox, *grid;
+    int              screen_width, screen_height;
+    NmtNewtForm     *form;
+    NmtNewtWidget   *list, *activate, *quit, *bbox, *grid, *rescan;
+    const GPtrArray *all_active_wifi_devices;
 
     newtGetScreenSize(&screen_width, &screen_height);
 
@@ -369,8 +507,17 @@ nmt_connect_connection_list(gboolean is_top)
 
     activate = nmt_newt_button_box_add_start(NMT_NEWT_BUTTON_BOX(bbox), _("Activate"));
     g_signal_connect(list, "notify::active", G_CALLBACK(listbox_active_changed), activate);
+    g_object_set_data(G_OBJECT(list), "activate-button", activate);
     listbox_active_changed(G_OBJECT(list), NULL, activate);
     g_signal_connect(activate, "clicked", G_CALLBACK(activate_clicked), list);
+
+    all_active_wifi_devices = active_wifi_devices();
+    if (all_active_wifi_devices->len > 0) {
+        rescan = nmt_newt_button_box_add_start(NMT_NEWT_BUTTON_BOX(bbox), _("Rescan Wi-Fi"));
+        g_signal_connect(rescan, "clicked", G_CALLBACK(wifi_rescan), list);
+        g_object_set_data(G_OBJECT(list), "rescan-button", rescan);
+        g_ptr_array_free(all_active_wifi_devices, FALSE);
+    }
 
     quit = nmt_newt_button_box_add_end(NMT_NEWT_BUTTON_BOX(bbox), is_top ? _("Quit") : _("Back"));
     nmt_newt_widget_set_exit_on_activate(quit, TRUE);
