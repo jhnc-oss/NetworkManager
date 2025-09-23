@@ -386,6 +386,7 @@ char *nm_ip_routing_rule_to_string(const NMIPRoutingRule       *self,
 #define NM_SETTING_IP_CONFIG_SHARED_DHCP_RANGE      "shared-dhcp-range"
 #define NM_SETTING_IP_CONFIG_SHARED_DHCP_LEASE_TIME "shared-dhcp-lease-time"
 #define NM_SETTING_IP_CONFIG_FORWARDING             "forwarding"
+#define NM_SETTING_IP_CONFIG_DHCP_REQUEST_OPTIONS   "dhcp-request-options"
 
 /* these are not real GObject properties. */
 #define NM_SETTING_IP_CONFIG_ROUTING_RULES "routing-rules"
@@ -569,6 +570,22 @@ NMSettingIPConfigForwarding nm_setting_ip_config_get_forwarding(NMSettingIPConfi
 
 NM_AVAILABLE_IN_1_56
 gboolean nm_dns_server_validate(const char *str, int family, GError **error);
+
+NM_AVAILABLE_IN_1_56
+gboolean nm_setting_ip_config_has_dhcp_request_options(NMSettingIPConfig *setting);
+NM_AVAILABLE_IN_1_56
+guint nm_setting_ip_config_get_num_dhcp_request_options(NMSettingIPConfig *setting);
+NM_AVAILABLE_IN_1_56
+const char *nm_setting_ip_config_get_dhcp_request_option(NMSettingIPConfig *setting, int idx);
+NM_AVAILABLE_IN_1_56
+void nm_setting_ip_config_add_dhcp_request_option(NMSettingIPConfig *setting, const char *option);
+NM_AVAILABLE_IN_1_56
+void nm_setting_ip_config_remove_dhcp_request_option(NMSettingIPConfig *setting, guint idx);
+NM_AVAILABLE_IN_1_56
+gboolean nm_setting_ip_config_remove_dhcp_request_option_by_value(NMSettingIPConfig *setting,
+                                                                  const char        *option);
+NM_AVAILABLE_IN_1_56
+void nm_setting_ip_config_clear_dhcp_request_options(NMSettingIPConfig *setting);
 
 G_END_DECLS
 

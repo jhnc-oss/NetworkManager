@@ -4010,7 +4010,8 @@ NM_GOBJECT_PROPERTIES_DEFINE(NMSettingIPConfig,
                              PROP_ROUTED_DNS,
                              PROP_SHARED_DHCP_RANGE,
                              PROP_SHARED_DHCP_LEASE_TIME,
-                             PROP_FORWARDING, );
+                             PROP_FORWARDING,
+                             PROP_DHCP_REQUEST_OPTIONS, );
 
 G_DEFINE_ABSTRACT_TYPE(NMSettingIPConfig, nm_setting_ip_config, NM_TYPE_SETTING)
 
@@ -4639,6 +4640,159 @@ nm_setting_ip_config_get_address(NMSettingIPConfig *setting, int idx)
     g_return_val_if_fail(idx >= 0 && idx < priv->addresses->len, NULL);
 
     return priv->addresses->pdata[idx];
+}
+
+/**
+ * nm_setting_ip_config_has_dhcp_request_options:
+ * @setting: the #NMSettingIPConfig
+ *
+ * NMSettingIPConfig can have a list of DHCP options that are
+ * additionally requested from the DHCP server. If the list
+ * is empty, there are two similar (but differentiated) states.
+ * Either the options are explicitly set to have no values,
+ * or the options are left undefined. The latter means to use
+ * a default configuration, while the former explicitly means "no-options".
+ *
+ * Returns: whether DHCP options are initialized or left unset (the default).
+ *
+ * Since: 1.56
+ **/
+gboolean
+nm_setting_ip_config_has_dhcp_request_options(NMSettingIPConfig *setting)
+{
+    g_return_val_if_fail(NM_IS_SETTING_IP_CONFIG(setting), 0);
+
+    return !!NM_SETTING_IP_CONFIG_GET_PRIVATE(setting)->dhcp_request_options.arr;
+}
+
+/**
+ * nm_setting_ip_config_get_num_dhcp_request_options:
+ * @setting: the #NMSettingIPConfig
+ *
+ * Returns: the number of additional DHCP options to request
+ *
+ * Since: 1.56
+ **/
+guint
+nm_setting_ip_config_get_num_dhcp_request_options(NMSettingIPConfig *setting)
+{
+    g_return_val_if_fail(NM_IS_SETTING_IP_CONFIG(setting), 0);
+
+    return nm_g_array_len(NM_SETTING_IP_CONFIG_GET_PRIVATE(setting)->dhcp_request_options.arr);
+}
+
+/**
+ * nm_setting_ip_config_get_dhcp_request_option:
+ * @setting: the #NMSettingIPConfig
+ * @idx: index number of the option to return
+ *
+ * Returns: the DHCP option at index @idx
+ *
+ * Since: 1.56
+ **/
+const char *
+nm_setting_ip_config_get_dhcp_request_option(NMSettingIPConfig *setting, int idx)
+{
+    g_return_val_if_fail(NM_IS_SETTING_IP_CONFIG(setting), NULL);
+
+    return nm_strvarray_get_idxnull_or_greturn(
+        NM_SETTING_IP_CONFIG_GET_PRIVATE(setting)->dhcp_request_options.arr,
+        idx);
+}
+
+/**
+ * nm_setting_ip_config_add_dhcp_request_option:
+ * @setting: the #NMSettingIPConfig
+ * @option: the DHCP option number as string to add
+ *
+ * Adds a new DHCP option to the setting.
+ *
+ * Since: 1.56
+ **/
+void
+nm_setting_ip_config_add_dhcp_request_option(NMSettingIPConfig *setting, const char *option)
+{
+    g_return_if_fail(NM_IS_SETTING_IP_CONFIG(setting));
+    g_return_if_fail(option);
+
+    nm_strvarray_ensure_and_add(
+        &NM_SETTING_IP_CONFIG_GET_PRIVATE(setting)->dhcp_request_options.arr,
+        option);
+    _notify(setting, PROP_DHCP_REQUEST_OPTIONS);
+}
+
+/**
+ * nm_setting_ip_config_remove_dhcp_request_option:
+ * @setting: the #NMSettingIPConfig
+ * @idx: index number of the DNS option
+ *
+ * Removes the DNS option at index @idx.
+ *
+ * Since: 1.2
+ **/
+void
+nm_setting_ip_config_remove_dhcp_request_option(NMSettingIPConfig *setting, guint idx)
+{
+    NMSettingIPConfigPrivate *priv;
+
+    g_return_if_fail(NM_IS_SETTING_IP_CONFIG(setting));
+
+    priv = NM_SETTING_IP_CONFIG_GET_PRIVATE(setting);
+
+    g_return_if_fail(idx < nm_g_array_len(priv->dhcp_request_options.arr));
+
+    nm_strvarray_remove_index(priv->dhcp_request_options.arr, idx);
+    _notify(setting, PROP_DHCP_REQUEST_OPTIONS);
+}
+
+/**
+ * nm_setting_ip_config_remove_dhcp_request_option_by_value:
+ * @setting: the #NMSettingIPConfig
+ * @option: the DHCP option to remove
+ *
+ * Removes the DHCP option @dhcp_option.
+ *
+ * Returns: %TRUE if the DHCP option was found and removed; %FALSE if it was not.
+ *
+ * Since: 1.56
+ **/
+gboolean
+nm_setting_ip_config_remove_dhcp_request_option_by_value(NMSettingIPConfig *setting,
+                                                         const char        *option)
+{
+    NMSettingIPConfigPrivate *priv;
+    gssize                    i;
+
+    g_return_val_if_fail(NM_IS_SETTING_IP_CONFIG(setting), FALSE);
+    g_return_val_if_fail(option != NULL, FALSE);
+    g_return_val_if_fail(option[0] != '\0', FALSE);
+
+    priv = NM_SETTING_IP_CONFIG_GET_PRIVATE(setting);
+
+    i = _dns_option_find_idx_garray(priv->dhcp_request_options.arr, option);
+    if (i < 0)
+        return FALSE;
+
+    nm_strvarray_remove_index(priv->dhcp_request_options.arr, i);
+    _notify(setting, PROP_DHCP_REQUEST_OPTIONS);
+    return TRUE;
+}
+
+/**
+ * nm_setting_ip_config_clear_dhcp_request_options:
+ * @setting: the #NMSettingIPConfig
+ *
+ * Removes all additional requested DHCP options.
+ *
+ * Since: 1.56
+ **/
+void
+nm_setting_ip_config_clear_dhcp_request_options(NMSettingIPConfig *setting)
+{
+    g_return_if_fail(NM_IS_SETTING_IP_CONFIG(setting));
+
+    if (nm_strvarray_clear(&NM_SETTING_IP_CONFIG_GET_PRIVATE(setting)->dhcp_request_options.arr))
+        _notify(setting, PROP_DHCP_REQUEST_OPTIONS);
 }
 
 /**
@@ -6407,6 +6561,15 @@ _nm_sett_info_property_override_create_array_ip_config(int addr_family)
         .direct_offset = NM_STRUCT_OFFSET_ENSURE_TYPE(int, NMSettingIPConfigPrivate, forwarding),
         .direct_data.enum_gtype = NM_TYPE_SETTING_IP_CONFIG_FORWARDING);
 
+    _nm_properties_override_gobj(properties_override,
+                                 obj_properties[PROP_DHCP_REQUEST_OPTIONS],
+                                 &nm_sett_info_propert_type_direct_strv,
+                                 .direct_offset =
+                                     NM_STRUCT_OFFSET_ENSURE_TYPE(NMValueStrv,
+                                                                  NMSettingIPConfigPrivate,
+                                                                  dhcp_request_options),
+                                 .direct_strv_preserve_empty = TRUE, );
+
     return properties_override;
 }
 
@@ -7301,6 +7464,23 @@ nm_setting_ip_config_class_init(NMSettingIPConfigClass *klass)
                          0,
                          G_PARAM_READWRITE | G_PARAM_EXPLICIT_NOTIFY | NM_SETTING_PARAM_FUZZY_IGNORE
                              | G_PARAM_STATIC_STRINGS);
+
+    /**
+     * NMSettingIPConfig:dhcp-request-options:
+     *
+     * Array of additional DHCP option numbers to request.
+     *
+     * This is intended to request additional DHCP options, which are handled by external components
+     * like dispatcher scripts. This property expects the options as numbers in base 10.
+     *
+     * Since: 1.56
+     **/
+    obj_properties[PROP_DHCP_REQUEST_OPTIONS] =
+        g_param_spec_boxed(NM_SETTING_IP_CONFIG_DHCP_REQUEST_OPTIONS,
+                           "",
+                           "",
+                           G_TYPE_STRV,
+                           G_PARAM_READWRITE | G_PARAM_EXPLICIT_NOTIFY | G_PARAM_STATIC_STRINGS);
 
     g_object_class_install_properties(object_class, _PROPERTY_ENUMS_LAST, obj_properties);
 }

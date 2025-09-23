@@ -2086,4 +2086,11 @@ global:
 	nm_setting_hsr_protocol_version_get_type;
 	nm_setting_connection_get_dnssec;
 	nm_setting_connection_dnssec_get_type;
+	nm_setting_ip_config_has_dhcp_request_options;
+	nm_setting_ip_config_get_num_dhcp_request_options;
+	nm_setting_ip_config_get_dhcp_request_option;
+	nm_setting_ip_config_add_dhcp_request_option;
+	nm_setting_ip_config_remove_dhcp_request_option;
+	nm_setting_ip_config_remove_dhcp_request_option_by_value;
+	nm_setting_ip_config_clear_dhcp_request_options;
 } libnm_1_54_0;

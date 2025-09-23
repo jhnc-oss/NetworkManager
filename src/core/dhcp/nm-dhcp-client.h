@@ -151,6 +151,9 @@ typedef struct {
      * For DHCPv6 this is always TRUE. */
     bool use_fqdn : 1;
 
+    gsize   n_request_additional_options;
+    guint8 *request_additional_options;
+
     union {
         struct {
             /* The address from the previous lease */
