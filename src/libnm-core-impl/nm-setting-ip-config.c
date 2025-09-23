@@ -4004,7 +4004,8 @@ NM_GOBJECT_PROPERTIES_DEFINE(NMSettingIPConfig,
                              PROP_DHCP_IAID,
                              PROP_DHCP_REJECT_SERVERS,
                              PROP_AUTO_ROUTE_EXT_GW,
-                             PROP_REPLACE_LOCAL_RULE, );
+                             PROP_REPLACE_LOCAL_RULE,
+                             PROP_DHCP_REQUEST_OPTIONS, );
 
 G_DEFINE_ABSTRACT_TYPE(NMSettingIPConfig, nm_setting_ip_config, NM_TYPE_SETTING)
 
@@ -4614,6 +4615,89 @@ nm_setting_ip_config_get_address(NMSettingIPConfig *setting, int idx)
     g_return_val_if_fail(idx >= 0 && idx < priv->addresses->len, NULL);
 
     return priv->addresses->pdata[idx];
+}
+
+gboolean
+nm_setting_ip_config_has_dhcp_request_options(NMSettingIPConfig *setting)
+{
+    g_return_val_if_fail(NM_IS_SETTING_IP_CONFIG(setting), 0);
+
+    return !!NM_SETTING_IP_CONFIG_GET_PRIVATE(setting)->dhcp_request_options.arr;
+}
+
+guint
+nm_setting_ip_config_get_num_dhcp_request_options(NMSettingIPConfig *setting)
+{
+    g_return_val_if_fail(NM_IS_SETTING_IP_CONFIG(setting), 0);
+
+    return nm_g_array_len(NM_SETTING_IP_CONFIG_GET_PRIVATE(setting)->dhcp_request_options.arr);
+}
+
+const char *
+nm_setting_ip_config_get_dhcp_request_option(NMSettingIPConfig *setting, int idx)
+{
+    g_return_val_if_fail(NM_IS_SETTING_IP_CONFIG(setting), NULL);
+
+    return nm_strvarray_get_idxnull_or_greturn(
+        NM_SETTING_IP_CONFIG_GET_PRIVATE(setting)->dhcp_request_options.arr,
+        idx);
+}
+
+void
+nm_setting_ip_config_add_dhcp_request_option(NMSettingIPConfig *setting, const char *option)
+{
+    g_return_if_fail(NM_IS_SETTING_IP_CONFIG(setting));
+    g_return_if_fail(option);
+
+    nm_strvarray_ensure_and_add(&NM_SETTING_IP_CONFIG_GET_PRIVATE(setting)->dhcp_request_options.arr,
+                                option);
+    _notify(setting, PROP_DHCP_REQUEST_OPTIONS);
+}
+
+void
+nm_setting_ip_config_remove_dhcp_request_option(NMSettingIPConfig *setting, guint idx)
+{
+    NMSettingIPConfigPrivate *priv;
+
+    g_return_if_fail(NM_IS_SETTING_IP_CONFIG(setting));
+
+    priv = NM_SETTING_IP_CONFIG_GET_PRIVATE(setting);
+
+    g_return_if_fail(idx < nm_g_array_len(priv->dhcp_request_options.arr));
+
+    nm_strvarray_remove_index(priv->dhcp_request_options.arr, idx);
+    _notify(setting, PROP_DHCP_REQUEST_OPTIONS);
+}
+
+gboolean
+nm_setting_ip_config_remove_dhcp_request_option_by_value(NMSettingIPConfig *setting, const char *dhcp_option)
+{
+    NMSettingIPConfigPrivate *priv;
+    gssize                    i;
+
+    g_return_val_if_fail(NM_IS_SETTING_IP_CONFIG(setting), FALSE);
+    g_return_val_if_fail(dhcp_option != NULL, FALSE);
+    g_return_val_if_fail(dhcp_option[0] != '\0', FALSE);
+
+    priv = NM_SETTING_IP_CONFIG_GET_PRIVATE(setting);
+
+    i = _dns_option_find_idx_garray(priv->dhcp_request_options.arr, dhcp_option);
+    if (i < 0)
+        return FALSE;
+
+    nm_strvarray_remove_index(priv->dhcp_request_options.arr, i);
+    _notify(setting, PROP_DHCP_REQUEST_OPTIONS);
+    return TRUE;
+}
+
+
+void
+nm_setting_ip_config_clear_dhcp_request_options(NMSettingIPConfig *setting)
+{
+    g_return_if_fail(NM_IS_SETTING_IP_CONFIG(setting));
+
+    if (nm_strvarray_clear(&NM_SETTING_IP_CONFIG_GET_PRIVATE(setting)->dhcp_request_options.arr))
+        _notify(setting, PROP_DHCP_REQUEST_OPTIONS);
 }
 
 /**
@@ -6173,6 +6257,14 @@ _nm_sett_info_property_override_create_array_ip_config(int addr_family)
                                                                   NMSettingIPConfigPrivate,
                                                                   dhcp_reject_servers));
 
+    _nm_properties_override_gobj(
+        properties_override,
+        obj_properties[PROP_DHCP_REQUEST_OPTIONS],
+        &nm_sett_info_propert_type_direct_strv,
+        .direct_offset =
+            NM_STRUCT_OFFSET_ENSURE_TYPE(NMValueStrv, NMSettingIPConfigPrivate, dhcp_request_options),
+        .direct_strv_preserve_empty = TRUE, );
+
     return properties_override;
 }
 
@@ -6902,6 +6994,24 @@ nm_setting_ip_config_class_init(NMSettingIPConfigClass *klass)
                           NM_TYPE_TERNARY,
                           NM_TERNARY_DEFAULT,
                           G_PARAM_READWRITE | G_PARAM_EXPLICIT_NOTIFY | G_PARAM_STATIC_STRINGS);
+
+    /**
+     * NMSettingIPConfig:dhcp-request-options:
+     *
+     * Array of additional DHCP option numbers to request.
+     *
+     * This is intended to request additional DHCP options, which are handled by external components
+     * like dispatcher scripts. This property expects the options as numbers in base 10.
+     *
+     * FIXME
+     * Since: 1.52
+     **/
+    obj_properties[PROP_DHCP_REQUEST_OPTIONS] =
+        g_param_spec_boxed(NM_SETTING_IP_CONFIG_DHCP_REQUEST_OPTIONS,
+                           "",
+                           "",
+                           G_TYPE_STRV,
+                           G_PARAM_READWRITE | G_PARAM_EXPLICIT_NOTIFY | G_PARAM_STATIC_STRINGS);
 
     g_object_class_install_properties(object_class, _PROPERTY_ENUMS_LAST, obj_properties);
 }

@@ -177,6 +177,7 @@ typedef struct {
     NMValueStrv dns_search; /* array of domain name strings */
     NMValueStrv dhcp_reject_servers;
     NMValueStrv dns_options; /* array of DNS options */
+    NMValueStrv dhcp_request_options;
     GPtrArray  *dns;         /* array of IP address strings */
     GPtrArray  *addresses;   /* array of NMIPAddress */
     GPtrArray  *routes;      /* array of NMIPRoute */

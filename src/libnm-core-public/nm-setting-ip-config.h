@@ -342,6 +342,7 @@ char *nm_ip_routing_rule_to_string(const NMIPRoutingRule       *self,
 #define NM_SETTING_IP_CONFIG_DHCP_REJECT_SERVERS "dhcp-reject-servers"
 #define NM_SETTING_IP_CONFIG_AUTO_ROUTE_EXT_GW   "auto-route-ext-gw"
 #define NM_SETTING_IP_CONFIG_REPLACE_LOCAL_RULE  "replace-local-rule"
+#define NM_SETTING_IP_CONFIG_DHCP_REQUEST_OPTIONS   "dhcp-request-options"
 
 /* these are not real GObject properties. */
 #define NM_SETTING_IP_CONFIG_ROUTING_RULES "routing-rules"
@@ -509,6 +510,22 @@ NM_AVAILABLE_IN_1_42
 NMTernary nm_setting_ip_config_get_auto_route_ext_gw(NMSettingIPConfig *setting);
 NM_AVAILABLE_IN_1_44
 NMTernary nm_setting_ip_config_get_replace_local_rule(NMSettingIPConfig *setting);
+
+// FIXME Adjust AVAILIABLE_IN macros to rebased version
+NM_AVAILABLE_IN_1_46
+gboolean nm_setting_ip_config_has_dhcp_request_options(NMSettingIPConfig *setting);
+NM_AVAILABLE_IN_1_46
+guint       nm_setting_ip_config_get_num_dhcp_request_options(NMSettingIPConfig *setting);
+NM_AVAILABLE_IN_1_46
+const char *nm_setting_ip_config_get_dhcp_request_option(NMSettingIPConfig *setting, int idx);
+NM_AVAILABLE_IN_1_46
+void nm_setting_ip_config_add_dhcp_request_option(NMSettingIPConfig *setting, const char *server);
+NM_AVAILABLE_IN_1_46
+void nm_setting_ip_config_remove_dhcp_request_option(NMSettingIPConfig *setting, guint idx);
+NM_AVAILABLE_IN_1_46
+gboolean nm_setting_ip_config_remove_dhcp_request_option_by_value(NMSettingIPConfig *setting, const char *option);
+NM_AVAILABLE_IN_1_46
+void nm_setting_ip_config_clear_dhcp_request_options(NMSettingIPConfig *setting);
 
 G_END_DECLS
 

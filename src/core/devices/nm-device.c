@@ -1994,6 +1994,65 @@ _prop_get_ipvx_dhcp_hostname_flags(NMDevice *self, int addr_family)
         return NM_DHCP_HOSTNAME_FLAGS_FQDN_DEFAULT_IP6;
 }
 
+static gsize
+_prop_get_ipvx_dhcp_request_options(NMDevice *self, int addr_family, guint8 **options)
+{
+    const int          IS_IPv4 = NM_IS_IPv4(addr_family);
+    NMSettingIPConfig *s_ip    = IS_IPv4
+                                     ? nm_device_get_applied_setting(self, NM_TYPE_SETTING_IP4_CONFIG)
+                                     : nm_device_get_applied_setting(self, NM_TYPE_SETTING_IP6_CONFIG);
+    const char *defval;
+    gs_free const char **split = NULL;
+    const char **iter;
+    gsize i, j;
+
+    if (nm_setting_ip_config_has_dhcp_request_options(s_ip)) {
+        *options = g_malloc(nm_setting_ip_config_get_num_dhcp_request_options(s_ip));
+        for (i = 0, j = 0; i < nm_setting_ip_config_get_num_dhcp_request_options(s_ip); i++) {
+            guint64 val;
+
+            // use 256 as max to have it as a fallback for invalid values
+            val = _nm_utils_ascii_str_to_uint64(nm_setting_ip_config_get_dhcp_request_option(s_ip, i), 10, 0, 256, 256);
+            if (val > 255)
+                continue;
+
+            (*options)[j] = (guint8) val;
+            j++;
+        }
+        return j;
+    }
+
+    defval = nm_config_data_get_connection_default(
+        NM_CONFIG_GET_DATA,
+        IS_IPv4 ? NM_CON_DEFAULT("ipv4.dhcp-request-options")
+                : NM_CON_DEFAULT("ipv6.dhcp-request-options"),
+        self);
+
+    split = nm_strsplit_set(defval, ", ");
+    if (!split) {
+        *options = NULL;
+        return 0;
+    }
+
+    // count elements for allocation
+    for (iter = split, j = 0; *iter; iter++)
+        j++;
+    *options = g_malloc(j);
+
+    for (iter = split, j = 0; *iter; iter++) {
+        guint64 val;
+
+        // use 256 as max to have it as a fallback for invalid values
+        val = _nm_utils_ascii_str_to_uint64(*iter, 10, 0, 256, 256);
+        if (val > 255)
+            continue;
+
+        (*options)[j] = (guint8) val;
+        j++;
+    }
+    return j;
+}
+
 static const char *
 _prop_get_connection_mud_url(NMDevice *self, NMSettingConnection *s_con)
 {
@@ -10969,6 +11028,8 @@ _dev_ipdhcpx_start(NMDevice *self, int addr_family)
     const char            *str;
     gboolean               request_broadcast;
     const char            *fail_reason;
+    guint8                *request_additional_options = NULL;
+    gsize                  num_request_additional_options;
 
     if (priv->ipdhcp_data_x[IS_IPv4].state == NM_DEVICE_IP_STATE_NONE)
         _dev_ipdhcpx_set_state(self, addr_family, NM_DEVICE_IP_STATE_PENDING);
@@ -11032,6 +11093,7 @@ _dev_ipdhcpx_start(NMDevice *self, int addr_family)
     }
 
     no_lease_timeout_sec = _prop_get_ipvx_dhcp_timeout(self, addr_family);
+    num_request_additional_options = _prop_get_ipvx_dhcp_request_options(self, addr_family, &request_additional_options);
 
     if (IS_IPv4) {
         NMDhcpClientConfig     config;
@@ -11080,6 +11142,8 @@ _dev_ipdhcpx_start(NMDevice *self, int addr_family)
             .vendor_class_identifier = vendor_class_identifier,
             .use_fqdn                = hostname_is_fqdn,
             .reject_servers          = reject_servers,
+            .n_request_additional_options = num_request_additional_options,
+            .request_additional_options = request_additional_options,
             .v4 =
                 {
                     .request_broadcast = request_broadcast,
@@ -11116,6 +11180,8 @@ _dev_ipdhcpx_start(NMDevice *self, int addr_family)
             .mud_url         = _prop_get_connection_mud_url(self, s_con),
             .timeout         = no_lease_timeout_sec,
             .anycast_address = _device_get_dhcp_anycast_address(self),
+            .n_request_additional_options = num_request_additional_options,
+            .request_additional_options = request_additional_options,
             .v6 =
                 {
                     .enforce_duid  = enforce_duid,
