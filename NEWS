@@ -23,6 +23,8 @@ USE AT YOUR OWN RISK.  NOT RECOMMENDED FOR PRODUCTION USE!
 * Fix a bug that makes broadband connections auto-connect getting 
   blocked if the connection tries to reconnect when modem status is 
   "disconnecting" / "disconnected".
+* Support configuring the HSR interlink port via the
+  "hsr.interlink" property.
 
 =============================================
 NetworkManager-1.54
