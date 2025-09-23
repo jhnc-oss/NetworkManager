@@ -2204,6 +2204,56 @@ _prop_get_ipvx_dhcp_hostname_flags(NMDevice *self, int addr_family)
         return NM_DHCP_HOSTNAME_FLAGS_FQDN_DEFAULT_IP6;
 }
 
+static GArray *
+_prop_get_ipvx_dhcp_request_options(NMDevice *self, int addr_family)
+{
+    const int          IS_IPv4 = NM_IS_IPv4(addr_family);
+    NMSettingIPConfig *s_ip    = IS_IPv4
+                                     ? nm_device_get_applied_setting(self, NM_TYPE_SETTING_IP4_CONFIG)
+                                     : nm_device_get_applied_setting(self, NM_TYPE_SETTING_IP6_CONFIG);
+
+    const char          *defval;
+    gs_free const char **split = NULL;
+    const char         **iter;
+    GArray              *ret;
+    guint                i;
+
+    if (nm_setting_ip_config_has_dhcp_request_options(s_ip)) {
+        const guint num = nm_setting_ip_config_get_num_dhcp_request_options(s_ip);
+        ret             = g_array_sized_new(FALSE, FALSE, sizeof(guint16), num);
+        for (i = 0; i < num; i++) {
+            guint16 option = nm_setting_ip_config_get_dhcp_request_option(s_ip, i);
+            g_array_append_val(ret, option);
+        }
+        return ret;
+    }
+
+    defval =
+        nm_config_data_get_connection_default(NM_CONFIG_GET_DATA,
+                                              IS_IPv4 ? NM_CON_DEFAULT("ipv4.dhcp-request-options")
+                                                      : NM_CON_DEFAULT("ipv6.dhcp-request-options"),
+                                              self);
+
+    ret   = g_array_new(FALSE, FALSE, sizeof(guint16));
+    split = nm_strsplit_set(defval, ", ");
+    if (!split)
+        return ret;
+
+    for (iter = split; *iter; iter++) {
+        guint64 val;
+        guint16 u16val;
+
+        /* use 65536 as max to have it as a fallback for invalid values */
+        val = _nm_utils_ascii_str_to_uint64(*iter, 10, 0, 65536, 256);
+        if (val > 65535)
+            continue;
+
+        u16val = (guint16) val;
+        g_array_append_val(ret, u16val);
+    }
+    return ret;
+}
+
 static gboolean
 _prop_get_ipvx_dhcp_send_hostname(NMDevice *self, int addr_family)
 {
@@ -11774,6 +11824,7 @@ _dev_ipdhcpx_start(NMDevice *self, int addr_family)
     const char            *str;
     gboolean               request_broadcast;
     const char            *fail_reason;
+    GArray                *request_additional_options;
 
     if (priv->ipdhcp_data_x[IS_IPv4].state == NM_DEVICE_IP_STATE_NONE)
         _dev_ipdhcpx_set_state(self, addr_family, NM_DEVICE_IP_STATE_PENDING);
@@ -11836,7 +11887,8 @@ _dev_ipdhcpx_start(NMDevice *self, int addr_family)
         return;
     }
 
-    no_lease_timeout_sec = _prop_get_ipvx_dhcp_timeout(self, addr_family);
+    no_lease_timeout_sec       = _prop_get_ipvx_dhcp_timeout(self, addr_family);
+    request_additional_options = _prop_get_ipvx_dhcp_request_options(self, addr_family);
 
     if (IS_IPv4) {
         NMDhcpClientConfig     config;
@@ -11883,23 +11935,24 @@ _dev_ipdhcpx_start(NMDevice *self, int addr_family)
         }
 
         config = (NMDhcpClientConfig) {
-            .addr_family             = AF_INET,
-            .l3cfg                   = nm_device_get_l3cfg(self),
-            .iface                   = nm_device_get_ip_iface(self),
-            .iface_type_log          = nm_device_get_type_desc_for_log(self),
-            .uuid                    = nm_connection_get_uuid(connection),
-            .hwaddr                  = hwaddr,
-            .bcast_hwaddr            = bcast_hwaddr,
-            .send_hostname           = _prop_get_ipvx_dhcp_send_hostname(self, AF_INET),
-            .hostname                = hostname,
-            .hostname_flags          = _prop_get_ipvx_dhcp_hostname_flags(self, AF_INET),
-            .client_id               = client_id,
-            .mud_url                 = _prop_get_connection_mud_url(self, s_con),
-            .timeout                 = no_lease_timeout_sec,
-            .anycast_address         = _device_get_dhcp_anycast_address(self),
-            .vendor_class_identifier = vendor_class_identifier,
-            .use_fqdn                = hostname_is_fqdn,
-            .reject_servers          = reject_servers,
+            .addr_family                = AF_INET,
+            .l3cfg                      = nm_device_get_l3cfg(self),
+            .iface                      = nm_device_get_ip_iface(self),
+            .iface_type_log             = nm_device_get_type_desc_for_log(self),
+            .uuid                       = nm_connection_get_uuid(connection),
+            .hwaddr                     = hwaddr,
+            .bcast_hwaddr               = bcast_hwaddr,
+            .send_hostname              = _prop_get_ipvx_dhcp_send_hostname(self, AF_INET),
+            .hostname                   = hostname,
+            .hostname_flags             = _prop_get_ipvx_dhcp_hostname_flags(self, AF_INET),
+            .client_id                  = client_id,
+            .mud_url                    = _prop_get_connection_mud_url(self, s_con),
+            .timeout                    = no_lease_timeout_sec,
+            .anycast_address            = _device_get_dhcp_anycast_address(self),
+            .vendor_class_identifier    = vendor_class_identifier,
+            .use_fqdn                   = hostname_is_fqdn,
+            .reject_servers             = reject_servers,
+            .request_additional_options = request_additional_options,
             .v4 =
                 {
                     .request_broadcast   = request_broadcast,
@@ -11925,18 +11978,19 @@ _dev_ipdhcpx_start(NMDevice *self, int addr_family)
         duid = _prop_get_ipv6_dhcp_duid(self, connection, hwaddr, &enforce_duid);
 
         config = (NMDhcpClientConfig) {
-            .addr_family     = AF_INET6,
-            .l3cfg           = nm_device_get_l3cfg(self),
-            .iface           = nm_device_get_ip_iface(self),
-            .iface_type_log  = nm_device_get_type_desc_for_log(self),
-            .uuid            = nm_connection_get_uuid(connection),
-            .send_hostname   = _prop_get_ipvx_dhcp_send_hostname(self, AF_INET6),
-            .hostname        = nm_setting_ip_config_get_dhcp_hostname(s_ip),
-            .hostname_flags  = _prop_get_ipvx_dhcp_hostname_flags(self, AF_INET6),
-            .client_id       = duid,
-            .mud_url         = _prop_get_connection_mud_url(self, s_con),
-            .timeout         = no_lease_timeout_sec,
-            .anycast_address = _device_get_dhcp_anycast_address(self),
+            .addr_family                = AF_INET6,
+            .l3cfg                      = nm_device_get_l3cfg(self),
+            .iface                      = nm_device_get_ip_iface(self),
+            .iface_type_log             = nm_device_get_type_desc_for_log(self),
+            .uuid                       = nm_connection_get_uuid(connection),
+            .send_hostname              = _prop_get_ipvx_dhcp_send_hostname(self, AF_INET6),
+            .hostname                   = nm_setting_ip_config_get_dhcp_hostname(s_ip),
+            .hostname_flags             = _prop_get_ipvx_dhcp_hostname_flags(self, AF_INET6),
+            .client_id                  = duid,
+            .mud_url                    = _prop_get_connection_mud_url(self, s_con),
+            .timeout                    = no_lease_timeout_sec,
+            .anycast_address            = _device_get_dhcp_anycast_address(self),
+            .request_additional_options = request_additional_options,
             .v6 =
                 {
                     .enforce_duid  = enforce_duid,

@@ -3589,6 +3589,48 @@ _is_default_func_ip_config_dns_options(NMSetting *setting)
 }
 
 static void
+_obj_to_str_ip_config_dhcp_request_options(NMMetaAccessorGetType get_type,
+                                           NMSetting            *setting,
+                                           guint                 idx,
+                                           GString              *str)
+{
+    guint16 val = nm_setting_ip_config_get_dhcp_request_option(NM_SETTING_IP_CONFIG(setting), idx);
+    g_string_append_printf(str, "%" G_GUINT16_FORMAT, val);
+}
+
+static gboolean
+_set_fcn_ip_config_dhcp_request_options(NMSetting  *setting,
+                                        gboolean    do_add,
+                                        const char *value,
+                                        GError    **error)
+{
+    NMSettingIPConfig *s_ip = NM_SETTING_IP_CONFIG(setting);
+    guint64            val;
+
+    val = _nm_utils_ascii_str_to_uint64(value, 10, 0, 65536, 65536);
+    if (val == 65536) {
+        g_set_error(error,
+                    NM_CONNECTION_ERROR,
+                    NM_CONNECTION_ERROR_INVALID_SETTING,
+                    _("DHCP option value '%s' not between 0 and 65535"),
+                    value);
+        return FALSE;
+    }
+
+    nm_setting_ip_config_remove_dhcp_request_option_by_value(s_ip, val);
+    if (do_add)
+        nm_setting_ip_config_add_dhcp_request_option(s_ip, val);
+
+    return TRUE;
+}
+
+static gboolean
+_is_default_func_ip_config_dhcp_request_options(NMSetting *setting)
+{
+    return !nm_setting_ip_config_has_dhcp_request_options(NM_SETTING_IP_CONFIG(setting));
+}
+
+static void
 _objlist_obj_to_str_fcn_ip_config_routing_rules(NMMetaAccessorGetType get_type,
                                                 NMSetting            *setting,
                                                 guint                 idx,
@@ -6698,6 +6740,21 @@ static const NMMetaPropertyInfo *const property_infos_IP4_CONFIG[] = {
             ),
         ),
     ),
+    PROPERTY_INFO (NM_SETTING_IP_CONFIG_DHCP_REQUEST_OPTIONS, DESCRIBE_DOC_NM_SETTING_IP4_CONFIG_DHCP_REQUEST_OPTIONS,
+        .property_type =                &_pt_objlist,
+        .property_typ_data = DEFINE_PROPERTY_TYP_DATA (
+            PROPERTY_TYP_DATA_SUBTYPE (objlist,
+                .get_num_fcn =          OBJLIST_GET_NUM_FCN         (NMSettingIPConfig, nm_setting_ip_config_get_num_dhcp_request_options),
+                .obj_to_str_fcn =       _obj_to_str_ip_config_dhcp_request_options,
+                .set_fcn =              _set_fcn_ip_config_dhcp_request_options,
+                .clear_all_fcn =        OBJLIST_CLEAR_ALL_FCN       (NMSettingIPConfig, nm_setting_ip_config_clear_dhcp_request_options),
+                .remove_by_idx_fcn_u =  OBJLIST_REMOVE_BY_IDX_FCN_U (NMSettingIPConfig, nm_setting_ip_config_remove_dhcp_request_option),
+                .strsplit_plain =       TRUE,
+            ),
+            .is_default_fcn = _is_default_func_ip_config_dhcp_request_options,
+            .list_items_doc_format =    NM_META_PROPERTY_TYPE_FORMAT_INT,
+        ),
+    ),
     NULL
 };
 
@@ -7014,6 +7071,21 @@ static const NMMetaPropertyInfo *const property_infos_IP6_CONFIG[] = {
     ),
     PROPERTY_INFO_WITH_DESC (NM_SETTING_IP6_CONFIG_TOKEN,
         .property_type =                &_pt_gobject_string,
+    ),
+    PROPERTY_INFO (NM_SETTING_IP_CONFIG_DHCP_REQUEST_OPTIONS, DESCRIBE_DOC_NM_SETTING_IP6_CONFIG_DHCP_REQUEST_OPTIONS,
+        .property_type =                &_pt_objlist,
+        .property_typ_data = DEFINE_PROPERTY_TYP_DATA (
+            PROPERTY_TYP_DATA_SUBTYPE (objlist,
+                .get_num_fcn =          OBJLIST_GET_NUM_FCN         (NMSettingIPConfig, nm_setting_ip_config_get_num_dhcp_request_options),
+                .obj_to_str_fcn =       _obj_to_str_ip_config_dhcp_request_options,
+                .set_fcn =              _set_fcn_ip_config_dhcp_request_options,
+                .clear_all_fcn =        OBJLIST_CLEAR_ALL_FCN       (NMSettingIPConfig, nm_setting_ip_config_clear_dhcp_request_options),
+                .remove_by_idx_fcn_u =  OBJLIST_REMOVE_BY_IDX_FCN_U (NMSettingIPConfig, nm_setting_ip_config_remove_dhcp_request_option),
+                .strsplit_plain =       TRUE,
+            ),
+            .is_default_fcn = _is_default_func_ip_config_dhcp_request_options,
+            .list_items_doc_format =    NM_META_PROPERTY_TYPE_FORMAT_STRING,
+        ),
     ),
     NULL
 };
