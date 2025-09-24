@@ -5845,6 +5845,14 @@ static const NMMetaPropertyInfo *const property_infos_CONNECTION[] = {
             ),
         ),
     ),
+    PROPERTY_INFO_WITH_DESC (NM_SETTING_CONNECTION_DNSSEC,
+        .property_type =                &_pt_gobject_enum,
+        .property_typ_data = DEFINE_PROPERTY_TYP_DATA (
+            PROPERTY_TYP_DATA_SUBTYPE (gobject_enum,
+                .get_gtype =            nm_setting_connection_dnssec_get_type,
+            ),
+        ),
+    ),
     PROPERTY_INFO_WITH_DESC (NM_SETTING_CONNECTION_MPTCP_FLAGS,
         .property_type =                &_pt_gobject_enum,
         .property_typ_data = DEFINE_PROPERTY_TYP_DATA (
