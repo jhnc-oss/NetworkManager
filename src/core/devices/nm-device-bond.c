@@ -321,6 +321,8 @@ set_bond_attr_or_default(NMDevice *device, NMSettingBond *s_bond, const char *op
 {
     NMDeviceBond *self = NM_DEVICE_BOND(device);
     const char   *value;
+    NMBondMode    mode;
+    const char   *mode_val;
 
     value = nm_setting_bond_get_option_normalized(s_bond, opt);
     if (!value) {
@@ -328,6 +330,12 @@ set_bond_attr_or_default(NMDevice *device, NMSettingBond *s_bond, const char *op
             _LOGT(LOGD_BOND, "bond option '%s' not set as it conflicts with other options", opt);
         return;
     }
+
+    mode_val = nm_setting_bond_get_option_normalized(s_bond, NM_SETTING_BOND_OPTION_MODE);
+    mode     = _nm_setting_bond_mode_from_string(mode_val);
+    if (NM_IN_SET(mode, NM_BOND_MODE_TLB, NM_BOND_MODE_ALB, NM_BOND_MODE_8023AD)
+        && nm_streq(opt, NM_SETTING_BOND_OPTION_ARP_MISSED_MAX))
+        return;
 
     _set_bond_attr(device, opt, value);
 }
@@ -501,6 +509,8 @@ _platform_lnk_bond_init_from_setting(NMSettingBond *s_bond, NMPlatformLnkBond *p
     props->lp_interval_has      = props->lp_interval != 1;
     props->tlb_dynamic_lb_has   = NM_IN_SET(props->mode, NM_BOND_MODE_TLB, NM_BOND_MODE_ALB);
     props->lacp_active_has      = NM_IN_SET(props->mode, NM_BOND_MODE_8023AD);
+    props->arp_missed_max_has =
+        !NM_IN_SET(props->mode, NM_BOND_MODE_TLB, NM_BOND_MODE_ALB, NM_BOND_MODE_8023AD);
 }
 
 static void

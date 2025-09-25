@@ -22,8 +22,10 @@ libnm_platform = static_library(
   include_directories: [
     src_inc,
     top_inc,
+    libnm_core_public_inc,
   ],
   dependencies: [
+    libnm_core_public_dep,
     glib_dep,
     libudev_dep,
   ],
