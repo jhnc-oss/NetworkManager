@@ -863,4 +863,7 @@ gboolean nm_device_get_refresh_forwarding_done(NMDevice *self);
 
 void nm_device_set_refresh_forwarding_done(NMDevice *self, gboolean is_refresh_forwarding_done);
 
+NML3ConfigData *nm_device_create_l3_config_data_from_connection(NMDevice     *self,
+                                                                NMConnection *connection);
+
 #endif /* __NETWORKMANAGER_DEVICE_H__ */
