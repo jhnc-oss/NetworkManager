@@ -225,6 +225,10 @@ nm_l3_config_data_equal(const NML3ConfigData *a, const NML3ConfigData *b)
 
 /*****************************************************************************/
 
+const NMPObject *nm_l3_config_data_get_direct_route_for_host(const NML3ConfigData *self,
+                                                             int                   addr_family,
+                                                             gconstpointer         host);
+
 const NMDedupMultiIdxType *nm_l3_config_data_lookup_index(const NML3ConfigData *self,
                                                           NMPObjectType         obj_type);
 
@@ -485,6 +489,24 @@ gboolean nm_l3_config_data_set_ip6_mtu(NML3ConfigData *self, guint32 ip6_mtu);
 NMUtilsIPv6IfaceId nm_l3_config_data_get_ip6_token(const NML3ConfigData *self);
 
 gboolean nm_l3_config_data_set_ip6_token(NML3ConfigData *self, NMUtilsIPv6IfaceId ipv6_token);
+
+gboolean nm_l3_config_data_set_network_id(NML3ConfigData *self, const char *network_id);
+
+const char *nm_l3_config_data_get_network_id(const NML3ConfigData *self);
+
+gboolean nm_l3_config_data_set_clat(NML3ConfigData *self, gboolean val);
+
+gboolean nm_l3_config_data_get_clat(const NML3ConfigData *self);
+
+gboolean nm_l3_config_data_set_pref64_valid(NML3ConfigData *self, gboolean val);
+
+gboolean nm_l3_config_data_get_pref64_valid(const NML3ConfigData *self);
+
+gboolean nm_l3_config_data_get_pref64(const NML3ConfigData *self,
+                                      struct in6_addr      *out_prefix,
+                                      guint32              *out_plen);
+
+gboolean nm_l3_config_data_set_pref64(NML3ConfigData *self, struct in6_addr prefix, guint32 plen);
 
 NMMptcpFlags nm_l3_config_data_get_mptcp_flags(const NML3ConfigData *self);
 
