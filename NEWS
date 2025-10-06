@@ -20,6 +20,11 @@ USE AT YOUR OWN RISK.  NOT RECOMMENDED FOR PRODUCTION USE!
 * Add gsm device-uid setting to restrict the devices the connection applies to.
 * Support configuring the HSR protocol version via the
   "hsr.protocol-version" property.
+* Add support for configuring systemd-resolved's DNSSEC option
+  per-connection via the "connection.dnssec" connection property.
+* Fix some connection properties not being applied to vpn connections
+  (connection.mdns, connection.llmnr, connection.dns-over-tls,
+   connection.mptcp-flags, ipv6.ip6-privacy)
 
 =============================================
 NetworkManager-1.54
