@@ -350,6 +350,8 @@ guint nm_settings_connection_get_num_seen_bssids(NMSettingsConnection *self);
 
 gboolean nm_settings_connection_autoconnect_is_blocked(NMSettingsConnection *self);
 
+void nm_settings_connection_autoconnect_blocked_reason_reset(NMSettingsConnection *self);
+
 NMSettingsAutoconnectBlockedReason
 nm_settings_connection_autoconnect_blocked_reason_get(NMSettingsConnection *self);
 

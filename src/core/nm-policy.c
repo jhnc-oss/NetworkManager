@@ -2418,6 +2418,9 @@ device_state_changed(NMDevice           *device,
         if (sett_conn) {
             /* Reset auto retries back to default since connection was successful */
             nm_manager_devcon_autoconnect_retries_reset(priv->manager, device, sett_conn);
+
+            // If the device autoconnection was blocked due invalid / absent credentials, it shoud now be unblocked.
+            nm_settings_connection_autoconnect_blocked_reason_reset(sett_conn);
         }
 
         /* Since there is no guarantee that device_l3cd_changed() is called

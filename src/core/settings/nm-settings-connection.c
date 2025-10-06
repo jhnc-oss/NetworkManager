@@ -2583,6 +2583,13 @@ nm_settings_connection_autoconnect_blocked_reason_get(NMSettingsConnection *self
     return NM_SETTINGS_CONNECTION_GET_PRIVATE(self)->autoconnect_blocked_reason;
 }
 
+void
+nm_settings_connection_autoconnect_blocked_reason_reset(NMSettingsConnection *self)
+{
+    NM_SETTINGS_CONNECTION_GET_PRIVATE(self)->autoconnect_blocked_reason =
+        NM_SETTINGS_AUTOCONNECT_BLOCKED_REASON_NONE;
+}
+
 gboolean
 nm_settings_connection_autoconnect_blocked_reason_set(NMSettingsConnection              *self,
                                                       NMSettingsAutoconnectBlockedReason reason,
