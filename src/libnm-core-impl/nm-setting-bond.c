@@ -197,7 +197,7 @@ static NM_UTILS_STRING_TABLE_LOOKUP_STRUCT_DEFINE(
      {"any", NM_BOND_OPTION_TYPE_BOTH, 0, 1, _option_default_strv_arp_all_targets}},
     {NM_SETTING_BOND_OPTION_ARP_INTERVAL, {"0", NM_BOND_OPTION_TYPE_INT, 0, G_MAXINT}},
     {NM_SETTING_BOND_OPTION_ARP_IP_TARGET, {"", NM_BOND_OPTION_TYPE_IP}},
-    {NM_SETTING_BOND_OPTION_ARP_MISSED_MAX, {"0", NM_BOND_OPTION_TYPE_INT, 0, 255}},
+    {NM_SETTING_BOND_OPTION_ARP_MISSED_MAX, {"2", NM_BOND_OPTION_TYPE_INT, 1, 255}},
     {NM_SETTING_BOND_OPTION_ARP_VALIDATE,
      {"none", NM_BOND_OPTION_TYPE_BOTH, 0, 6, _option_default_strv_arp_validate}},
     {NM_SETTING_BOND_OPTION_BALANCE_SLB, {"0", NM_BOND_OPTION_TYPE_INT, 0, 1}},
@@ -861,10 +861,10 @@ verify(NMSetting *setting, NMConnection *connection, GError **error)
     NMSettingBondPrivate    *priv = NM_SETTING_BOND_GET_PRIVATE(setting);
     int                      miimon;
     int                      arp_interval;
-    int                      arp_missed_max;
     int                      num_grat_arp;
     int                      num_unsol_na;
     int                      peer_notif_delay;
+    const char              *arp_missed_max;
     const char              *mode_str;
     const char              *arp_ip_target = NULL;
     const char              *ns_ip6_target;
@@ -894,8 +894,6 @@ verify(NMSetting *setting, NMConnection *connection, GError **error)
 
     miimon       = _atoi(_bond_get_option_or_default(self, NM_SETTING_BOND_OPTION_MIIMON));
     arp_interval = _atoi(_bond_get_option_or_default(self, NM_SETTING_BOND_OPTION_ARP_INTERVAL));
-    arp_missed_max =
-        _atoi(_bond_get_option_or_default(self, NM_SETTING_BOND_OPTION_ARP_MISSED_MAX));
     num_grat_arp = _atoi(_bond_get_option_or_default(self, NM_SETTING_BOND_OPTION_NUM_GRAT_ARP));
     num_unsol_na = _atoi(_bond_get_option_or_default(self, NM_SETTING_BOND_OPTION_NUM_UNSOL_NA));
     peer_notif_delay =
@@ -950,17 +948,20 @@ verify(NMSetting *setting, NMConnection *connection, GError **error)
             g_prefix_error(error, "%s.%s: ", NM_SETTING_BOND_SETTING_NAME, NM_SETTING_BOND_OPTIONS);
             return FALSE;
         }
-        if (arp_missed_max > 0) {
-            g_set_error(error,
-                        NM_CONNECTION_ERROR,
-                        NM_CONNECTION_ERROR_INVALID_PROPERTY,
-                        _("'%s=%s' is incompatible with '%s > 0'"),
-                        NM_SETTING_BOND_OPTION_MODE,
-                        mode_str,
-                        NM_SETTING_BOND_OPTION_ARP_MISSED_MAX);
-            g_prefix_error(error, "%s.%s: ", NM_SETTING_BOND_SETTING_NAME, NM_SETTING_BOND_OPTIONS);
-            return FALSE;
-        }
+    }
+
+    arp_missed_max = _bond_get_option(self, NM_SETTING_BOND_OPTION_ARP_MISSED_MAX);
+    if (arp_missed_max
+        && NM_IN_SET(bond_mode, NM_BOND_MODE_8023AD, NM_BOND_MODE_TLB, NM_BOND_MODE_ALB)) {
+        g_set_error(error,
+                    NM_CONNECTION_ERROR,
+                    NM_CONNECTION_ERROR_INVALID_PROPERTY,
+                    _("'%s' option is not valid for '%s=%s'"),
+                    NM_SETTING_BOND_OPTION_ARP_MISSED_MAX,
+                    NM_SETTING_BOND_OPTION_MODE,
+                    mode_str);
+        g_prefix_error(error, "%s.%s: ", NM_SETTING_BOND_SETTING_NAME, NM_SETTING_BOND_OPTIONS);
+        return FALSE;
     }
 
     primary = _bond_get_option(self, NM_SETTING_BOND_OPTION_PRIMARY);
