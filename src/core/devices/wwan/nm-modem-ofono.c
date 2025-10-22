@@ -68,7 +68,7 @@ typedef struct {
     /* unowned; reference held by 'contexts' above. */
     OfonoContextData *current_octx;
 
-    GSource *deferred_connection_timeout_source;
+    GSource *connect_timeout_source;
 } NMModemOfonoPrivate;
 
 struct _NMModemOfono {
@@ -173,23 +173,36 @@ update_modem_state(NMModemOfono *self)
     }
 
     if (state != new_state) {
-        if (new_state == NM_MODEM_STATE_DISABLED && priv->deferred_connection_timeout_source) {
+        if (new_state == NM_MODEM_STATE_DISABLED
+            && (priv->connect_timeout_source || priv->connect_cancellable)) {
             /*
              * Do this before set_state(), because we want the final device state
              * to be "unavailable", not "failed" or "disconnected".
              */
-            _LOGI("canceling deferred context activation");
+            _LOGI("modem disabled, cancel context activation");
 
-            nm_clear_g_source_inst(&priv->deferred_connection_timeout_source);
+            nm_clear_g_cancellable(&priv->connect_cancellable);
+            nm_clear_g_source_inst(&priv->connect_timeout_source);
             nm_modem_emit_prepare_result(NM_MODEM(self), FALSE, NM_DEVICE_STATE_REASON_MODEM_BUSY);
+        } else if (new_state != NM_MODEM_STATE_REGISTERED && priv->connect_cancellable) {
+            nm_clear_g_cancellable(&priv->connect_cancellable);
+
+            if (priv->connect_timeout_source) {
+                _LOGI("modem become unregistered while attempting connection, "
+                      "defer activation.");
+            } else {
+                _LOGI("modem become unregistered while attempting connection "
+                      "and it's timeout already, no more retries.");
+                nm_modem_emit_prepare_result(NM_MODEM(self),
+                                             FALSE,
+                                             NM_DEVICE_STATE_REASON_MODEM_BUSY);
+            }
         }
 
         nm_modem_set_state(NM_MODEM(self), new_state, reason);
 
-        if (new_state == NM_MODEM_STATE_REGISTERED && priv->deferred_connection_timeout_source) {
+        if (new_state == NM_MODEM_STATE_REGISTERED && priv->connect_timeout_source) {
             _LOGI("resuming deferred context activation");
-
-            nm_clear_g_source_inst(&priv->deferred_connection_timeout_source);
             do_context_activate(self);
         }
     }
@@ -1176,14 +1189,19 @@ stage1_prepare_done(GObject *source, GAsyncResult *result, gpointer user_data)
     self = NM_MODEM_OFONO(user_data);
     priv = NM_MODEM_OFONO_GET_PRIVATE(self);
 
-    g_clear_object(&priv->connect_cancellable);
-
     nm_clear_pointer(&priv->connect_properties, g_hash_table_destroy);
 
     if (error) {
-        if (!g_strstr_len(error->message,
-                          NM_STRLEN(OFONO_ERROR_IN_PROGRESS),
-                          OFONO_ERROR_IN_PROGRESS)) {
+        gs_free gchar *remote_error = g_dbus_error_get_remote_error(error);
+
+        if (!remote_error || !g_str_equal(remote_error, OFONO_ERROR_IN_PROGRESS)) {
+            if (remote_error)
+                g_dbus_error_strip_remote_error(error);
+
+            _LOGW("activating oFono context failed: %s", error->message);
+
+            nm_clear_g_cancellable(&priv->connect_cancellable);
+            nm_clear_g_source_inst(&priv->connect_timeout_source);
             nm_modem_emit_prepare_result(NM_MODEM(self), FALSE, NM_DEVICE_STATE_REASON_MODEM_BUSY);
         }
     }
@@ -1209,10 +1227,10 @@ handle_settings(NMModemOfono *self, GVariant *v_dict)
      * handle the action.
      */
 
-    if (nm_modem_get_state(NM_MODEM(self)) < NM_MODEM_STATE_REGISTERED) {
+    if (!priv->connect_cancellable) {
         /*
-         * Connection definitely isn't happening. Avoid trigering bogus
-         * failure which would put device in a wrong state.
+         * We're not in connecting state. Avoid trigering bogus failure which
+         * would put device in a wrong state.
          */
         return;
     }
@@ -1356,16 +1374,13 @@ out:
     if (priv->l3cd_4)
         nm_l3_config_data_seal(priv->l3cd_4);
 
-    if (nm_modem_get_state(NM_MODEM(self)) != NM_MODEM_STATE_CONNECTED) {
-        _LOGI("emitting PREPARE_RESULT: %s", ret ? "TRUE" : "FALSE");
-        nm_modem_emit_prepare_result(NM_MODEM(self),
-                                     ret,
-                                     ret ? NM_DEVICE_STATE_REASON_NONE
-                                         : NM_DEVICE_STATE_REASON_IP_CONFIG_UNAVAILABLE);
-    } else {
-        _LOGW("MODEM_PPP_FAILED");
-        nm_modem_emit_ppp_failed(NM_MODEM(self), NM_DEVICE_STATE_REASON_PPP_FAILED);
-    }
+    nm_clear_g_cancellable(&priv->connect_cancellable);
+    nm_clear_g_source_inst(&priv->connect_timeout_source);
+    _LOGI("emitting PREPARE_RESULT: %s", ret ? "TRUE" : "FALSE");
+    nm_modem_emit_prepare_result(NM_MODEM(self),
+                                 ret,
+                                 ret ? NM_DEVICE_STATE_REASON_NONE
+                                     : NM_DEVICE_STATE_REASON_IP_CONFIG_UNAVAILABLE);
 }
 
 static void
@@ -1403,6 +1418,7 @@ static void
 context_properties_cb(GDBusProxy *proxy, GAsyncResult *result, gpointer user_data)
 {
     NMModemOfono              *self       = user_data;
+    NMModemOfonoPrivate       *priv       = NM_MODEM_OFONO_GET_PRIVATE(self);
     gs_free_error GError      *error      = NULL;
     gs_unref_variant GVariant *properties = NULL;
     gs_unref_variant GVariant *settings   = NULL;
@@ -1410,6 +1426,8 @@ context_properties_cb(GDBusProxy *proxy, GAsyncResult *result, gpointer user_dat
     gboolean                   active;
 
     properties = g_dbus_proxy_call_finish(proxy, result, &error);
+    if (g_error_matches(error, G_IO_ERROR, G_IO_ERROR_CANCELLED))
+        return;
 
     if (!properties) {
         _LOGW("ofono: connection failed: no context properties returned %s", error->message);
@@ -1444,13 +1462,15 @@ context_properties_cb(GDBusProxy *proxy, GAsyncResult *result, gpointer user_dat
                           g_variant_new("(sv)", "Active", g_variant_new("b", TRUE)),
                           G_DBUS_CALL_FLAGS_NONE,
                           20000,
-                          NULL,
+                          priv->connect_cancellable,
                           (GAsyncReadyCallback) stage1_prepare_done,
                           self);
     }
     return;
 
 error:
+    nm_clear_g_cancellable(&priv->connect_cancellable);
+    nm_clear_g_source_inst(&priv->connect_timeout_source);
     nm_modem_emit_prepare_result(NM_MODEM(self), FALSE, NM_DEVICE_STATE_REASON_MODEM_BUSY);
 }
 
@@ -1509,16 +1529,21 @@ create_connect_properties(NMConnection *connection)
 }
 
 static gboolean
-wait_for_signal_timeout(gpointer user_data)
+connect_timeout(gpointer user_data)
 {
     NMModemOfono        *self = NM_MODEM_OFONO(user_data);
     NMModemOfonoPrivate *priv = NM_MODEM_OFONO_GET_PRIVATE(self);
 
-    nm_modem_emit_prepare_result(NM_MODEM(self),
-                                 FALSE,
-                                 NM_DEVICE_STATE_REASON_GSM_REGISTRATION_TIMEOUT);
+    nm_clear_g_source_inst(&priv->connect_timeout_source);
 
-    nm_clear_g_source_inst(&priv->deferred_connection_timeout_source);
+    /* If we've already proceeded with the connection, let that proceed.
+     * However, if GPRS becomes unattached again in the mean time, no more
+     * chance will be given (see update_modem_state()). */
+    if (!priv->connect_cancellable) {
+        nm_modem_emit_prepare_result(NM_MODEM(self),
+                                     FALSE,
+                                     NM_DEVICE_STATE_REASON_GSM_REGISTRATION_TIMEOUT);
+    }
     return G_SOURCE_REMOVE;
 }
 
@@ -1545,15 +1570,20 @@ modem_act_stage1_prepare(NMModem             *modem,
     _LOGI("activating context %s", g_dbus_proxy_get_object_path(octx->proxy));
     priv->current_octx = octx;
 
+    /* If GPRS is not attached or becomes un-attached while we attempt context
+     * activation, we consider that a transient error and wait for GPRS to
+     * become attached again. However, to put time bound to the whole thing,
+     * set a timer to emit a failure if it takes too long.
+     */
+    nm_clear_g_source_inst(&priv->connect_timeout_source);
+    priv->connect_timeout_source =
+        nm_g_timeout_add_seconds_source(60 /* seconds */, connect_timeout, self);
+
     update_modem_state(self);
     if (nm_modem_get_state(modem) == NM_MODEM_STATE_REGISTERED) {
         do_context_activate(self);
     } else if (nm_modem_get_state(modem) == NM_MODEM_STATE_SEARCHING) {
         _LOGI("activation deferred while modem is searching for signal.");
-
-        nm_clear_g_source_inst(&priv->deferred_connection_timeout_source);
-        priv->deferred_connection_timeout_source =
-            nm_g_timeout_add_seconds_source(60 /* seconds */, wait_for_signal_timeout, self);
         /* update_modem_state() will advance the next step. */
     } else {
         _LOGW("could not activate context: modem is not registered.");
@@ -1719,7 +1749,7 @@ dispose(GObject *object)
     g_free(priv->imsi);
     priv->imsi = NULL;
 
-    nm_clear_g_source_inst(&priv->deferred_connection_timeout_source);
+    nm_clear_g_source_inst(&priv->connect_timeout_source);
 
     G_OBJECT_CLASS(nm_modem_ofono_parent_class)->dispose(object);
 }
