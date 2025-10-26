@@ -5565,50 +5565,6 @@ _l3_commit_one(NML3Cfg              *self,
 
 #if HAVE_CLAT
 static void
-_l3_get_pref64_config(NML3Cfg                     *self,
-                      struct clat_v4_config_key   *v4_key,
-                      struct clat_v4_config_value *v4_value,
-                      struct clat_v6_config_key   *v6_key,
-                      struct clat_v6_config_value *v6_value,
-                      gboolean                     committed)
-{
-    const NML3ConfigData *l3cd = self->priv.p->combined_l3cd_commited;
-    struct in6_addr       pref64;
-    guint32               pref64_plen;
-
-    memset(v4_key, 0, sizeof(*v4_key));
-    memset(v6_key, 0, sizeof(*v6_key));
-    memset(v4_value, 0, sizeof(*v4_value));
-    memset(v6_value, 0, sizeof(*v6_value));
-
-    v4_key->ifindex = v6_key->ifindex = self->priv.ifindex;
-
-    if (committed) {
-        if (self->priv.p->clat_address_4_committed) {
-            v6_value->local_v4.s_addr = v4_key->local_v4.s_addr =
-                self->priv.p->clat_address_4_committed->addr;
-        }
-        if (self->priv.p->clat_address_6_committed_valid) {
-            v4_value->local_v6 = v6_key->local_v6 = self->priv.p->clat_address_6_committed.address;
-        }
-        if (self->priv.p->clat_pref64_valid) {
-            v6_key->pref64 = v4_value->pref64 = self->priv.p->clat_pref64;
-        }
-    } else {
-        if (self->priv.p->clat_address_4) {
-            v6_value->local_v4.s_addr = v4_key->local_v4.s_addr =
-                self->priv.p->clat_address_4->addr;
-        }
-        if (self->priv.p->clat_address_6_valid) {
-            v4_value->local_v6 = v6_key->local_v6 = self->priv.p->clat_address_6.address;
-        }
-        if (nm_l3_config_data_get_pref64(l3cd, &pref64, &pref64_plen)) {
-            v6_key->pref64 = v4_value->pref64 = pref64;
-        }
-    }
-}
-
-static void
 _l3_clat_destroy(NML3Cfg *self)
 {
     DECLARE_LIBBPF_OPTS(bpf_tc_hook,
@@ -5643,17 +5599,14 @@ _l3_clat_destroy(NML3Cfg *self)
 static void
 _l3_commit_pref64(NML3Cfg *self, NML3CfgCommitType commit_type)
 {
-    int                         err  = 0;
-    const NML3ConfigData       *l3cd = self->priv.p->combined_l3cd_commited;
-    struct in6_addr             _l3cd_pref64_inner;
-    const struct in6_addr      *l3cd_pref64 = NULL;
-    guint32                     l3cd_pref64_plen;
-    char                        buf[100];
-    struct clat_v6_config_key   v6_key_committed, v6_key_new;
-    struct clat_v4_config_key   v4_key_committed, v4_key_new;
-    struct clat_v6_config_value v6_value_committed, v6_value_new;
-    struct clat_v4_config_value v4_value_committed, v4_value_new;
-    gboolean                    v6_changed;
+    int                    err  = 0;
+    const NML3ConfigData  *l3cd = self->priv.p->combined_l3cd_commited;
+    struct in6_addr        _l3cd_pref64_inner;
+    const struct in6_addr *l3cd_pref64 = NULL;
+    guint32                l3cd_pref64_plen;
+    char                   buf[100];
+    struct clat_config     clat_config;
+    gboolean               v6_changed;
     DECLARE_LIBBPF_OPTS(bpf_tc_hook,
                         hook,
                         .attach_point = BPF_TC_INGRESS | BPF_TC_EGRESS,
@@ -5677,10 +5630,6 @@ _l3_commit_pref64(NML3Cfg *self, NML3CfgCommitType commit_type)
                 self->priv.p->clat_bpf = NULL;
                 return;
             }
-
-            /* Set up maps */
-            bpf_map__set_max_entries(self->priv.p->clat_bpf->maps.v4_config_map, 16);
-            bpf_map__set_max_entries(self->priv.p->clat_bpf->maps.v6_config_map, 16);
 
             err = clat_bpf__load(self->priv.p->clat_bpf);
             if (err) {
@@ -5739,34 +5688,12 @@ _l3_commit_pref64(NML3Cfg *self, NML3CfgCommitType commit_type)
             self->priv.p->clat_attach_egress = attach_egress;
         }
 
-        _l3_get_pref64_config(self,
-                              &v4_key_committed,
-                              &v4_value_committed,
-                              &v6_key_committed,
-                              &v6_value_committed,
-                              TRUE);
-        _l3_get_pref64_config(self, &v4_key_new, &v4_value_new, &v6_key_new, &v6_value_new, FALSE);
-
-        if (memcmp(&v4_key_committed, &v4_key_new, sizeof(v4_key_new))) {
-            bpf_map_delete_elem(bpf_map__fd(self->priv.p->clat_bpf->maps.v4_config_map),
-                                &v4_key_committed);
-        }
-        if (memcmp(&v6_key_committed, &v6_key_new, sizeof(v6_key_new))) {
-            bpf_map_delete_elem(bpf_map__fd(self->priv.p->clat_bpf->maps.v6_config_map),
-                                &v6_key_committed);
-        }
-        if (memcmp(&v4_value_committed, &v4_value_new, sizeof(v4_value_new))) {
-            bpf_map_update_elem(bpf_map__fd(self->priv.p->clat_bpf->maps.v4_config_map),
-                                &v4_key_new,
-                                &v4_value_new,
-                                BPF_ANY);
-        }
-        if (memcmp(&v6_value_committed, &v6_value_new, sizeof(v6_value_new))) {
-            bpf_map_update_elem(bpf_map__fd(self->priv.p->clat_bpf->maps.v6_config_map),
-                                &v6_key_new,
-                                &v6_value_new,
-                                BPF_ANY);
-        }
+        /* Pass configuration to the BPF program */
+        memset(&clat_config, 0, sizeof(clat_config));
+        clat_config.local_v4.s_addr         = self->priv.p->clat_address_4->addr;
+        clat_config.local_v6                = self->priv.p->clat_address_6.address;
+        clat_config.pref64                  = *l3cd_pref64;
+        self->priv.p->clat_bpf->bss->config = clat_config;
 
         if (l3cd_pref64) {
             self->priv.p->clat_pref64_valid = TRUE;
