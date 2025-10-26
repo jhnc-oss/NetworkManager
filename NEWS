@@ -29,6 +29,10 @@ USE AT YOUR OWN RISK.  NOT RECOMMENDED FOR PRODUCTION USE!
   per-connection via the "connection.dnssec" connection property.
 * Support configuring the HSR interlink port via the
   "hsr.interlink" property.
+* Added support for CLAT (464XLAT) using a BPF program.
+* The default value of the ipv4.dhcp-ipv6-only-preferred property was
+  changed to a new value "auto" which automatically enables the option
+  when CLAT is enabled for the connection.
 
 =============================================
 NetworkManager-1.54
