@@ -7,6 +7,7 @@
 
 #include "nm-setting-ip4-config.h"
 
+#include "libnm-glib-aux/nm-shared-utils.h"
 #include "nm-setting-private.h"
 #include "nm-utils-private.h"
 
@@ -195,6 +196,7 @@ verify(NMSetting *setting, NMConnection *connection, GError **error)
     NMSettingIPConfig         *s_ip = NM_SETTING_IP_CONFIG(setting);
     NMSettingVerifyResult      ret;
     const char                *method;
+    gsize                      i;
 
     ret = NM_SETTING_CLASS(nm_setting_ip4_config_parent_class)->verify(setting, connection, error);
     if (ret != NM_SETTING_VERIFY_SUCCESS)
@@ -390,6 +392,22 @@ verify(NMSetting *setting, NMConnection *connection, GError **error)
     if (priv->dhcp_vendor_class_identifier
         && !nm_utils_validate_dhcp4_vendor_class_id(priv->dhcp_vendor_class_identifier, error))
         return FALSE;
+
+    for (i = 0; i < nm_g_array_len(priv->parent.dhcp_request_options); i++) {
+        guint32 value = nm_g_array_index(priv->parent.dhcp_request_options, guint32, i);
+        if (value > 255) {
+            g_set_error(error,
+                        NM_CONNECTION_ERROR,
+                        NM_CONNECTION_ERROR_INVALID_PROPERTY,
+                        _("DHCPv4 options value %d higher than the maximum possible value 255"),
+                        value);
+            g_prefix_error(error,
+                           "%s.%s: ",
+                           NM_SETTING_IP4_CONFIG_SETTING_NAME,
+                           NM_SETTING_IP_CONFIG_DHCP_REQUEST_OPTIONS);
+            return FALSE;
+        }
+    }
 
     /* Failures from here on are NORMALIZABLE_ERROR... */
 

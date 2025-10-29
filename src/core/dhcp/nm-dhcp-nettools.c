@@ -18,6 +18,7 @@
 #include "libnm-glib-aux/nm-dedup-multi.h"
 #include "libnm-glib-aux/nm-io-utils.h"
 #include "libnm-glib-aux/nm-str-buf.h"
+#include "libnm-glib-aux/nm-shared-utils.h"
 #include "libnm-std-aux/unaligned.h"
 
 #include "NetworkManagerUtils.h"
@@ -636,11 +637,14 @@ lease_to_ip4_config(NMDhcpNettools *self, NDhcp4ClientLease *lease, GError **err
     const guint8                           *l_data;
     gsize                                   l_data_len;
     const char                             *v_str;
+    char                                   *v_mut_str;
     guint16                                 v_u16;
     in_addr_t                               v_inaddr;
     in_addr_t                               lease_address;
     struct in_addr                          v_inaddr_s;
     int                                     r;
+    gsize                                   i;
+    const NMDhcpClientConfig               *client_config;
 
     nm_assert(lease);
 
@@ -649,6 +653,8 @@ lease_to_ip4_config(NMDhcpNettools *self, NDhcp4ClientLease *lease, GError **err
     l3cd = nm_dhcp_client_create_l3cd(NM_DHCP_CLIENT(self));
 
     options = nm_dhcp_client_create_options_dict(NM_DHCP_CLIENT(self), TRUE);
+
+    client_config = nm_dhcp_client_get_config(NM_DHCP_CLIENT(self));
 
     if (!lease_parse_address(self, lease, l3cd, iface, options, &lease_address, error))
         return NULL;
@@ -703,8 +709,6 @@ lease_to_ip4_config(NMDhcpNettools *self, NDhcp4ClientLease *lease, GError **err
 
         nm_str_buf_reset(&sbuf);
         if (domains) {
-            gsize i;
-
             for (i = 0; domains[i]; i++) {
                 gs_free char *s = NULL;
 
@@ -863,6 +867,19 @@ lease_to_ip4_config(NMDhcpNettools *self, NDhcp4ClientLease *lease, GError **err
                                              NM_UTILS_STR_UTF8_SAFE_FLAG_ESCAPE_CTRL,
                                              &to_free);
         _add_option(options, NM_DHCP_OPTION_DHCP4_BOOTFILE_NAME, v_str ?: "");
+    }
+
+    for (i = 0; i < client_config->request_additional_options->len; i++) {
+        guint8 option_id = nm_g_array_index(client_config->request_additional_options, guint16, i);
+        r                = _client_lease_query(lease, option_id, &l_data, &l_data_len);
+        if (r == 0) {
+            v_mut_str = nm_utils_bin2hexstr_fuller(l_data, l_data_len, '\0', TRUE, TRUE, NULL);
+            nm_dhcp_option_take_option(options,
+                                       TRUE,
+                                       AF_INET,
+                                       option_id,
+                                       g_steal_pointer(&v_mut_str));
+        }
     }
 
     lease_parse_address_list(lease, l3cd, iface, NM_DHCP_OPTION_DHCP4_NIS_SERVERS, options, &sbuf);
@@ -1428,6 +1445,12 @@ ip4_start(NMDhcpClient *client, GError **error)
     if (client_config->v4.ipv6_only_preferred) {
         n_dhcp4_client_probe_config_request_option(config,
                                                    NM_DHCP_OPTION_DHCP4_IPV6_ONLY_PREFERRED);
+    }
+
+    for (i = 0; i < client_config->request_additional_options->len; i++) {
+        n_dhcp4_client_probe_config_request_option(
+            config,
+            nm_g_array_index(client_config->request_additional_options, guint16, i));
     }
 
     if (client_config->mud_url) {
