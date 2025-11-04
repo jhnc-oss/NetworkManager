@@ -18948,6 +18948,24 @@ _device_get_auth_retries(NMDevice *self)
 }
 
 gboolean
+nm_device_auth_retries_has_next(NMDevice *self)
+{
+    int auth_retries;
+
+    g_return_val_if_fail(NM_IS_DEVICE(self), FALSE);
+
+    auth_retries = _device_get_auth_retries(self);
+
+    if (auth_retries == NM_DEVICE_AUTH_RETRIES_INFINITY)
+        return TRUE;
+
+    if (auth_retries > 0)
+        return TRUE;
+
+    return FALSE;
+}
+
+gboolean
 nm_device_auth_retries_try_next(NMDevice *self)
 {
     NMDevicePrivate *priv;
