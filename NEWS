@@ -12,6 +12,9 @@ USE AT YOUR OWN RISK.  NOT RECOMMENDED FOR PRODUCTION USE!
   same link. If the link has no DNS servers, the connectivity check will
   use any servers available in the system.
 * Install the systemd units in the initramfs using a systemd generator.
+* WIFI connections using wpa-psk respect the setting connection.auth-retry
+  and only prompt for new secrets during the last authentication attempt before
+  failing.
 
 =============================================
 NetworkManager-1.56
