@@ -3328,9 +3328,8 @@ nm_setting_connection_class_init(NMSettingConnectionClass *klass)
      *
      * The number of retries for the authentication. Zero means to try indefinitely; -1 means
      * to use a global default. If the global default is not set, the authentication
-     * retries for 3 times before failing the connection.
-     *
-     * Currently, this only applies to 802-1x authentication.
+     * retries for 3 times before failing the connection. Connections using a pre-shared key
+     * to authenticate will only prompt for a new key during the last authentication attempt.
      *
      * Since: 1.10
      **/
