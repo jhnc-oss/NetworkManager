@@ -44,6 +44,9 @@ USE AT YOUR OWN RISK.  NOT RECOMMENDED FOR PRODUCTION USE!
 * Change the default value of the ipv4.dhcp-ipv6-only-preferred property
   to a new value "auto" which automatically enables the option when CLAT
   is enabled ("yes" or "auto") in the connection profile.
+* WIFI connections using wpa-psk respect the setting connection.auth-retry
+  and only prompt for new secrets during the last authentication attempt before
+  failing.
 
 =============================================
 NetworkManager-1.56
