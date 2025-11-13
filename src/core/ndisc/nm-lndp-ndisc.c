@@ -180,10 +180,8 @@ receive_ra(struct ndp *ndp, struct ndp_msg *msg, gpointer user_data)
           now_msec / 1000,
           (int) (now_msec % 1000));
 
-    /* 
-     * RFC 4861 section 6.1.2 states that Router Advertisements MUST be silently discarded if certain
-     * criteria are not met. One of these critiria is that the ICMPv6 code field is zero.
-     */
+    /* RFC 4861 section 6.1.2 states that Router Advertisements MUST be silently discarded if certain
+     * criteria are not met. One of these critiria is that the ICMPv6 code field is zero. */
     icmp6_code = ndp_msg_code(msg);
     if (icmp6_code != 0) {
         _LOG_INVALID_RA(ndisc,
@@ -663,10 +661,8 @@ receive_rs(struct ndp *ndp, struct ndp_msg *msg, gpointer user_data)
     NMLndpNDiscPrivate *priv  = NM_LNDP_NDISC_GET_PRIVATE(ndisc);
     uint8_t             icmp6_code;
 
-    /* 
-     * RFC 4861 section 6.1.1 states that Router Solicitations MUST be silently discarded if certain
-     * criteria are not met. One of these critiria is that the ICMPv6 code field is zero.
-     */
+    /* RFC 4861 section 6.1.1 states that Router Solicitations MUST be silently discarded if certain
+     * criteria are not met. One of these critiria is that the ICMPv6 code field is zero. */
     icmp6_code = ndp_msg_code(msg);
     if (icmp6_code != 0) {
         _LOG_INVALID_RA(ndisc,
