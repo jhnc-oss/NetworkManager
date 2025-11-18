@@ -73,6 +73,7 @@ typedef enum {
 #define NM_SUPPLICANT_INTERFACE_IFINDEX            "ifindex"
 #define NM_SUPPLICANT_INTERFACE_SCANNING           "scanning"
 #define NM_SUPPLICANT_INTERFACE_CURRENT_BSS        "current-bss"
+#define NM_SUPPLICANT_INTERFACE_CURRENT_AUTH_MODE  "current-auth-mode"
 #define NM_SUPPLICANT_INTERFACE_P2P_GROUP_JOINED   "p2p-group-joined"
 #define NM_SUPPLICANT_INTERFACE_P2P_GROUP_PATH     "p2p-group-path"
 #define NM_SUPPLICANT_INTERFACE_P2P_GROUP_OWNER    "p2p-group-owner"
@@ -150,6 +151,8 @@ const char *nm_supplicant_interface_state_to_string(NMSupplicantInterfaceState s
 gboolean nm_supplicant_interface_get_scanning(NMSupplicantInterface *self);
 
 NMRefString *nm_supplicant_interface_get_current_bss(NMSupplicantInterface *self);
+
+NMRefString *nm_supplicant_interface_get_current_auth_mode(NMSupplicantInterface *self);
 
 gint64 nm_supplicant_interface_get_last_scan(NMSupplicantInterface *self);
 

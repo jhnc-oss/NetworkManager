@@ -124,6 +124,8 @@ typedef struct {
     guint32 failed_iface_count;
     gint32  hw_addr_scan_expire;
 
+    guint sae_auth_failure_count;
+
     guint32 rate;
 
     guint8 scan_periodic_interval_sec;
@@ -2393,6 +2395,48 @@ need_new_wpa_psk(NMDeviceWifi              *self,
 }
 
 static gboolean
+need_new_wpa3_secret(NMDeviceWifi              *self,
+                     NMSupplicantInterfaceState old_state,
+                     int                        disconnect_reason,
+                     const char               **setting_name)
+{
+    NMDeviceWifiPrivate *priv          = NM_DEVICE_WIFI_GET_PRIVATE(self);
+    const char          *sup_auth_mode = NULL;
+
+    g_return_val_if_fail(setting_name, FALSE);
+
+    /* Since some networks support wpa2-psk and wpa3-sae, check to see which method wpa_supplicant chose */
+    sup_auth_mode =
+        nm_ref_string_get_str(nm_supplicant_interface_get_current_auth_mode(priv->sup_iface));
+
+    g_return_val_if_fail(sup_auth_mode, FALSE);
+
+    /* SAE authentication failures typically occur as repeated AUTHENTICATING->DISCONNECTED loops */
+    if (g_strcmp0(sup_auth_mode, "SAE") == 0
+        && old_state == NM_SUPPLICANT_INTERFACE_STATE_AUTHENTICATING) {
+        priv->sae_auth_failure_count++;
+
+        _LOGI(LOGD_DEVICE | LOGD_WIFI,
+              "Activation: (wifi) WPA3 disconnected during auth %d time(s)",
+              priv->sae_auth_failure_count);
+    }
+
+    /* Handle SAE (WPA3) connections */
+    if (g_strcmp0(sup_auth_mode, "SAE") == 0 && priv->sae_auth_failure_count > 1) {
+        /* A bad password with WPA3 will cause the supplicant to disconnect
+        during the authentication phase multiple times in a row*/
+        if (old_state != NM_SUPPLICANT_INTERFACE_STATE_AUTHENTICATING)
+            return FALSE;
+
+        _LOGI(LOGD_DEVICE | LOGD_WIFI,
+              "Activation: (wifi) WPA3 disconnected during auth 2x, asking for new key");
+        *setting_name = NM_SETTING_WIRELESS_SECURITY_SETTING_NAME;
+        return TRUE;
+    }
+    return FALSE;
+}
+
+static gboolean
 handle_8021x_or_psk_auth_fail(NMDeviceWifi              *self,
                               NMSupplicantInterfaceState new_state,
                               NMSupplicantInterfaceState old_state,
@@ -2412,7 +2456,8 @@ handle_8021x_or_psk_auth_fail(NMDeviceWifi              *self,
     g_return_val_if_fail(req != NULL, FALSE);
 
     if (need_new_8021x_secrets(self, old_state, &setting_name)
-        || need_new_wpa_psk(self, old_state, disconnect_reason, &setting_name)) {
+        || need_new_wpa_psk(self, old_state, disconnect_reason, &setting_name)
+        || need_new_wpa3_secret(self, old_state, disconnect_reason, &setting_name)) {
         nm_act_request_clear_secrets(req);
 
         _LOGI(LOGD_DEVICE | LOGD_WIFI,
@@ -3398,7 +3443,8 @@ act_stage2_config(NMDevice *device, NMDeviceStateReason *out_failure_reason)
               nm_connection_get_id(connection));
     }
 
-    priv->ssid_found = FALSE;
+    priv->ssid_found             = FALSE;
+    priv->sae_auth_failure_count = 0;
 
     /* Supplicant requires an initial frequency for Ad-Hoc, Hotspot and Mesh;
      * if the user didn't specify one and we didn't find an AP that matched

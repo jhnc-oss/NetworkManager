@@ -80,6 +80,7 @@ NM_GOBJECT_PROPERTIES_DEFINE(NMSupplicantInterface,
                              PROP_P2P_GROUP_OWNER,
                              PROP_SCANNING,
                              PROP_CURRENT_BSS,
+                             PROP_CURRENT_AUTH_MODE,
                              PROP_DRIVER,
                              PROP_P2P_AVAILABLE,
                              PROP_AUTH_STATE, );
@@ -123,6 +124,8 @@ typedef struct _NMSupplicantInterfacePrivate {
     gint64 last_scan_msec;
 
     NMSupplicantAuthState auth_state;
+
+    NMRefString *current_auth_mode;
 
     NMSupplicantDriver requested_driver;
     NMSupplCapMask     global_capabilities;
@@ -1166,6 +1169,7 @@ set_state_down(NMSupplicantInterface *self,
     _remove_network(self);
 
     nm_clear_pointer(&priv->current_bss, nm_ref_string_unref);
+    nm_clear_pointer(&priv->current_auth_mode, nm_ref_string_unref);
 
     _notify_maybe_scanning(self);
 }
@@ -1205,6 +1209,14 @@ nm_supplicant_interface_get_current_bss(NMSupplicantInterface *self)
     g_return_val_if_fail(self != NULL, FALSE);
 
     return NM_SUPPLICANT_INTERFACE_GET_PRIVATE(self)->current_bss;
+}
+
+NMRefString *
+nm_supplicant_interface_get_current_auth_mode(NMSupplicantInterface *self)
+{
+    g_return_val_if_fail(self != NULL, FALSE);
+
+    return NM_SUPPLICANT_INTERFACE_GET_PRIVATE(self)->current_auth_mode;
 }
 
 gboolean
@@ -1942,6 +1954,7 @@ _properties_changed_main(NMSupplicantInterface *self, GVariant *properties)
     gboolean                      do_log_driver_info    = FALSE;
     gboolean                      do_set_state          = FALSE;
     gboolean                      do_notify_current_bss = FALSE;
+    gboolean                      do_notify_current_auth_mode = FALSE;
 
     nm_assert(properties || g_variant_is_of_type(properties, G_VARIANT_TYPE("a{sv}")));
 
@@ -2007,6 +2020,11 @@ _properties_changed_main(NMSupplicantInterface *self, GVariant *properties)
             do_notify_current_bss = TRUE;
     }
 
+    if (nm_g_variant_lookup(properties, "CurrentAuthMode", "&s", &v_s)) {
+        if (nm_ref_string_reset_str(&priv->current_auth_mode, v_s))
+            do_notify_current_auth_mode = TRUE;
+    }
+
     if (nm_g_variant_lookup(properties, "ApIsolate", "&s", &v_s))
         priv->ap_isolate_supported = TRUE;
 
@@ -2048,6 +2066,9 @@ _properties_changed_main(NMSupplicantInterface *self, GVariant *properties)
 
     if (do_notify_current_bss)
         _notify(self, PROP_CURRENT_BSS);
+
+    if (do_notify_current_auth_mode)
+        _notify(self, PROP_CURRENT_AUTH_MODE);
 
     if (do_set_state)
         set_state(self, priv->supp_state);
@@ -3306,6 +3327,11 @@ get_property(GObject *object, guint prop_id, GValue *value, GParamSpec *pspec)
         g_value_set_string(value,
                            nm_ref_string_get_str(nm_supplicant_interface_get_current_bss(self)));
         break;
+    case PROP_CURRENT_AUTH_MODE:
+        g_value_set_string(
+            value,
+            nm_ref_string_get_str(nm_supplicant_interface_get_current_auth_mode(self)));
+        break;
     case PROP_P2P_GROUP_JOINED:
         g_value_set_boolean(value, nm_supplicant_interface_get_p2p_group_joined(self));
         break;
@@ -3577,6 +3603,7 @@ dispose(GObject *object)
     nm_clear_pointer(&priv->peer_idx, g_hash_table_destroy);
 
     nm_clear_pointer(&priv->current_bss, nm_ref_string_unref);
+    nm_clear_pointer(&priv->current_auth_mode, nm_ref_string_unref);
 
     G_OBJECT_CLASS(nm_supplicant_interface_parent_class)->dispose(object);
 
@@ -3635,6 +3662,12 @@ nm_supplicant_interface_class_init(NMSupplicantInterfaceClass *klass)
                                                          G_PARAM_READABLE | G_PARAM_STATIC_STRINGS);
     obj_properties[PROP_CURRENT_BSS] =
         g_param_spec_string(NM_SUPPLICANT_INTERFACE_CURRENT_BSS,
+                            "",
+                            "",
+                            NULL,
+                            G_PARAM_READABLE | G_PARAM_STATIC_STRINGS);
+    obj_properties[PROP_CURRENT_AUTH_MODE] =
+        g_param_spec_string(NM_SUPPLICANT_INTERFACE_CURRENT_AUTH_MODE,
                             "",
                             "",
                             NULL,
