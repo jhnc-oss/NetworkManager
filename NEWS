@@ -34,6 +34,9 @@ USE AT YOUR OWN RISK.  NOT RECOMMENDED FOR PRODUCTION USE!
    connection.mptcp-flags, ipv6.ip6-privacy)
 * Update n-acd to always compile with eBPF enabled, as support
   for eBPF is now detected at run time.
+* WIFI connections using wpa-psk respect the setting connection.auth-retry
+  and only prompt for new secrets during the last authentication attempt before
+  failing.
 
 =============================================
 NetworkManager-1.54
