@@ -8,6 +8,9 @@ subject to change and not guaranteed to be compatible with
 the later release.
 USE AT YOUR OWN RISK.  NOT RECOMMENDED FOR PRODUCTION USE!
 
+* The support for Wireless Extensions is deprecated and will be
+  removed in a future release. Wireless Extensions are now disabled by
+  default.
 * nmcli now supports viewing and managing WireGuard peers.
 * Support reapplying the "sriov.vfs" property as long as
   "sriov.total-vfs" is not changed.
