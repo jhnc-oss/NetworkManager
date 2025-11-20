@@ -6331,6 +6331,14 @@ concheck_is_possible(NMDevice *self)
     if (priv->state == NM_DEVICE_STATE_UNKNOWN)
         return FALSE;
 
+    if (nm_config_data_get_device_config_boolean_by_device(
+            NM_CONFIG_GET_DATA,
+            NM_CONFIG_KEYFILE_KEY_DEVICE_IGNORE_CONNECTIVITY,
+            self,
+            FALSE,
+            FALSE))
+        return FALSE;
+
     return TRUE;
 }
 

@@ -1323,6 +1323,22 @@ managed=1
             </para>
           </listitem>
         </varlistentry>
+        <varlistentry id="ignore-connectivity">
+          <term><varname>ignore-connectivity</varname></term>
+          <listitem>
+            <para>
+              Specify devices for which NetworkManager will not perform a
+              connectivity check. These device are always considered to have
+              full connectivity, even if the connectivity check would not have
+              succeeded if actually performed.
+            </para>
+            <para>
+              This setting does nothing if the connectivity check has been
+              disabled globally using the
+              <literal>connectivity.enabled</literal> setting.
+            </para>
+          </listitem>
+        </varlistentry>
         <varlistentry id="keep-configuration">
          <term><varname>keep-configuration</varname></term>
           <listitem>
