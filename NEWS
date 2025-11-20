@@ -36,6 +36,8 @@ USE AT YOUR OWN RISK.  NOT RECOMMENDED FOR PRODUCTION USE!
   for eBPF is now detected at run time.
 * Add new MPTCP 'laminar' endpoint type, and set it by default alongside
   the 'subflow' one.
+* A new "ignore-connectivity" configuration option is available to disable the
+  connectivity check for selected interfaces.
 
 =============================================
 NetworkManager-1.54
