@@ -5,7 +5,7 @@ project(
 # NOTE: When incrementing version also add corresponding
 #       NM_VERSION_x_y_z macros in
 #       "src/libnm-core-public/nm-version-macros.h.in"
-  version: '1.55.4',
+  version: '1.57.0',
   license: 'GPL2+',
   default_options: [
     'buildtype=debugoptimized',
@@ -381,6 +381,14 @@ install_systemdunitdir = (systemd_systemdsystemunitdir != 'no')
 if install_systemdunitdir and systemd_systemdsystemunitdir == ''
   assert(systemd_dep.found(), 'systemd required but not found, please provide a valid systemd user unit dir or disable it')
   systemd_systemdsystemunitdir = systemd_dep.get_variable(pkgconfig: 'systemdsystemunitdir', pkgconfig_define: ['rootprefix', nm_prefix])
+endif
+
+systemd_systemdsystemgeneratordir = get_option('systemdsystemgeneratordir')
+install_systemdgeneratordir = (systemd_systemdsystemgeneratordir != 'no')
+
+if install_systemdgeneratordir and systemd_systemdsystemgeneratordir == ''
+  assert(systemd_dep.found(), 'systemd required but not found, please provide a valid systemd user generator dir or disable it')
+  systemd_systemdsystemgeneratordir = systemd_dep.get_variable(pkgconfig: 'systemdsystemgeneratordir', pkgconfig_define: ['rootprefix', nm_prefix])
 endif
 
 enable_systemd_journal = get_option('systemd_journal')
@@ -1059,6 +1067,7 @@ output = '\nSystem paths:\n'
 output += '  prefix: ' + nm_prefix + '\n'
 output += '  exec_prefix: ' + nm_prefix + '\n'
 output += '  systemdunitdir: ' + systemd_systemdsystemunitdir + '\n'
+output += '  systemdgeneratordir: ' + systemd_systemdsystemgeneratordir + '\n'
 output += '  udev_dir: ' + udev_udevdir + '\n'
 output += '  nmbinary: ' + nm_pkgsbindir + '\n'
 output += '  nmconfdir: ' + nm_pkgconfdir + '\n'
