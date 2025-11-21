@@ -160,6 +160,7 @@ typedef enum {
 typedef enum {
     NM_DHCP_OPTION_DHCP6_CLIENT_ID    = 1,
     NM_DHCP_OPTION_DHCP6_SERVER_ID    = 2,
+    NM_DHCP_OPTION_DHCP6_VENDOR_OPTS  = 17,
     NM_DHCP_OPTION_DHCP6_DNS_SERVERS  = 23,
     NM_DHCP_OPTION_DHCP6_DOMAIN_LIST  = 24,
     NM_DHCP_OPTION_DHCP6_IA_PD        = 25, /* RFC 8415 */
@@ -190,7 +191,7 @@ typedef struct {
 } NMDhcpOption;
 
 extern const NMDhcpOption _nm_dhcp_option_dhcp4_options[144];
-extern const NMDhcpOption _nm_dhcp_option_dhcp6_options[18];
+extern const NMDhcpOption _nm_dhcp_option_dhcp6_options[19];
 
 static inline const char *
 nm_dhcp_option_get_name(const NMDhcpOption *option)
