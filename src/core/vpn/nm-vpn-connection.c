@@ -124,6 +124,7 @@ typedef struct {
 typedef struct {
     gboolean service_can_persist;
     gboolean connection_can_persist;
+    gboolean listening;
 
     NMSettingsConnectionCallId *secrets_id;
     SecretsReq                  secrets_idx;
@@ -1856,8 +1857,13 @@ _config_process_generic(NMVpnConnection *self, GVariant *dict)
                      NM_VPN_PLUGIN_CONFIG_EXT_GATEWAY,
                      &priv->ip_data_6.gw_external);
 
+    if (g_variant_lookup(dict, NM_VPN_PLUGIN_CONFIG_LISTENING, "b", &v_b) && v_b) {
+        /* Defaults to FALSE if not specified */
+        priv->listening = TRUE;
+    }
+
     if (nm_ip_addr_is_null(AF_INET, &priv->ip_data_4.gw_external)
-        && nm_ip_addr_is_null(AF_INET6, &priv->ip_data_6.gw_external)) {
+        && nm_ip_addr_is_null(AF_INET6, &priv->ip_data_6.gw_external) && !priv->listening) {
         _LOGW("config: no VPN gateway address received");
         return FALSE;
     }
@@ -1918,6 +1924,13 @@ _dbus_signal_config_cb(NMVpnConnection *self, GVariant *dict)
           priv->ip_data_4.method_auto ? "auto" : "disabled",
           priv->ip_data_6.enabled ? "on" : "off",
           priv->ip_data_6.method_auto ? "auto" : "disabled");
+
+    if (!priv->ip_data_4.enabled) {
+        _l3cfg_l3cd_set(self, L3CD_TYPE_IP_4, NULL);
+    }
+    if (!priv->ip_data_6.enabled) {
+        _l3cfg_l3cd_set(self, L3CD_TYPE_IP_6, NULL);
+    }
 
     if (!priv->ip_data_4.method_auto)
         priv->ip_data_4.enabled = FALSE;
@@ -2005,6 +2018,7 @@ _dbus_signal_ip_config_cb(NMVpnConnection *self, int addr_family, GVariant *dict
     }
 
     if (!priv->ip_data_x[IS_IPv4].enabled) {
+        _l3cfg_l3cd_set(self, L3CD_TYPE_IP_X(IS_IPv4), NULL);
         _check_complete(self, TRUE);
         return;
     }
