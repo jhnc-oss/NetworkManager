@@ -200,6 +200,7 @@ const NMDhcpOption _nm_dhcp_option_dhcp6_options[] = {
      */
     REQ(NM_DHCP_OPTION_DHCP6_SERVER_ID, "dhcp6_server_id", FALSE),
 
+    REQ(NM_DHCP_OPTION_DHCP6_VENDOR_OPTS, "dhcp6_vendor_opts", FALSE),
     REQ(NM_DHCP_OPTION_DHCP6_DNS_SERVERS, "dhcp6_name_servers", TRUE),
     REQ(NM_DHCP_OPTION_DHCP6_DOMAIN_LIST, "dhcp6_domain_search", TRUE),
     REQ(NM_DHCP_OPTION_DHCP6_IA_PD, "ip6_prefix", FALSE),
@@ -242,6 +243,7 @@ static const NMDhcpOption *const _sorted_options_6[G_N_ELEMENTS(_nm_dhcp_option_
     A(15),
     A(16),
     A(17),
+    A(18),
 #undef A
 };
 

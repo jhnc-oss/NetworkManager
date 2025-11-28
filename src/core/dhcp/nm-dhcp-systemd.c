@@ -5,6 +5,8 @@
 
 #include "src/core/nm-default-daemon.h"
 
+#include <stddef.h>
+#include <stdint.h>
 #include <stdlib.h>
 #include <unistd.h>
 #include <stdio.h>
@@ -25,6 +27,9 @@
 #include "libnm-platform/nm-platform.h"
 #include "nm-dhcp-client-logging.h"
 #include "libnm-systemd-core/nm-sd.h"
+#include "nm-sd-adapt-shared.h"
+#include "dhcp6-lease-internal.h"
+#include "libnm-glib-aux/nm-shared-utils.h"
 
 /*****************************************************************************/
 
@@ -90,8 +95,13 @@ lease_to_ip6_config(NMDhcpSystemd *self, sd_dhcp6_lease *lease, gint32 ts, GErro
     char                                  **ntp_fqdns;
     const struct in6_addr                  *ntp_addrs;
     const char                             *s;
+    char                                   *s_mut;
+    uint32_t                                u32;
+    uint16_t                                u16;
     nm_auto_free_gstring GString           *str = NULL;
-    int                                     num, i;
+    int                                     num, i, j;
+    size_t                                  size, offset;
+    sd_dhcp6_option                       **vendor_options;
 
     nm_assert(lease);
 
@@ -231,6 +241,46 @@ lease_to_ip6_config(NMDhcpSystemd *self, sd_dhcp6_lease *lease, gint32 ts, GErro
                                   AF_INET6,
                                   NM_DHCP_OPTION_DHCP6_NTP_SERVER,
                                   str->str);
+    }
+
+    for (i = 0; i < config->n_request_additional_options; i++) {
+        if (config->request_additional_options[i] == NM_DHCP_OPTION_DHCP6_VENDOR_OPTS) {
+            num = sd_dhcp6_lease_get_vendor_options(lease, &vendor_options);
+            if (num <= 0)
+                continue;
+
+            for (size = 0, j = 0; j < num; j++) {
+                /* 4 bytes enterprise id, 2 bytes option num and 2 bytes option length */
+                size += 2 * (4 + 2 + 2 + vendor_options[j]->length);
+            }
+
+            s_mut  = g_malloc(size);
+            offset = 0;
+            for (j = 0; j < num; j++) {
+                u32 = htobe32(vendor_options[j]->enterprise_identifier);
+                nm_utils_bin2hexstr_fuller(&u32, 4, 0, TRUE, TRUE, s_mut + offset);
+                offset += 4 * 2;
+                u16 = htobe16(vendor_options[j]->option);
+                nm_utils_bin2hexstr_fuller(&u16, 2, 0, TRUE, TRUE, s_mut + offset);
+                offset += 2 * 2;
+                u16 = htobe16(vendor_options[j]->length);
+                nm_utils_bin2hexstr_fuller(&u16, 2, 0, TRUE, TRUE, s_mut + offset);
+                offset += 2 * 2;
+                nm_utils_bin2hexstr_fuller(vendor_options[j]->data,
+                                           vendor_options[j]->length,
+                                           0,
+                                           TRUE,
+                                           TRUE,
+                                           s_mut + offset);
+                offset += vendor_options[j]->length * 2;
+            }
+
+            nm_dhcp_option_take_option(options,
+                                       TRUE,
+                                       AF_INET6,
+                                       NM_DHCP_OPTION_DHCP6_VENDOR_OPTS,
+                                       g_steal_pointer(&s_mut));
+        }
     }
 
     nm_l3_config_data_set_dhcp_lease_from_options(l3cd, AF_INET6, g_steal_pointer(&options));
@@ -381,6 +431,10 @@ ip6_start(NMDhcpClient *client, const struct in6_addr *ll_addr, GError **error)
                                                    _nm_dhcp_option_dhcp6_options[i].option_num);
             nm_assert(r >= 0 || r == -EEXIST);
         }
+    }
+
+    for (i = 0; i < client_config->n_request_additional_options; i++) {
+        sd_dhcp6_client_set_request_option(sd_client, client_config->request_additional_options[i]);
     }
 
     mud_url = client_config->mud_url;
