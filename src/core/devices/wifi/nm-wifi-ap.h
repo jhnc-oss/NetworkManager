@@ -30,6 +30,7 @@
 #define NM_WIFI_AP_BANDWIDTH   "bandwidth"
 #define NM_WIFI_AP_STRENGTH    "strength"
 #define NM_WIFI_AP_LAST_SEEN   "last-seen"
+#define NM_WIFI_AP_WIFI_GENERATION "wifi-generation"
 
 typedef struct {
     NMDBusObject             parent;
