@@ -1572,6 +1572,7 @@ nm_dhcp_client_stop(NMDhcpClient *self, gboolean release)
 
     nm_clear_l3cd(&priv->l3cd_next);
     nm_clear_l3cd(&priv->l3cd_curr);
+    g_free(priv->config.request_additional_options);
 
     _nm_dhcp_client_notify(self, NM_DHCP_CLIENT_EVENT_TYPE_TERMINATED, NULL);
 }

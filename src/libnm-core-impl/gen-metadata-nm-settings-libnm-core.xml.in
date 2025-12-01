@@ -1688,6 +1688,10 @@
                   dbus-type="as"
                   gprop-type="GStrv"
                   />
+        <property name="dhcp-request-options"
+                  dbus-type="as"
+                  gprop-type="GStrv"
+                  />
         <property name="dhcp-send-hostname"
                   dbus-type="b"
                   gprop-type="gboolean"
@@ -1848,6 +1852,10 @@
                   gprop-type="gchararray"
                   />
         <property name="dhcp-reject-servers"
+                  dbus-type="as"
+                  gprop-type="GStrv"
+                  />
+        <property name="dhcp-request-options"
                   dbus-type="as"
                   gprop-type="GStrv"
                   />
