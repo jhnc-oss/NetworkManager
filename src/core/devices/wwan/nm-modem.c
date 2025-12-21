@@ -51,6 +51,7 @@ enum {
     AUTH_RESULT,
     REMOVED,
     STATE_CHANGED,
+    CAPABILITIES_CHANGED,
     LAST_SIGNAL,
 };
 
@@ -336,6 +337,14 @@ nm_modem_set_state(NMModem *self, NMModemState new_state, const char *reason)
         _notify(self, PROP_STATE);
         g_signal_emit(self, signals[STATE_CHANGED], 0, (int) new_state, (int) old_state);
     }
+}
+
+void
+nm_modem_set_capabilities(NMModem *self, NMDeviceModemCapabilities modem_caps, NMDeviceModemCapabilities current_caps)
+{
+    NMModemPrivate *priv = NM_MODEM_GET_PRIVATE(self);
+
+    g_signal_emit(self, signals[CAPABILITIES_CHANGED], 0, (guint) modem_caps, (guint) current_caps);
 }
 
 void
@@ -2004,4 +2013,16 @@ nm_modem_class_init(NMModemClass *klass)
                                           2,
                                           G_TYPE_INT,
                                           G_TYPE_INT);
+
+    signals[CAPABILITIES_CHANGED] = g_signal_new(NM_MODEM_CAPABILITIES_CHANGED,
+                                                  G_OBJECT_CLASS_TYPE(object_class),
+                                                  G_SIGNAL_RUN_FIRST,
+                                                  0,
+                                                  NULL,
+                                                  NULL,
+                                                  NULL,
+                                                  G_TYPE_NONE,
+                                                  2,
+                                                  G_TYPE_UINT,
+                                                  G_TYPE_UINT);
 }
