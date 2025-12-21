@@ -58,6 +58,9 @@ typedef struct {
     GError *property_error;
 
     char *imsi;
+    char *mnc;
+    char *mcc;
+    char *operator_code;
 
     gboolean modem_online;
     gboolean modem_powered;
@@ -236,6 +239,25 @@ update_modem_state(NMModemOfono *self)
             nm_clear_g_source_inst(&priv->deferred_connection_timeout_source);
             do_context_activate(self);
         }
+    }
+}
+
+static void
+operator_code_changed(NMModemOfono *self)
+{
+    NMModemOfonoPrivate *priv = NM_MODEM_OFONO_GET_PRIVATE(self);
+
+    _LOGD("MCC: %s MNC: %s", priv->mcc ? priv->mcc : "(null)", priv->mnc ? priv->mnc : "(null)");
+
+    if (priv->mcc && priv->mnc) {
+        char operator_code[7];
+        g_snprintf(operator_code, sizeof(operator_code), "%s%s", priv->mcc, priv->mnc);
+
+        if (priv->operator_code)
+            g_free(priv->operator_code);
+
+        priv->operator_code = g_strdup(operator_code);
+        _nm_modem_set_operator_code(NM_MODEM(self), priv->operator_code);
     }
 }
 
@@ -444,6 +466,26 @@ handle_sim_property(GDBusProxy *proxy, const char *property, GVariant *v, gpoint
             priv->imsi = g_strdup(value_str);
             update_modem_state(self);
         }
+    } else if (g_strcmp0(property, "MobileCountryCode") == 0 && VARIANT_IS_OF_TYPE_STRING(v)) {
+        const char *value_str = g_variant_get_string(v, NULL);
+
+        _LOGD("MobileCountryCode: %s", value_str);
+
+        if (priv->mcc)
+            g_free(priv->mcc);
+
+        priv->mcc = g_strdup(value_str);
+        operator_code_changed(self);
+    } else if (g_strcmp0(property, "MobileNetworkCode") == 0 && VARIANT_IS_OF_TYPE_STRING(v)) {
+        const char *value_str = g_variant_get_string(v, NULL);
+
+        _LOGD("MobileNetworkCode: %s", value_str);
+
+        if (priv->mnc)
+            g_free(priv->mnc);
+
+        priv->mnc = g_strdup(value_str);
+        operator_code_changed(self);
     }
 }
 
@@ -1957,6 +1999,13 @@ dispose(GObject *object)
 
     g_free(priv->imsi);
     priv->imsi = NULL;
+
+    g_free(priv->mcc);
+    priv->mcc = NULL;
+    g_free(priv->mnc);
+    priv->mnc = NULL;
+    g_free(priv->operator_code);
+    priv->operator_code = NULL;
 
     g_strfreev(priv->available_technologies);
     priv->available_technologies = NULL;
