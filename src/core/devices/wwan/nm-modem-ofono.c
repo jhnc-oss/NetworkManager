@@ -61,6 +61,7 @@ typedef struct {
     char *mnc;
     char *mcc;
     char *operator_code;
+    char *apn;
 
     gboolean modem_online;
     gboolean modem_powered;
@@ -1678,11 +1679,13 @@ static void
 context_properties_cb(GDBusProxy *proxy, GAsyncResult *result, gpointer user_data)
 {
     NMModemOfono              *self       = user_data;
+    NMModemOfonoPrivate       *priv       = NM_MODEM_OFONO_GET_PRIVATE(self);
     gs_free_error GError      *error      = NULL;
     gs_unref_variant GVariant *properties = NULL;
     gs_unref_variant GVariant *settings   = NULL;
     gs_unref_variant GVariant *v_dict     = NULL;
     gboolean                   active;
+    gchar                     *apn        = NULL;
 
     properties = g_dbus_proxy_call_finish(proxy, result, &error);
 
@@ -1701,6 +1704,14 @@ context_properties_cb(GDBusProxy *proxy, GAsyncResult *result, gpointer user_dat
     if (!g_variant_lookup(v_dict, "Active", "b", &active)) {
         _LOGW("ofono: connection failed; can not read 'Active' property");
         goto error;
+    }
+
+    if (g_variant_lookup(v_dict, "AccessPointName", "&s", &apn)) {
+        if (priv->apn)
+            g_free(priv->apn);
+
+        priv->apn = g_strdup(apn);
+        _nm_modem_set_apn(NM_MODEM(self), priv->apn);
     }
 
     if (active) {
@@ -2006,6 +2017,9 @@ dispose(GObject *object)
     priv->mnc = NULL;
     g_free(priv->operator_code);
     priv->operator_code = NULL;
+
+    g_free(priv->apn);
+    priv->apn = NULL;
 
     g_strfreev(priv->available_technologies);
     priv->available_technologies = NULL;
