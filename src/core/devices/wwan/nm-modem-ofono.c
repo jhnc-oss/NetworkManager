@@ -16,6 +16,7 @@
 #include "nm-modem.h"
 #include "libnm-platform/nm-platform.h"
 #include "nm-l3-config-data.h"
+#include "nm-device-modem.h"
 
 #define VARIANT_IS_OF_TYPE_BOOLEAN(v) \
     ((v) != NULL && (g_variant_is_of_type((v), G_VARIANT_TYPE_BOOLEAN)))
@@ -46,11 +47,13 @@ typedef struct {
     GDBusProxy *modem_proxy;
     GDBusProxy *connman_proxy;
     GDBusProxy *sim_proxy;
+    GDBusProxy *rat_proxy;
 
     GCancellable *modem_proxy_cancellable;
     GCancellable *connman_proxy_cancellable;
     GCancellable *connect_cancellable;
     GCancellable *sim_proxy_cancellable;
+    GCancellable *rat_proxy_cancellable;
 
     GError *property_error;
 
@@ -69,6 +72,9 @@ typedef struct {
     OfonoContextData *current_octx;
 
     GSource *deferred_connection_timeout_source;
+
+    gchar **available_technologies;
+    char   *preferred_technology;
 } NMModemOfonoPrivate;
 
 struct _NMModemOfono {
@@ -137,9 +143,49 @@ get_capabilities(NMModem                   *_self,
                  NMDeviceModemCapabilities *modem_caps,
                  NMDeviceModemCapabilities *current_caps)
 {
-    /* FIXME: auto-detect capabilities to allow LTE */
-    *modem_caps   = NM_DEVICE_MODEM_CAPABILITY_GSM_UMTS;
-    *current_caps = NM_DEVICE_MODEM_CAPABILITY_GSM_UMTS;
+    NMDeviceModem       *dev_modem = NM_DEVICE_MODEM(_self);
+    NMModemOfono        *self      = NM_MODEM_OFONO(_self);
+    NMModemOfonoPrivate *priv      = NM_MODEM_OFONO_GET_PRIVATE(self);
+
+    *modem_caps   = NM_DEVICE_MODEM_CAPABILITY_NONE;
+    *current_caps = NM_DEVICE_MODEM_CAPABILITY_NONE;
+
+    /* Example values:
+     * AvailableTechnologies: "gsm umts lte"
+     * TechnologyPreference: "lte"
+    */
+
+    if (!priv->available_technologies || !priv->preferred_technology) {
+        _LOGD("no technology information available");
+        return;
+    }
+
+    for (gint i = 0; priv->available_technologies[i]; i++) {
+        const char *tech = priv->available_technologies[i];
+
+        _LOGD("available technology: %s", tech);
+
+        if (nm_streq(tech, "gsm") || nm_streq(tech, "umts"))
+            *modem_caps |= NM_DEVICE_MODEM_CAPABILITY_GSM_UMTS;
+        else if (nm_streq(tech, "lte"))
+            *modem_caps |= NM_DEVICE_MODEM_CAPABILITY_LTE;
+    }
+
+    if (nm_streq(priv->preferred_technology, "gsm") || nm_streq(priv->preferred_technology, "umts"))
+        *current_caps |= NM_DEVICE_MODEM_CAPABILITY_GSM_UMTS;
+    else if (nm_streq(priv->preferred_technology, "lte"))
+        *current_caps |= NM_DEVICE_MODEM_CAPABILITY_LTE;
+}
+
+static void
+set_capabilities_changed(NMModemOfono *self)
+{
+    NMDeviceModemCapabilities modem_caps   = NM_DEVICE_MODEM_CAPABILITY_NONE;
+    NMDeviceModemCapabilities current_caps = NM_DEVICE_MODEM_CAPABILITY_NONE;
+
+    get_capabilities(NM_MODEM(self), &modem_caps, &current_caps);
+
+    nm_modem_set_capabilities(NM_MODEM(self), modem_caps, current_caps);
 }
 
 static void do_context_activate(NMModemOfono *self);
@@ -1083,6 +1129,154 @@ handle_connman_iface(NMModemOfono *self, gboolean found)
 }
 
 static void
+handle_rat_property(GDBusProxy *proxy, const char *property, GVariant *v, gpointer user_data)
+{
+    NMModemOfono        *self = NM_MODEM_OFONO(user_data);
+    NMModemOfonoPrivate *priv = NM_MODEM_OFONO_GET_PRIVATE(self);
+
+    if (nm_streq(property, "AvailableTechnologies") && VARIANT_IS_OF_TYPE_STRING_ARRAY(v)) {
+        gchar **available_technologies = g_variant_dup_strv(v, NULL);
+
+        if (!priv->available_technologies) {
+            priv->available_technologies = available_technologies;
+            set_capabilities_changed(self);
+        }
+    } else if (nm_streq(property, "TechnologyPreference") && VARIANT_IS_OF_TYPE_STRING(v)) {
+        const char *technology_preference = g_variant_get_string(v, NULL);
+
+        if (!priv->preferred_technology
+            || !nm_streq(priv->preferred_technology, technology_preference)) {
+            g_free(priv->preferred_technology);
+            priv->preferred_technology = g_strdup(technology_preference);
+            set_capabilities_changed(self);
+        }
+    }
+}
+
+static void
+rat_property_changed(GDBusProxy *proxy, const char *property, GVariant *v, gpointer user_data)
+{
+    GVariant *v_child = g_variant_get_child_value(v, 0);
+
+    handle_rat_property(proxy, property, v_child, user_data);
+    g_variant_unref(v_child);
+}
+
+static void
+rat_get_properties_done(GObject *source, GAsyncResult *result, gpointer user_data)
+{
+    NMModemOfono              *self;
+    NMModemOfonoPrivate       *priv;
+    gs_free_error GError      *error        = NULL;
+    gs_unref_variant GVariant *v_properties = NULL;
+    gs_unref_variant GVariant *v_dict       = NULL;
+    gs_unref_variant GVariant *v            = NULL;
+    GVariantIter               i;
+    const char                *property;
+
+    v_properties =
+        _nm_dbus_proxy_call_finish(G_DBUS_PROXY(source), result, G_VARIANT_TYPE("(a{sv})"), &error);
+    if (!v_properties && g_error_matches(error, G_IO_ERROR, G_IO_ERROR_CANCELLED))
+        return;
+
+    self = NM_MODEM_OFONO(user_data);
+    priv = NM_MODEM_OFONO_GET_PRIVATE(self);
+
+    g_clear_object(&priv->rat_proxy_cancellable);
+
+    if (!v_properties) {
+        g_dbus_error_strip_remote_error(error);
+        _LOGW("error getting RadioSettings properties: %s", error->message);
+        return;
+    }
+
+    _LOGD("rat v_properties is type: %s", g_variant_get_type_string(v_properties));
+
+    v_dict = g_variant_get_child_value(v_properties, 0);
+    if (!v_dict) {
+        _LOGW("error getting RadioSettings properties: no v_dict");
+        return;
+    }
+
+    _LOGD("rat v_dict is type: %s", g_variant_get_type_string(v_dict));
+
+    g_variant_iter_init(&i, v_dict);
+    while (g_variant_iter_loop(&i, "{&sv}", &property, &v)) {
+        handle_rat_property(NULL, property, v, self);
+    }
+}
+
+static void
+_rat_proxy_new_cb(GObject *source, GAsyncResult *result, gpointer user_data)
+{
+    NMModemOfono         *self;
+    NMModemOfonoPrivate  *priv;
+    gs_free_error GError *error = NULL;
+    GDBusProxy           *proxy;
+
+    proxy = g_dbus_proxy_new_for_bus_finish(result, &error);
+    if (!proxy && g_error_matches(error, G_IO_ERROR, G_IO_ERROR_CANCELLED))
+        return;
+
+    self = user_data;
+    priv = NM_MODEM_OFONO_GET_PRIVATE(self);
+
+    if (!proxy) {
+        _LOGW("failed to create RadioSettings proxy: %s", error->message);
+        g_clear_object(&priv->rat_proxy_cancellable);
+        return;
+    }
+
+    priv->rat_proxy = proxy;
+
+    /* Watch for custom ofono PropertyChanged signals */
+    _nm_dbus_proxy_signal_connect(priv->rat_proxy,
+                                  "PropertyChanged",
+                                  G_VARIANT_TYPE("(sv)"),
+                                  G_CALLBACK(rat_property_changed),
+                                  self);
+
+    g_dbus_proxy_call(priv->rat_proxy,
+                      "GetProperties",
+                      NULL,
+                      G_DBUS_CALL_FLAGS_NONE,
+                      20000,
+                      priv->rat_proxy_cancellable,
+                      rat_get_properties_done,
+                      self);
+}
+
+static void
+handle_rat_iface(NMModemOfono *self, gboolean found)
+{
+    NMModemOfonoPrivate *priv = NM_MODEM_OFONO_GET_PRIVATE(self);
+
+    if (!found && (priv->rat_proxy || priv->rat_proxy_cancellable)) {
+        _LOGI("RadioSettings interface disappeared");
+        nm_clear_g_cancellable(&priv->rat_proxy_cancellable);
+        if (priv->rat_proxy) {
+            g_signal_handlers_disconnect_by_data(priv->rat_proxy, self);
+            g_clear_object(&priv->rat_proxy);
+        }
+    } else if (found && (!priv->rat_proxy && !priv->rat_proxy_cancellable)) {
+        _LOGI("found new RadioSettings interface");
+
+        priv->rat_proxy_cancellable = g_cancellable_new();
+
+        g_dbus_proxy_new_for_bus(G_BUS_TYPE_SYSTEM,
+                                 G_DBUS_PROXY_FLAGS_DO_NOT_LOAD_PROPERTIES
+                                     | G_DBUS_PROXY_FLAGS_DO_NOT_AUTO_START,
+                                 NULL, /* GDBusInterfaceInfo */
+                                 OFONO_DBUS_SERVICE,
+                                 nm_modem_get_path(NM_MODEM(self)),
+                                 OFONO_DBUS_INTERFACE_RADIO_SETTINGS,
+                                 priv->rat_proxy_cancellable,
+                                 _rat_proxy_new_cb,
+                                 self);
+    }
+}
+
+static void
 handle_modem_property(GDBusProxy *proxy, const char *property, GVariant *v, gpointer user_data)
 {
     NMModemOfono        *self = NM_MODEM_OFONO(user_data);
@@ -1119,6 +1313,7 @@ handle_modem_property(GDBusProxy *proxy, const char *property, GVariant *v, gpoi
         const char **array, **iter;
         gboolean     found_connman = FALSE;
         gboolean     found_sim     = FALSE;
+        gboolean     found_rat     = FALSE;
 
         _LOGD("Interfaces found");
 
@@ -1129,12 +1324,15 @@ handle_modem_property(GDBusProxy *proxy, const char *property, GVariant *v, gpoi
                     found_sim = TRUE;
                 else if (g_strcmp0(OFONO_DBUS_INTERFACE_CONNECTION_MANAGER, *iter) == 0)
                     found_connman = TRUE;
+                else if (g_strcmp0(OFONO_DBUS_INTERFACE_RADIO_SETTINGS, *iter) == 0)
+                    found_rat = TRUE;
             }
             g_free(array);
         }
 
         handle_sim_iface(self, found_sim);
         handle_connman_iface(self, found_connman);
+        handle_rat_iface(self, found_rat);
     }
 }
 
@@ -1713,6 +1911,7 @@ dispose(GObject *object)
     nm_clear_g_cancellable(&priv->connman_proxy_cancellable);
     nm_clear_g_cancellable(&priv->connect_cancellable);
     nm_clear_g_cancellable(&priv->sim_proxy_cancellable);
+    nm_clear_g_cancellable(&priv->rat_proxy_cancellable);
 
     if (priv->connect_properties) {
         g_hash_table_destroy(priv->connect_properties);
@@ -1746,6 +1945,11 @@ dispose(GObject *object)
         g_clear_object(&priv->sim_proxy);
     }
 
+    if (priv->rat_proxy) {
+        g_signal_handlers_disconnect_by_data(priv->rat_proxy, self);
+        g_clear_object(&priv->rat_proxy);
+    }
+
     if (priv->settings) {
         g_signal_handlers_disconnect_by_data(priv->settings, self);
         g_clear_object(&priv->settings);
@@ -1753,6 +1957,12 @@ dispose(GObject *object)
 
     g_free(priv->imsi);
     priv->imsi = NULL;
+
+    g_strfreev(priv->available_technologies);
+    priv->available_technologies = NULL;
+
+    g_free(priv->preferred_technology);
+    priv->preferred_technology = NULL;
 
     nm_clear_g_source_inst(&priv->deferred_connection_timeout_source);
 
