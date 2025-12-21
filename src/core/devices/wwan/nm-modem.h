@@ -33,14 +33,15 @@
 #define NM_MODEM_DEVICE_UID      "device-uid"
 
 /* Signals */
-#define NM_MODEM_PPP_STATS      "ppp-stats"
-#define NM_MODEM_PPP_FAILED     "ppp-failed"
-#define NM_MODEM_PREPARE_RESULT "prepare-result"
-#define NM_MODEM_NEW_CONFIG     "new-config"
-#define NM_MODEM_AUTH_REQUESTED "auth-requested"
-#define NM_MODEM_AUTH_RESULT    "auth-result"
-#define NM_MODEM_REMOVED        "removed"
-#define NM_MODEM_STATE_CHANGED  "state-changed"
+#define NM_MODEM_PPP_STATS            "ppp-stats"
+#define NM_MODEM_PPP_FAILED           "ppp-failed"
+#define NM_MODEM_PREPARE_RESULT       "prepare-result"
+#define NM_MODEM_NEW_CONFIG           "new-config"
+#define NM_MODEM_AUTH_REQUESTED       "auth-requested"
+#define NM_MODEM_AUTH_RESULT          "auth-result"
+#define NM_MODEM_REMOVED              "removed"
+#define NM_MODEM_STATE_CHANGED        "state-changed"
+#define NM_MODEM_CAPABILITIES_CHANGED "capabilities-changed"
 
 typedef enum {
     NM_MODEM_IP_METHOD_UNKNOWN = 0,
@@ -214,6 +215,10 @@ NMModemState nm_modem_get_state(NMModem *self);
 void         nm_modem_set_state(NMModem *self, NMModemState new_state, const char *reason);
 void         nm_modem_set_prev_state(NMModem *self, const char *reason);
 const char  *nm_modem_state_to_string(NMModemState state);
+
+void nm_modem_set_capabilities(NMModem                  *self,
+                               NMDeviceModemCapabilities modem_caps,
+                               NMDeviceModemCapabilities current_caps);
 
 NMModemIPType nm_modem_get_supported_ip_types(NMModem *self);
 

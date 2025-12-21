@@ -328,6 +328,23 @@ modem_state_cb(NMModem *modem, int new_state_i, int old_state_i, gpointer user_d
 }
 
 static void
+caps_changed_cb(NMModem *modem, guint modem_caps, guint current_caps, gpointer user_data)
+{
+    NMDeviceModem        *self = NM_DEVICE_MODEM(user_data);
+    NMDeviceModemPrivate *priv = NM_DEVICE_MODEM_GET_PRIVATE(self);
+
+    if (priv->caps != modem_caps) {
+        priv->caps = modem_caps;
+        _notify(self, PROP_CAPABILITIES);
+    }
+
+    if (priv->current_caps != current_caps) {
+        priv->current_caps = current_caps;
+        _notify(self, PROP_CURRENT_CAPABILITIES);
+    }
+}
+
+static void
 modem_removed_cb(NMModem *modem, gpointer user_data)
 {
     g_signal_emit_by_name(NM_DEVICE(user_data), NM_DEVICE_REMOVED);
@@ -677,6 +694,7 @@ set_modem(NMDeviceModem *self, NMModem *modem)
     g_signal_connect(modem, NM_MODEM_AUTH_REQUESTED, G_CALLBACK(modem_auth_requested), self);
     g_signal_connect(modem, NM_MODEM_AUTH_RESULT, G_CALLBACK(modem_auth_result), self);
     g_signal_connect(modem, NM_MODEM_STATE_CHANGED, G_CALLBACK(modem_state_cb), self);
+    g_signal_connect(modem, NM_MODEM_CAPABILITIES_CHANGED, G_CALLBACK(caps_changed_cb), self);
     g_signal_connect(modem, NM_MODEM_REMOVED, G_CALLBACK(modem_removed_cb), self);
 
     g_signal_connect(modem,
