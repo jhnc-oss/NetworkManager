@@ -2163,11 +2163,10 @@ activate_secondary_connections(NMPolicy *self, NMConnection *connection, NMDevic
             break;
         }
 
-        if (!nm_connection_is_type(nm_settings_connection_get_connection(sett_conn),
-                                   NM_SETTING_VPN_SETTING_NAME)) {
+        if (!nm_connection_is_valid_secondary(nm_settings_connection_get_connection(sett_conn))) {
             _LOGW(LOGD_DEVICE,
                   "secondary connection '%s (%s)' auto-activation failed: The connection is not a "
-                  "VPN.",
+                  "valid secondary.",
                   nm_settings_connection_get_id(sett_conn),
                   sec_uuid);
             success = FALSE;

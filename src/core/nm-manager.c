@@ -6196,6 +6196,28 @@ _new_active_connection(NMManager             *self,
             activation_reason,
             initial_state_flags,
             subject);
+    } else if (nm_connection_is_valid_secondary(sett_conn ? nm_settings_connection_get_connection(sett_conn)
+                                                  : incompl_conn)) {
+        /**
+		 * For non-plugin VPN connections, re-validate the corresponding device. 
+		 * Wireguard, for example, needs its own (virtual) device.
+		 * If it, however, gets activated as secondary device,
+		 * 'device' points to the primary device that is currently starting.
+		 * Bringing up a WG tunnel this way will fail.
+		 */
+        NMDevice             *_device = NULL;
+        gs_free_error GError *local   = NULL;
+        _device =
+            nm_manager_get_best_device_for_connection(self, sett_conn, applied, TRUE, NULL, &local);
+        if (!_device) {
+            g_set_error(error,
+                        NM_MANAGER_ERROR,
+                        NM_MANAGER_ERROR_UNKNOWN_DEVICE,
+                        "No suitable device found for non-plugin VPN connection (%s).",
+                        local->message);
+            return NULL;
+        }
+        device = _device;
     }
 
     return (NMActiveConnection *) nm_act_request_new(sett_conn,
