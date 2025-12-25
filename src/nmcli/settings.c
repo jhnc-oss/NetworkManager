@@ -382,7 +382,7 @@ _set_fcn_precheck_connection_secondaries(NMClient   *client,
 	    } else {
                 /* Currently, NM only supports VPN connections as secondaries */
                 if (!nm_connection_is_valid_secondary(con)) {
-                    g_set_error(error, 1, 0, _("'%s' is not a valid secondary profile"), *iter);
+                    g_set_error(error, 1, 0, _("'%s' is not a valid VPN profile, e.g., Wireguard or OpenVPN."), *iter);
                     return FALSE;
 				}
             }
@@ -394,7 +394,7 @@ _set_fcn_precheck_connection_secondaries(NMClient   *client,
             }
             /* Currently, NM only supports VPN connections, including Wireguard, as secondaries */
             if (!nm_connection_is_valid_secondary(con)) {
-                g_set_error(error, 1, 0, _("'%s' is not a valid secondary profile"), *iter);
+                g_set_error(error, 1, 0, _("'%s' is not a valid VPN profile, e.g., Wireguard or OpenVPN."), *iter);
                 return FALSE;
             }
 
