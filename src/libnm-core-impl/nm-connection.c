@@ -2882,6 +2882,8 @@ nm_connection_is_type(NMConnection *connection, const char *type)
  * @connection: the #NMConnection
  *
  * Checks whether the given connection can be activated as a secondary.
+ * A valid secondary connection is either a Wireguard connection or
+ * a connection belonging to a VPN plugin, e.g., OpenVPN.
  *
  * Returns: %TRUE if the connection is a valid secondary.
  *
