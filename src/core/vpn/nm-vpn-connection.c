@@ -2117,8 +2117,10 @@ _dbus_signal_ip_config_cb(NMVpnConnection *self, int addr_family, GVariant *dict
                                  : NM_VPN_PLUGIN_IP6_CONFIG_DOMAINS,
                          "as",
                          &var_iter)) {
-        while (g_variant_iter_next(var_iter, "&s", &v_str))
+        while (g_variant_iter_next(var_iter, "&s", &v_str)) {
             nm_l3_config_data_add_domain(l3cd, addr_family, v_str);
+            nm_l3_config_data_add_search(l3cd, addr_family, v_str);
+        }
         g_variant_iter_free(var_iter);
     }
 

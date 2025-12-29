@@ -26,6 +26,8 @@ USE AT YOUR OWN RISK.  NOT RECOMMENDED FOR PRODUCTION USE!
 * The support for Wireless Extensions is deprecated and will be
   removed in a future release. Wireless Extensions are now disabled by
   default.
+* Fix search domains getting overridden on VPN connections when the
+  dns-search option is used instead of being merged
 
 =============================================
 NetworkManager-1.56
