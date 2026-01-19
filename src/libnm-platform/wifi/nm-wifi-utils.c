@@ -228,10 +228,10 @@ nm_wifi_utils_indicate_addressing_running(NMWifiUtils *data, gboolean running)
  * Returns: %TRUE if the combination is allowed, %FALSE otherwise.
  */
 gboolean
-nm_wifi_utils_can_concurrent(NMWifiUtils *data,
-                             guint32      iftype1,
-                             guint32      iftype2,
-                             guint8      *out_num_channels)
+nm_wifi_utils_can_concurrent(NMWifiUtils    *data,
+                             NMWifiIfaceType iftype1,
+                             NMWifiIfaceType iftype2,
+                             guint8         *out_num_channels)
 {
     GArray *combs;
     guint   i, j, k;
