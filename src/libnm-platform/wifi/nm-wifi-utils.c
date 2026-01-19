@@ -210,3 +210,93 @@ nm_wifi_utils_indicate_addressing_running(NMWifiUtils *data, gboolean running)
     return klass->indicate_addressing_running ? klass->indicate_addressing_running(data, running)
                                               : FALSE;
 }
+
+/**
+ * nm_wifi_utils_can_concurrent:
+ * @data: The NMWifiUtils instance
+ * @iftype1: First interface type (NL80211_IFTYPE_*)
+ * @iftype2: Second interface type (NL80211_IFTYPE_*)
+ * @out_num_channels: (out) (optional): Number of different channels allowed
+ *
+ * Check if two interface types can operate concurrently based on
+ * the hardware's interface combination capabilities parsed from
+ * NL80211_ATTR_INTERFACE_COMBINATIONS.
+ *
+ * The algorithm tries to find a valid allocation: place iftype1 in one Limit
+ * and iftype2 in another Limit (or the same Limit if its max >= 2).
+ *
+ * Returns: %TRUE if the combination is allowed, %FALSE otherwise.
+ */
+gboolean
+nm_wifi_utils_can_concurrent(NMWifiUtils *data,
+                             guint32      iftype1,
+                             guint32      iftype2,
+                             guint8      *out_num_channels)
+{
+    GArray *combs;
+    guint   i, j, k;
+
+    g_return_val_if_fail(data != NULL, FALSE);
+
+    combs = data->iface_combinations;
+    if (!combs || combs->len == 0)
+        return FALSE;
+
+    /* Check each combination to find a valid allocation for both interface types */
+    for (i = 0; i < combs->len; i++) {
+        NMWifiIfaceCombination *comb = &g_array_index(combs, NMWifiIfaceCombination, i);
+
+        /* Quick check: we need at least 2 interfaces total for concurrent operation */
+        if (comb->max_num < 2)
+            continue;
+
+        if (!comb->limits || comb->limits->len == 0)
+            continue;
+
+        /* Try to allocate iftype1 to limit[j] and iftype2 to limit[k].
+         * They can be the same limit (j == k) or different limits (j != k).
+         */
+        for (j = 0; j < comb->limits->len; j++) {
+            NMWifiIfaceCombLimit *limit_a = &g_array_index(comb->limits, NMWifiIfaceCombLimit, j);
+
+            /* Check if limit_a supports iftype1 */
+            if (!(limit_a->types & (1 << iftype1)))
+                continue;
+
+            for (k = 0; k < comb->limits->len; k++) {
+                NMWifiIfaceCombLimit *limit_b =
+                    &g_array_index(comb->limits, NMWifiIfaceCombLimit, k);
+
+                /* Check if limit_b supports iftype2 */
+                if (!(limit_b->types & (1 << iftype2)))
+                    continue;
+
+                /* Found two limits that support the requested types.
+                 * Now verify the constraints.
+                 */
+
+                if (j == k) {
+                    /* Case 1: Both types in the same limit.
+                     * The limit must allow at least 2 interfaces.
+                     */
+                    if (limit_a->max >= 2) {
+                        if (out_num_channels)
+                            *out_num_channels = comb->num_channels;
+                        return TRUE;
+                    }
+                } else {
+                    /* Case 2: Types in different limits.
+                     * Each limit only needs to support 1 interface (which is
+                     * guaranteed since we're here), and we already verified
+                     * comb->max_num >= 2.
+                     */
+                    if (out_num_channels)
+                        *out_num_channels = comb->num_channels;
+                    return TRUE;
+                }
+            }
+        }
+    }
+
+    return FALSE;
+}
