@@ -702,7 +702,7 @@ supplicant_interface_release(NMDeviceWifi *self)
 
     if (priv->p2p_device) {
         /* Signal to P2P device to also release its reference */
-        nm_device_wifi_p2p_set_mgmt_iface(priv->p2p_device, NULL);
+        nm_device_wifi_p2p_set_mgmt_iface(priv->p2p_device, NULL, 0);
     }
 
     _scan_notify_is_scanning(self);
@@ -2749,7 +2749,9 @@ recheck_p2p_availability(NMDeviceWifi *self)
 
         priv->p2p_device = nm_device_wifi_p2p_new(iface_name);
 
-        nm_device_wifi_p2p_set_mgmt_iface(priv->p2p_device, priv->sup_iface);
+        nm_device_wifi_p2p_set_mgmt_iface(priv->p2p_device,
+                                          priv->sup_iface,
+                                          nm_device_get_ifindex(NM_DEVICE(self)));
 
         g_signal_emit(self, signals[P2P_DEVICE_CREATED], 0, priv->p2p_device);
         g_object_add_weak_pointer(G_OBJECT(priv->p2p_device), (gpointer *) &priv->p2p_device);
@@ -2758,7 +2760,9 @@ recheck_p2p_availability(NMDeviceWifi *self)
     }
 
     if (p2p_available && priv->p2p_device) {
-        nm_device_wifi_p2p_set_mgmt_iface(priv->p2p_device, priv->sup_iface);
+        nm_device_wifi_p2p_set_mgmt_iface(priv->p2p_device,
+                                          priv->sup_iface,
+                                          nm_device_get_ifindex(NM_DEVICE(self)));
         return;
     }
 
