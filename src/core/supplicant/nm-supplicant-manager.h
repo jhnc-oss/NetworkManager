@@ -38,6 +38,9 @@ NMSupplCapMask   nm_supplicant_manager_get_global_capabilities(NMSupplicantManag
 
 void nm_supplicant_manager_set_wfd_ies(NMSupplicantManager *self, GBytes *wfd_ies);
 
+void nm_supplicant_manager_set_p2p_device_name(NMSupplicantManager *self,
+                                               const char          *p2p_device_name);
+
 typedef struct _NMSupplMgrCreateIfaceHandle NMSupplMgrCreateIfaceHandle;
 
 typedef void (*NMSupplicantManagerCreateInterfaceCb)(NMSupplicantManager         *self,
