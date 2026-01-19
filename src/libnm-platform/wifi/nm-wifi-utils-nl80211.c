@@ -575,6 +575,9 @@ struct nl80211_device_info {
     gboolean            supported;
     gboolean            success;
     gboolean            can_wowlan;
+
+    /* Interface combinations from NL80211_ATTR_INTERFACE_COMBINATIONS */
+    NMWifiIfaceCombinations *iface_combinations;
 };
 
 #define WLAN_CIPHER_SUITE_USE_GROUP 0x000FAC00
@@ -765,6 +768,99 @@ nl80211_wiphy_info_handler(const struct nl_msg *msg, void *arg)
     if (tb[NL80211_ATTR_SUPPORT_IBSS_RSN])
         info->caps |= _NM_WIFI_DEVICE_CAP_IBSS_RSN;
 
+    /* Parse interface combinations for concurrent mode support */
+    if (tb[NL80211_ATTR_INTERFACE_COMBINATIONS]) {
+        struct nlattr *nl_comb;
+        int            rem_comb;
+        int            n_combinations = 0;
+        int            comb_idx       = 0;
+
+        /* First pass: count combinations */
+        nla_for_each_nested (nl_comb, tb[NL80211_ATTR_INTERFACE_COMBINATIONS], rem_comb) {
+            n_combinations++;
+        }
+
+        if (n_combinations > 0) {
+            NMWifiIfaceCombinations *combs;
+
+            combs                 = g_new0(NMWifiIfaceCombinations, 1);
+            combs->combinations   = g_new0(NMWifiIfaceCombination, n_combinations);
+            combs->n_combinations = n_combinations;
+
+            /* Second pass: parse each combination */
+            nla_for_each_nested (nl_comb, tb[NL80211_ATTR_INTERFACE_COMBINATIONS], rem_comb) {
+                struct nlattr          *tb_comb[MAX_NL80211_IFACE_COMB + 1];
+                NMWifiIfaceCombination *comb = &combs->combinations[comb_idx];
+
+                if (nla_parse_nested_arr(tb_comb, nl_comb, NULL) < 0) {
+                    comb_idx++;
+                    continue;
+                }
+
+                if (tb_comb[NL80211_IFACE_COMB_MAXNUM])
+                    comb->max_num = nla_get_u32(tb_comb[NL80211_IFACE_COMB_MAXNUM]);
+
+                if (tb_comb[NL80211_IFACE_COMB_NUM_CHANNELS])
+                    comb->num_channels = nla_get_u32(tb_comb[NL80211_IFACE_COMB_NUM_CHANNELS]);
+
+                if (tb_comb[NL80211_IFACE_COMB_STA_AP_BI_MATCH])
+                    comb->sta_ap_bi_match = TRUE;
+
+                /* Parse limits within this combination */
+                if (tb_comb[NL80211_IFACE_COMB_LIMITS]) {
+                    struct nlattr *nl_limit;
+                    int            rem_limit;
+                    int            n_limits  = 0;
+                    int            limit_idx = 0;
+
+                    /* Count limits */
+                    nla_for_each_nested (nl_limit, tb_comb[NL80211_IFACE_COMB_LIMITS], rem_limit) {
+                        n_limits++;
+                    }
+
+                    if (n_limits > 0) {
+                        comb->limits   = g_new0(NMWifiIfaceCombLimit, n_limits);
+                        comb->n_limits = n_limits;
+
+                        nla_for_each_nested (nl_limit,
+                                             tb_comb[NL80211_IFACE_COMB_LIMITS],
+                                             rem_limit) {
+                            struct nlattr        *tb_limit[MAX_NL80211_IFACE_LIMIT + 1];
+                            NMWifiIfaceCombLimit *limit = &comb->limits[limit_idx];
+
+                            if (nla_parse_nested_arr(tb_limit, nl_limit, NULL) < 0) {
+                                limit_idx++;
+                                continue;
+                            }
+
+                            if (tb_limit[NL80211_IFACE_LIMIT_MAX])
+                                limit->max = nla_get_u32(tb_limit[NL80211_IFACE_LIMIT_MAX]);
+
+                            if (tb_limit[NL80211_IFACE_LIMIT_TYPES]) {
+                                struct nlattr *nl_type;
+                                int            rem_type;
+
+                                nla_for_each_nested (nl_type,
+                                                     tb_limit[NL80211_IFACE_LIMIT_TYPES],
+                                                     rem_type) {
+                                    limit->types |= (1 << nla_type(nl_type));
+                                }
+                            }
+
+                            limit_idx++;
+                        }
+                    }
+                }
+
+                comb_idx++;
+            }
+
+            info->iface_combinations = combs;
+
+            _LOGD("parsed %d interface combinations from kernel", n_combinations);
+        }
+    }
+
     info->success = TRUE;
 
     return NL_SKIP;
@@ -919,6 +1015,9 @@ nm_wifi_utils_nl80211_new(struct nl_sock *genl, guint16 genl_family_id, int ifin
     self->num_freqs   = device_info.num_freqs;
     self->parent.caps = device_info.caps;
     self->can_wowlan  = device_info.can_wowlan;
+
+    /* Store interface combination capabilities for concurrent mode support */
+    self->parent.iface_combinations = device_info.iface_combinations;
 
     _LOGD("using nl80211 for Wi-Fi device control");
     return (NMWifiUtils *) g_steal_pointer(&self);

@@ -69,4 +69,21 @@ gboolean nm_wifi_utils_set_mesh_channel(NMWifiUtils *data, guint32 channel);
 
 gboolean nm_wifi_utils_set_mesh_ssid(NMWifiUtils *data, const guint8 *ssid, gsize len);
 
+/**
+ * nm_wifi_utils_can_concurrent:
+ * @data: The NMWifiUtils instance
+ * @iftype1: First interface type (NL80211_IFTYPE_*)
+ * @iftype2: Second interface type (NL80211_IFTYPE_*)
+ * @out_num_channels: (out) (optional): Number of different channels allowed
+ *
+ * Check if two interface types can operate concurrently based on
+ * the hardware's interface combination capabilities.
+ *
+ * Returns: %TRUE if the combination is allowed, %FALSE otherwise.
+ */
+gboolean nm_wifi_utils_can_concurrent(NMWifiUtils *data,
+                                      guint32      iftype1,
+                                      guint32      iftype2,
+                                      guint8      *out_num_channels);
+
 #endif /* __WIFI_UTILS_H__ */
