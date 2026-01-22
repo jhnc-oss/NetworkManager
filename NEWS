@@ -37,6 +37,8 @@ USE AT YOUR OWN RISK.  NOT RECOMMENDED FOR PRODUCTION USE!
 * The "band" property of Wi-fi connections now accepts the "6GHz"
   value.
 * Show the Wi-Fi band of APs in the scan results from nmcli.
+* Fix search domains getting overridden on VPN connections insteaf of being 
+  merged when the dns-search option is used
 
 =============================================
 NetworkManager-1.56
