@@ -249,6 +249,7 @@ NMSettingVxlan *nm_connection_get_setting_vxlan(NMConnection *connection);
 
 NM_AVAILABLE_IN_1_52
 gboolean nm_connection_is_valid_secondary(NMConnection *connection);
+gboolean nm_connection_is_vpn(NMConnection *connection);
 
 G_END_DECLS
 

@@ -271,6 +271,13 @@ gboolean nm_manager_devcon_autoconnect_blocked_reason_set(NMManager            *
                                                           NMSettingsAutoconnectBlockedReason value,
                                                           gboolean                           set);
 
+NMDevice *nm_manager_get_best_device_for_connection(NMManager            *self,
+                                          NMSettingsConnection *sett_conn,
+                                          NMConnection         *connection,
+                                          gboolean              for_user_request,
+                                          GHashTable           *exclude_devices,
+                                          GError              **error);
+
 NMConfig *nm_manager_get_config(NMManager *self);
 
 #endif /* __NETWORKMANAGER_MANAGER_H__ */

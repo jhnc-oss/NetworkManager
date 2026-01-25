@@ -2878,6 +2878,33 @@ nm_connection_is_type(NMConnection *connection, const char *type)
 }
 
 /**
+ * nm_connection_is_vpn:
+ * @connection: the #NMConnection
+ *
+ * Checks whether the given connection is VPN connection.
+ * This applies to a connection belonging to a VPN plugin,
+ * e.g., OpenVPN.
+ *
+ * Returns: %TRUE if the connection is a valid secondary.
+ *
+ * Since: 1.57
+*/
+gboolean
+nm_connection_is_vpn(NMConnection *connection)
+{
+    const char *type;
+
+    type = nm_connection_get_connection_type(connection);
+    if (type)
+        return nm_streq(type, NM_SETTING_VPN_SETTING_NAME);
+
+    /* we have an incomplete (invalid) connection at hand. That can only
+     * happen during AddAndActivate. Determine whether it's VPN type based
+     * on the existence of a [vpn] section. */
+    return !!nm_connection_get_setting_vpn(connection);
+}
+
+/**
  * nm_connection_is_valid_secondary:
  * @connection: the #NMConnection
  *
@@ -2887,7 +2914,7 @@ nm_connection_is_type(NMConnection *connection, const char *type)
  *
  * Returns: %TRUE if the connection is a valid secondary.
  *
- * Since: 1.52
+ * Since: 1.57
 */
 gboolean
 nm_connection_is_valid_secondary(NMConnection *connection)
