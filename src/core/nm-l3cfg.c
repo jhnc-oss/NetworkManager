@@ -4140,6 +4140,222 @@ update_routes:
 }
 
 static void
+_l3cfg_update_clat_config(NML3Cfg             *self,
+                          NML3ConfigData      *l3cd,
+                          const L3ConfigData **l3_config_datas_arr,
+                          guint                l3_config_datas_len)
+{
+#if !HAVE_CLAT
+    return;
+#else
+    struct in6_addr           pref64;
+    guint32                   pref64_plen;
+    gboolean                  clat_enabled = FALSE;
+    const NMPlatformIP4Route *ip4_route;
+    NMDedupMultiIter          iter;
+
+    switch (nm_l3_config_data_get_clat(l3cd)) {
+    case NM_SETTING_IP4_CONFIG_CLAT_FORCE:
+        clat_enabled = TRUE;
+        break;
+    case NM_SETTING_IP4_CONFIG_CLAT_NO:
+        clat_enabled = FALSE;
+        break;
+    case NM_SETTING_IP4_CONFIG_CLAT_AUTO:
+        clat_enabled = TRUE;
+        /* disable if there is a native IPv4 gateway */
+        nm_l3_config_data_iter_ip4_route_for_each (&iter, l3cd, &ip4_route) {
+            if (ip4_route->network == INADDR_ANY && ip4_route->plen == 0
+                && ip4_route->gateway != INADDR_ANY)
+                clat_enabled = FALSE;
+            break;
+        }
+        break;
+    case NM_SETTING_IP4_CONFIG_CLAT_DEFAULT:
+        nm_assert_not_reached();
+        clat_enabled = TRUE;
+        break;
+    }
+
+    if (clat_enabled && nm_l3_config_data_get_pref64_valid(l3cd)) {
+        NMPlatformIPXRoute          rx;
+        NMIPAddrTyped               best_v6_gateway;
+        const NMPlatformIP6Route   *best_v6_route;
+        const NMPlatformIP6Address *ip6_entry;
+        struct in6_addr             ip6;
+        const char                 *network_id;
+        char                        buf[512];
+        guint32                     route4_metric = NM_PLATFORM_ROUTE_METRIC_DEFAULT_IP4;
+        guint                       i;
+
+        /* If we have a valid NAT64 prefix, configure in kernel:
+         *
+         * - a CLAT IPv4 address (192.0.0.x)
+         * - a IPv4 default route via the best IPv6 gateway
+         *
+         * We also set clat_address_6 as an additional /64 IPv6 address
+         * determined according to https://www.rfc-editor.org/rfc/rfc6877#section-6.3 .
+         * This address is used for sending and receiving translated packets,
+         * but is not configured in kernel to avoid that it gets used by applications.
+         * Later in _l3_commit_pref64() we use IPV6_JOIN_ANYCAST to let the kernel
+         * handle ND for the address.
+         */
+
+        nm_l3_config_data_get_pref64(l3cd, &pref64, &pref64_plen);
+        network_id = nm_l3_config_data_get_network_id(l3cd);
+
+        if (!self->priv.p->clat_address_6_valid && network_id) {
+            nm_l3_config_data_iter_ip6_address_for_each (&iter, l3cd, &ip6_entry) {
+                if (ip6_entry->addr_source == NM_IP_CONFIG_SOURCE_NDISC && ip6_entry->plen == 64) {
+                    ip6 = ip6_entry->address;
+
+                    nm_utils_ipv6_addr_set_stable_privacy(NM_UTILS_STABLE_TYPE_CLAT,
+                                                          &ip6,
+                                                          nm_l3cfg_get_ifname(self, TRUE),
+                                                          network_id,
+                                                          0);
+                    self->priv.p->clat_address_6 = (NMPlatformIP6Address) {
+                        .ifindex      = self->priv.ifindex,
+                        .address      = ip6,
+                        .peer_address = ip6,
+                        .addr_source  = NM_IP_CONFIG_SOURCE_CLAT,
+                        .plen         = ip6_entry->plen,
+                    };
+
+                    _LOGT("clat: using IPv6 address %s", nm_inet6_ntop(&ip6, buf));
+
+                    self->priv.p->clat_address_6_valid = TRUE;
+                    break;
+                }
+            }
+        }
+
+        /* Don't get a v4 address if we have no v6 address (otherwise, we could
+         * potentially create broken v4 connectivity) */
+        if (!self->priv.p->clat_address_6_valid) {
+            _LOGW("CLAT is currently only supported when SLAAC is in use.");
+            /* Deallocate the v4 address unless it's the committed one */
+            if (self->priv.p->clat_address_4 != self->priv.p->clat_address_4_committed) {
+                nm_clear_pointer(&self->priv.p->clat_address_4, nm_netns_ip_reservation_release);
+            } else {
+                self->priv.p->clat_address_4 = NULL;
+            }
+        } else if (!self->priv.p->clat_address_4) {
+            /* We need a v4 /32 */
+            self->priv.p->clat_address_4 =
+                nm_netns_ip_reservation_get(self->priv.netns, NM_NETNS_IP_RESERVATION_TYPE_CLAT);
+        }
+
+        {
+            const NMPlatformIP4Route *r4;
+            guint32                   metric  = 0;
+            guint32                   penalty = 0;
+
+            /* Find the IPv4 metric for the CLAT default route.
+             * If there is another non-CLAT default route on the device, use the
+             * same metric + 1, so that native connectivity is always preferred.
+             * Otherwise, use the metric from the connection profile.
+             */
+
+            r4 = NMP_OBJECT_CAST_IP4_ROUTE(nm_l3_config_data_get_best_default_route(l3cd, AF_INET));
+
+            if (r4) {
+                route4_metric = nm_add_clamped_u32(r4->metric, 1u);
+            } else {
+                for (i = 0; i < l3_config_datas_len; i++) {
+                    const L3ConfigData *l3cd_data = l3_config_datas_arr[i];
+
+                    if (l3cd_data->default_route_metric_4 != NM_PLATFORM_ROUTE_METRIC_DEFAULT_IP4) {
+                        metric = l3cd_data->default_route_metric_4;
+                    }
+                    if (l3cd_data->default_route_penalty_4 != 0) {
+                        penalty = l3cd_data->default_route_penalty_4;
+                    }
+                }
+                route4_metric = nm_add_clamped_u32(metric, penalty);
+            }
+        }
+
+        if (self->priv.p->clat_address_4) {
+            best_v6_route = NMP_OBJECT_CAST_IP6_ROUTE(
+                nm_l3_config_data_get_direct_route_for_host(l3cd, AF_INET6, &pref64));
+            if (!best_v6_route) {
+                best_v6_route = NMP_OBJECT_CAST_IP6_ROUTE(
+                    nm_l3_config_data_get_best_default_route(l3cd, AF_INET6));
+            }
+            if (best_v6_route) {
+                NMPlatformIP4Address addr = {
+                    .ifindex      = self->priv.ifindex,
+                    .address      = self->priv.p->clat_address_4->addr,
+                    .peer_address = self->priv.p->clat_address_4->addr,
+                    .addr_source  = NM_IP_CONFIG_SOURCE_CLAT,
+                    .plen         = 32,
+                };
+                const NMPlatformLink *pllink;
+                guint                 mtu = 0;
+                guint                 val = 0;
+
+                best_v6_gateway.addr_family = AF_INET6;
+                best_v6_gateway.addr.addr6  = best_v6_route->gateway;
+
+                /* Determine the IPv6 MTU of the interface. Unfortunately,
+                 * the logic to set the MTU is in NMDevice and here we need
+                 * some duplication to find the actual value.
+                 * TODO: move the MTU handling into l3cfg. */
+
+                /* Get the link MTU */
+                pllink = nm_l3cfg_get_pllink(self, TRUE);
+                if (pllink)
+                    mtu = pllink->mtu;
+                if (mtu == 0)
+                    mtu = 1500;
+
+                /* Update it with the IPv6 MTU value from the connection
+                 * or from RA */
+                val = nm_l3_config_data_get_ip6_mtu_static(l3cd);
+                if (val == 0) {
+                    val = nm_l3_config_data_get_ip6_mtu_ra(l3cd);
+                }
+                if (val != 0 && val < mtu) {
+                    mtu = val;
+                }
+                if (mtu < 1280)
+                    mtu = 1280;
+
+                /* Leave 20 additional bytes for the ipv4 -> ipv6 header translation,
+                 * plus 8 for a potential fragmentation extension header */
+                mtu -= 28;
+
+                rx.r4 = (NMPlatformIP4Route) {
+                    .ifindex       = self->priv.ifindex,
+                    .rt_source     = NM_IP_CONFIG_SOURCE_CLAT,
+                    .network       = 0, /* default route */
+                    .plen          = 0,
+                    .table_coerced = nm_platform_route_table_coerce(RT_TABLE_MAIN),
+                    .scope_inv     = nm_platform_route_scope_inv(RT_SCOPE_UNIVERSE),
+                    .type_coerced  = nm_platform_route_type_coerce(RTN_UNICAST),
+                    .pref_src      = self->priv.p->clat_address_4->addr,
+                    .via           = best_v6_gateway,
+                    .metric        = route4_metric,
+                    .mtu           = mtu,
+                };
+                nm_platform_ip_route_normalize(AF_INET, &rx.rx);
+                if (!nm_l3_config_data_lookup_route(l3cd, AF_INET, &rx.rx)) {
+                    nm_l3_config_data_add_route_4(l3cd, &rx.r4);
+                }
+
+                _LOGT("clat: route %s", nm_platform_ip4_route_to_string(&rx.r4, buf, sizeof(buf)));
+
+                nm_l3_config_data_add_address_4(l3cd, &addr);
+            } else {
+                _LOGW("Couldn't find a good ipv6 route! Unable to set up CLAT!");
+            }
+        }
+    }
+#endif /* HAVE_CLAT */
+}
+
+static void
 _l3cfg_update_combined_config(NML3Cfg               *self,
                               gboolean               to_commit,
                               gboolean               reapply,
@@ -4155,13 +4371,6 @@ _l3cfg_update_combined_config(NML3Cfg               *self,
     guint                                    i;
     gboolean                                 merged_changed   = FALSE;
     gboolean                                 commited_changed = FALSE;
-#if HAVE_CLAT
-    struct in6_addr           pref64;
-    guint32                   pref64_plen;
-    gboolean                  clat_enabled = FALSE;
-    const NMPlatformIP4Route *ip4_route;
-    NMDedupMultiIter          iter;
-#endif
 
     nm_assert(NM_IS_L3CFG(self));
     nm_assert(!out_old || !*out_old);
@@ -4259,211 +4468,7 @@ _l3cfg_update_combined_config(NML3Cfg               *self,
                                     &hook_data);
         }
 
-#if HAVE_CLAT
-        switch (nm_l3_config_data_get_clat(l3cd)) {
-        case NM_SETTING_IP4_CONFIG_CLAT_FORCE:
-            clat_enabled = TRUE;
-            break;
-        case NM_SETTING_IP4_CONFIG_CLAT_NO:
-            clat_enabled = FALSE;
-            break;
-        case NM_SETTING_IP4_CONFIG_CLAT_AUTO:
-            clat_enabled = TRUE;
-            /* disable if there is a native IPv4 gateway */
-            nm_l3_config_data_iter_ip4_route_for_each (&iter, l3cd, &ip4_route) {
-                if (ip4_route->network == INADDR_ANY && ip4_route->plen == 0
-                    && ip4_route->gateway != INADDR_ANY)
-                    clat_enabled = FALSE;
-                break;
-            }
-            break;
-        case NM_SETTING_IP4_CONFIG_CLAT_DEFAULT:
-            nm_assert_not_reached();
-            clat_enabled = TRUE;
-            break;
-        }
-
-        if (clat_enabled && nm_l3_config_data_get_pref64_valid(l3cd)) {
-            NMPlatformIPXRoute          rx;
-            NMIPAddrTyped               best_v6_gateway;
-            const NMPlatformIP6Route   *best_v6_route;
-            const NMPlatformIP6Address *ip6_entry;
-            struct in6_addr             ip6;
-            const char                 *network_id;
-            char                        buf[512];
-            guint32                     route4_metric = NM_PLATFORM_ROUTE_METRIC_DEFAULT_IP4;
-
-            /* If we have a valid NAT64 prefix, configure in kernel:
-             *
-             * - a CLAT IPv4 address (192.0.0.x)
-             * - a IPv4 default route via the best IPv6 gateway
-             *
-             * We also set clat_address_6 as an additional /64 IPv6 address
-             * determined according to https://www.rfc-editor.org/rfc/rfc6877#section-6.3 .
-             * This address is used for sending and receiving translated packets,
-             * but is not configured in kernel to avoid that it gets used by applications.
-             * Later in _l3_commit_pref64() we use IPV6_JOIN_ANYCAST to let the kernel
-             * handle ND for the address.
-             */
-
-            nm_l3_config_data_get_pref64(l3cd, &pref64, &pref64_plen);
-            network_id = nm_l3_config_data_get_network_id(l3cd);
-
-            if (!self->priv.p->clat_address_6_valid && network_id) {
-                nm_l3_config_data_iter_ip6_address_for_each (&iter, l3cd, &ip6_entry) {
-                    if (ip6_entry->addr_source == NM_IP_CONFIG_SOURCE_NDISC
-                        && ip6_entry->plen == 64) {
-                        ip6 = ip6_entry->address;
-
-                        nm_utils_ipv6_addr_set_stable_privacy(NM_UTILS_STABLE_TYPE_CLAT,
-                                                              &ip6,
-                                                              nm_l3cfg_get_ifname(self, TRUE),
-                                                              network_id,
-                                                              0);
-                        self->priv.p->clat_address_6 = (NMPlatformIP6Address) {
-                            .ifindex      = self->priv.ifindex,
-                            .address      = ip6,
-                            .peer_address = ip6,
-                            .addr_source  = NM_IP_CONFIG_SOURCE_CLAT,
-                            .plen         = ip6_entry->plen,
-                        };
-
-                        _LOGT("clat: using IPv6 address %s", nm_inet6_ntop(&ip6, buf));
-
-                        self->priv.p->clat_address_6_valid = TRUE;
-                        break;
-                    }
-                }
-            }
-
-            /* Don't get a v4 address if we have no v6 address (otherwise, we could
-               potentially create broken v4 connectivity) */
-            if (!self->priv.p->clat_address_6_valid) {
-                _LOGW("CLAT is currently only supported when SLAAC is in use.");
-                /* Deallocate the v4 address unless it's the committed one */
-                if (self->priv.p->clat_address_4 != self->priv.p->clat_address_4_committed) {
-                    nm_clear_pointer(&self->priv.p->clat_address_4,
-                                     nm_netns_ip_reservation_release);
-                } else {
-                    self->priv.p->clat_address_4 = NULL;
-                }
-            } else if (!self->priv.p->clat_address_4) {
-                /* We need a v4 /32 */
-                self->priv.p->clat_address_4 =
-                    nm_netns_ip_reservation_get(self->priv.netns,
-                                                NM_NETNS_IP_RESERVATION_TYPE_CLAT);
-            }
-
-            {
-                const NMPlatformIP4Route *r4;
-                guint32                   metric  = 0;
-                guint32                   penalty = 0;
-
-                /* Find the IPv4 metric for the CLAT default route.
-                 * If there is another non-CLAT default route on the device, use the
-                 * same metric + 1, so that native connectivity is always preferred.
-                 * Otherwise, use the metric from the connection profile.
-                 */
-
-                r4 = NMP_OBJECT_CAST_IP4_ROUTE(
-                    nm_l3_config_data_get_best_default_route(l3cd, AF_INET));
-
-                if (r4) {
-                    route4_metric = nm_add_clamped_u32(r4->metric, 1u);
-                } else {
-                    for (i = 0; i < l3_config_datas_len; i++) {
-                        const L3ConfigData *l3cd_data = l3_config_datas_arr[i];
-
-                        if (l3cd_data->default_route_metric_4
-                            != NM_PLATFORM_ROUTE_METRIC_DEFAULT_IP4) {
-                            metric = l3cd_data->default_route_metric_4;
-                        }
-                        if (l3cd_data->default_route_penalty_4 != 0) {
-                            penalty = l3cd_data->default_route_penalty_4;
-                        }
-                    }
-                    route4_metric = nm_add_clamped_u32(metric, penalty);
-                }
-            }
-
-            if (self->priv.p->clat_address_4) {
-                best_v6_route = NMP_OBJECT_CAST_IP6_ROUTE(
-                    nm_l3_config_data_get_direct_route_for_host(l3cd, AF_INET6, &pref64));
-                if (!best_v6_route) {
-                    best_v6_route = NMP_OBJECT_CAST_IP6_ROUTE(
-                        nm_l3_config_data_get_best_default_route(l3cd, AF_INET6));
-                }
-                if (best_v6_route) {
-                    NMPlatformIP4Address addr = {
-                        .ifindex      = self->priv.ifindex,
-                        .address      = self->priv.p->clat_address_4->addr,
-                        .peer_address = self->priv.p->clat_address_4->addr,
-                        .addr_source  = NM_IP_CONFIG_SOURCE_CLAT,
-                        .plen         = 32,
-                    };
-                    const NMPlatformLink *pllink;
-                    guint                 mtu = 0;
-                    guint                 val = 0;
-
-                    best_v6_gateway.addr_family = AF_INET6;
-                    best_v6_gateway.addr.addr6  = best_v6_route->gateway;
-
-                    /* Determine the IPv6 MTU of the interface. Unfortunately,
-                     * the logic to set the MTU is in NMDevice and here we need
-                     * some duplication to find the actual value.
-                     * TODO: move the MTU handling into l3cfg. */
-
-                    /* Get the link MTU */
-                    pllink = nm_l3cfg_get_pllink(self, TRUE);
-                    if (pllink)
-                        mtu = pllink->mtu;
-                    if (mtu == 0)
-                        mtu = 1500;
-
-                    /* Update it with the IPv6 MTU value from the connection
-                     * or from RA */
-                    val = nm_l3_config_data_get_ip6_mtu_static(l3cd);
-                    if (val == 0) {
-                        val = nm_l3_config_data_get_ip6_mtu_ra(l3cd);
-                    }
-                    if (val != 0 && val < mtu) {
-                        mtu = val;
-                    }
-                    if (mtu < 1280)
-                        mtu = 1280;
-
-                    /* Leave 20 additional bytes for the ipv4 -> ipv6 header translation,
-                     * plus 8 for a potential fragmentation extension header */
-                    mtu -= 28;
-
-                    rx.r4 = (NMPlatformIP4Route) {
-                        .ifindex       = self->priv.ifindex,
-                        .rt_source     = NM_IP_CONFIG_SOURCE_CLAT,
-                        .network       = 0, /* default route */
-                        .plen          = 0,
-                        .table_coerced = nm_platform_route_table_coerce(RT_TABLE_MAIN),
-                        .scope_inv     = nm_platform_route_scope_inv(RT_SCOPE_UNIVERSE),
-                        .type_coerced  = nm_platform_route_type_coerce(RTN_UNICAST),
-                        .pref_src      = self->priv.p->clat_address_4->addr,
-                        .via           = best_v6_gateway,
-                        .metric        = route4_metric,
-                        .mtu           = mtu,
-                    };
-                    nm_platform_ip_route_normalize(AF_INET, &rx.rx);
-                    if (!nm_l3_config_data_lookup_route(l3cd, AF_INET, &rx.rx)) {
-                        nm_l3_config_data_add_route_4(l3cd, &rx.r4);
-                    }
-
-                    _LOGT("clat: route %s",
-                          nm_platform_ip4_route_to_string(&rx.r4, buf, sizeof(buf)));
-
-                    nm_l3_config_data_add_address_4(l3cd, &addr);
-                } else {
-                    _LOGW("Couldn't find a good ipv6 route! Unable to set up CLAT!");
-                }
-            }
-        }
-#endif /* HAVE_CLAT */
+        _l3cfg_update_clat_config(self, l3cd, l3_config_datas_arr, l3_config_datas_len);
 
         if (self->priv.ifindex == NM_LOOPBACK_IFINDEX) {
             NMPlatformIPXAddress ax;
