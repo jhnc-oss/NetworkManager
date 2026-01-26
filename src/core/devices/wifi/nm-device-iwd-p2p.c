@@ -694,6 +694,19 @@ act_stage2_config(NMDevice *device, NMDeviceStateReason *out_failure_reason)
         return NM_ACT_STAGE_RETURN_FAILURE;
     }
 
+    /* Set the P2P device name to the system hostname so that peers can identify this device. */
+    g_dbus_proxy_call(priv->dbus_p2p_proxy,
+                      DBUS_INTERFACE_PROPERTIES ".Set",
+                      g_variant_new("(ssv)",
+                                    NM_IWD_P2P_INTERFACE,
+                                    "Name",
+                                    g_variant_new_string(g_get_host_name())),
+                      G_DBUS_CALL_FLAGS_NONE,
+                      2000,
+                      NULL,
+                      NULL,
+                      NULL);
+
     peer_proxy = nm_iwd_manager_get_dbus_interface(nm_iwd_manager_get(),
                                                    nm_wifi_p2p_peer_get_supplicant_path(peer),
                                                    NM_IWD_P2P_PEER_INTERFACE);

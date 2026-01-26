@@ -451,6 +451,9 @@ act_stage2_config(NMDevice *device, NMDeviceStateReason *out_failure_reason)
     wfd_ies = nm_setting_wifi_p2p_get_wfd_ies(s_wifi_p2p);
     nm_supplicant_manager_set_wfd_ies(priv->sup_mgr, wfd_ies);
 
+    /* Set the P2P device name to the system hostname so that peers can identify this device. */
+    nm_supplicant_manager_set_p2p_device_name(priv->sup_mgr, g_get_host_name());
+
     /* TODO: Grab secrets if we don't have them yet! */
 
     /* TODO: Fix "pbc" being hardcoded here! */
