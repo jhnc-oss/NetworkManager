@@ -15,6 +15,7 @@
 #include "nm-connection-private.h"
 #include "nm-utils.h"
 #include "nm-setting-private.h"
+#include "nm-setting-wireguard.h"
 #include "libnm-core-intern/nm-core-internal.h"
 
 /**
@@ -2876,6 +2877,60 @@ nm_connection_is_type(NMConnection *connection, const char *type)
     return nm_streq0(type, nm_connection_get_connection_type(connection));
 }
 
+/**
+ * nm_connection_is_vpn:
+ * @connection: the #NMConnection
+ *
+ * Checks whether the given connection is VPN connection.
+ * This applies to a connection belonging to a VPN plugin,
+ * e.g., OpenVPN.
+ *
+ * Returns: %TRUE if the connection is a valid secondary.
+ *
+ * Since: 1.57
+*/
+gboolean
+nm_connection_is_vpn(NMConnection *connection)
+{
+    const char *type;
+
+    type = nm_connection_get_connection_type(connection);
+    if (type)
+        return nm_streq(type, NM_SETTING_VPN_SETTING_NAME);
+
+    /* we have an incomplete (invalid) connection at hand. That can only
+     * happen during AddAndActivate. Determine whether it's VPN type based
+     * on the existence of a [vpn] section. */
+    return !!nm_connection_get_setting_vpn(connection);
+}
+
+/**
+ * nm_connection_is_valid_secondary:
+ * @connection: the #NMConnection
+ *
+ * Checks whether the given connection can be activated as a secondary.
+ * A valid secondary connection is either a Wireguard connection or
+ * a connection belonging to a VPN plugin, e.g., OpenVPN.
+ *
+ * Returns: %TRUE if the connection is a valid secondary.
+ *
+ * Since: 1.57
+*/
+gboolean
+nm_connection_is_valid_secondary(NMConnection *connection)
+{
+    const char *type = nm_connection_get_connection_type(connection);
+    if (type)
+        return nm_streq(type, NM_SETTING_VPN_SETTING_NAME)
+               || nm_streq(type, NM_SETTING_WIREGUARD_SETTING_NAME);
+
+    /* we have an incomplete (invalid) connection at hand. That can only
+     * happen during AddAndActivate. Determine whether it's VPN type based
+     * on the existence of a [vpn] section. */
+    return !!nm_connection_get_setting_vpn(connection)
+           || nm_connection_get_setting_wireguard(connection);
+}
+
 int
 _nm_setting_sort_for_nm_assert(NMSetting *a, NMSetting *b)
 {
@@ -3820,6 +3875,20 @@ NMSettingVpn *
 nm_connection_get_setting_vpn(NMConnection *connection)
 {
     return _nm_connection_get_setting_by_metatype(connection, NM_META_SETTING_TYPE_VPN);
+}
+
+/**
+ * nm_connection_get_setting_wireguard:
+ * @connection: the #NMConnection
+ *
+ * A shortcut to return any #NMSettingVpn the connection might contain.
+ *
+ * Returns: (transfer none): an #NMSettingVpn if the connection contains one, otherwise %NULL
+ **/
+NMSettingVpn *
+nm_connection_get_setting_wireguard(NMConnection *connection)
+{
+    return _nm_connection_get_setting_by_metatype(connection, NM_META_SETTING_TYPE_WIREGUARD);
 }
 
 /**
