@@ -34,6 +34,7 @@
 #define _SIZE_MAX_ROUTES      1000u
 #define _SIZE_MAX_DNS_SERVERS 64u
 #define _SIZE_MAX_DNS_DOMAINS 64u
+#define _SIZE_MAX_PREF64      8u
 
 /*****************************************************************************/
 
@@ -212,8 +213,8 @@ nm_ndisc_data_to_l3cd(NMDedupMultiIndex        *multi_idx,
     for (i = 0; i < rdata->dns_domains_n; i++)
         nm_l3_config_data_add_search(l3cd, AF_INET6, rdata->dns_domains[i].domain);
 
-    if (rdata->pref64.valid) {
-        nm_l3_config_data_set_pref64(l3cd, rdata->pref64.network, rdata->pref64.plen);
+    if (rdata->pref64_n > 0) {
+        nm_l3_config_data_set_pref64(l3cd, rdata->pref64[0].prefix, rdata->pref64[0].plen);
     } else {
         nm_l3_config_data_set_pref64_valid(l3cd, FALSE);
     }
@@ -425,6 +426,7 @@ _data_complete(NMNDiscDataInternal *data)
     _SET(data, gateways);
     _SET(data, addresses);
     _SET(data, routes);
+    _SET(data, pref64);
     _SET(data, dns_servers);
     _SET(data, dns_domains);
 #undef _SET
@@ -767,6 +769,59 @@ nm_ndisc_add_route(NMNDisc *ndisc, const NMNDiscRoute *new_item, gint64 now_msec
     }
 
     g_array_insert_val(rdata->routes, insert_idx == G_MAXUINT ? 0u : insert_idx, *new_item);
+    return TRUE;
+}
+
+gboolean
+nm_ndisc_add_pref64(NMNDisc *ndisc, const NMNDiscPref64 *new_item, gint64 now_msec)
+{
+    NMNDiscDataInternal *rdata = &NM_NDISC_GET_PRIVATE(ndisc)->rdata;
+    guint                i;
+    guint                insert_idx = G_MAXUINT;
+
+    for (i = 0; i < rdata->pref64->len;) {
+        NMNDiscPref64 *item = &nm_g_array_index(rdata->pref64, NMNDiscPref64, i);
+
+        if (item->plen == new_item->plen && IN6_ARE_ADDR_EQUAL(&item->prefix, &new_item->prefix)
+            && IN6_ARE_ADDR_EQUAL(&item->gateway, &new_item->gateway)) {
+            if (new_item->expiry_msec <= now_msec) {
+                g_array_remove_index(rdata->pref64, i);
+                return TRUE;
+            }
+
+            if (item->gateway_preference != new_item->gateway_preference) {
+                g_array_remove_index(rdata->pref64, i);
+                continue;
+            }
+
+            item->gateway_expiry_msec = new_item->gateway_expiry_msec;
+
+            if (item->expiry_msec == new_item->expiry_msec)
+                return FALSE;
+
+            item->expiry_msec = new_item->expiry_msec;
+            return TRUE;
+        }
+
+        /* Put before less preferable gateways. */
+        if (_preference_to_priority(item->gateway_preference)
+                < _preference_to_priority(new_item->gateway_preference)
+            && insert_idx == G_MAXUINT)
+            insert_idx = i;
+
+        i++;
+    }
+
+    if (rdata->pref64->len >= _SIZE_MAX_PREF64)
+        return FALSE;
+
+    if (new_item->expiry_msec <= now_msec)
+        return FALSE;
+
+    g_array_insert_val(rdata->pref64,
+                       insert_idx == G_MAXUINT ? rdata->pref64->len : insert_idx,
+                       *new_item);
+
     return TRUE;
 }
 
@@ -1410,6 +1465,17 @@ _config_changed_log(NMNDisc *ndisc, NMNDiscConfigMap changed)
               nm_icmpv6_router_pref_to_string(route->preference, str_pref, sizeof(str_pref)),
               get_exp(str_exp, now_msec, route));
     }
+    for (i = 0; i < rdata->pref64->len; i++) {
+        const NMNDiscPref64 *pref64 = &nm_g_array_index(rdata->pref64, NMNDiscPref64, i);
+        char                 addrstr2[NM_INET_ADDRSTRLEN];
+
+        _LOGD("  pref64 %s/%u via %s exp %s",
+              nm_inet6_ntop(&pref64->prefix, addrstr),
+              pref64->plen,
+              nm_inet6_ntop(&pref64->gateway, addrstr2),
+              get_exp(str_exp, now_msec, pref64));
+    }
+
     for (i = 0; i < rdata->dns_servers->len; i++) {
         const NMNDiscDNSServer *dns_server =
             &nm_g_array_index(rdata->dns_servers, NMNDiscDNSServer, i);
@@ -1538,13 +1604,39 @@ static void
 clean_pref64(NMNDisc *ndisc, gint64 now_msec, NMNDiscConfigMap *changed, gint64 *next_msec)
 {
     NMNDiscDataInternal *rdata = &NM_NDISC_GET_PRIVATE(ndisc)->rdata;
+    NMNDiscPref64       *arr;
+    guint                i;
+    guint                j;
 
-    if (!rdata->public.pref64.valid)
+    if (rdata->pref64->len == 0)
         return;
-    if (!expiry_next(now_msec, rdata->public.pref64.expiry_msec, next_msec)) {
-        rdata->public.pref64.valid = FALSE;
-        *changed |= NM_NDISC_CONFIG_PREF64;
+
+    arr = &nm_g_array_first(rdata->pref64, NMNDiscPref64);
+
+    for (i = 0, j = 0; i < rdata->pref64->len; i++) {
+        if (!expiry_next(now_msec, arr[i].expiry_msec, next_msec)
+            || !expiry_next(now_msec,
+                            arr[i].gateway_expiry_msec,
+                            next_msec)) { /* no gateway no party */
+            if (i == 0) {
+                /* Emit the changed signal only when the first PREF64 expires,
+                 * because only the first item is exported into the l3cd. Changes
+                 * in other PREF64s are not relevant. */
+                *changed |= NM_NDISC_CONFIG_PREF64;
+            }
+            continue;
+        }
+
+        if (i != j)
+            arr[j] = arr[i];
+        j++;
     }
+
+    if (i != j) {
+        g_array_set_size(rdata->pref64, j);
+    }
+
+    _array_set_size_max(rdata->pref64, _SIZE_MAX_PREF64);
 }
 
 static void
@@ -1943,6 +2035,7 @@ nm_ndisc_init(NMNDisc *ndisc)
     rdata->gateways    = g_array_new(FALSE, FALSE, sizeof(NMNDiscGateway));
     rdata->addresses   = g_array_new(FALSE, FALSE, sizeof(NMNDiscAddress));
     rdata->routes      = g_array_new(FALSE, FALSE, sizeof(NMNDiscRoute));
+    rdata->pref64      = g_array_new(FALSE, FALSE, sizeof(NMNDiscPref64));
     rdata->dns_servers = g_array_new(FALSE, FALSE, sizeof(NMNDiscDNSServer));
     rdata->dns_domains = g_array_new(FALSE, FALSE, sizeof(NMNDiscDNSDomain));
     g_array_set_clear_func(rdata->dns_domains, dns_domain_free);
@@ -1975,6 +2068,7 @@ finalize(GObject *object)
     g_array_unref(rdata->gateways);
     g_array_unref(rdata->addresses);
     g_array_unref(rdata->routes);
+    g_array_unref(rdata->pref64);
     g_array_unref(rdata->dns_servers);
     g_array_unref(rdata->dns_domains);
 
