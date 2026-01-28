@@ -2251,6 +2251,26 @@ wps_timeout_cb(gpointer user_data)
     return G_SOURCE_REMOVE;
 }
 
+static gboolean
+wifi_connection_is_new(NMDeviceWifi *self)
+{
+    NMDevice             *device = NM_DEVICE(self);
+    NMActRequest         *req;
+    NMSettingsConnection *connection;
+    guint64               timestamp = 0;
+
+    req = nm_device_get_act_request(device);
+    g_return_val_if_fail(NM_IS_ACT_REQUEST(req), TRUE);
+
+    connection = nm_act_request_get_settings_connection(req);
+    g_return_val_if_fail(NM_IS_SETTINGS_CONNECTION(connection), TRUE);
+
+    if (nm_settings_connection_get_timestamp(connection, &timestamp) && timestamp != 0)
+        return FALSE;
+
+    return TRUE;
+}
+
 static void
 wifi_secrets_get_secrets(NMDeviceWifi                *self,
                          const char                  *setting_name,
@@ -2405,10 +2425,11 @@ handle_8021x_or_psk_auth_fail(NMDeviceWifi              *self,
                               NMSupplicantInterfaceState old_state,
                               int                        disconnect_reason)
 {
-    NMDevice     *device = NM_DEVICE(self);
-    NMActRequest *req;
-    const char   *setting_name = NULL;
-    gboolean      handled      = FALSE;
+    NMDevice                    *device = NM_DEVICE(self);
+    NMActRequest                *req;
+    const char                  *setting_name = NULL;
+    NMSecretAgentGetSecretsFlags secret_flags = NM_SECRET_AGENT_GET_SECRETS_FLAG_ALLOW_INTERACTION
+                                                | NM_SECRET_AGENT_GET_SECRETS_FLAG_REQUEST_NEW;
 
     g_return_val_if_fail(new_state == NM_SUPPLICANT_INTERFACE_STATE_DISCONNECTED, FALSE);
 
@@ -2418,8 +2439,7 @@ handle_8021x_or_psk_auth_fail(NMDeviceWifi              *self,
     req = nm_device_get_act_request(NM_DEVICE(self));
     g_return_val_if_fail(req != NULL, FALSE);
 
-    if (need_new_8021x_secrets(self, old_state, &setting_name)
-        || need_new_wpa_psk(self, old_state, disconnect_reason, &setting_name)) {
+    if (need_new_8021x_secrets(self, old_state, &setting_name)) {
         nm_act_request_clear_secrets(req);
 
         _LOGI(LOGD_DEVICE | LOGD_WIFI,
@@ -2429,14 +2449,54 @@ handle_8021x_or_psk_auth_fail(NMDeviceWifi              *self,
         nm_device_state_changed(device,
                                 NM_DEVICE_STATE_NEED_AUTH,
                                 NM_DEVICE_STATE_REASON_SUPPLICANT_DISCONNECT);
-        wifi_secrets_get_secrets(self,
-                                 setting_name,
-                                 NM_SECRET_AGENT_GET_SECRETS_FLAG_ALLOW_INTERACTION
-                                     | NM_SECRET_AGENT_GET_SECRETS_FLAG_REQUEST_NEW);
-        handled = TRUE;
+        wifi_secrets_get_secrets(self, setting_name, secret_flags);
+        return TRUE;
     }
 
-    return handled;
+    if (need_new_wpa_psk(self, old_state, disconnect_reason, &setting_name)) {
+        nm_act_request_clear_secrets(req);
+        cleanup_association_attempt(self, TRUE);
+
+        if (wifi_connection_is_new(self)) {
+            _LOGI(LOGD_DEVICE | LOGD_WIFI,
+                  "Activation: (wifi) new connection disconnected during association, asking for "
+                  "new key");
+            nm_device_state_changed(device,
+                                    NM_DEVICE_STATE_NEED_AUTH,
+                                    NM_DEVICE_STATE_REASON_SUPPLICANT_DISCONNECT);
+            wifi_secrets_get_secrets(self, setting_name, secret_flags);
+            return TRUE;
+        }
+
+        if (!nm_device_auth_retries_try_next(device)) {
+            nm_device_state_changed(device,
+                                    NM_DEVICE_STATE_FAILED,
+                                    NM_DEVICE_STATE_REASON_NO_SECRETS);
+            return TRUE;
+        }
+
+        if (nm_device_auth_retries_has_next(device)) {
+            secret_flags &= ~NM_SECRET_AGENT_GET_SECRETS_FLAG_REQUEST_NEW;
+            _LOGI(
+                LOGD_DEVICE | LOGD_WIFI,
+                "Activation: (wifi) disconnected during association, reauthenticating connection");
+        } else {
+            _LOGI(LOGD_DEVICE | LOGD_WIFI,
+                  "Activation: (wifi) disconnected during association, asking for new key");
+        }
+
+        nm_device_state_changed(device,
+                                NM_DEVICE_STATE_NEED_AUTH,
+                                NM_DEVICE_STATE_REASON_SUPPLICANT_DISCONNECT);
+        wifi_secrets_get_secrets(self, setting_name, secret_flags);
+
+        return TRUE;
+    }
+
+    _LOGI(LOGD_DEVICE | LOGD_WIFI,
+          "Activation: (wifi) disconnected during association, retrying connection");
+
+    return FALSE;
 }
 
 static gboolean
@@ -2867,6 +2927,12 @@ supplicant_iface_notify_wpa_psk_mismatch_cb(NMSupplicantInterface *iface, NMDevi
 
     if (nm_device_get_state(device) != NM_DEVICE_STATE_CONFIG)
         return;
+
+    if (!wifi_connection_is_new(self) && nm_device_auth_retries_has_next(device)) {
+        _LOGI(LOGD_DEVICE | LOGD_WIFI,
+              "Activation: (wifi) psk mismatch reported by supplicant, retrying connection");
+        return;
+    }
 
     _LOGI(LOGD_DEVICE | LOGD_WIFI,
           "Activation: (wifi) psk mismatch reported by supplicant, asking for new key");

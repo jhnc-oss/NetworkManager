@@ -18905,14 +18905,14 @@ nm_device_get_supplicant_timeout(NMDevice *self)
                                                        SUPPLICANT_DEFAULT_TIMEOUT);
 }
 
-gboolean
-nm_device_auth_retries_try_next(NMDevice *self)
+static int
+_device_get_auth_retries(NMDevice *self)
 {
     NMDevicePrivate     *priv;
     NMSettingConnection *s_con;
     int                  auth_retries;
 
-    g_return_val_if_fail(NM_IS_DEVICE(self), FALSE);
+    g_return_val_if_fail(NM_IS_DEVICE(self), 0);
 
     priv         = NM_DEVICE_GET_PRIVATE(self);
     auth_retries = priv->auth_retries;
@@ -18944,13 +18944,47 @@ nm_device_auth_retries_try_next(NMDevice *self)
         priv->auth_retries = auth_retries;
     }
 
+    return auth_retries;
+}
+
+gboolean
+nm_device_auth_retries_has_next(NMDevice *self)
+{
+    int auth_retries;
+
+    g_return_val_if_fail(NM_IS_DEVICE(self), FALSE);
+
+    auth_retries = _device_get_auth_retries(self);
+
+    if (auth_retries == NM_DEVICE_AUTH_RETRIES_INFINITY)
+        return TRUE;
+
+    if (auth_retries > 0)
+        return TRUE;
+
+    return FALSE;
+}
+
+gboolean
+nm_device_auth_retries_try_next(NMDevice *self)
+{
+    NMDevicePrivate *priv;
+    int              auth_retries;
+
+    g_return_val_if_fail(NM_IS_DEVICE(self), FALSE);
+
+    priv         = NM_DEVICE_GET_PRIVATE(self);
+    auth_retries = _device_get_auth_retries(self);
+
     if (auth_retries == NM_DEVICE_AUTH_RETRIES_INFINITY)
         return TRUE;
     if (auth_retries <= 0) {
         nm_assert(auth_retries == 0);
         return FALSE;
     }
+
     priv->auth_retries--;
+
     return TRUE;
 }
 
