@@ -14,7 +14,7 @@ struct _NMNDiscDataInternal {
     NMNDiscData public;
     GArray *gateways;
     GArray *addresses;
-    GArray *clat_addresses;
+    GArray *pref64;
     GArray *routes;
     GArray *dns_servers;
     GArray *dns_domains;
@@ -29,6 +29,7 @@ gboolean nm_ndisc_add_gateway(NMNDisc *ndisc, const NMNDiscGateway *new_item, gi
 gboolean
 nm_ndisc_complete_and_add_address(NMNDisc *ndisc, const NMNDiscAddress *new_item, gint64 now_msec);
 gboolean nm_ndisc_add_route(NMNDisc *ndisc, const NMNDiscRoute *new_item, gint64 now_msec);
+gboolean nm_ndisc_add_pref64(NMNDisc *ndisc, const NMNDiscPref64 *new_item, gint64 now_msec);
 gboolean nm_ndisc_add_dns_server(NMNDisc *ndisc, const NMNDiscDNSServer *new_item, gint64 now_msec);
 gboolean nm_ndisc_add_dns_domain(NMNDisc *ndisc, const NMNDiscDNSDomain *new_item, gint64 now_msec);
 
