@@ -5768,6 +5768,18 @@ _l3_commit_pref64(NML3Cfg *self, NML3CfgCommitType commit_type)
             }
 
             if (self->priv.p->clat_address_6_valid) {
+                /* As per draft-ietf-v6ops-claton-14, hosts must perform duplicate
+                 * addresses detection (DAD) on the generated CLAT IPv6 address. This is
+                 * necessary not only to avoid address collisions but also because some
+                 * networks drop traffic from addresses that have not done DAD.
+                 * Since doing true DAD adds complexity, adopt the same approach as
+                 * Android: start DAD by sending a neighbor solicitation and don't wait
+                 * for any reply. This avoids the problem with dropped traffic; it
+                 * doesn't help with collisions, but collisions are anyway very unlikely
+                 * because the interface identifier is a random 64-bit value.
+                 */
+                nm_utils_ipv6_dad_send(&self->priv.p->clat_address_6.address, self->priv.ifindex);
+
                 mreq.ipv6mr_multiaddr = self->priv.p->clat_address_6.address;
 
                 err = setsockopt(self->priv.p->clat_socket,
