@@ -5768,6 +5768,9 @@ _l3_commit_pref64(NML3Cfg *self, NML3CfgCommitType commit_type)
             }
 
             if (self->priv.p->clat_address_6_valid) {
+                /* Send DAD NS before using the address */
+                nm_utils_ipv6_dad_send(&self->priv.p->clat_address_6.address, self->priv.ifindex);
+
                 mreq.ipv6mr_multiaddr = self->priv.p->clat_address_6.address;
 
                 err = setsockopt(self->priv.p->clat_socket,
