@@ -125,8 +125,18 @@ struct _NML3ConfigData {
     NMSettingConnectionDnsOverTls dns_over_tls;
     NMSettingConnectionDnssec     dnssec;
     NMUtilsIPv6IfaceId            ip6_token;
-    NMSettingIp4ConfigClat        clat;
     NMRefString                  *network_id;
+    NMSettingIp4ConfigClat clat; /* this indicates the 'administrative' CLAT state, i.e. whether
+                                  * CLAT will be started once we receive a PREF64 */
+
+    /* The runtime CLAT state */
+    struct {
+        struct in6_addr ip6;
+        struct in6_addr pref64;
+        in_addr_t       ip4;
+        guint8          pref64_plen;
+        bool            enabled;
+    } clat_state;
 
     NML3ConfigDatFlags flags;
 
@@ -535,6 +545,14 @@ nm_l3_config_data_log(const NML3ConfigData *self,
                 _L("clat: auto");
             else if (self->clat == NM_SETTING_IP4_CONFIG_CLAT_FORCE)
                 _L("clat: force");
+
+            if (self->clat_state.enabled) {
+                _L("clat-state: ip4=%s/32, pref64=%s/%u, ip6=%s/64",
+                   nm_inet4_ntop(self->clat_state.ip4, sbuf + NM_INET_ADDRSTRLEN),
+                   nm_inet6_ntop(&self->clat_state.pref64, sbuf),
+                   self->clat_state.pref64_plen,
+                   nm_inet6_ntop(&self->clat_state.ip6, sbuf_addr));
+            }
         }
 
         if (!IS_IPv4 && self->pref64_valid) {
@@ -2048,6 +2066,46 @@ nm_l3_config_data_get_clat(const NML3ConfigData *self)
 }
 
 gboolean
+nm_l3_config_data_get_clat_state(const NML3ConfigData *self,
+                                 struct in6_addr      *out_ip6,
+                                 struct in6_addr      *out_pref64,
+                                 guint8               *out_pref64_plen,
+                                 in_addr_t            *out_ip4)
+{
+    if (!self || !self->clat_state.enabled)
+        return FALSE;
+    NM_SET_OUT(out_ip6, self->clat_state.ip6);
+    NM_SET_OUT(out_pref64, self->clat_state.pref64);
+    NM_SET_OUT(out_pref64_plen, self->clat_state.pref64_plen);
+    NM_SET_OUT(out_ip4, self->clat_state.ip4);
+    return TRUE;
+}
+
+void
+nm_l3_config_data_set_clat_state(NML3ConfigData        *self,
+                                 gboolean               enabled,
+                                 const struct in6_addr *ip6,
+                                 const struct in6_addr *pref64,
+                                 guint8                 pref64_plen,
+                                 in_addr_t              ip4)
+{
+    nm_assert(_NM_IS_L3_CONFIG_DATA(self, FALSE));
+
+    self->clat_state.enabled = enabled;
+    if (enabled) {
+        self->clat_state.ip6         = *ip6;
+        self->clat_state.pref64      = *pref64;
+        self->clat_state.pref64_plen = pref64_plen;
+        self->clat_state.ip4         = ip4;
+    } else {
+        self->clat_state.ip6         = in6addr_any;
+        self->clat_state.pref64      = in6addr_any;
+        self->clat_state.pref64_plen = 0;
+        self->clat_state.ip4         = 0;
+    }
+}
+
+gboolean
 nm_l3_config_data_set_pref64_valid(NML3ConfigData *self, gboolean val)
 {
     if (self->pref64_valid == val)
@@ -2649,6 +2707,14 @@ nm_l3_config_data_cmp_full(const NML3ConfigData *a,
         NM_CMP_DIRECT_UNSAFE(a->routed_dns_6, b->routed_dns_6);
 
         NM_CMP_DIRECT_UNSAFE(a->clat, b->clat);
+
+        NM_CMP_DIRECT(!!a->clat_state.enabled, !!b->clat_state.enabled);
+        if (a->clat_state.enabled) {
+            NM_CMP_DIRECT_IN6ADDR(&a->clat_state.ip6, &b->clat_state.ip6);
+            NM_CMP_DIRECT_IN6ADDR(&a->clat_state.pref64, &b->clat_state.pref64);
+            NM_CMP_DIRECT(a->clat_state.pref64_plen, b->clat_state.pref64_plen);
+            NM_CMP_DIRECT(a->clat_state.ip4, b->clat_state.ip4);
+        }
 
         NM_CMP_DIRECT(!!a->pref64_valid, !!b->pref64_valid);
         if (a->pref64_valid) {
@@ -3733,6 +3799,10 @@ nm_l3_config_data_merge(NML3ConfigData       *self,
     } else if (src->clat == NM_SETTING_IP4_CONFIG_CLAT_FORCE) {
         /* 'force' always takes precedence */
         self->clat = src->clat;
+    }
+
+    if (!self->clat_state.enabled && src->clat_state.enabled) {
+        self->clat_state = src->clat_state;
     }
 
     if (src->pref64_valid) {
