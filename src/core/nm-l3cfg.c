@@ -4351,6 +4351,17 @@ _l3cfg_update_clat_config(NML3Cfg             *self,
                 _LOGW("Couldn't find a good ipv6 route! Unable to set up CLAT!");
             }
         }
+
+        if (self->priv.p->clat_address_4 && self->priv.p->clat_address_6_valid) {
+            nm_l3_config_data_set_clat_state(l3cd,
+                                             TRUE,
+                                             &self->priv.p->clat_address_6.address,
+                                             &pref64,
+                                             pref64_plen,
+                                             self->priv.p->clat_address_4->addr);
+        } else {
+            nm_l3_config_data_set_clat_state(l3cd, FALSE, NULL, NULL, 0, INADDR_ANY);
+        }
     }
 #endif /* HAVE_CLAT */
 }
