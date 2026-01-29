@@ -156,6 +156,10 @@ _metagen_ip4_config_get_fcn(NMC_META_GENERIC_INFO_GET_FCN_ARGS)
             return NULL;
         arrc = nm_ip_config_get_wins_servers(cfg4);
         goto arrc_out;
+    case NMC_GENERIC_INFO_TYPE_IP4_CONFIG_CLAT_ADDRESS:
+        str = nm_ip_config_get_clat_address(cfg4);
+        NM_SET_OUT(out_is_default, !str);
+        return str;
     default:
         break;
     }
@@ -184,6 +188,7 @@ const NmcMetaGenericInfo *const metagen_ip4_config[_NMC_GENERIC_INFO_TYPE_IP4_CO
     _METAGEN_IP4_CONFIG(NMC_GENERIC_INFO_TYPE_IP4_CONFIG_DOMAIN, "DOMAIN"),
     _METAGEN_IP4_CONFIG(NMC_GENERIC_INFO_TYPE_IP4_CONFIG_SEARCHES, "SEARCHES"),
     _METAGEN_IP4_CONFIG(NMC_GENERIC_INFO_TYPE_IP4_CONFIG_WINS, "WINS"),
+    _METAGEN_IP4_CONFIG(NMC_GENERIC_INFO_TYPE_IP4_CONFIG_CLAT_ADDRESS, "CLAT-ADDRESS"),
 };
 
 /*****************************************************************************/
@@ -245,6 +250,14 @@ _metagen_ip6_config_get_fcn(NMC_META_GENERIC_INFO_GET_FCN_ARGS)
             return NULL;
         arrc = nm_ip_config_get_searches(cfg6);
         goto arrc_out;
+    case NMC_GENERIC_INFO_TYPE_IP6_CONFIG_CLAT_ADDRESS:
+        str = nm_ip_config_get_clat_address(cfg6);
+        NM_SET_OUT(out_is_default, !str);
+        return str;
+    case NMC_GENERIC_INFO_TYPE_IP6_CONFIG_CLAT_PREF64:
+        str = nm_ip_config_get_clat_pref64(cfg6);
+        NM_SET_OUT(out_is_default, !str);
+        return str;
     default:
         break;
     }
@@ -272,6 +285,8 @@ const NmcMetaGenericInfo *const metagen_ip6_config[_NMC_GENERIC_INFO_TYPE_IP6_CO
     _METAGEN_IP6_CONFIG(NMC_GENERIC_INFO_TYPE_IP6_CONFIG_DNS, "DNS"),
     _METAGEN_IP6_CONFIG(NMC_GENERIC_INFO_TYPE_IP6_CONFIG_DOMAIN, "DOMAIN"),
     _METAGEN_IP6_CONFIG(NMC_GENERIC_INFO_TYPE_IP6_CONFIG_SEARCHES, "SEARCHES"),
+    _METAGEN_IP6_CONFIG(NMC_GENERIC_INFO_TYPE_IP6_CONFIG_CLAT_ADDRESS, "CLAT-ADDRESS"),
+    _METAGEN_IP6_CONFIG(NMC_GENERIC_INFO_TYPE_IP6_CONFIG_CLAT_PREF64, "CLAT-PREF64"),
 };
 
 /*****************************************************************************/

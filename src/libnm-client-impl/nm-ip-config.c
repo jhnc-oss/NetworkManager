@@ -26,7 +26,9 @@ NM_GOBJECT_PROPERTIES_DEFINE(NMIPConfig,
                              PROP_NAMESERVERS,
                              PROP_DOMAINS,
                              PROP_SEARCHES,
-                             PROP_WINS_SERVERS, );
+                             PROP_WINS_SERVERS,
+                             PROP_CLAT_ADDRESS,
+                             PROP_CLAT_PREF64, );
 
 typedef struct _NMIPConfigPrivate {
     GPtrArray *addresses;
@@ -36,6 +38,8 @@ typedef struct _NMIPConfigPrivate {
     char     **searches;
     char     **wins_servers;
     char      *gateway;
+    char      *clat_address;
+    char      *clat_pref64;
 
     bool addresses_new_style : 1;
     bool routes_new_style : 1;
@@ -256,6 +260,12 @@ get_property(GObject *object, guint prop_id, GValue *value, GParamSpec *pspec)
     case PROP_GATEWAY:
         g_value_set_string(value, nm_ip_config_get_gateway(self));
         break;
+    case PROP_CLAT_ADDRESS:
+        g_value_set_string(value, nm_ip_config_get_clat_address(self));
+        break;
+    case PROP_CLAT_PREF64:
+        g_value_set_string(value, nm_ip_config_get_clat_pref64(self));
+        break;
     case PROP_ADDRESSES:
         g_value_take_boxed(value,
                            _nm_utils_copy_array(nm_ip_config_get_addresses(self),
@@ -307,6 +317,8 @@ finalize(GObject *object)
     NMIPConfigPrivate *priv = NM_IP_CONFIG_GET_PRIVATE(object);
 
     g_free(priv->gateway);
+    g_free(priv->clat_address);
+    g_free(priv->clat_pref64);
 
     g_ptr_array_unref(priv->routes);
     g_ptr_array_unref(priv->addresses);
@@ -333,6 +345,10 @@ const NMLDBusMetaIface _nml_dbus_meta_iface_nm_ip4config = NML_DBUS_META_IFACE_I
                                         "aau",
                                         _notify_update_prop_addresses,
                                         .obj_property_no_reverse_idx = TRUE),
+        NML_DBUS_META_PROPERTY_INIT_S("ClatAddress",
+                                      PROP_CLAT_ADDRESS,
+                                      NMIPConfigPrivate,
+                                      clat_address),
         NML_DBUS_META_PROPERTY_INIT_TODO("DnsOptions", "as"),
         NML_DBUS_META_PROPERTY_INIT_TODO("DnsPriority", "i"),
         NML_DBUS_META_PROPERTY_INIT_AS("Domains", PROP_DOMAINS, NMIPConfigPrivate, domains),
@@ -381,6 +397,14 @@ const NMLDBusMetaIface _nml_dbus_meta_iface_nm_ip6config = NML_DBUS_META_IFACE_I
                                         "a(ayuay)",
                                         _notify_update_prop_addresses,
                                         .obj_property_no_reverse_idx = TRUE),
+        NML_DBUS_META_PROPERTY_INIT_S("ClatAddress",
+                                      PROP_CLAT_ADDRESS,
+                                      NMIPConfigPrivate,
+                                      clat_address),
+        NML_DBUS_META_PROPERTY_INIT_S("ClatPref64",
+                                      PROP_CLAT_PREF64,
+                                      NMIPConfigPrivate,
+                                      clat_pref64),
         NML_DBUS_META_PROPERTY_INIT_TODO("DnsOptions", "as"),
         NML_DBUS_META_PROPERTY_INIT_TODO("DnsPriority", "i"),
         NML_DBUS_META_PROPERTY_INIT_AS("Domains", PROP_DOMAINS, NMIPConfigPrivate, domains),
@@ -435,6 +459,34 @@ nm_ip_config_class_init(NMIPConfigClass *config_class)
                                                        "",
                                                        NULL,
                                                        G_PARAM_READABLE | G_PARAM_STATIC_STRINGS);
+
+    /**
+     * NMIPConfig:clat-address:
+     *
+     * The IP address used by CLAT.
+     *
+     * Since: 1.58
+     **/
+    obj_properties[PROP_CLAT_ADDRESS] =
+        g_param_spec_string(NM_IP_CONFIG_CLAT_ADDRESS,
+                            "",
+                            "",
+                            NULL,
+                            G_PARAM_READABLE | G_PARAM_STATIC_STRINGS);
+
+    /**
+     * NMIPConfig:clat-pref64:
+     *
+     * The NAT64 prefix used by CLAT.
+     *
+     * Since: 1.58
+     **/
+    obj_properties[PROP_CLAT_PREF64] =
+        g_param_spec_string(NM_IP_CONFIG_CLAT_PREF64,
+                            "",
+                            "",
+                            NULL,
+                            G_PARAM_READABLE | G_PARAM_STATIC_STRINGS);
 
     /**
      * NMIPConfig:addresses:
@@ -541,6 +593,42 @@ nm_ip_config_get_gateway(NMIPConfig *config)
     g_return_val_if_fail(NM_IS_IP_CONFIG(config), NULL);
 
     return _nml_coerce_property_str_not_empty(NM_IP_CONFIG_GET_PRIVATE(config)->gateway);
+}
+
+/**
+ * nm_ip_config_get_clat_address:
+ * @config: a #NMIPConfig
+ *
+ * Gets the CLAT IP address.
+ *
+ * Returns: (transfer none): the CLAT IP address.
+ *
+ * Since: 1.58
+ **/
+const char *
+nm_ip_config_get_clat_address(NMIPConfig *config)
+{
+    g_return_val_if_fail(NM_IS_IP_CONFIG(config), NULL);
+
+    return _nml_coerce_property_str_not_empty(NM_IP_CONFIG_GET_PRIVATE(config)->clat_address);
+}
+
+/**
+ * nm_ip_config_get_clat_pref64:
+ * @config: a #NMIPConfig
+ *
+ * Gets the NAT64 prefix used by CLAT.
+ *
+ * Returns: (transfer none): the NAT64 prefix.
+ *
+ * Since: 1.58
+ **/
+const char *
+nm_ip_config_get_clat_pref64(NMIPConfig *config)
+{
+    g_return_val_if_fail(NM_IS_IP_CONFIG(config), NULL);
+
+    return _nml_coerce_property_str_not_empty(NM_IP_CONFIG_GET_PRIVATE(config)->clat_pref64);
 }
 
 /**

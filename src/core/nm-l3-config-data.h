@@ -507,6 +507,19 @@ gboolean nm_l3_config_data_set_clat(NML3ConfigData *self, NMSettingIp4ConfigClat
 
 NMSettingIp4ConfigClat nm_l3_config_data_get_clat(const NML3ConfigData *self);
 
+gboolean nm_l3_config_data_get_clat_state(const NML3ConfigData *self,
+                                          struct in6_addr      *out_ip6,
+                                          struct in6_addr      *out_pref64,
+                                          guint8               *out_pref64_plen,
+                                          in_addr_t            *out_ip4);
+
+void nm_l3_config_data_set_clat_state(NML3ConfigData        *self,
+                                      gboolean               enabled,
+                                      const struct in6_addr *ip6,
+                                      const struct in6_addr *pref64,
+                                      guint8                 pref64_plen,
+                                      in_addr_t              ip4);
+
 gboolean nm_l3_config_data_set_pref64_valid(NML3ConfigData *self, gboolean val);
 
 gboolean nm_l3_config_data_get_pref64_valid(const NML3ConfigData *self);
