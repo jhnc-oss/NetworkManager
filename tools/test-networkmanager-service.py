@@ -1046,6 +1046,18 @@ class Device(ExportedObj):
             PRP_DEVICE_DHCP6_CONFIG,
             ExportedObj.to_path(self.dhcp6_config),
         )
+        if Util.random_int(self.path, 100) > 80:
+            self.ip4_config._dbus_property_set(
+                IFACE_IP4_CONFIG, PRP_IP4_CONFIG_CLAT_ADDRESS, "192.0.0.1"
+            )
+            self.ip6_config._dbus_property_set(
+                IFACE_IP6_CONFIG,
+                PRP_IP6_CONFIG_CLAT_ADDRESS,
+                "2002:aaaa::2c0d:1e71:ef87:fac7",
+            )
+            self.ip6_config._dbus_property_set(
+                IFACE_IP6_CONFIG, PRP_IP6_CONFIG_CLAT_PREF64, "64:ff9b::/96"
+            )
 
     def stop(self):
         self._dbus_property_set(
@@ -2446,6 +2458,7 @@ PRP_IP4_CONFIG_SEARCHES = "Searches"
 PRP_IP4_CONFIG_DNSOPTIONS = "DnsOptions"
 PRP_IP4_CONFIG_DNSPRIORITY = "DnsPriority"
 PRP_IP4_CONFIG_WINSSERVERS = "WinsServers"
+PRP_IP4_CONFIG_CLAT_ADDRESS = "ClatAddress"
 
 
 class IP4Config(ExportedObj):
@@ -2624,6 +2637,7 @@ class IP4Config(ExportedObj):
             PRP_IP4_CONFIG_WINSSERVERS: dbus.Array(
                 [dbus.UInt32(Util.ip4_addr_be32(n)) for n in winsservers], "u"
             ),
+            PRP_IP4_CONFIG_CLAT_ADDRESS: dbus.String(""),
         }
 
     def props_regenerate(self, generate_seed):
@@ -2648,6 +2662,8 @@ PRP_IP6_CONFIG_DOMAINS = "Domains"
 PRP_IP6_CONFIG_SEARCHES = "Searches"
 PRP_IP6_CONFIG_DNSOPTIONS = "DnsOptions"
 PRP_IP6_CONFIG_DNSPRIORITY = "DnsPriority"
+PRP_IP6_CONFIG_CLAT_ADDRESS = "ClatAddress"
+PRP_IP6_CONFIG_CLAT_PREF64 = "ClatPref64"
 
 
 class IP6Config(ExportedObj):
@@ -2814,6 +2830,8 @@ class IP6Config(ExportedObj):
             PRP_IP6_CONFIG_SEARCHES: dbus.Array(searches, "s"),
             PRP_IP6_CONFIG_DNSOPTIONS: dbus.Array(dnsoptions, "s"),
             PRP_IP6_CONFIG_DNSPRIORITY: dbus.Int32(dnspriority),
+            PRP_IP6_CONFIG_CLAT_ADDRESS: dbus.String(""),
+            PRP_IP6_CONFIG_CLAT_PREF64: dbus.String(""),
         }
 
     def props_regenerate(self, generate_seed):
