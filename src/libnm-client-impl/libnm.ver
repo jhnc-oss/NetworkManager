@@ -2106,6 +2106,8 @@ global:
 
 libnm_1_58_0 {
 global:
+	nm_ip_config_get_clat_address;
+	nm_ip_config_get_clat_pref64;
 	nm_setting_ip4_config_clat_get_type;
 	nm_setting_ip4_config_get_clat;
 	nm_utils_wifi_6ghz_freqs;

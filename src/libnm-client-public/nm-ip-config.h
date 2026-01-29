@@ -38,11 +38,17 @@ typedef struct _NMIPConfigClass NMIPConfigClass;
 #define NM_IP_CONFIG_DOMAINS      "domains"
 #define NM_IP_CONFIG_SEARCHES     "searches"
 #define NM_IP_CONFIG_WINS_SERVERS "wins-servers"
+#define NM_IP_CONFIG_CLAT_ADDRESS "clat-address"
+#define NM_IP_CONFIG_CLAT_PREF64  "clat-pref64"
 
 GType nm_ip_config_get_type(void);
 
-int                nm_ip_config_get_family(NMIPConfig *config);
-const char        *nm_ip_config_get_gateway(NMIPConfig *config);
+int         nm_ip_config_get_family(NMIPConfig *config);
+const char *nm_ip_config_get_gateway(NMIPConfig *config);
+NM_AVAILABLE_IN_1_58
+const char *nm_ip_config_get_clat_address(NMIPConfig *config);
+NM_AVAILABLE_IN_1_58
+const char        *nm_ip_config_get_clat_pref64(NMIPConfig *config);
 GPtrArray         *nm_ip_config_get_addresses(NMIPConfig *config);
 GPtrArray         *nm_ip_config_get_routes(NMIPConfig *config);
 const char *const *nm_ip_config_get_nameservers(NMIPConfig *config);
