@@ -4154,7 +4154,7 @@ _l3cfg_update_clat_config(NML3Cfg             *self,
     const NMPlatformIP4Route *ip4_route;
     NMDedupMultiIter          iter;
 
-    switch (nm_l3_config_data_get_clat(l3cd)) {
+    switch (nm_l3_config_data_get_clat_config(l3cd)) {
     case NM_SETTING_IP4_CONFIG_CLAT_FORCE:
         clat_enabled = TRUE;
         break;
