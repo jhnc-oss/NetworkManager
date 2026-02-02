@@ -5708,7 +5708,7 @@ _l3_commit_pref64(NML3Cfg *self, NML3CfgCommitType commit_type)
             }
 
             self->priv.p->clat_ingress_link =
-                bpf_program__attach_tcx(self->priv.p->clat_bpf->progs.clat_ingress,
+                bpf_program__attach_tcx(self->priv.p->clat_bpf->progs.nm_clat_ingress,
                                         self->priv.ifindex,
                                         NULL);
             if (!self->priv.p->clat_ingress_link) {
@@ -5718,7 +5718,7 @@ _l3_commit_pref64(NML3Cfg *self, NML3CfgCommitType commit_type)
             }
 
             self->priv.p->clat_egress_link =
-                bpf_program__attach_tcx(self->priv.p->clat_bpf->progs.clat_egress,
+                bpf_program__attach_tcx(self->priv.p->clat_bpf->progs.nm_clat_egress,
                                         self->priv.ifindex,
                                         NULL);
             if (!self->priv.p->clat_egress_link) {
