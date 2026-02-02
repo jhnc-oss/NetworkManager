@@ -11531,7 +11531,7 @@ _dev_ipmanual_start(NMDevice *self)
             nm_l3_config_data_set_routed_dns(l3cd, AF_INET6, TRUE);
         }
 
-        nm_l3_config_data_set_clat(l3cd, _prop_get_ipv4_clat(self, TRUE));
+        nm_l3_config_data_set_clat_config(l3cd, _prop_get_ipv4_clat(self, TRUE));
     }
 
     if (!l3cd) {

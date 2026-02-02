@@ -126,8 +126,9 @@ struct _NML3ConfigData {
     NMSettingConnectionDnssec     dnssec;
     NMUtilsIPv6IfaceId            ip6_token;
     NMRefString                  *network_id;
-    NMSettingIp4ConfigClat clat; /* this indicates the 'administrative' CLAT state, i.e. whether
-                                  * CLAT will be started once we receive a PREF64 */
+    NMSettingIp4ConfigClat        clat_config; /* this indicates the 'administrative' CLAT
+                                                * state, i.e. whether CLAT will be started
+                                                * once we receive a PREF64 */
 
     /* The runtime CLAT state */
     struct {
@@ -541,10 +542,10 @@ nm_l3_config_data_log(const NML3ConfigData *self,
         }
 
         if (!IS_IPv4) {
-            if (self->clat == NM_SETTING_IP4_CONFIG_CLAT_AUTO)
-                _L("clat: auto");
-            else if (self->clat == NM_SETTING_IP4_CONFIG_CLAT_FORCE)
-                _L("clat: force");
+            if (self->clat_config == NM_SETTING_IP4_CONFIG_CLAT_AUTO)
+                _L("clat-config: auto");
+            else if (self->clat_config == NM_SETTING_IP4_CONFIG_CLAT_FORCE)
+                _L("clat-config: force");
 
             if (self->clat_state.enabled) {
                 _L("clat-state: ip4=%s/32, pref64=%s/%u, ip6=%s/64",
@@ -755,7 +756,7 @@ nm_l3_config_data_new(NMDedupMultiIndex *multi_idx, int ifindex, NMIPConfigSourc
         .flags                          = NM_L3_CONFIG_DAT_FLAGS_NONE,
         .metered                        = NM_TERNARY_DEFAULT,
         .proxy_browser_only             = NM_TERNARY_DEFAULT,
-        .clat                           = NM_SETTING_IP4_CONFIG_CLAT_NO,
+        .clat_config                    = NM_SETTING_IP4_CONFIG_CLAT_NO,
         .proxy_method                   = NM_PROXY_CONFIG_METHOD_UNKNOWN,
         .route_table_sync_4             = NM_IP_ROUTE_TABLE_SYNC_MODE_NONE,
         .route_table_sync_6             = NM_IP_ROUTE_TABLE_SYNC_MODE_NONE,
@@ -2043,7 +2044,7 @@ nm_l3_config_data_set_network_id(NML3ConfigData *self, const char *value)
 }
 
 gboolean
-nm_l3_config_data_set_clat(NML3ConfigData *self, NMSettingIp4ConfigClat val)
+nm_l3_config_data_set_clat_config(NML3ConfigData *self, NMSettingIp4ConfigClat val)
 {
     nm_assert(_NM_IS_L3_CONFIG_DATA(self, FALSE));
     nm_assert(NM_IN_SET(val,
@@ -2051,18 +2052,18 @@ nm_l3_config_data_set_clat(NML3ConfigData *self, NMSettingIp4ConfigClat val)
                         NM_SETTING_IP4_CONFIG_CLAT_FORCE,
                         NM_SETTING_IP4_CONFIG_CLAT_AUTO));
 
-    if (self->clat == val)
+    if (self->clat_config == val)
         return FALSE;
-    self->clat = val;
+    self->clat_config = val;
     return TRUE;
 }
 
 NMSettingIp4ConfigClat
-nm_l3_config_data_get_clat(const NML3ConfigData *self)
+nm_l3_config_data_get_clat_config(const NML3ConfigData *self)
 {
     nm_assert(_NM_IS_L3_CONFIG_DATA(self, TRUE));
 
-    return self->clat;
+    return self->clat_config;
 }
 
 gboolean
@@ -2706,7 +2707,7 @@ nm_l3_config_data_cmp_full(const NML3ConfigData *a,
         NM_CMP_DIRECT_UNSAFE(a->routed_dns_4, b->routed_dns_4);
         NM_CMP_DIRECT_UNSAFE(a->routed_dns_6, b->routed_dns_6);
 
-        NM_CMP_DIRECT_UNSAFE(a->clat, b->clat);
+        NM_CMP_DIRECT_UNSAFE(a->clat_config, b->clat_config);
 
         NM_CMP_DIRECT(!!a->clat_state.enabled, !!b->clat_state.enabled);
         if (a->clat_state.enabled) {
@@ -3793,12 +3794,12 @@ nm_l3_config_data_merge(NML3ConfigData       *self,
     if (src->routed_dns_6)
         self->routed_dns_6 = TRUE;
 
-    if (self->clat == NM_SETTING_IP4_CONFIG_CLAT_NO) {
+    if (self->clat_config == NM_SETTING_IP4_CONFIG_CLAT_NO) {
         /* 'no' always loses to 'force' and 'auto' */
-        self->clat = src->clat;
-    } else if (src->clat == NM_SETTING_IP4_CONFIG_CLAT_FORCE) {
+        self->clat_config = src->clat_config;
+    } else if (src->clat_config == NM_SETTING_IP4_CONFIG_CLAT_FORCE) {
         /* 'force' always takes precedence */
-        self->clat = src->clat;
+        self->clat_config = src->clat_config;
     }
 
     if (!self->clat_state.enabled && src->clat_state.enabled) {

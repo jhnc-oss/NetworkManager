@@ -503,9 +503,9 @@ gboolean nm_l3_config_data_set_network_id(NML3ConfigData *self, const char *netw
 
 const char *nm_l3_config_data_get_network_id(const NML3ConfigData *self);
 
-gboolean nm_l3_config_data_set_clat(NML3ConfigData *self, NMSettingIp4ConfigClat val);
+gboolean nm_l3_config_data_set_clat_config(NML3ConfigData *self, NMSettingIp4ConfigClat val);
 
-NMSettingIp4ConfigClat nm_l3_config_data_get_clat(const NML3ConfigData *self);
+NMSettingIp4ConfigClat nm_l3_config_data_get_clat_config(const NML3ConfigData *self);
 
 gboolean nm_l3_config_data_get_clat_state(const NML3ConfigData *self,
                                           struct in6_addr      *out_ip6,
