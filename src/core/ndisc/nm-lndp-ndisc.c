@@ -401,14 +401,15 @@ receive_ra(struct ndp *ndp, struct ndp_msg *msg, gpointer user_data)
         }
     }
 
+#if HAVE_CLAT
     /* PREF64 */
     ndp_msg_opt_for_each_offset (offset, msg, NDP_MSG_OPT_PREF64) {
         NMNDiscPref64 pref64;
 
         pref64 = (NMNDiscPref64) {
-            .prefix  = *ndp_msg_opt_pref64_prefix(msg, offset),
-            .plen    = ndp_msg_opt_pref64_prefix_length(msg, offset),
-            .gateway = gateway.address,
+            .prefix             = *ndp_msg_opt_pref64_prefix(msg, offset),
+            .plen               = ndp_msg_opt_pref64_prefix_length(msg, offset),
+            .gateway            = gateway.address,
             .gateway_preference = gateway.preference,
             .expiry_msec =
                 _nm_ndisc_lifetime_to_expiry(now_msec, ndp_msg_opt_pref64_lifetime(msg, offset)),
@@ -422,6 +423,7 @@ receive_ra(struct ndp *ndp, struct ndp_msg *msg, gpointer user_data)
             changed |= NM_NDISC_CONFIG_PREF64;
         }
     }
+#endif
 
     nm_ndisc_ra_received(ndisc, now_msec, changed);
     return 0;
