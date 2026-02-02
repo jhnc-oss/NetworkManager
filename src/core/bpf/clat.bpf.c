@@ -1103,14 +1103,14 @@ out:
 
 SEC("tcx/egress")
 int
-clat_egress(struct __sk_buff *skb)
+nm_clat_egress(struct __sk_buff *skb)
 {
     return clat_handle_v4(skb);
 }
 
 SEC("tcx/ingress")
 int
-clat_ingress(struct __sk_buff *skb)
+nm_clat_ingress(struct __sk_buff *skb)
 {
     return clat_handle_v6(skb);
 }
