@@ -2120,4 +2120,11 @@ global:
 	nm_setting_geneve_get_type;
 	nm_setting_geneve_new;
 	nm_connection_get_setting_geneve;
+	nm_device_geneve_get_dst_port;
+	nm_device_geneve_get_id;
+	nm_device_geneve_get_remote;
+	nm_device_geneve_get_tos;
+	nm_device_geneve_get_ttl;
+	nm_device_geneve_get_df;
+	nm_device_geneve_get_type;
 } libnm_1_56_0;

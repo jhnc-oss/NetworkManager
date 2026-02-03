@@ -5,7 +5,6 @@
 
 #ifndef __NETWORKMANAGER_DEVICE_FACTORY_H__
 #define __NETWORKMANAGER_DEVICE_FACTORY_H__
-
 #include "nm-dbus-interface.h"
 #include "nm-device.h"
 
