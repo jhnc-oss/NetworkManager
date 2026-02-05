@@ -653,7 +653,7 @@
                   format="choice (NMConnectionMultiConnect)"
                   values="default (0), single (1), manual-multiple (2), multiple (3)" />
         <property name="auth-retries"
-                  nmcli-description="The number of retries for the authentication. Zero means to try indefinitely; -1 means to use a global default. If the global default is not set, the authentication retries for 3 times before failing the connection. Currently, this only applies to 802-1x authentication."
+                  nmcli-description="The number of retries for the authentication. Zero means to try indefinitely; -1 means to use a global default. If the global default is not set, the authentication retries for 3 times before failing the connection. Connections using a pre-shared key to authenticate will only prompt for a new key during the last authentication attempt."
                   format="integer"
                   values="-1 - 2147483647" />
         <property name="timestamp"
