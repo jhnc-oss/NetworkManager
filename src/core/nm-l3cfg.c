@@ -7,6 +7,7 @@
 #include "libnm-std-aux/nm-linux-compat.h"
 
 #include <net/if.h>
+#include <net/if_arp.h>
 #include "nm-compat-headers/linux/if_addr.h"
 #include <linux/if_ether.h>
 #include <linux/rtnetlink.h>
@@ -5691,6 +5692,8 @@ _l3_commit_pref64(NML3Cfg *self, NML3CfgCommitType commit_type)
     char                   buf[100];
     struct clat_config     clat_config;
     gboolean               v6_changed;
+    const NMPlatformLink  *pllink;
+    gboolean               has_ethernet_header = FALSE;
 
     if (l3cd && nm_l3_config_data_get_pref64(l3cd, &_l3cd_pref64_inner, &l3cd_pref64_plen)) {
         l3cd_pref64 = &_l3cd_pref64_inner;
@@ -5730,12 +5733,33 @@ _l3_commit_pref64(NML3Cfg *self, NML3CfgCommitType commit_type)
             _LOGT("clat: program attached successfully");
         }
 
+        pllink = nm_l3cfg_get_pllink(self, TRUE);
+        if (!pllink) {
+            has_ethernet_header = TRUE;
+        } else {
+            switch (pllink->arptype) {
+            case ARPHRD_ETHER:
+                has_ethernet_header = TRUE;
+                break;
+            case ARPHRD_NONE:
+            case ARPHRD_PPP:
+            case ARPHRD_RAWIP:
+                has_ethernet_header = FALSE;
+                break;
+            default:
+                _LOGD("clat: unknown ARP type %u, assuming the interface uses no L2 header",
+                      pllink->arptype);
+                has_ethernet_header = FALSE;
+            }
+        }
+
         /* Pass configuration to the BPF program */
         memset(&clat_config, 0, sizeof(clat_config));
         clat_config.local_v4.s_addr         = self->priv.p->clat_address_4->addr;
         clat_config.local_v6                = self->priv.p->clat_address_6.address;
         clat_config.pref64                  = *l3cd_pref64;
         clat_config.pref64_len              = l3cd_pref64_plen;
+        clat_config.has_eth_header          = has_ethernet_header;
         self->priv.p->clat_bpf->bss->config = clat_config;
 
         if (self->priv.p->clat_socket < 0) {
