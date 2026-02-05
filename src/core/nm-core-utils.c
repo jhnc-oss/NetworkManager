@@ -5351,6 +5351,7 @@ nm_utils_icmp6_checksum(const void *ip6_src, size_t data_len, const void *data)
  * nm_utils_ipv6_dad_send:
  * @addr: the target IPv6 address
  * @ifindex: the interface index
+ * @arptype: the ARP hardware type of the interface (e.g. ARPHRD_ETHER, ARPHRD_NONE)
  *
  * Send an IPv6 Duplicate Address Detection (DAD) Neighbor Solicitation
  * for the given address.
@@ -5358,7 +5359,7 @@ nm_utils_icmp6_checksum(const void *ip6_src, size_t data_len, const void *data)
  * Returns: %TRUE if the packet was sent successfully, %FALSE on error
  */
 gboolean
-nm_utils_ipv6_dad_send(const struct in6_addr *addr, int ifindex)
+nm_utils_ipv6_dad_send(const struct in6_addr *addr, int ifindex, int arptype)
 {
     /* DAD packet: IPv6 header + ICMPv6 NS + nonce option (RFC 3971) */
     struct _nm_packed {
@@ -5427,15 +5428,25 @@ nm_utils_ipv6_dad_send(const struct in6_addr *addr, int ifindex)
         return FALSE;
     }
 
-    /* Build link-layer destination address for solicited-node multicast */
+    /* Build link-layer destination address. For Ethernet, use the solicited-node
+     * multicast MAC address. For L3-only devices (ARPHRD_NONE, ARPHRD_RAWIP, etc.)
+     * there is no L2 header, so set sll_halen to 0. */
     {
         struct sockaddr_ll dst_ll = {
             .sll_family   = AF_PACKET,
             .sll_protocol = htons(ETH_P_IPV6),
             .sll_ifindex  = ifindex,
-            .sll_halen    = ETH_ALEN,
-            .sll_addr = {0x33, 0x33, 0xff, addr->s6_addr[13], addr->s6_addr[14], addr->s6_addr[15]},
         };
+
+        if (arptype == ARPHRD_ETHER) {
+            dst_ll.sll_halen   = ETH_ALEN;
+            dst_ll.sll_addr[0] = 0x33;
+            dst_ll.sll_addr[1] = 0x33;
+            dst_ll.sll_addr[2] = 0xff;
+            dst_ll.sll_addr[3] = addr->s6_addr[13];
+            dst_ll.sll_addr[4] = addr->s6_addr[14];
+            dst_ll.sll_addr[5] = addr->s6_addr[15];
+        }
 
         if (sendto(fd, &dad_pkt, sizeof(dad_pkt), 0, (struct sockaddr *) &dst_ll, sizeof(dst_ll))
             < 0) {

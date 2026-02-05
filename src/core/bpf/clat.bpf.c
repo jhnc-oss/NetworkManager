@@ -78,12 +78,12 @@ struct ip6_frag {
     __u32 identification;
 } __attribute__((packed));
 
-#define ETH_H_LEN      (sizeof(struct ethhdr))
-#define IP_H_LEN       (sizeof(struct iphdr))
-#define IP6_H_LEN      (sizeof(struct ipv6hdr))
-#define IP6_FRAG_H_LEN (sizeof(struct ip6_frag))
-#define ICMP_H_LEN     (sizeof(struct icmphdr))
-#define ICMP6_H_LEN    (sizeof(struct icmp6hdr))
+#define L2_H_LEN(has_eth) (has_eth ? sizeof(struct ethhdr) : 0)
+#define IP_H_LEN          (sizeof(struct iphdr))
+#define IP6_H_LEN         (sizeof(struct ipv6hdr))
+#define IP6_FRAG_H_LEN    (sizeof(struct ip6_frag))
+#define ICMP_H_LEN        (sizeof(struct icmphdr))
+#define ICMP6_H_LEN       (sizeof(struct icmp6hdr))
 
 #define ensure_header(header, skb, data, data_end, offset) \
     _ensure_header((void **) header, (skb), (data), (data_end), sizeof(**(header)), (offset))
@@ -121,6 +121,7 @@ static __always_inline void
 update_l4_checksum(struct __sk_buff *skb,
                    struct ipv6hdr   *ip6h,
                    struct iphdr     *iph,
+                   bool              has_eth,
                    bool              v4to6,
                    bool              is_inner,
                    bool              is_v6_fragment,
@@ -136,14 +137,14 @@ update_l4_checksum(struct __sk_buff *skb,
         void *to_ptr   = &ip6h->saddr;
 
         csum   = bpf_csum_diff(from_ptr, 2 * sizeof(__u32), to_ptr, 2 * sizeof(struct in6_addr), 0);
-        offset = ETH_H_LEN + IP_H_LEN;
+        offset = L2_H_LEN(has_eth) + IP_H_LEN;
         ip_type = ip6h->nexthdr;
     } else {
         void *from_ptr = &ip6h->saddr;
         void *to_ptr   = &iph->saddr;
 
         csum   = bpf_csum_diff(from_ptr, 2 * sizeof(struct in6_addr), to_ptr, 2 * sizeof(__u32), 0);
-        offset = ETH_H_LEN + IP6_H_LEN;
+        offset = L2_H_LEN(has_eth) + IP6_H_LEN;
         ip_type = iph->protocol;
 
         if (is_inner) {
@@ -179,6 +180,7 @@ update_icmp_checksum(struct __sk_buff     *skb,
                      const struct ipv6hdr *ip6h,
                      void                 *icmp_before,
                      void                 *icmp_after,
+                     bool                  has_eth,
                      bool                  v4to6,
                      bool                  is_inner,
                      __u32                 seed)
@@ -210,9 +212,9 @@ update_icmp_checksum(struct __sk_buff     *skb,
                          seed);
 
     if (v4to6) {
-        offset = ETH_H_LEN + IP_H_LEN + 2;
+        offset = L2_H_LEN(has_eth) + IP_H_LEN + 2;
     } else {
-        offset = ETH_H_LEN + IP6_H_LEN + 2;
+        offset = L2_H_LEN(has_eth) + IP6_H_LEN + 2;
         if (is_inner)
             offset += ICMP6_H_LEN + IP6_H_LEN;
     }
@@ -232,8 +234,8 @@ update_icmp_checksum(struct __sk_buff     *skb,
         bpf_l4_csum_replace(skb, offset, u_before, u_after, 4);
 }
 
-static int
-rewrite_icmp(struct __sk_buff *skb, const struct ipv6hdr *ip6h)
+static __always_inline int
+rewrite_icmp(struct __sk_buff *skb, const struct ipv6hdr *ip6h, bool has_eth)
 {
     void            *data_end = SKB_DATA_END(skb);
     void            *data     = SKB_DATA(skb);
@@ -243,7 +245,7 @@ rewrite_icmp(struct __sk_buff *skb, const struct ipv6hdr *ip6h)
     struct icmp6hdr *icmp6;
     __u32            mtu;
 
-    if (!ensure_header(&icmp, skb, &data, &data_end, ETH_H_LEN + IP_H_LEN))
+    if (!ensure_header(&icmp, skb, &data, &data_end, L2_H_LEN(has_eth) + IP_H_LEN))
         return -1;
 
     icmp_buf  = *icmp;
@@ -346,7 +348,7 @@ rewrite_icmp(struct __sk_buff *skb, const struct ipv6hdr *ip6h)
     }
 
     *icmp6 = icmp6_buf;
-    update_icmp_checksum(skb, ip6h, &icmp_buf, icmp6, true, false, 0);
+    update_icmp_checksum(skb, ip6h, &icmp_buf, icmp6, has_eth, true, false, 0);
 
     /* FIXME: also need to rewrite IP header embedded in ICMP error */
 
@@ -518,8 +520,8 @@ v6addr_to_v4(const struct in6_addr *addr6, int pref64_len, __be32 *addr4, struct
 }
 
 /* ipv4 traffic in from application on this device, needs to be translated to v6 and sent to PLAT */
-static int
-clat_handle_v4(struct __sk_buff *skb)
+static __always_inline int
+clat_handle_v4(struct __sk_buff *skb, bool has_eth)
 {
     int             ret      = TC_ACT_OK;
     void           *data_end = SKB_DATA_END(skb);
@@ -531,11 +533,16 @@ clat_handle_v4(struct __sk_buff *skb)
     struct iphdr  *iph;
     struct ethhdr *eth;
 
-    if (!ensure_header(&iph, skb, &data, &data_end, ETH_H_LEN))
+    if (!ensure_header(&iph, skb, &data, &data_end, L2_H_LEN(has_eth)))
         goto out;
 
-    eth = data;
-    if (eth->h_proto != bpf_htons(ETH_P_IP))
+    if (has_eth) {
+        eth = data;
+        if (eth->h_proto != bpf_htons(ETH_P_IP))
+            goto out;
+    }
+
+    if (iph->version != 4)
         goto out;
 
     if (iph->saddr != config.local_v4.s_addr)
@@ -576,13 +583,13 @@ clat_handle_v4(struct __sk_buff *skb)
 
     switch (dst_hdr.nexthdr) {
     case IPPROTO_ICMP:
-        if (rewrite_icmp(skb, &dst_hdr))
+        if (rewrite_icmp(skb, &dst_hdr, has_eth))
             goto out;
         dst_hdr.nexthdr = IPPROTO_ICMPV6;
         break;
     case IPPROTO_TCP:
     case IPPROTO_UDP:
-        update_l4_checksum(skb, &dst_hdr, iph, true, false, false, NULL);
+        update_l4_checksum(skb, &dst_hdr, iph, has_eth, true, false, false, NULL);
         break;
     default:
         break;
@@ -594,12 +601,15 @@ clat_handle_v4(struct __sk_buff *skb)
     data     = SKB_DATA(skb);
     data_end = SKB_DATA_END(skb);
 
-    if (!ensure_header(&ip6h, skb, &data, &data_end, ETH_H_LEN))
+    if (!ensure_header(&ip6h, skb, &data, &data_end, L2_H_LEN(has_eth)))
         goto out;
 
-    eth          = data;
-    eth->h_proto = bpf_htons(ETH_P_IPV6);
-    *ip6h        = dst_hdr;
+    if (has_eth) {
+        eth          = data;
+        eth->h_proto = bpf_htons(ETH_P_IPV6);
+    }
+
+    *ip6h = dst_hdr;
 
     ret = bpf_redirect(skb->ifindex, 0);
 out:
@@ -734,8 +744,8 @@ translate_icmpv6_header(const struct icmp6hdr *icmp6, struct icmphdr *icmp)
     return 0;
 }
 
-static int
-rewrite_icmpv6_inner(struct __sk_buff *skb, __u32 *csum_diff)
+static __always_inline int
+rewrite_icmpv6_inner(struct __sk_buff *skb, __u32 *csum_diff, bool has_eth)
 {
     void            *data_end = SKB_DATA_END(skb);
     void            *data     = SKB_DATA(skb);
@@ -751,7 +761,11 @@ rewrite_icmpv6_inner(struct __sk_buff *skb, __u32 *csum_diff)
      * -------------------------------------------------------------------------
      */
 
-    if (!ensure_header(&icmp6, skb, &data, &data_end, ETH_H_LEN + 2 * IP6_H_LEN + ICMP6_H_LEN))
+    if (!ensure_header(&icmp6,
+                       skb,
+                       &data,
+                       &data_end,
+                       L2_H_LEN(has_eth) + 2 * IP6_H_LEN + ICMP6_H_LEN))
         return -1;
 
     icmp6_buf = *icmp6;
@@ -763,9 +777,10 @@ rewrite_icmpv6_inner(struct __sk_buff *skb, __u32 *csum_diff)
 
     *icmp = icmp_buf;
     update_icmp_checksum(skb,
-                         (struct ipv6hdr *) (data + ETH_H_LEN),
+                         (struct ipv6hdr *) (data + L2_H_LEN(has_eth)),
                          &icmp6_buf,
                          icmp,
+                         has_eth,
                          false,
                          true,
                          0);
@@ -774,7 +789,11 @@ rewrite_icmpv6_inner(struct __sk_buff *skb, __u32 *csum_diff)
         data_end = SKB_DATA_END(skb);
         data     = SKB_DATA(skb);
 
-        if (!ensure_header(&icmp, skb, &data, &data_end, ETH_H_LEN + 2 * IP6_H_LEN + ICMP6_H_LEN))
+        if (!ensure_header(&icmp,
+                           skb,
+                           &data,
+                           &data_end,
+                           L2_H_LEN(has_eth) + 2 * IP6_H_LEN + ICMP6_H_LEN))
             return -1;
 
         /* Compute the checksum difference between the old ICMPv6 header and the new ICMPv4 one */
@@ -785,8 +804,8 @@ rewrite_icmpv6_inner(struct __sk_buff *skb, __u32 *csum_diff)
     return 0;
 }
 
-static int
-rewrite_ipv6_inner(struct __sk_buff *skb, struct iphdr *dst_hdr, __u32 *csum_diff)
+static __always_inline int
+rewrite_ipv6_inner(struct __sk_buff *skb, struct iphdr *dst_hdr, __u32 *csum_diff, bool has_eth)
 {
     void           *data_end = SKB_DATA_END(skb);
     void           *data     = SKB_DATA(skb);
@@ -801,7 +820,7 @@ rewrite_ipv6_inner(struct __sk_buff *skb, struct iphdr *dst_hdr, __u32 *csum_dif
      * ----------------------------------------------------------------
      */
 
-    if (!ensure_header(&ip6h, skb, &data, &data_end, ETH_H_LEN + IP6_H_LEN + ICMP6_H_LEN))
+    if (!ensure_header(&ip6h, skb, &data, &data_end, L2_H_LEN(has_eth) + IP6_H_LEN + ICMP6_H_LEN))
         return -1;
 
     if (!v6addr_equal(&ip6h->saddr, &config.local_v6))
@@ -822,12 +841,12 @@ rewrite_ipv6_inner(struct __sk_buff *skb, struct iphdr *dst_hdr, __u32 *csum_dif
 
     switch (dst_hdr->protocol) {
     case IPPROTO_ICMP:
-        if (rewrite_icmpv6_inner(skb, csum_diff))
+        if (rewrite_icmpv6_inner(skb, csum_diff, has_eth))
             return -1;
         break;
     case IPPROTO_TCP:
     case IPPROTO_UDP:
-        update_l4_checksum(skb, ip6h, dst_hdr, false, true, false, csum_diff);
+        update_l4_checksum(skb, ip6h, dst_hdr, has_eth, false, true, false, csum_diff);
         break;
     default:
         break;
@@ -836,8 +855,8 @@ rewrite_ipv6_inner(struct __sk_buff *skb, struct iphdr *dst_hdr, __u32 *csum_dif
     return 0;
 }
 
-static int
-rewrite_icmpv6(struct __sk_buff *skb, int *out_length_diff)
+static __always_inline int
+rewrite_icmpv6(struct __sk_buff *skb, int *out_length_diff, bool has_eth)
 {
     void            *data_end = SKB_DATA_END(skb);
     void            *data     = SKB_DATA(skb);
@@ -856,7 +875,7 @@ rewrite_icmpv6(struct __sk_buff *skb, int *out_length_diff)
      * ---------------------------------------------
      */
 
-    if (!ensure_header(&icmp6, skb, &data, &data_end, ETH_H_LEN + IP6_H_LEN))
+    if (!ensure_header(&icmp6, skb, &data, &data_end, L2_H_LEN(has_eth) + IP6_H_LEN))
         return -1;
 
     icmp6_buf = *icmp6;
@@ -870,9 +889,10 @@ rewrite_icmpv6(struct __sk_buff *skb, int *out_length_diff)
         /* ICMPv6 non-error message: only translate the header */
         *icmp = icmp_buf;
         update_icmp_checksum(skb,
-                             (struct ipv6hdr *) (data + ETH_H_LEN),
+                             (struct ipv6hdr *) (data + L2_H_LEN(has_eth)),
                              &icmp6_buf,
                              icmp,
+                             has_eth,
                              false,
                              false,
                              0);
@@ -883,7 +903,7 @@ rewrite_icmpv6(struct __sk_buff *skb, int *out_length_diff)
      * Track in csum_diff the incremental changes to the checksum for the ICMPv4
      * header. */
 
-    if (rewrite_ipv6_inner(skb, &ip_in_buf, &csum_diff))
+    if (rewrite_ipv6_inner(skb, &ip_in_buf, &csum_diff, has_eth))
         return -1;
 
     /* The inner IP header shrinks from 40 (IPv6) to 20 (IPv4) bytes; we need to move
@@ -901,10 +921,10 @@ rewrite_icmpv6(struct __sk_buff *skb, int *out_length_diff)
     data_end = SKB_DATA_END(skb);
     data     = SKB_DATA(skb);
 
-    if (!ensure_header(&ip, skb, &data, &data_end, ETH_H_LEN + IP6_H_LEN + ICMP_H_LEN))
+    if (!ensure_header(&ip, skb, &data, &data_end, L2_H_LEN(has_eth) + IP6_H_LEN + ICMP_H_LEN))
         return -1;
 
-    icmp = data + ETH_H_LEN + IP6_H_LEN;
+    icmp = data + L2_H_LEN(has_eth) + IP6_H_LEN;
 
     /* Rewrite the ICMPv6 header with the translated ICMPv4 one */
     *icmp = icmp_buf;
@@ -913,9 +933,10 @@ rewrite_icmpv6(struct __sk_buff *skb, int *out_length_diff)
 
     /* Update the ICMPv4 checksum according to all the changes in headers */
     update_icmp_checksum(skb,
-                         (struct ipv6hdr *) (data + ETH_H_LEN),
+                         (struct ipv6hdr *) (data + L2_H_LEN(has_eth)),
                          &icmp6_buf,
                          icmp,
+                         has_eth,
                          false,
                          false,
                          csum_diff);
@@ -924,8 +945,8 @@ rewrite_icmpv6(struct __sk_buff *skb, int *out_length_diff)
 }
 
 /* ipv6 traffic from the PLAT, to be translated into ipv4 and sent to an application */
-static int
-clat_handle_v6(struct __sk_buff *skb)
+static __always_inline int
+clat_handle_v6(struct __sk_buff *skb, bool has_eth)
 {
     int             ret      = TC_ACT_OK;
     void           *data_end = SKB_DATA_END(skb);
@@ -939,11 +960,16 @@ clat_handle_v6(struct __sk_buff *skb)
     int             length_diff = 0;
     bool            fragmented  = false;
 
-    if (!ensure_header(&ip6h, skb, &data, &data_end, ETH_H_LEN))
+    if (!ensure_header(&ip6h, skb, &data, &data_end, L2_H_LEN(has_eth)))
         goto out;
 
-    eth = data;
-    if (eth->h_proto != bpf_htons(ETH_P_IPV6))
+    if (has_eth) {
+        eth = data;
+        if (eth->h_proto != bpf_htons(ETH_P_IPV6))
+            goto out;
+    }
+
+    if (ip6h->version != 6)
         goto out;
 
     if (!v6addr_equal(&ip6h->daddr, &config.local_v6))
@@ -965,10 +991,10 @@ clat_handle_v6(struct __sk_buff *skb)
         if (ip6h->nexthdr != IPPROTO_ICMPV6)
             goto out;
 
-        if (!ensure_header(&icmp6, skb, &data, &data_end, ETH_H_LEN + IP6_H_LEN))
+        if (!ensure_header(&icmp6, skb, &data, &data_end, L2_H_LEN(has_eth) + IP6_H_LEN))
             goto out;
 
-        ip6h = data + ETH_H_LEN;
+        ip6h = data + L2_H_LEN(has_eth);
 
         if (icmp6->icmp6_type != ICMPV6_DEST_UNREACH && icmp6->icmp6_type != ICMPV6_TIME_EXCEED
             && icmp6->icmp6_type != ICMPV6_PKT_TOOBIG)
@@ -995,10 +1021,10 @@ clat_handle_v6(struct __sk_buff *skb)
         int              tot_len;
         __u16            offset;
 
-        if (!ensure_header(&frag, skb, &data, &data_end, ETH_H_LEN + IP6_H_LEN))
+        if (!ensure_header(&frag, skb, &data, &data_end, L2_H_LEN(has_eth) + IP6_H_LEN))
             goto out;
 
-        ip6h = data + ETH_H_LEN;
+        ip6h = data + L2_H_LEN(has_eth);
 
         /* Translate into an IPv4 fragmented packet, RFC 6145 5.1.1 */
 
@@ -1046,7 +1072,7 @@ clat_handle_v6(struct __sk_buff *skb)
         if (fragmented)
             goto out;
 
-        if (rewrite_icmpv6(skb, &length_diff))
+        if (rewrite_icmpv6(skb, &length_diff, has_eth))
             goto out;
         break;
     case IPPROTO_TCP:
@@ -1054,7 +1080,7 @@ clat_handle_v6(struct __sk_buff *skb)
         /* Update the L4 headers only for non-fragmented packets or for the first
          * fragment, which contains the L4 header. */
         if (!fragmented || (bpf_ntohs(dst_hdr.frag_off) & 0x1FFF) == 0) {
-            update_l4_checksum(skb, ip6h, &dst_hdr, false, false, fragmented, NULL);
+            update_l4_checksum(skb, ip6h, &dst_hdr, has_eth, false, false, fragmented, NULL);
         }
         break;
     default:
@@ -1067,7 +1093,7 @@ clat_handle_v6(struct __sk_buff *skb)
         data     = SKB_DATA(skb);
         data_end = SKB_DATA_END(skb);
 
-        if (!ensure_header(&ip6h, skb, &data, &data_end, ETH_H_LEN))
+        if (!ensure_header(&ip6h, skb, &data, &data_end, L2_H_LEN(has_eth)))
             goto out;
 
         dst_hdr.tot_len = bpf_htons(bpf_ntohs(ip6h->payload_len) + length_diff + IP_H_LEN);
@@ -1089,28 +1115,52 @@ clat_handle_v6(struct __sk_buff *skb)
     data     = SKB_DATA(skb);
     data_end = SKB_DATA_END(skb);
 
-    if (!ensure_header(&iph, skb, &data, &data_end, ETH_H_LEN))
+    if (!ensure_header(&iph, skb, &data, &data_end, L2_H_LEN(has_eth)))
         goto out;
 
-    eth          = data;
-    eth->h_proto = bpf_htons(ETH_P_IP);
-    *iph         = dst_hdr;
+    if (has_eth) {
+        eth          = data;
+        eth->h_proto = bpf_htons(ETH_P_IP);
+    }
+
+    *iph = dst_hdr;
 
     ret = bpf_redirect(skb->ifindex, BPF_F_INGRESS);
 out:
     return ret;
 }
 
+/* Use separate entry points for interfaces with and without an
+ * Ethernet header. Since all functions are now marked as inline,
+ * the compiler is able to replace the value of the parametric
+ * L2_H_LEN() macros with an immediate constant. This avoids
+ * pointer arithmetic which is forbidden because we don't run with
+ * CAP_PERFMON. The loader attaches the right program pair based
+ * on the interface type. */
 SEC("tcx/egress")
 int
-nm_clat_egress(struct __sk_buff *skb)
+nm_clat_egress_eth(struct __sk_buff *skb)
 {
-    return clat_handle_v4(skb);
+    return clat_handle_v4(skb, true);
+}
+
+SEC("tcx/egress")
+int
+nm_clat_egress_rawip(struct __sk_buff *skb)
+{
+    return clat_handle_v4(skb, false);
 }
 
 SEC("tcx/ingress")
 int
-nm_clat_ingress(struct __sk_buff *skb)
+nm_clat_ingress_eth(struct __sk_buff *skb)
 {
-    return clat_handle_v6(skb);
+    return clat_handle_v6(skb, true);
+}
+
+SEC("tcx/ingress")
+int
+nm_clat_ingress_rawip(struct __sk_buff *skb)
+{
+    return clat_handle_v6(skb, false);
 }

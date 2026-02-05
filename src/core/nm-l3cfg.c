@@ -7,6 +7,7 @@
 #include "libnm-std-aux/nm-linux-compat.h"
 
 #include <net/if.h>
+#include <net/if_arp.h>
 #include "nm-compat-headers/linux/if_addr.h"
 #include <linux/if_ether.h>
 #include <linux/rtnetlink.h>
@@ -5691,36 +5692,77 @@ _l3_commit_pref64(NML3Cfg *self, NML3CfgCommitType commit_type)
     char                   buf[100];
     struct clat_config     clat_config;
     gboolean               v6_changed;
+    const NMPlatformLink  *pllink;
+    gboolean               has_ethernet_header = FALSE;
 
     if (l3cd && nm_l3_config_data_get_pref64(l3cd, &_l3cd_pref64_inner, &l3cd_pref64_plen)) {
         l3cd_pref64 = &_l3cd_pref64_inner;
     }
 
     if (l3cd_pref64 && self->priv.p->clat_address_4 && self->priv.p->clat_address_6_valid) {
+        pllink = nm_l3cfg_get_pllink(self, TRUE);
+        if (!pllink) {
+            has_ethernet_header = TRUE;
+        } else {
+            switch (pllink->arptype) {
+            case ARPHRD_ETHER:
+                has_ethernet_header = TRUE;
+                break;
+            case ARPHRD_NONE:
+            case ARPHRD_PPP:
+            case ARPHRD_RAWIP:
+                has_ethernet_header = FALSE;
+                break;
+            default:
+                _LOGD("clat: unknown ARP type %u, assuming the interface uses no L2 header",
+                      pllink->arptype);
+                has_ethernet_header = FALSE;
+            }
+        }
+
         if (!self->priv.p->clat_bpf) {
             _LOGT("clat: attaching the BPF program");
 
-            self->priv.p->clat_bpf = clat_bpf__open_and_load();
+            self->priv.p->clat_bpf = clat_bpf__open();
             if (!self->priv.p->clat_bpf) {
                 libbpf_strerror(errno, buf, sizeof(buf));
-                _LOGW("clat: failed to open and load the BPF program: %s", buf);
+                _LOGW("clat: failed to open the BPF program: %s", buf);
                 return;
             }
 
-            self->priv.p->clat_ingress_link =
-                bpf_program__attach_tcx(self->priv.p->clat_bpf->progs.nm_clat_ingress,
-                                        self->priv.ifindex,
-                                        NULL);
+            /* Only load the programs for the right L2 type */
+            bpf_program__set_autoload(self->priv.p->clat_bpf->progs.nm_clat_ingress_eth,
+                                      has_ethernet_header);
+            bpf_program__set_autoload(self->priv.p->clat_bpf->progs.nm_clat_egress_eth,
+                                      has_ethernet_header);
+            bpf_program__set_autoload(self->priv.p->clat_bpf->progs.nm_clat_ingress_rawip,
+                                      !has_ethernet_header);
+            bpf_program__set_autoload(self->priv.p->clat_bpf->progs.nm_clat_egress_rawip,
+                                      !has_ethernet_header);
+
+            if (clat_bpf__load(self->priv.p->clat_bpf)) {
+                libbpf_strerror(errno, buf, sizeof(buf));
+                _LOGW("clat: failed to load the BPF program: %s", buf);
+                nm_clear_pointer(&self->priv.p->clat_bpf, clat_bpf__destroy);
+                return;
+            }
+
+            self->priv.p->clat_ingress_link = bpf_program__attach_tcx(
+                has_ethernet_header ? self->priv.p->clat_bpf->progs.nm_clat_ingress_eth
+                                    : self->priv.p->clat_bpf->progs.nm_clat_ingress_rawip,
+                self->priv.ifindex,
+                NULL);
             if (!self->priv.p->clat_ingress_link) {
                 libbpf_strerror(errno, buf, sizeof(buf));
                 _LOGW("clat: failed to attach the ingress program: %s", buf);
                 return;
             }
 
-            self->priv.p->clat_egress_link =
-                bpf_program__attach_tcx(self->priv.p->clat_bpf->progs.nm_clat_egress,
-                                        self->priv.ifindex,
-                                        NULL);
+            self->priv.p->clat_egress_link = bpf_program__attach_tcx(
+                has_ethernet_header ? self->priv.p->clat_bpf->progs.nm_clat_egress_eth
+                                    : self->priv.p->clat_bpf->progs.nm_clat_egress_rawip,
+                self->priv.ifindex,
+                NULL);
             if (!self->priv.p->clat_egress_link) {
                 libbpf_strerror(errno, buf, sizeof(buf));
                 _LOGW("clat: failed to attach the egress program: %s", buf);
@@ -5789,7 +5831,9 @@ _l3_commit_pref64(NML3Cfg *self, NML3CfgCommitType commit_type)
                  * doesn't help with collisions, but collisions are anyway very unlikely
                  * because the interface identifier is a random 64-bit value.
                  */
-                nm_utils_ipv6_dad_send(&self->priv.p->clat_address_6.address, self->priv.ifindex);
+                nm_utils_ipv6_dad_send(&self->priv.p->clat_address_6.address,
+                                       self->priv.ifindex,
+                                       pllink ? pllink->arptype : ARPHRD_ETHER);
 
                 mreq.ipv6mr_multiaddr = self->priv.p->clat_address_6.address;
 
