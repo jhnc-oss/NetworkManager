@@ -23,6 +23,8 @@
 #include <net/ethernet.h>
 #include <netinet/ip_icmp.h>
 #include <netinet/icmp6.h>
+#include <netinet/ip6.h>
+#include <linux/if_packet.h>
 
 #include "libnm-glib-aux/nm-uuid.h"
 #include "libnm-platform/nmp-base.h"
@@ -5291,6 +5293,178 @@ nm_utils_ping_host_finish(GAsyncResult *result, GError **error)
     nm_assert(nm_g_task_is_valid(result, NULL, nm_utils_ping_host));
 
     return g_task_propagate_boolean(task, error);
+}
+
+/*****************************************************************************/
+
+/*
+ * nm_utils_icmp6_checksum:
+ * @ip6_src: pointer to the IPv6 source address
+ * @data_len: length of the data
+ * @data: the data on which to compute the checksum
+ *
+ * Computes the ICMP6 checksum over @data (with length @data_len) and the IPv6
+ * pseudo-header. @ip6_src points to the source address in the IPv6 header.
+ */
+uint16_t
+nm_utils_icmp6_checksum(const void *ip6_src, size_t data_len, const void *data)
+{
+    uint32_t        sum = 0;
+    const uint16_t *ptr;
+    const uint8_t  *ptr8;
+    size_t          i;
+
+    /* Pseudo-header: source address */
+    ptr = (const uint16_t *) ip6_src;
+    for (i = 0; i < 8; i++)
+        sum += *ptr++;
+
+    /* Pseudo-header: destination address */
+    for (i = 0; i < 8; i++)
+        sum += *ptr++;
+
+    /* Pseudo-header: payload length */
+    sum += htons(data_len);
+
+    /* Pseudo-header: next header */
+    sum += htons(IPPROTO_ICMPV6);
+
+    /* ICMPv6 data */
+    ptr = (const uint16_t *) data;
+    for (i = 0; i < data_len / 2; i++)
+        sum += ptr[i];
+
+    /* Handle odd byte */
+    if (data_len % 2) {
+        ptr8 = &((const uint8_t *) data)[data_len - 1];
+        sum += htons((guint16) (*ptr8) << 8);
+    }
+
+    /* Fold 32-bit sum to 16 bits */
+    while (sum >> 16)
+        sum = (sum & 0xffff) + (sum >> 16);
+
+    return (uint16_t) ~sum;
+}
+
+/*
+ * nm_utils_ipv6_dad_send:
+ * @addr: the target IPv6 address
+ * @ifindex: the interface index
+ * @arptype: the ARP hardware type of the interface (e.g. ARPHRD_ETHER, ARPHRD_NONE)
+ *
+ * Send an IPv6 Duplicate Address Detection (DAD) Neighbor Solicitation
+ * for the given address.
+ *
+ * Returns: %TRUE if the packet was sent successfully, %FALSE on error
+ */
+gboolean
+nm_utils_ipv6_dad_send(const struct in6_addr *addr, int ifindex, int arptype)
+{
+    /* DAD packet: IPv6 header + ICMPv6 NS + nonce option (RFC 3971) */
+    struct _nm_packed {
+        struct ip6_hdr             ip6h;
+        struct nd_neighbor_solicit ns;
+        guint8                     ns_opt_nr;
+        guint8                     ns_opt_len;
+        guint8                     ns_opt_nonce[6];
+    } dad_pkt;
+    nm_auto_close int fd = -1;
+    int               errsv;
+    char              sbuf[NM_INET_ADDRSTRLEN];
+
+    nm_assert(addr);
+    nm_assert(ifindex > 0);
+
+    /* IPv6 header */
+    dad_pkt.ip6h = (struct ip6_hdr) {
+        .ip6_flow        = htonl(6 << 28), /* version 6, tclass 0, flowlabel 0 */
+        .ip6_plen        = htons(sizeof(dad_pkt) - sizeof(struct ip6_hdr)),
+        .ip6_nxt         = IPPROTO_ICMPV6,
+        .ip6_hlim        = 255,
+        .ip6_src         = IN6ADDR_ANY_INIT,
+        .ip6_dst.s6_addr = {0xff,
+                            0x02,
+                            0,
+                            0,
+                            0,
+                            0,
+                            0,
+                            0,
+                            0,
+                            0,
+                            0,
+                            0x01,
+                            0xff,
+                            addr->s6_addr[13],
+                            addr->s6_addr[14],
+                            addr->s6_addr[15]},
+    };
+
+    /* ICMPv6 Neighbor Solicitation */
+    dad_pkt.ns = (struct nd_neighbor_solicit) {
+        .nd_ns_type   = ND_NEIGHBOR_SOLICIT,
+        .nd_ns_target = *addr,
+    };
+
+    /* Nonce option (RFC 3971) */
+    dad_pkt.ns_opt_nr  = 14;
+    dad_pkt.ns_opt_len = 1; /* in units of 8 bytes */
+    nm_random_get_bytes(dad_pkt.ns_opt_nonce, sizeof(dad_pkt.ns_opt_nonce));
+
+    /* Compute the ICMPv6 checksum */
+    dad_pkt.ns.nd_ns_cksum = nm_utils_icmp6_checksum(&dad_pkt.ip6h.ip6_src,
+                                                     sizeof(dad_pkt) - sizeof(struct ip6_hdr),
+                                                     &dad_pkt.ns);
+
+    /* We need a ETH_P_IPV6 socket because we need to use a zero IPv6 source address */
+    fd = socket(AF_PACKET, SOCK_DGRAM | SOCK_CLOEXEC, htons(ETH_P_IPV6));
+    if (fd < 0) {
+        errsv = errno;
+        nm_log_warn(LOGD_CORE,
+                    "ipv6-dad: failed to create socket for %s: %s",
+                    nm_inet6_ntop(addr, sbuf),
+                    nm_strerror_native(errsv));
+        return FALSE;
+    }
+
+    /* Build link-layer destination address. For Ethernet, use the solicited-node
+     * multicast MAC address. For L3-only devices (ARPHRD_NONE, ARPHRD_RAWIP, etc.)
+     * there is no L2 header, so set sll_halen to 0. */
+    {
+        struct sockaddr_ll dst_ll = {
+            .sll_family   = AF_PACKET,
+            .sll_protocol = htons(ETH_P_IPV6),
+            .sll_ifindex  = ifindex,
+        };
+
+        if (arptype == ARPHRD_ETHER) {
+            dst_ll.sll_halen   = ETH_ALEN;
+            dst_ll.sll_addr[0] = 0x33;
+            dst_ll.sll_addr[1] = 0x33;
+            dst_ll.sll_addr[2] = 0xff;
+            dst_ll.sll_addr[3] = addr->s6_addr[13];
+            dst_ll.sll_addr[4] = addr->s6_addr[14];
+            dst_ll.sll_addr[5] = addr->s6_addr[15];
+        }
+
+        if (sendto(fd, &dad_pkt, sizeof(dad_pkt), 0, (struct sockaddr *) &dst_ll, sizeof(dst_ll))
+            < 0) {
+            errsv = errno;
+            nm_log_warn(LOGD_CORE,
+                        "ipv6-dad: failed to send DAD NS for %s: %s",
+                        nm_inet6_ntop(addr, sbuf),
+                        nm_strerror_native(errsv));
+            return FALSE;
+        }
+    }
+
+    nm_log_dbg(LOGD_CORE,
+               "ipv6-dad: sent DAD NS for %s on ifindex %d",
+               nm_inet6_ntop(addr, sbuf),
+               ifindex);
+
+    return TRUE;
 }
 
 /*****************************************************************************/

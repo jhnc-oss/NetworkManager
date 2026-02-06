@@ -1486,6 +1486,24 @@ ac_overview(NmCli *nmc, NMActiveConnection *ac)
             }
         }
     }
+
+    {
+        NMIPConfig *ip4 = nm_active_connection_get_ip4_config(ac);
+        NMIPConfig *ip6 = nm_active_connection_get_ip6_config(ac);
+        const char *clat4;
+        const char *clat6;
+        const char *pref64;
+
+        if (ip4 && ip6) {
+            clat4  = nm_ip_config_get_clat_address(ip4);
+            clat6  = nm_ip_config_get_clat_address(ip6);
+            pref64 = nm_ip_config_get_clat_pref64(ip6);
+
+            if (clat4 && clat6 && pref64) {
+                nmc_print("\tclat inet4 %s inet6 %s pref64 %s\n", clat4, clat6, pref64);
+            }
+        }
+    }
 }
 
 void

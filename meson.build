@@ -288,7 +288,7 @@ uuid_dep = dependency('uuid')
 libelogind_dep = dependency('libelogind', version: '>= 219', required: false)
 libudev_dep = dependency('libudev', version: '>= 175')
 dbus_dep = dependency('dbus-1', version: '>= 1.1')
-libndp_dep = dependency('libndp', version: '>= 1.9')
+libndp_dep = dependency('libndp')
 
 jansson_dep = dependency('jansson', version: '>= 2.7', required: false)
 config_h.set10('WITH_JANSSON', jansson_dep.found())
@@ -519,6 +519,8 @@ enable_clat = get_option('clat')
 if enable_clat
   libbpf = dependency('libbpf', version: '>= 0.1.0', required: false)
   assert(libbpf.found(), 'You must have libbpf installed to build. Use -Dclat=false to disable use of it')
+  libndp_dep = dependency('libndp', version: '>= 1.9', required: false)
+  assert(libndp_dep.found(), 'You must have libndp >= 1.9 installed to build with CLAT support. Use -Dclat=false to disable it')
 endif
 config_h.set10('HAVE_CLAT', enable_clat)
 
@@ -1153,6 +1155,7 @@ output += '  ofono: ' + enable_ofono.to_string() + '\n'
 output += '  concheck: ' + enable_concheck.to_string() + '\n'
 output += '  libteamdctl: ' + enable_teamdctl.to_string() + '\n'
 output += '  ovs: ' + enable_ovs.to_string() + '\n'
+output += '  clat: ' + enable_clat.to_string() + '\n'
 output += '  nmcli: ' + enable_nmcli.to_string() + '\n'
 output += '  nmtui: ' + enable_nmtui.to_string() + '\n'
 output += '  nm-cloud-setup: ' + enable_nm_cloud_setup.to_string() + '\n'
@@ -1189,6 +1192,5 @@ output +=      'have-nss: ' + crypto_nss_dep.found().to_string() + ')\n'
 output += '  sanitizers: ' + get_option('b_sanitize') + '\n'
 output += '  Mozilla Public Suffix List: ' + enable_libpsl.to_string() + '\n'
 output += '  vapi: ' + enable_vapi.to_string() + '\n'
-output += '  clat: ' + enable_clat.to_string() + '\n'
 output += '  readline: ' + with_readline + '\n'
 message(output)

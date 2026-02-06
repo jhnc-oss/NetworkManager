@@ -11,4 +11,20 @@ struct clat_config {
     unsigned        pref64_len;
 };
 
+struct clat_stats {
+    /* egress: v4 to v6 */
+    __u64 egress_tcp;
+    __u64 egress_udp;
+    __u64 egress_icmp;
+    __u64 egress_other;
+    __u64 egress_dropped;
+    /* ingress: v6 to v4 */
+    __u64 ingress_tcp;
+    __u64 ingress_udp;
+    __u64 ingress_icmp;
+    __u64 ingress_other;
+    __u64 ingress_fragment;
+    __u64 ingress_dropped;
+};
+
 #endif

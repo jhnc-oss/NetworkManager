@@ -461,14 +461,8 @@ main(int argc, char *argv[])
     /* the first access to State causes the file to be read (and possibly print a warning) */
     nm_config_state_get(config);
 
-    nm_log_dbg(LOGD_CORE,
-               "WEXT support is %s",
-#if HAVE_WEXT
-               "enabled"
-#else
-               "disabled"
-#endif
-    );
+    nm_log_dbg(LOGD_CORE, "WEXT support is %s", HAVE_WEXT ? "enabled" : "disabled");
+    nm_log_dbg(LOGD_CORE, "CLAT support is %s", HAVE_CLAT ? "enabled" : "disabled");
 
     if (!_dbus_manager_init(config))
         goto done_no_manager;
