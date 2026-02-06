@@ -33,6 +33,7 @@
 char _license[] SEC("license") = "GPL";
 
 struct clat_config config;
+struct clat_stats  stats;
 
 #ifdef DEBUG
 /* Note: when enabling debugging, you also need to add CAP_PERFMON
@@ -611,8 +612,25 @@ clat_handle_v4(struct __sk_buff *skb, bool has_eth)
 
     *ip6h = dst_hdr;
 
+    switch (dst_hdr.nexthdr) {
+    case IPPROTO_ICMPV6:
+        __sync_fetch_and_add(&stats.egress_icmp, 1);
+        break;
+    case IPPROTO_TCP:
+        __sync_fetch_and_add(&stats.egress_tcp, 1);
+        break;
+    case IPPROTO_UDP:
+        __sync_fetch_and_add(&stats.egress_udp, 1);
+        break;
+    default:
+        __sync_fetch_and_add(&stats.egress_other, 1);
+        break;
+    }
+
     ret = bpf_redirect(skb->ifindex, 0);
 out:
+    if (ret == TC_ACT_SHOT)
+        __sync_fetch_and_add(&stats.egress_dropped, 1);
     return ret;
 }
 
@@ -1125,8 +1143,27 @@ clat_handle_v6(struct __sk_buff *skb, bool has_eth)
 
     *iph = dst_hdr;
 
+    if (fragmented)
+        __sync_fetch_and_add(&stats.ingress_fragment, 1);
+    switch (dst_hdr.protocol) {
+    case IPPROTO_ICMP:
+        __sync_fetch_and_add(&stats.ingress_icmp, 1);
+        break;
+    case IPPROTO_TCP:
+        __sync_fetch_and_add(&stats.ingress_tcp, 1);
+        break;
+    case IPPROTO_UDP:
+        __sync_fetch_and_add(&stats.ingress_udp, 1);
+        break;
+    default:
+        __sync_fetch_and_add(&stats.ingress_other, 1);
+        break;
+    }
+
     ret = bpf_redirect(skb->ifindex, BPF_F_INGRESS);
 out:
+    if (ret == TC_ACT_SHOT)
+        __sync_fetch_and_add(&stats.ingress_dropped, 1);
     return ret;
 }
 

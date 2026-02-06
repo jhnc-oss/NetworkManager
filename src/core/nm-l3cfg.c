@@ -5660,6 +5660,28 @@ _l3_clat_destroy(NML3Cfg *self)
     char buf[100];
     int  err;
 
+    if (self->priv.p->clat_bpf) {
+        const struct clat_stats *s = &self->priv.p->clat_bpf->bss->stats;
+
+        _LOGT("clat: stats:"
+              " egress (v4 to v6): tcp %" G_GUINT64_FORMAT ", udp %" G_GUINT64_FORMAT
+              ", icmp %" G_GUINT64_FORMAT ", other %" G_GUINT64_FORMAT
+              ", dropped %" G_GUINT64_FORMAT "; ingress (v6 to v4): tcp %" G_GUINT64_FORMAT
+              ", udp %" G_GUINT64_FORMAT ", icmp %" G_GUINT64_FORMAT ", other %" G_GUINT64_FORMAT
+              ", fragment %" G_GUINT64_FORMAT ", dropped %" G_GUINT64_FORMAT,
+              (guint64) s->egress_tcp,
+              (guint64) s->egress_udp,
+              (guint64) s->egress_icmp,
+              (guint64) s->egress_other,
+              (guint64) s->egress_dropped,
+              (guint64) s->ingress_tcp,
+              (guint64) s->ingress_udp,
+              (guint64) s->ingress_icmp,
+              (guint64) s->ingress_other,
+              (guint64) s->ingress_fragment,
+              (guint64) s->ingress_dropped);
+    }
+
     if (self->priv.p->clat_ingress_link) {
         err = bpf_link__destroy(self->priv.p->clat_ingress_link);
         if (err != 0) {
