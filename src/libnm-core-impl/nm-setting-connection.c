@@ -3159,7 +3159,7 @@ nm_setting_connection_class_init(NMSettingConnectionClass *klass)
      *
      * List of connection UUIDs that should be activated when the base
      * connection itself is activated. Currently, only VPN connections are
-     * supported.
+     * supported, i.e., either Wireguard or of type VPN.
      **/
     /* ---ifcfg-rh---
      * property: secondaries

@@ -2153,6 +2153,7 @@ activate_secondary_connections(NMPolicy *self, NMConnection *connection, NMDevic
         NMSettingsConnection *sett_conn;
         const char           *sec_uuid = nm_setting_connection_get_secondary(s_con, i);
         NMActRequest         *req;
+	NMConnection         *nm_conn;
 
         sett_conn = nm_settings_get_connection_by_uuid(priv->settings, sec_uuid);
         if (!sett_conn) {
@@ -2162,26 +2163,47 @@ activate_secondary_connections(NMPolicy *self, NMConnection *connection, NMDevic
             success = FALSE;
             break;
         }
+	nm_conn = nm_settings_connection_get_connection(sett_conn);
 
-        if (!nm_connection_is_type(nm_settings_connection_get_connection(sett_conn),
-                                   NM_SETTING_VPN_SETTING_NAME)) {
+        if (!nm_connection_is_valid_secondary(nm_conn)) {
             _LOGW(LOGD_DEVICE,
-                  "secondary connection '%s (%s)' auto-activation failed: The connection is not a "
-                  "VPN.",
+                  "secondary connection '%s (%s)' auto-activation failed: The connection is neither a "
+                  "valid VPN nor a Wireguard connection.",
                   nm_settings_connection_get_id(sett_conn),
                   sec_uuid);
             success = FALSE;
             break;
         }
 
+	if (!nm_connection_is_vpn(nm_conn)) {
+	        /**
+		 * For non-plugin VPN connections, re-validate the corresponding device. 
+		 * Wireguard, for example, needs its own (virtual) device.
+		 * If it, however, gets activated as secondary device,
+		 * 'device' points to the primary device that is currently starting.
+		 * Bringing up a WG tunnel this way will fail.
+		 */
+        	NMDevice             *_device = NULL;
+	        gs_free_error GError *local   = NULL;
+        	_device =
+	            nm_manager_get_best_device_for_connection(priv->manager, sett_conn, nm_conn, TRUE, NULL, &local);
+	        if (!_device) {
+	            _LOGW(LOGD_DEVICE,
+        	                "No suitable device found for non-plugin VPN connection (%s).",
+	                        local->message);
+        	    success = FALSE;
+		    break;
+	        }
+	        device = _device;
+	}
         req = nm_device_get_act_request(device);
 
         _LOGD(LOGD_DEVICE,
-              "activating secondary connection '%s (%s)' for base connection '%s (%s)'",
+              "activating secondary connection '%s (%s)' for base connection '%s (%s), real: %d, sw:%d, iface: %s'",
               nm_settings_connection_get_id(sett_conn),
               sec_uuid,
               nm_connection_get_id(connection),
-              nm_connection_get_uuid(connection));
+              nm_connection_get_uuid(connection), nm_device_is_real(device), nm_device_is_software(device), nm_device_get_iface(device));
         ac = nm_manager_activate_connection(
             priv->manager,
             sett_conn,
@@ -2196,6 +2218,10 @@ activate_secondary_connections(NMPolicy *self, NMConnection *connection, NMDevic
         if (ac)
             secondary_ac_list = g_slist_append(secondary_ac_list, g_object_ref(ac));
         else {
+            _LOGW(LOGD_DEVICE,
+                  "secondary connection '%s (%s)' auto-activation failed:",
+                  nm_settings_connection_get_id(sett_conn),
+                  sec_uuid);
             _LOGW(LOGD_DEVICE,
                   "secondary connection '%s (%s)' auto-activation failed: (%d) %s",
                   nm_settings_connection_get_id(sett_conn),
