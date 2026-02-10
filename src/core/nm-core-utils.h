@@ -532,4 +532,8 @@ void nm_utils_ping_host(NMIPAddrTyped       address,
 
 gboolean nm_utils_ping_host_finish(GAsyncResult *result, GError **error);
 
+uint16_t nm_utils_icmp6_checksum(const void *ip6_src, size_t data_len, const void *data);
+
+gboolean nm_utils_ipv6_dad_send(const struct in6_addr *addr, int ifindex, int arptype);
+
 #endif /* __NM_CORE_UTILS_H__ */

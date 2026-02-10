@@ -1954,12 +1954,12 @@ stderr: 54 bytes
 Błąd: nieprawidłowy dodatkowy parametr „eth0”.
 
 <<<
-size: 3792
+size: 3966
 location: src/tests/client/test-client.py:test_003()/47
 cmd: $NMCLI -f ALL dev show eth0
 lang: C
 returncode: 0
-stdout: 3653 bytes
+stdout: 3827 bytes
 >>>
 GENERAL.DEVICE:                         eth0
 GENERAL.TYPE:                           ethernet
@@ -2006,6 +2006,7 @@ IP4.DNS[1]:                             192.168.213.113
 IP4.DOMAIN[1]:                          sear4.foo4.bar
 IP4.WINS[1]:                            192.168.156.115
 IP4.WINS[2]:                            192.168.8.33
+IP4.CLAT-ADDRESS:                       192.0.0.1
 IP6.ADDRESS[1]:                         2001:a::29c0:62b9:2e01:30a/69
 IP6.ADDRESS[2]:                         2001:a::6433:6420:34f9:3801/115
 IP6.ADDRESS[3]:                         2001:a::8191:ed6b:8ce:b60/103
@@ -2016,6 +2017,8 @@ IP6.DNS[2]:                             2001:a::4e1:24e6:b8c1:91bb
 IP6.DNS[3]:                             2001:a::bd96:3bed:fbd6:19c5
 IP6.DOMAIN[1]:                          sear6.fo.x.y
 IP6.DOMAIN[2]:                          sear6.foo4.bar
+IP6.CLAT-ADDRESS:                       2002:aaaa::2c0d:1e71:ef87:fac7
+IP6.CLAT-PREF64:                        64:ff9b::/96
 DHCP6.OPTION[1]:                        dhcp-6-opt-1 = val-1
 DHCP6.OPTION[2]:                        dhcp-6-opt-5 = val-5
 DHCP6.OPTION[3]:                        dhcp-6-opt-6 = val-6
@@ -2026,12 +2029,12 @@ CONNECTIONS.AVAILABLE-CONNECTIONS[2]:   UUID-con-xx1-REPLACED-REPLACED-REPLA | c
 CONNECTIONS.AVAILABLE-CONNECTIONS[3]:   UUID-ethernet-REPLACED-REPLACED-REPL | ethernet
 
 <<<
-size: 3830
+size: 4004
 location: src/tests/client/test-client.py:test_003()/48
 cmd: $NMCLI -f ALL dev show eth0
 lang: pl_PL.UTF-8
 returncode: 0
-stdout: 3681 bytes
+stdout: 3855 bytes
 >>>
 GENERAL.DEVICE:                         eth0
 GENERAL.TYPE:                           ethernet
@@ -2078,6 +2081,7 @@ IP4.DNS[1]:                             192.168.213.113
 IP4.DOMAIN[1]:                          sear4.foo4.bar
 IP4.WINS[1]:                            192.168.156.115
 IP4.WINS[2]:                            192.168.8.33
+IP4.CLAT-ADDRESS:                       192.0.0.1
 IP6.ADDRESS[1]:                         2001:a::29c0:62b9:2e01:30a/69
 IP6.ADDRESS[2]:                         2001:a::6433:6420:34f9:3801/115
 IP6.ADDRESS[3]:                         2001:a::8191:ed6b:8ce:b60/103
@@ -2088,6 +2092,8 @@ IP6.DNS[2]:                             2001:a::4e1:24e6:b8c1:91bb
 IP6.DNS[3]:                             2001:a::bd96:3bed:fbd6:19c5
 IP6.DOMAIN[1]:                          sear6.fo.x.y
 IP6.DOMAIN[2]:                          sear6.foo4.bar
+IP6.CLAT-ADDRESS:                       2002:aaaa::2c0d:1e71:ef87:fac7
+IP6.CLAT-PREF64:                        64:ff9b::/96
 DHCP6.OPTION[1]:                        dhcp-6-opt-1 = val-1
 DHCP6.OPTION[2]:                        dhcp-6-opt-5 = val-5
 DHCP6.OPTION[3]:                        dhcp-6-opt-6 = val-6
@@ -2098,12 +2104,12 @@ CONNECTIONS.AVAILABLE-CONNECTIONS[2]:   UUID-con-xx1-REPLACED-REPLACED-REPLA | c
 CONNECTIONS.AVAILABLE-CONNECTIONS[3]:   UUID-ethernet-REPLACED-REPLACED-REPL | ethernet
 
 <<<
-size: 2420
+size: 2524
 location: src/tests/client/test-client.py:test_003()/49
 cmd: $NMCLI -f ALL -t dev show eth0
 lang: C
 returncode: 0
-stdout: 2278 bytes
+stdout: 2382 bytes
 >>>
 GENERAL.DEVICE:eth0
 GENERAL.TYPE:ethernet
@@ -2150,6 +2156,7 @@ IP4.DNS[1]:192.168.213.113
 IP4.DOMAIN[1]:sear4.foo4.bar
 IP4.WINS[1]:192.168.156.115
 IP4.WINS[2]:192.168.8.33
+IP4.CLAT-ADDRESS:192.0.0.1
 IP6.ADDRESS[1]:2001:a::29c0:62b9:2e01:30a/69
 IP6.ADDRESS[2]:2001:a::6433:6420:34f9:3801/115
 IP6.ADDRESS[3]:2001:a::8191:ed6b:8ce:b60/103
@@ -2160,6 +2167,8 @@ IP6.DNS[2]:2001:a::4e1:24e6:b8c1:91bb
 IP6.DNS[3]:2001:a::bd96:3bed:fbd6:19c5
 IP6.DOMAIN[1]:sear6.fo.x.y
 IP6.DOMAIN[2]:sear6.foo4.bar
+IP6.CLAT-ADDRESS:2002:aaaa::2c0d:1e71:ef87:fac7
+IP6.CLAT-PREF64:64:ff9b::/96
 DHCP6.OPTION[1]:dhcp-6-opt-1 = val-1
 DHCP6.OPTION[2]:dhcp-6-opt-5 = val-5
 DHCP6.OPTION[3]:dhcp-6-opt-6 = val-6
@@ -2170,12 +2179,12 @@ CONNECTIONS.AVAILABLE-CONNECTIONS[2]:UUID-con-xx1-REPLACED-REPLACED-REPLA | con-
 CONNECTIONS.AVAILABLE-CONNECTIONS[3]:UUID-ethernet-REPLACED-REPLACED-REPL | ethernet
 
 <<<
-size: 2430
+size: 2534
 location: src/tests/client/test-client.py:test_003()/50
 cmd: $NMCLI -f ALL -t dev show eth0
 lang: pl_PL.UTF-8
 returncode: 0
-stdout: 2278 bytes
+stdout: 2382 bytes
 >>>
 GENERAL.DEVICE:eth0
 GENERAL.TYPE:ethernet
@@ -2222,6 +2231,7 @@ IP4.DNS[1]:192.168.213.113
 IP4.DOMAIN[1]:sear4.foo4.bar
 IP4.WINS[1]:192.168.156.115
 IP4.WINS[2]:192.168.8.33
+IP4.CLAT-ADDRESS:192.0.0.1
 IP6.ADDRESS[1]:2001:a::29c0:62b9:2e01:30a/69
 IP6.ADDRESS[2]:2001:a::6433:6420:34f9:3801/115
 IP6.ADDRESS[3]:2001:a::8191:ed6b:8ce:b60/103
@@ -2232,6 +2242,8 @@ IP6.DNS[2]:2001:a::4e1:24e6:b8c1:91bb
 IP6.DNS[3]:2001:a::bd96:3bed:fbd6:19c5
 IP6.DOMAIN[1]:sear6.fo.x.y
 IP6.DOMAIN[2]:sear6.foo4.bar
+IP6.CLAT-ADDRESS:2002:aaaa::2c0d:1e71:ef87:fac7
+IP6.CLAT-PREF64:64:ff9b::/96
 DHCP6.OPTION[1]:dhcp-6-opt-1 = val-1
 DHCP6.OPTION[2]:dhcp-6-opt-5 = val-5
 DHCP6.OPTION[3]:dhcp-6-opt-6 = val-6
@@ -3058,12 +3070,12 @@ stderr: 54 bytes
 Błąd: nieprawidłowy dodatkowy parametr „eth0”.
 
 <<<
-size: 3792
+size: 3966
 location: src/tests/client/test-client.py:test_003()/72
 cmd: $NMCLI -f ALL dev show eth0
 lang: C
 returncode: 0
-stdout: 3653 bytes
+stdout: 3827 bytes
 >>>
 GENERAL.DEVICE:                         eth0
 GENERAL.TYPE:                           ethernet
@@ -3110,6 +3122,7 @@ IP4.DNS[1]:                             192.168.213.113
 IP4.DOMAIN[1]:                          sear4.foo4.bar
 IP4.WINS[1]:                            192.168.156.115
 IP4.WINS[2]:                            192.168.8.33
+IP4.CLAT-ADDRESS:                       192.0.0.1
 IP6.ADDRESS[1]:                         2001:a::29c0:62b9:2e01:30a/69
 IP6.ADDRESS[2]:                         2001:a::6433:6420:34f9:3801/115
 IP6.ADDRESS[3]:                         2001:a::8191:ed6b:8ce:b60/103
@@ -3120,6 +3133,8 @@ IP6.DNS[2]:                             2001:a::4e1:24e6:b8c1:91bb
 IP6.DNS[3]:                             2001:a::bd96:3bed:fbd6:19c5
 IP6.DOMAIN[1]:                          sear6.fo.x.y
 IP6.DOMAIN[2]:                          sear6.foo4.bar
+IP6.CLAT-ADDRESS:                       2002:aaaa::2c0d:1e71:ef87:fac7
+IP6.CLAT-PREF64:                        64:ff9b::/96
 DHCP6.OPTION[1]:                        dhcp-6-opt-1 = val-1
 DHCP6.OPTION[2]:                        dhcp-6-opt-5 = val-5
 DHCP6.OPTION[3]:                        dhcp-6-opt-6 = val-6
@@ -3130,12 +3145,12 @@ CONNECTIONS.AVAILABLE-CONNECTIONS[2]:   UUID-con-xx1-REPLACED-REPLACED-REPLA | c
 CONNECTIONS.AVAILABLE-CONNECTIONS[3]:   UUID-ethernet-REPLACED-REPLACED-REPL | ethernet
 
 <<<
-size: 3830
+size: 4004
 location: src/tests/client/test-client.py:test_003()/73
 cmd: $NMCLI -f ALL dev show eth0
 lang: pl_PL.UTF-8
 returncode: 0
-stdout: 3681 bytes
+stdout: 3855 bytes
 >>>
 GENERAL.DEVICE:                         eth0
 GENERAL.TYPE:                           ethernet
@@ -3182,6 +3197,7 @@ IP4.DNS[1]:                             192.168.213.113
 IP4.DOMAIN[1]:                          sear4.foo4.bar
 IP4.WINS[1]:                            192.168.156.115
 IP4.WINS[2]:                            192.168.8.33
+IP4.CLAT-ADDRESS:                       192.0.0.1
 IP6.ADDRESS[1]:                         2001:a::29c0:62b9:2e01:30a/69
 IP6.ADDRESS[2]:                         2001:a::6433:6420:34f9:3801/115
 IP6.ADDRESS[3]:                         2001:a::8191:ed6b:8ce:b60/103
@@ -3192,6 +3208,8 @@ IP6.DNS[2]:                             2001:a::4e1:24e6:b8c1:91bb
 IP6.DNS[3]:                             2001:a::bd96:3bed:fbd6:19c5
 IP6.DOMAIN[1]:                          sear6.fo.x.y
 IP6.DOMAIN[2]:                          sear6.foo4.bar
+IP6.CLAT-ADDRESS:                       2002:aaaa::2c0d:1e71:ef87:fac7
+IP6.CLAT-PREF64:                        64:ff9b::/96
 DHCP6.OPTION[1]:                        dhcp-6-opt-1 = val-1
 DHCP6.OPTION[2]:                        dhcp-6-opt-5 = val-5
 DHCP6.OPTION[3]:                        dhcp-6-opt-6 = val-6
@@ -3202,12 +3220,12 @@ CONNECTIONS.AVAILABLE-CONNECTIONS[2]:   UUID-con-xx1-REPLACED-REPLACED-REPLA | c
 CONNECTIONS.AVAILABLE-CONNECTIONS[3]:   UUID-ethernet-REPLACED-REPLACED-REPL | ethernet
 
 <<<
-size: 2420
+size: 2524
 location: src/tests/client/test-client.py:test_003()/74
 cmd: $NMCLI -f ALL -t dev show eth0
 lang: C
 returncode: 0
-stdout: 2278 bytes
+stdout: 2382 bytes
 >>>
 GENERAL.DEVICE:eth0
 GENERAL.TYPE:ethernet
@@ -3254,6 +3272,7 @@ IP4.DNS[1]:192.168.213.113
 IP4.DOMAIN[1]:sear4.foo4.bar
 IP4.WINS[1]:192.168.156.115
 IP4.WINS[2]:192.168.8.33
+IP4.CLAT-ADDRESS:192.0.0.1
 IP6.ADDRESS[1]:2001:a::29c0:62b9:2e01:30a/69
 IP6.ADDRESS[2]:2001:a::6433:6420:34f9:3801/115
 IP6.ADDRESS[3]:2001:a::8191:ed6b:8ce:b60/103
@@ -3264,6 +3283,8 @@ IP6.DNS[2]:2001:a::4e1:24e6:b8c1:91bb
 IP6.DNS[3]:2001:a::bd96:3bed:fbd6:19c5
 IP6.DOMAIN[1]:sear6.fo.x.y
 IP6.DOMAIN[2]:sear6.foo4.bar
+IP6.CLAT-ADDRESS:2002:aaaa::2c0d:1e71:ef87:fac7
+IP6.CLAT-PREF64:64:ff9b::/96
 DHCP6.OPTION[1]:dhcp-6-opt-1 = val-1
 DHCP6.OPTION[2]:dhcp-6-opt-5 = val-5
 DHCP6.OPTION[3]:dhcp-6-opt-6 = val-6
@@ -3274,12 +3295,12 @@ CONNECTIONS.AVAILABLE-CONNECTIONS[2]:UUID-con-xx1-REPLACED-REPLACED-REPLA | con-
 CONNECTIONS.AVAILABLE-CONNECTIONS[3]:UUID-ethernet-REPLACED-REPLACED-REPL | ethernet
 
 <<<
-size: 2430
+size: 2534
 location: src/tests/client/test-client.py:test_003()/75
 cmd: $NMCLI -f ALL -t dev show eth0
 lang: pl_PL.UTF-8
 returncode: 0
-stdout: 2278 bytes
+stdout: 2382 bytes
 >>>
 GENERAL.DEVICE:eth0
 GENERAL.TYPE:ethernet
@@ -3326,6 +3347,7 @@ IP4.DNS[1]:192.168.213.113
 IP4.DOMAIN[1]:sear4.foo4.bar
 IP4.WINS[1]:192.168.156.115
 IP4.WINS[2]:192.168.8.33
+IP4.CLAT-ADDRESS:192.0.0.1
 IP6.ADDRESS[1]:2001:a::29c0:62b9:2e01:30a/69
 IP6.ADDRESS[2]:2001:a::6433:6420:34f9:3801/115
 IP6.ADDRESS[3]:2001:a::8191:ed6b:8ce:b60/103
@@ -3336,6 +3358,8 @@ IP6.DNS[2]:2001:a::4e1:24e6:b8c1:91bb
 IP6.DNS[3]:2001:a::bd96:3bed:fbd6:19c5
 IP6.DOMAIN[1]:sear6.fo.x.y
 IP6.DOMAIN[2]:sear6.foo4.bar
+IP6.CLAT-ADDRESS:2002:aaaa::2c0d:1e71:ef87:fac7
+IP6.CLAT-PREF64:64:ff9b::/96
 DHCP6.OPTION[1]:dhcp-6-opt-1 = val-1
 DHCP6.OPTION[2]:dhcp-6-opt-5 = val-5
 DHCP6.OPTION[3]:dhcp-6-opt-6 = val-6
@@ -4136,12 +4160,12 @@ GENERAL.ZONE:                           --
 GENERAL.MASTER-PATH:                    --
 
 <<<
-size: 3792
+size: 3966
 location: src/tests/client/test-client.py:test_003()/88
 cmd: $NMCLI -f all dev show eth0
 lang: C
 returncode: 0
-stdout: 3653 bytes
+stdout: 3827 bytes
 >>>
 GENERAL.DEVICE:                         eth0
 GENERAL.TYPE:                           ethernet
@@ -4188,6 +4212,7 @@ IP4.DNS[1]:                             192.168.213.113
 IP4.DOMAIN[1]:                          sear4.foo4.bar
 IP4.WINS[1]:                            192.168.156.115
 IP4.WINS[2]:                            192.168.8.33
+IP4.CLAT-ADDRESS:                       192.0.0.1
 IP6.ADDRESS[1]:                         2001:a::29c0:62b9:2e01:30a/69
 IP6.ADDRESS[2]:                         2001:a::6433:6420:34f9:3801/115
 IP6.ADDRESS[3]:                         2001:a::8191:ed6b:8ce:b60/103
@@ -4198,6 +4223,8 @@ IP6.DNS[2]:                             2001:a::4e1:24e6:b8c1:91bb
 IP6.DNS[3]:                             2001:a::bd96:3bed:fbd6:19c5
 IP6.DOMAIN[1]:                          sear6.fo.x.y
 IP6.DOMAIN[2]:                          sear6.foo4.bar
+IP6.CLAT-ADDRESS:                       2002:aaaa::2c0d:1e71:ef87:fac7
+IP6.CLAT-PREF64:                        64:ff9b::/96
 DHCP6.OPTION[1]:                        dhcp-6-opt-1 = val-1
 DHCP6.OPTION[2]:                        dhcp-6-opt-5 = val-5
 DHCP6.OPTION[3]:                        dhcp-6-opt-6 = val-6
@@ -4208,12 +4235,12 @@ CONNECTIONS.AVAILABLE-CONNECTIONS[2]:   UUID-con-xx1-REPLACED-REPLACED-REPLA | c
 CONNECTIONS.AVAILABLE-CONNECTIONS[3]:   UUID-ethernet-REPLACED-REPLACED-REPL | ethernet
 
 <<<
-size: 3830
+size: 4004
 location: src/tests/client/test-client.py:test_003()/89
 cmd: $NMCLI -f all dev show eth0
 lang: pl_PL.UTF-8
 returncode: 0
-stdout: 3681 bytes
+stdout: 3855 bytes
 >>>
 GENERAL.DEVICE:                         eth0
 GENERAL.TYPE:                           ethernet
@@ -4260,6 +4287,7 @@ IP4.DNS[1]:                             192.168.213.113
 IP4.DOMAIN[1]:                          sear4.foo4.bar
 IP4.WINS[1]:                            192.168.156.115
 IP4.WINS[2]:                            192.168.8.33
+IP4.CLAT-ADDRESS:                       192.0.0.1
 IP6.ADDRESS[1]:                         2001:a::29c0:62b9:2e01:30a/69
 IP6.ADDRESS[2]:                         2001:a::6433:6420:34f9:3801/115
 IP6.ADDRESS[3]:                         2001:a::8191:ed6b:8ce:b60/103
@@ -4270,6 +4298,8 @@ IP6.DNS[2]:                             2001:a::4e1:24e6:b8c1:91bb
 IP6.DNS[3]:                             2001:a::bd96:3bed:fbd6:19c5
 IP6.DOMAIN[1]:                          sear6.fo.x.y
 IP6.DOMAIN[2]:                          sear6.foo4.bar
+IP6.CLAT-ADDRESS:                       2002:aaaa::2c0d:1e71:ef87:fac7
+IP6.CLAT-PREF64:                        64:ff9b::/96
 DHCP6.OPTION[1]:                        dhcp-6-opt-1 = val-1
 DHCP6.OPTION[2]:                        dhcp-6-opt-5 = val-5
 DHCP6.OPTION[3]:                        dhcp-6-opt-6 = val-6
@@ -4966,12 +4996,12 @@ GENERAL.ZONE:                           --
 GENERAL.MASTER-PATH:                    --
 
 <<<
-size: 3804
+size: 3978
 location: src/tests/client/test-client.py:test_003()/98
 cmd: $NMCLI --color yes -f all dev show eth0
 lang: C
 returncode: 0
-stdout: 3653 bytes
+stdout: 3827 bytes
 >>>
 GENERAL.DEVICE:                         eth0
 GENERAL.TYPE:                           ethernet
@@ -5018,6 +5048,7 @@ IP4.DNS[1]:                             192.168.213.113
 IP4.DOMAIN[1]:                          sear4.foo4.bar
 IP4.WINS[1]:                            192.168.156.115
 IP4.WINS[2]:                            192.168.8.33
+IP4.CLAT-ADDRESS:                       192.0.0.1
 IP6.ADDRESS[1]:                         2001:a::29c0:62b9:2e01:30a/69
 IP6.ADDRESS[2]:                         2001:a::6433:6420:34f9:3801/115
 IP6.ADDRESS[3]:                         2001:a::8191:ed6b:8ce:b60/103
@@ -5028,6 +5059,8 @@ IP6.DNS[2]:                             2001:a::4e1:24e6:b8c1:91bb
 IP6.DNS[3]:                             2001:a::bd96:3bed:fbd6:19c5
 IP6.DOMAIN[1]:                          sear6.fo.x.y
 IP6.DOMAIN[2]:                          sear6.foo4.bar
+IP6.CLAT-ADDRESS:                       2002:aaaa::2c0d:1e71:ef87:fac7
+IP6.CLAT-PREF64:                        64:ff9b::/96
 DHCP6.OPTION[1]:                        dhcp-6-opt-1 = val-1
 DHCP6.OPTION[2]:                        dhcp-6-opt-5 = val-5
 DHCP6.OPTION[3]:                        dhcp-6-opt-6 = val-6
@@ -5038,12 +5071,12 @@ CONNECTIONS.AVAILABLE-CONNECTIONS[2]:   UUID-con-xx1-REPLACED-REPLACED-REPLA | c
 CONNECTIONS.AVAILABLE-CONNECTIONS[3]:   UUID-ethernet-REPLACED-REPLACED-REPL | ethernet
 
 <<<
-size: 3842
+size: 4016
 location: src/tests/client/test-client.py:test_003()/99
 cmd: $NMCLI --color yes -f all dev show eth0
 lang: pl_PL.UTF-8
 returncode: 0
-stdout: 3681 bytes
+stdout: 3855 bytes
 >>>
 GENERAL.DEVICE:                         eth0
 GENERAL.TYPE:                           ethernet
@@ -5090,6 +5123,7 @@ IP4.DNS[1]:                             192.168.213.113
 IP4.DOMAIN[1]:                          sear4.foo4.bar
 IP4.WINS[1]:                            192.168.156.115
 IP4.WINS[2]:                            192.168.8.33
+IP4.CLAT-ADDRESS:                       192.0.0.1
 IP6.ADDRESS[1]:                         2001:a::29c0:62b9:2e01:30a/69
 IP6.ADDRESS[2]:                         2001:a::6433:6420:34f9:3801/115
 IP6.ADDRESS[3]:                         2001:a::8191:ed6b:8ce:b60/103
@@ -5100,6 +5134,8 @@ IP6.DNS[2]:                             2001:a::4e1:24e6:b8c1:91bb
 IP6.DNS[3]:                             2001:a::bd96:3bed:fbd6:19c5
 IP6.DOMAIN[1]:                          sear6.fo.x.y
 IP6.DOMAIN[2]:                          sear6.foo4.bar
+IP6.CLAT-ADDRESS:                       2002:aaaa::2c0d:1e71:ef87:fac7
+IP6.CLAT-PREF64:                        64:ff9b::/96
 DHCP6.OPTION[1]:                        dhcp-6-opt-1 = val-1
 DHCP6.OPTION[2]:                        dhcp-6-opt-5 = val-5
 DHCP6.OPTION[3]:                        dhcp-6-opt-6 = val-6
@@ -5868,12 +5904,12 @@ GENERAL.MASTER-PATH:                    --
 -------------------------------------------------------------------------------
 
 <<<
-size: 4733
+size: 4907
 location: src/tests/client/test-client.py:test_003()/108
 cmd: $NMCLI --pretty -f all dev show eth0
 lang: C
 returncode: 0
-stdout: 4584 bytes
+stdout: 4758 bytes
 >>>
 ===============================================================================
                              Device details (eth0)
@@ -5927,6 +5963,7 @@ IP4.DNS[1]:                             192.168.213.113
 IP4.DOMAIN[1]:                          sear4.foo4.bar
 IP4.WINS[1]:                            192.168.156.115
 IP4.WINS[2]:                            192.168.8.33
+IP4.CLAT-ADDRESS:                       192.0.0.1
 -------------------------------------------------------------------------------
 -------------------------------------------------------------------------------
 IP6.ADDRESS[1]:                         2001:a::29c0:62b9:2e01:30a/69
@@ -5939,6 +5976,8 @@ IP6.DNS[2]:                             2001:a::4e1:24e6:b8c1:91bb
 IP6.DNS[3]:                             2001:a::bd96:3bed:fbd6:19c5
 IP6.DOMAIN[1]:                          sear6.fo.x.y
 IP6.DOMAIN[2]:                          sear6.foo4.bar
+IP6.CLAT-ADDRESS:                       2002:aaaa::2c0d:1e71:ef87:fac7
+IP6.CLAT-PREF64:                        64:ff9b::/96
 -------------------------------------------------------------------------------
 DHCP6.OPTION[1]:                        dhcp-6-opt-1 = val-1
 DHCP6.OPTION[2]:                        dhcp-6-opt-5 = val-5
@@ -5952,12 +5991,12 @@ CONNECTIONS.AVAILABLE-CONNECTIONS[3]:   UUID-ethernet-REPLACED-REPLACED-REPL | e
 -------------------------------------------------------------------------------
 
 <<<
-size: 4777
+size: 4951
 location: src/tests/client/test-client.py:test_003()/109
 cmd: $NMCLI --pretty -f all dev show eth0
 lang: pl_PL.UTF-8
 returncode: 0
-stdout: 4618 bytes
+stdout: 4792 bytes
 >>>
 ===============================================================================
                         Informacje o urządzeniu (eth0)
@@ -6011,6 +6050,7 @@ IP4.DNS[1]:                             192.168.213.113
 IP4.DOMAIN[1]:                          sear4.foo4.bar
 IP4.WINS[1]:                            192.168.156.115
 IP4.WINS[2]:                            192.168.8.33
+IP4.CLAT-ADDRESS:                       192.0.0.1
 -------------------------------------------------------------------------------
 -------------------------------------------------------------------------------
 IP6.ADDRESS[1]:                         2001:a::29c0:62b9:2e01:30a/69
@@ -6023,6 +6063,8 @@ IP6.DNS[2]:                             2001:a::4e1:24e6:b8c1:91bb
 IP6.DNS[3]:                             2001:a::bd96:3bed:fbd6:19c5
 IP6.DOMAIN[1]:                          sear6.fo.x.y
 IP6.DOMAIN[2]:                          sear6.foo4.bar
+IP6.CLAT-ADDRESS:                       2002:aaaa::2c0d:1e71:ef87:fac7
+IP6.CLAT-PREF64:                        64:ff9b::/96
 -------------------------------------------------------------------------------
 DHCP6.OPTION[1]:                        dhcp-6-opt-1 = val-1
 DHCP6.OPTION[2]:                        dhcp-6-opt-5 = val-5
@@ -6794,12 +6836,12 @@ GENERAL.MASTER-PATH:                    --
 -------------------------------------------------------------------------------
 
 <<<
-size: 4745
+size: 4919
 location: src/tests/client/test-client.py:test_003()/118
 cmd: $NMCLI --pretty --color yes -f all dev show eth0
 lang: C
 returncode: 0
-stdout: 4584 bytes
+stdout: 4758 bytes
 >>>
 ===============================================================================
                              Device details (eth0)
@@ -6853,6 +6895,7 @@ IP4.DNS[1]:                             192.168.213.113
 IP4.DOMAIN[1]:                          sear4.foo4.bar
 IP4.WINS[1]:                            192.168.156.115
 IP4.WINS[2]:                            192.168.8.33
+IP4.CLAT-ADDRESS:                       192.0.0.1
 -------------------------------------------------------------------------------
 -------------------------------------------------------------------------------
 IP6.ADDRESS[1]:                         2001:a::29c0:62b9:2e01:30a/69
@@ -6865,6 +6908,8 @@ IP6.DNS[2]:                             2001:a::4e1:24e6:b8c1:91bb
 IP6.DNS[3]:                             2001:a::bd96:3bed:fbd6:19c5
 IP6.DOMAIN[1]:                          sear6.fo.x.y
 IP6.DOMAIN[2]:                          sear6.foo4.bar
+IP6.CLAT-ADDRESS:                       2002:aaaa::2c0d:1e71:ef87:fac7
+IP6.CLAT-PREF64:                        64:ff9b::/96
 -------------------------------------------------------------------------------
 DHCP6.OPTION[1]:                        dhcp-6-opt-1 = val-1
 DHCP6.OPTION[2]:                        dhcp-6-opt-5 = val-5
@@ -6878,12 +6923,12 @@ CONNECTIONS.AVAILABLE-CONNECTIONS[3]:   UUID-ethernet-REPLACED-REPLACED-REPL | e
 -------------------------------------------------------------------------------
 
 <<<
-size: 4789
+size: 4963
 location: src/tests/client/test-client.py:test_003()/119
 cmd: $NMCLI --pretty --color yes -f all dev show eth0
 lang: pl_PL.UTF-8
 returncode: 0
-stdout: 4618 bytes
+stdout: 4792 bytes
 >>>
 ===============================================================================
                         Informacje o urządzeniu (eth0)
@@ -6937,6 +6982,7 @@ IP4.DNS[1]:                             192.168.213.113
 IP4.DOMAIN[1]:                          sear4.foo4.bar
 IP4.WINS[1]:                            192.168.156.115
 IP4.WINS[2]:                            192.168.8.33
+IP4.CLAT-ADDRESS:                       192.0.0.1
 -------------------------------------------------------------------------------
 -------------------------------------------------------------------------------
 IP6.ADDRESS[1]:                         2001:a::29c0:62b9:2e01:30a/69
@@ -6949,6 +6995,8 @@ IP6.DNS[2]:                             2001:a::4e1:24e6:b8c1:91bb
 IP6.DNS[3]:                             2001:a::bd96:3bed:fbd6:19c5
 IP6.DOMAIN[1]:                          sear6.fo.x.y
 IP6.DOMAIN[2]:                          sear6.foo4.bar
+IP6.CLAT-ADDRESS:                       2002:aaaa::2c0d:1e71:ef87:fac7
+IP6.CLAT-PREF64:                        64:ff9b::/96
 -------------------------------------------------------------------------------
 DHCP6.OPTION[1]:                        dhcp-6-opt-1 = val-1
 DHCP6.OPTION[2]:                        dhcp-6-opt-5 = val-5
@@ -7644,12 +7692,12 @@ GENERAL.ZONE:
 GENERAL.MASTER-PATH:
 
 <<<
-size: 2426
+size: 2530
 location: src/tests/client/test-client.py:test_003()/128
 cmd: $NMCLI --terse -f all dev show eth0
 lang: C
 returncode: 0
-stdout: 2278 bytes
+stdout: 2382 bytes
 >>>
 GENERAL.DEVICE:eth0
 GENERAL.TYPE:ethernet
@@ -7696,6 +7744,7 @@ IP4.DNS[1]:192.168.213.113
 IP4.DOMAIN[1]:sear4.foo4.bar
 IP4.WINS[1]:192.168.156.115
 IP4.WINS[2]:192.168.8.33
+IP4.CLAT-ADDRESS:192.0.0.1
 IP6.ADDRESS[1]:2001:a::29c0:62b9:2e01:30a/69
 IP6.ADDRESS[2]:2001:a::6433:6420:34f9:3801/115
 IP6.ADDRESS[3]:2001:a::8191:ed6b:8ce:b60/103
@@ -7706,6 +7755,8 @@ IP6.DNS[2]:2001:a::4e1:24e6:b8c1:91bb
 IP6.DNS[3]:2001:a::bd96:3bed:fbd6:19c5
 IP6.DOMAIN[1]:sear6.fo.x.y
 IP6.DOMAIN[2]:sear6.foo4.bar
+IP6.CLAT-ADDRESS:2002:aaaa::2c0d:1e71:ef87:fac7
+IP6.CLAT-PREF64:64:ff9b::/96
 DHCP6.OPTION[1]:dhcp-6-opt-1 = val-1
 DHCP6.OPTION[2]:dhcp-6-opt-5 = val-5
 DHCP6.OPTION[3]:dhcp-6-opt-6 = val-6
@@ -7716,12 +7767,12 @@ CONNECTIONS.AVAILABLE-CONNECTIONS[2]:UUID-con-xx1-REPLACED-REPLACED-REPLA | con-
 CONNECTIONS.AVAILABLE-CONNECTIONS[3]:UUID-ethernet-REPLACED-REPLACED-REPL | ethernet
 
 <<<
-size: 2436
+size: 2540
 location: src/tests/client/test-client.py:test_003()/129
 cmd: $NMCLI --terse -f all dev show eth0
 lang: pl_PL.UTF-8
 returncode: 0
-stdout: 2278 bytes
+stdout: 2382 bytes
 >>>
 GENERAL.DEVICE:eth0
 GENERAL.TYPE:ethernet
@@ -7768,6 +7819,7 @@ IP4.DNS[1]:192.168.213.113
 IP4.DOMAIN[1]:sear4.foo4.bar
 IP4.WINS[1]:192.168.156.115
 IP4.WINS[2]:192.168.8.33
+IP4.CLAT-ADDRESS:192.0.0.1
 IP6.ADDRESS[1]:2001:a::29c0:62b9:2e01:30a/69
 IP6.ADDRESS[2]:2001:a::6433:6420:34f9:3801/115
 IP6.ADDRESS[3]:2001:a::8191:ed6b:8ce:b60/103
@@ -7778,6 +7830,8 @@ IP6.DNS[2]:2001:a::4e1:24e6:b8c1:91bb
 IP6.DNS[3]:2001:a::bd96:3bed:fbd6:19c5
 IP6.DOMAIN[1]:sear6.fo.x.y
 IP6.DOMAIN[2]:sear6.foo4.bar
+IP6.CLAT-ADDRESS:2002:aaaa::2c0d:1e71:ef87:fac7
+IP6.CLAT-PREF64:64:ff9b::/96
 DHCP6.OPTION[1]:dhcp-6-opt-1 = val-1
 DHCP6.OPTION[2]:dhcp-6-opt-5 = val-5
 DHCP6.OPTION[3]:dhcp-6-opt-6 = val-6
@@ -8470,12 +8524,12 @@ GENERAL.ZONE:
 GENERAL.MASTER-PATH:
 
 <<<
-size: 2438
+size: 2542
 location: src/tests/client/test-client.py:test_003()/138
 cmd: $NMCLI --terse --color yes -f all dev show eth0
 lang: C
 returncode: 0
-stdout: 2278 bytes
+stdout: 2382 bytes
 >>>
 GENERAL.DEVICE:eth0
 GENERAL.TYPE:ethernet
@@ -8522,6 +8576,7 @@ IP4.DNS[1]:192.168.213.113
 IP4.DOMAIN[1]:sear4.foo4.bar
 IP4.WINS[1]:192.168.156.115
 IP4.WINS[2]:192.168.8.33
+IP4.CLAT-ADDRESS:192.0.0.1
 IP6.ADDRESS[1]:2001:a::29c0:62b9:2e01:30a/69
 IP6.ADDRESS[2]:2001:a::6433:6420:34f9:3801/115
 IP6.ADDRESS[3]:2001:a::8191:ed6b:8ce:b60/103
@@ -8532,6 +8587,8 @@ IP6.DNS[2]:2001:a::4e1:24e6:b8c1:91bb
 IP6.DNS[3]:2001:a::bd96:3bed:fbd6:19c5
 IP6.DOMAIN[1]:sear6.fo.x.y
 IP6.DOMAIN[2]:sear6.foo4.bar
+IP6.CLAT-ADDRESS:2002:aaaa::2c0d:1e71:ef87:fac7
+IP6.CLAT-PREF64:64:ff9b::/96
 DHCP6.OPTION[1]:dhcp-6-opt-1 = val-1
 DHCP6.OPTION[2]:dhcp-6-opt-5 = val-5
 DHCP6.OPTION[3]:dhcp-6-opt-6 = val-6
@@ -8542,12 +8599,12 @@ CONNECTIONS.AVAILABLE-CONNECTIONS[2]:UUID-con-xx1-REPLACED-REPLACED-REPLA | con-
 CONNECTIONS.AVAILABLE-CONNECTIONS[3]:UUID-ethernet-REPLACED-REPLACED-REPL | ethernet
 
 <<<
-size: 2448
+size: 2552
 location: src/tests/client/test-client.py:test_003()/139
 cmd: $NMCLI --terse --color yes -f all dev show eth0
 lang: pl_PL.UTF-8
 returncode: 0
-stdout: 2278 bytes
+stdout: 2382 bytes
 >>>
 GENERAL.DEVICE:eth0
 GENERAL.TYPE:ethernet
@@ -8594,6 +8651,7 @@ IP4.DNS[1]:192.168.213.113
 IP4.DOMAIN[1]:sear4.foo4.bar
 IP4.WINS[1]:192.168.156.115
 IP4.WINS[2]:192.168.8.33
+IP4.CLAT-ADDRESS:192.0.0.1
 IP6.ADDRESS[1]:2001:a::29c0:62b9:2e01:30a/69
 IP6.ADDRESS[2]:2001:a::6433:6420:34f9:3801/115
 IP6.ADDRESS[3]:2001:a::8191:ed6b:8ce:b60/103
@@ -8604,6 +8662,8 @@ IP6.DNS[2]:2001:a::4e1:24e6:b8c1:91bb
 IP6.DNS[3]:2001:a::bd96:3bed:fbd6:19c5
 IP6.DOMAIN[1]:sear6.fo.x.y
 IP6.DOMAIN[2]:sear6.foo4.bar
+IP6.CLAT-ADDRESS:2002:aaaa::2c0d:1e71:ef87:fac7
+IP6.CLAT-PREF64:64:ff9b::/96
 DHCP6.OPTION[1]:dhcp-6-opt-1 = val-1
 DHCP6.OPTION[2]:dhcp-6-opt-5 = val-5
 DHCP6.OPTION[3]:dhcp-6-opt-6 = val-6
@@ -8796,12 +8856,12 @@ GENERAL  ethernet  UUID-ethernet-REPLACED-REPLACED-REPL  eth0     eth0      deza
 
 
 <<<
-size: 3207
+size: 3327
 location: src/tests/client/test-client.py:test_003()/148
 cmd: $NMCLI --mode tabular -f all dev show eth0
 lang: C
 returncode: 0
-stdout: 3052 bytes
+stdout: 3172 bytes
 >>>
 NAME     DEVICE  TYPE      NM-TYPE           DBUS-PATH                                  VENDOR  PRODUCT  DRIVER   DRIVER-VERSION  FIRMWARE-VERSION  HWADDR             MTU  STATE            REASON               IP4-CONNECTIVITY  IP6-CONNECTIVITY  UDI                        PATH  IP-IFACE  IS-SOFTWARE  NM-MANAGED  AUTOCONNECT  FIRMWARE-MISSING  NM-PLUGIN-MISSING  PHYS-PORT-ID  CONNECTION  CON-UUID                              CON-PATH                                            METERED 
 GENERAL  eth0    ethernet  NMDeviceEthernet  /org/freedesktop/NetworkManager/Devices/1  --      --       virtual  --              --                C0:61:AE:26:4D:D7  0    100 (connected)  0 (No reason given)  0 (unknown)       0 (unknown)       /sys/devices/virtual/eth0  --    eth0      no           yes         yes          no                no                 --            ethernet    UUID-ethernet-REPLACED-REPLACED-REPL  /org/freedesktop/NetworkManager/ActiveConnection/1  unknown 
@@ -8815,14 +8875,14 @@ INTERFACE-FLAGS  yes  yes       no       no
 NAME              CARRIER  S390-SUBCHANNELS 
 WIRED-PROPERTIES  on       --               
 
-GROUP  ADDRESS           GATEWAY  ROUTE                                                                                                         DNS              DOMAIN          SEARCHES  WINS                           
-IP4    192.168.6.238/29  --       dst = 192.168.58.133/31, nh = 192.168.50.116, mt = 3130348792 | dst = 192.168.155.50/19, nh = 192.168.127.64  192.168.213.113  sear4.foo4.bar  --        192.168.156.115 | 192.168.8.33 
+GROUP  ADDRESS           GATEWAY  ROUTE                                                                                                         DNS              DOMAIN          SEARCHES  WINS                            CLAT-ADDRESS 
+IP4    192.168.6.238/29  --       dst = 192.168.58.133/31, nh = 192.168.50.116, mt = 3130348792 | dst = 192.168.155.50/19, nh = 192.168.127.64  192.168.213.113  sear4.foo4.bar  --        192.168.156.115 | 192.168.8.33  192.0.0.1    
 
 GROUP  OPTION 
 DHCP4  --     
 
-GROUP  ADDRESS                                                                                          GATEWAY                      ROUTE                                                            DNS                                                                                     DOMAIN                         SEARCHES 
-IP6    2001:a::29c0:62b9:2e01:30a/69 | 2001:a::6433:6420:34f9:3801/115 | 2001:a::8191:ed6b:8ce:b60/103  2001:a::2b50:64d1:9a91:23b4  dst = 2001:a::5ecb:f5ee:fb96:856c/100, nh = ::, mt = 4249082794  2001:a::1323:9a78:2b82:d16b | 2001:a::4e1:24e6:b8c1:91bb | 2001:a::bd96:3bed:fbd6:19c5  sear6.fo.x.y | sear6.foo4.bar  --       
+GROUP  ADDRESS                                                                                          GATEWAY                      ROUTE                                                            DNS                                                                                     DOMAIN                         SEARCHES  CLAT-ADDRESS                    CLAT-PREF64  
+IP6    2001:a::29c0:62b9:2e01:30a/69 | 2001:a::6433:6420:34f9:3801/115 | 2001:a::8191:ed6b:8ce:b60/103  2001:a::2b50:64d1:9a91:23b4  dst = 2001:a::5ecb:f5ee:fb96:856c/100, nh = ::, mt = 4249082794  2001:a::1323:9a78:2b82:d16b | 2001:a::4e1:24e6:b8c1:91bb | 2001:a::bd96:3bed:fbd6:19c5  sear6.fo.x.y | sear6.foo4.bar  --        2002:aaaa::2c0d:1e71:ef87:fac7  64:ff9b::/96 
 
 GROUP  OPTION                                                                                    
 DHCP6  dhcp-6-opt-1 = val-1 | dhcp-6-opt-5 = val-5 | dhcp-6-opt-6 = val-6 | dhcp-6-opt-8 = val-8 
@@ -8831,12 +8891,12 @@ NAME         AVAILABLE-CONNECTION-PATHS                                   AVAILA
 CONNECTIONS  /org/freedesktop/NetworkManager/Settings/Connection/{1,2,6}  5fcfd6d7-1e63-3332-8826-a7eda103792d | con-1 | UUID-con-xx1-REPLACED-REPLACED-REPLA | con-xx1 | UUID-ethernet-REPLACED-REPLACED-REPL | ethernet 
 
 <<<
-size: 3237
+size: 3357
 location: src/tests/client/test-client.py:test_003()/149
 cmd: $NMCLI --mode tabular -f all dev show eth0
 lang: pl_PL.UTF-8
 returncode: 0
-stdout: 3072 bytes
+stdout: 3192 bytes
 >>>
 NAME     DEVICE  TYPE      NM-TYPE           DBUS-PATH                                  VENDOR  PRODUCT  DRIVER   DRIVER-VERSION  FIRMWARE-VERSION  HWADDR             MTU  STATE            REASON                    IP4-CONNECTIVITY  IP6-CONNECTIVITY  UDI                        PATH  IP-IFACE  IS-SOFTWARE  NM-MANAGED  AUTOCONNECT  FIRMWARE-MISSING  NM-PLUGIN-MISSING  PHYS-PORT-ID  CONNECTION  CON-UUID                              CON-PATH                                            METERED  
 GENERAL  eth0    ethernet  NMDeviceEthernet  /org/freedesktop/NetworkManager/Devices/1  --      --       virtual  --              --                C0:61:AE:26:4D:D7  0    100 (połączono)  0 (Nie podano przyczyny)  0 (nieznane)      0 (nieznane)      /sys/devices/virtual/eth0  --    eth0      nie          tak         tak          nie               nie                --            ethernet    UUID-ethernet-REPLACED-REPLACED-REPL  /org/freedesktop/NetworkManager/ActiveConnection/1  nieznane 
@@ -8850,14 +8910,14 @@ INTERFACE-FLAGS  tak  tak       nie      nie
 NAME              CARRIER   S390-SUBCHANNELS 
 WIRED-PROPERTIES  włączone  --               
 
-GROUP  ADDRESS           GATEWAY  ROUTE                                                                                                         DNS              DOMAIN          SEARCHES  WINS                           
-IP4    192.168.6.238/29  --       dst = 192.168.58.133/31, nh = 192.168.50.116, mt = 3130348792 | dst = 192.168.155.50/19, nh = 192.168.127.64  192.168.213.113  sear4.foo4.bar  --        192.168.156.115 | 192.168.8.33 
+GROUP  ADDRESS           GATEWAY  ROUTE                                                                                                         DNS              DOMAIN          SEARCHES  WINS                            CLAT-ADDRESS 
+IP4    192.168.6.238/29  --       dst = 192.168.58.133/31, nh = 192.168.50.116, mt = 3130348792 | dst = 192.168.155.50/19, nh = 192.168.127.64  192.168.213.113  sear4.foo4.bar  --        192.168.156.115 | 192.168.8.33  192.0.0.1    
 
 GROUP  OPTION 
 DHCP4  --     
 
-GROUP  ADDRESS                                                                                          GATEWAY                      ROUTE                                                            DNS                                                                                     DOMAIN                         SEARCHES 
-IP6    2001:a::29c0:62b9:2e01:30a/69 | 2001:a::6433:6420:34f9:3801/115 | 2001:a::8191:ed6b:8ce:b60/103  2001:a::2b50:64d1:9a91:23b4  dst = 2001:a::5ecb:f5ee:fb96:856c/100, nh = ::, mt = 4249082794  2001:a::1323:9a78:2b82:d16b | 2001:a::4e1:24e6:b8c1:91bb | 2001:a::bd96:3bed:fbd6:19c5  sear6.fo.x.y | sear6.foo4.bar  --       
+GROUP  ADDRESS                                                                                          GATEWAY                      ROUTE                                                            DNS                                                                                     DOMAIN                         SEARCHES  CLAT-ADDRESS                    CLAT-PREF64  
+IP6    2001:a::29c0:62b9:2e01:30a/69 | 2001:a::6433:6420:34f9:3801/115 | 2001:a::8191:ed6b:8ce:b60/103  2001:a::2b50:64d1:9a91:23b4  dst = 2001:a::5ecb:f5ee:fb96:856c/100, nh = ::, mt = 4249082794  2001:a::1323:9a78:2b82:d16b | 2001:a::4e1:24e6:b8c1:91bb | 2001:a::bd96:3bed:fbd6:19c5  sear6.fo.x.y | sear6.foo4.bar  --        2002:aaaa::2c0d:1e71:ef87:fac7  64:ff9b::/96 
 
 GROUP  OPTION                                                                                    
 DHCP6  dhcp-6-opt-1 = val-1 | dhcp-6-opt-5 = val-5 | dhcp-6-opt-6 = val-6 | dhcp-6-opt-8 = val-8 
@@ -9048,12 +9108,12 @@ GENERAL  ethernet  UUID-ethernet-REPLACED-REPLACED-REPL  eth0     eth0      deza
 
 
 <<<
-size: 3219
+size: 3339
 location: src/tests/client/test-client.py:test_003()/158
 cmd: $NMCLI --mode tabular --color yes -f all dev show eth0
 lang: C
 returncode: 0
-stdout: 3052 bytes
+stdout: 3172 bytes
 >>>
 NAME     DEVICE  TYPE      NM-TYPE           DBUS-PATH                                  VENDOR  PRODUCT  DRIVER   DRIVER-VERSION  FIRMWARE-VERSION  HWADDR             MTU  STATE            REASON               IP4-CONNECTIVITY  IP6-CONNECTIVITY  UDI                        PATH  IP-IFACE  IS-SOFTWARE  NM-MANAGED  AUTOCONNECT  FIRMWARE-MISSING  NM-PLUGIN-MISSING  PHYS-PORT-ID  CONNECTION  CON-UUID                              CON-PATH                                            METERED 
 GENERAL  eth0    ethernet  NMDeviceEthernet  /org/freedesktop/NetworkManager/Devices/1  --      --       virtual  --              --                C0:61:AE:26:4D:D7  0    100 (connected)  0 (No reason given)  0 (unknown)       0 (unknown)       /sys/devices/virtual/eth0  --    eth0      no           yes         yes          no                no                 --            ethernet    UUID-ethernet-REPLACED-REPLACED-REPL  /org/freedesktop/NetworkManager/ActiveConnection/1  unknown 
@@ -9067,14 +9127,14 @@ INTERFACE-FLAGS  yes  yes       no       no
 NAME              CARRIER  S390-SUBCHANNELS 
 WIRED-PROPERTIES  on       --               
 
-GROUP  ADDRESS           GATEWAY  ROUTE                                                                                                         DNS              DOMAIN          SEARCHES  WINS                           
-IP4    192.168.6.238/29  --       dst = 192.168.58.133/31, nh = 192.168.50.116, mt = 3130348792 | dst = 192.168.155.50/19, nh = 192.168.127.64  192.168.213.113  sear4.foo4.bar  --        192.168.156.115 | 192.168.8.33 
+GROUP  ADDRESS           GATEWAY  ROUTE                                                                                                         DNS              DOMAIN          SEARCHES  WINS                            CLAT-ADDRESS 
+IP4    192.168.6.238/29  --       dst = 192.168.58.133/31, nh = 192.168.50.116, mt = 3130348792 | dst = 192.168.155.50/19, nh = 192.168.127.64  192.168.213.113  sear4.foo4.bar  --        192.168.156.115 | 192.168.8.33  192.0.0.1    
 
 GROUP  OPTION 
 DHCP4  --     
 
-GROUP  ADDRESS                                                                                          GATEWAY                      ROUTE                                                            DNS                                                                                     DOMAIN                         SEARCHES 
-IP6    2001:a::29c0:62b9:2e01:30a/69 | 2001:a::6433:6420:34f9:3801/115 | 2001:a::8191:ed6b:8ce:b60/103  2001:a::2b50:64d1:9a91:23b4  dst = 2001:a::5ecb:f5ee:fb96:856c/100, nh = ::, mt = 4249082794  2001:a::1323:9a78:2b82:d16b | 2001:a::4e1:24e6:b8c1:91bb | 2001:a::bd96:3bed:fbd6:19c5  sear6.fo.x.y | sear6.foo4.bar  --       
+GROUP  ADDRESS                                                                                          GATEWAY                      ROUTE                                                            DNS                                                                                     DOMAIN                         SEARCHES  CLAT-ADDRESS                    CLAT-PREF64  
+IP6    2001:a::29c0:62b9:2e01:30a/69 | 2001:a::6433:6420:34f9:3801/115 | 2001:a::8191:ed6b:8ce:b60/103  2001:a::2b50:64d1:9a91:23b4  dst = 2001:a::5ecb:f5ee:fb96:856c/100, nh = ::, mt = 4249082794  2001:a::1323:9a78:2b82:d16b | 2001:a::4e1:24e6:b8c1:91bb | 2001:a::bd96:3bed:fbd6:19c5  sear6.fo.x.y | sear6.foo4.bar  --        2002:aaaa::2c0d:1e71:ef87:fac7  64:ff9b::/96 
 
 GROUP  OPTION                                                                                    
 DHCP6  dhcp-6-opt-1 = val-1 | dhcp-6-opt-5 = val-5 | dhcp-6-opt-6 = val-6 | dhcp-6-opt-8 = val-8 
@@ -9083,12 +9143,12 @@ NAME         AVAILABLE-CONNECTION-PATHS                                   AVAILA
 CONNECTIONS  /org/freedesktop/NetworkManager/Settings/Connection/{1,2,6}  5fcfd6d7-1e63-3332-8826-a7eda103792d | con-1 | UUID-con-xx1-REPLACED-REPLACED-REPLA | con-xx1 | UUID-ethernet-REPLACED-REPLACED-REPL | ethernet 
 
 <<<
-size: 3249
+size: 3369
 location: src/tests/client/test-client.py:test_003()/159
 cmd: $NMCLI --mode tabular --color yes -f all dev show eth0
 lang: pl_PL.UTF-8
 returncode: 0
-stdout: 3072 bytes
+stdout: 3192 bytes
 >>>
 NAME     DEVICE  TYPE      NM-TYPE           DBUS-PATH                                  VENDOR  PRODUCT  DRIVER   DRIVER-VERSION  FIRMWARE-VERSION  HWADDR             MTU  STATE            REASON                    IP4-CONNECTIVITY  IP6-CONNECTIVITY  UDI                        PATH  IP-IFACE  IS-SOFTWARE  NM-MANAGED  AUTOCONNECT  FIRMWARE-MISSING  NM-PLUGIN-MISSING  PHYS-PORT-ID  CONNECTION  CON-UUID                              CON-PATH                                            METERED  
 GENERAL  eth0    ethernet  NMDeviceEthernet  /org/freedesktop/NetworkManager/Devices/1  --      --       virtual  --              --                C0:61:AE:26:4D:D7  0    100 (połączono)  0 (Nie podano przyczyny)  0 (nieznane)      0 (nieznane)      /sys/devices/virtual/eth0  --    eth0      nie          tak         tak          nie               nie                --            ethernet    UUID-ethernet-REPLACED-REPLACED-REPL  /org/freedesktop/NetworkManager/ActiveConnection/1  nieznane 
@@ -9102,14 +9162,14 @@ INTERFACE-FLAGS  tak  tak       nie      nie
 NAME              CARRIER   S390-SUBCHANNELS 
 WIRED-PROPERTIES  włączone  --               
 
-GROUP  ADDRESS           GATEWAY  ROUTE                                                                                                         DNS              DOMAIN          SEARCHES  WINS                           
-IP4    192.168.6.238/29  --       dst = 192.168.58.133/31, nh = 192.168.50.116, mt = 3130348792 | dst = 192.168.155.50/19, nh = 192.168.127.64  192.168.213.113  sear4.foo4.bar  --        192.168.156.115 | 192.168.8.33 
+GROUP  ADDRESS           GATEWAY  ROUTE                                                                                                         DNS              DOMAIN          SEARCHES  WINS                            CLAT-ADDRESS 
+IP4    192.168.6.238/29  --       dst = 192.168.58.133/31, nh = 192.168.50.116, mt = 3130348792 | dst = 192.168.155.50/19, nh = 192.168.127.64  192.168.213.113  sear4.foo4.bar  --        192.168.156.115 | 192.168.8.33  192.0.0.1    
 
 GROUP  OPTION 
 DHCP4  --     
 
-GROUP  ADDRESS                                                                                          GATEWAY                      ROUTE                                                            DNS                                                                                     DOMAIN                         SEARCHES 
-IP6    2001:a::29c0:62b9:2e01:30a/69 | 2001:a::6433:6420:34f9:3801/115 | 2001:a::8191:ed6b:8ce:b60/103  2001:a::2b50:64d1:9a91:23b4  dst = 2001:a::5ecb:f5ee:fb96:856c/100, nh = ::, mt = 4249082794  2001:a::1323:9a78:2b82:d16b | 2001:a::4e1:24e6:b8c1:91bb | 2001:a::bd96:3bed:fbd6:19c5  sear6.fo.x.y | sear6.foo4.bar  --       
+GROUP  ADDRESS                                                                                          GATEWAY                      ROUTE                                                            DNS                                                                                     DOMAIN                         SEARCHES  CLAT-ADDRESS                    CLAT-PREF64  
+IP6    2001:a::29c0:62b9:2e01:30a/69 | 2001:a::6433:6420:34f9:3801/115 | 2001:a::8191:ed6b:8ce:b60/103  2001:a::2b50:64d1:9a91:23b4  dst = 2001:a::5ecb:f5ee:fb96:856c/100, nh = ::, mt = 4249082794  2001:a::1323:9a78:2b82:d16b | 2001:a::4e1:24e6:b8c1:91bb | 2001:a::bd96:3bed:fbd6:19c5  sear6.fo.x.y | sear6.foo4.bar  --        2002:aaaa::2c0d:1e71:ef87:fac7  64:ff9b::/96 
 
 GROUP  OPTION                                                                                    
 DHCP6  dhcp-6-opt-1 = val-1 | dhcp-6-opt-5 = val-5 | dhcp-6-opt-6 = val-6 | dhcp-6-opt-8 = val-8 
@@ -9372,12 +9432,12 @@ GENERAL  ethernet  UUID-ethernet-REPLACED-REPLACED-REPL  eth0     eth0      deza
 
 
 <<<
-size: 4823
+size: 5003
 location: src/tests/client/test-client.py:test_003()/168
 cmd: $NMCLI --mode tabular --pretty -f all dev show eth0
 lang: C
 returncode: 0
-stdout: 4659 bytes
+stdout: 4839 bytes
 >>>
 =========================
   Device details (eth0)
@@ -9398,17 +9458,17 @@ NAME              CARRIER  S390-SUBCHANNELS
 ---------------------------------------------
 WIRED-PROPERTIES  on       --               
 
-GROUP  ADDRESS           GATEWAY  ROUTE                                                                                                         DNS              DOMAIN          SEARCHES  WINS                           
----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-IP4    192.168.6.238/29  --       dst = 192.168.58.133/31, nh = 192.168.50.116, mt = 3130348792 | dst = 192.168.155.50/19, nh = 192.168.127.64  192.168.213.113  sear4.foo4.bar  --        192.168.156.115 | 192.168.8.33 
+GROUP  ADDRESS           GATEWAY  ROUTE                                                                                                         DNS              DOMAIN          SEARCHES  WINS                            CLAT-ADDRESS 
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+IP4    192.168.6.238/29  --       dst = 192.168.58.133/31, nh = 192.168.50.116, mt = 3130348792 | dst = 192.168.155.50/19, nh = 192.168.127.64  192.168.213.113  sear4.foo4.bar  --        192.168.156.115 | 192.168.8.33  192.0.0.1    
 
 GROUP  OPTION 
 ---------------
 DHCP4  --     
 
-GROUP  ADDRESS                                                                                          GATEWAY                      ROUTE                                                            DNS                                                                                     DOMAIN                         SEARCHES 
----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-IP6    2001:a::29c0:62b9:2e01:30a/69 | 2001:a::6433:6420:34f9:3801/115 | 2001:a::8191:ed6b:8ce:b60/103  2001:a::2b50:64d1:9a91:23b4  dst = 2001:a::5ecb:f5ee:fb96:856c/100, nh = ::, mt = 4249082794  2001:a::1323:9a78:2b82:d16b | 2001:a::4e1:24e6:b8c1:91bb | 2001:a::bd96:3bed:fbd6:19c5  sear6.fo.x.y | sear6.foo4.bar  --       
+GROUP  ADDRESS                                                                                          GATEWAY                      ROUTE                                                            DNS                                                                                     DOMAIN                         SEARCHES  CLAT-ADDRESS                    CLAT-PREF64  
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+IP6    2001:a::29c0:62b9:2e01:30a/69 | 2001:a::6433:6420:34f9:3801/115 | 2001:a::8191:ed6b:8ce:b60/103  2001:a::2b50:64d1:9a91:23b4  dst = 2001:a::5ecb:f5ee:fb96:856c/100, nh = ::, mt = 4249082794  2001:a::1323:9a78:2b82:d16b | 2001:a::4e1:24e6:b8c1:91bb | 2001:a::bd96:3bed:fbd6:19c5  sear6.fo.x.y | sear6.foo4.bar  --        2002:aaaa::2c0d:1e71:ef87:fac7  64:ff9b::/96 
 
 GROUP  OPTION                                                                                    
 --------------------------------------------------------------------------------------------------
@@ -9419,12 +9479,12 @@ NAME         AVAILABLE-CONNECTION-PATHS                                   AVAILA
 CONNECTIONS  /org/freedesktop/NetworkManager/Settings/Connection/{1,2,6}  5fcfd6d7-1e63-3332-8826-a7eda103792d | con-1 | UUID-con-xx1-REPLACED-REPLACED-REPLA | con-xx1 | UUID-ethernet-REPLACED-REPLACED-REPL | ethernet 
 
 <<<
-size: 4889
+size: 5069
 location: src/tests/client/test-client.py:test_003()/169
 cmd: $NMCLI --mode tabular --pretty -f all dev show eth0
 lang: pl_PL.UTF-8
 returncode: 0
-stdout: 4715 bytes
+stdout: 4895 bytes
 >>>
 ==================================
   Informacje o urządzeniu (eth0)
@@ -9445,17 +9505,17 @@ NAME              CARRIER   S390-SUBCHANNELS
 ----------------------------------------------
 WIRED-PROPERTIES  włączone  --               
 
-GROUP  ADDRESS           GATEWAY  ROUTE                                                                                                         DNS              DOMAIN          SEARCHES  WINS                           
----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-IP4    192.168.6.238/29  --       dst = 192.168.58.133/31, nh = 192.168.50.116, mt = 3130348792 | dst = 192.168.155.50/19, nh = 192.168.127.64  192.168.213.113  sear4.foo4.bar  --        192.168.156.115 | 192.168.8.33 
+GROUP  ADDRESS           GATEWAY  ROUTE                                                                                                         DNS              DOMAIN          SEARCHES  WINS                            CLAT-ADDRESS 
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+IP4    192.168.6.238/29  --       dst = 192.168.58.133/31, nh = 192.168.50.116, mt = 3130348792 | dst = 192.168.155.50/19, nh = 192.168.127.64  192.168.213.113  sear4.foo4.bar  --        192.168.156.115 | 192.168.8.33  192.0.0.1    
 
 GROUP  OPTION 
 ---------------
 DHCP4  --     
 
-GROUP  ADDRESS                                                                                          GATEWAY                      ROUTE                                                            DNS                                                                                     DOMAIN                         SEARCHES 
----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-IP6    2001:a::29c0:62b9:2e01:30a/69 | 2001:a::6433:6420:34f9:3801/115 | 2001:a::8191:ed6b:8ce:b60/103  2001:a::2b50:64d1:9a91:23b4  dst = 2001:a::5ecb:f5ee:fb96:856c/100, nh = ::, mt = 4249082794  2001:a::1323:9a78:2b82:d16b | 2001:a::4e1:24e6:b8c1:91bb | 2001:a::bd96:3bed:fbd6:19c5  sear6.fo.x.y | sear6.foo4.bar  --       
+GROUP  ADDRESS                                                                                          GATEWAY                      ROUTE                                                            DNS                                                                                     DOMAIN                         SEARCHES  CLAT-ADDRESS                    CLAT-PREF64  
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+IP6    2001:a::29c0:62b9:2e01:30a/69 | 2001:a::6433:6420:34f9:3801/115 | 2001:a::8191:ed6b:8ce:b60/103  2001:a::2b50:64d1:9a91:23b4  dst = 2001:a::5ecb:f5ee:fb96:856c/100, nh = ::, mt = 4249082794  2001:a::1323:9a78:2b82:d16b | 2001:a::4e1:24e6:b8c1:91bb | 2001:a::bd96:3bed:fbd6:19c5  sear6.fo.x.y | sear6.foo4.bar  --        2002:aaaa::2c0d:1e71:ef87:fac7  64:ff9b::/96 
 
 GROUP  OPTION                                                                                    
 --------------------------------------------------------------------------------------------------
@@ -9720,12 +9780,12 @@ GENERAL  ethernet  UUID-ethernet-REPLACED-REPLACED-REPL  eth0     eth0      deza
 
 
 <<<
-size: 4835
+size: 5015
 location: src/tests/client/test-client.py:test_003()/178
 cmd: $NMCLI --mode tabular --pretty --color yes -f all dev show eth0
 lang: C
 returncode: 0
-stdout: 4659 bytes
+stdout: 4839 bytes
 >>>
 =========================
   Device details (eth0)
@@ -9746,17 +9806,17 @@ NAME              CARRIER  S390-SUBCHANNELS
 ---------------------------------------------
 WIRED-PROPERTIES  on       --               
 
-GROUP  ADDRESS           GATEWAY  ROUTE                                                                                                         DNS              DOMAIN          SEARCHES  WINS                           
----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-IP4    192.168.6.238/29  --       dst = 192.168.58.133/31, nh = 192.168.50.116, mt = 3130348792 | dst = 192.168.155.50/19, nh = 192.168.127.64  192.168.213.113  sear4.foo4.bar  --        192.168.156.115 | 192.168.8.33 
+GROUP  ADDRESS           GATEWAY  ROUTE                                                                                                         DNS              DOMAIN          SEARCHES  WINS                            CLAT-ADDRESS 
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+IP4    192.168.6.238/29  --       dst = 192.168.58.133/31, nh = 192.168.50.116, mt = 3130348792 | dst = 192.168.155.50/19, nh = 192.168.127.64  192.168.213.113  sear4.foo4.bar  --        192.168.156.115 | 192.168.8.33  192.0.0.1    
 
 GROUP  OPTION 
 ---------------
 DHCP4  --     
 
-GROUP  ADDRESS                                                                                          GATEWAY                      ROUTE                                                            DNS                                                                                     DOMAIN                         SEARCHES 
----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-IP6    2001:a::29c0:62b9:2e01:30a/69 | 2001:a::6433:6420:34f9:3801/115 | 2001:a::8191:ed6b:8ce:b60/103  2001:a::2b50:64d1:9a91:23b4  dst = 2001:a::5ecb:f5ee:fb96:856c/100, nh = ::, mt = 4249082794  2001:a::1323:9a78:2b82:d16b | 2001:a::4e1:24e6:b8c1:91bb | 2001:a::bd96:3bed:fbd6:19c5  sear6.fo.x.y | sear6.foo4.bar  --       
+GROUP  ADDRESS                                                                                          GATEWAY                      ROUTE                                                            DNS                                                                                     DOMAIN                         SEARCHES  CLAT-ADDRESS                    CLAT-PREF64  
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+IP6    2001:a::29c0:62b9:2e01:30a/69 | 2001:a::6433:6420:34f9:3801/115 | 2001:a::8191:ed6b:8ce:b60/103  2001:a::2b50:64d1:9a91:23b4  dst = 2001:a::5ecb:f5ee:fb96:856c/100, nh = ::, mt = 4249082794  2001:a::1323:9a78:2b82:d16b | 2001:a::4e1:24e6:b8c1:91bb | 2001:a::bd96:3bed:fbd6:19c5  sear6.fo.x.y | sear6.foo4.bar  --        2002:aaaa::2c0d:1e71:ef87:fac7  64:ff9b::/96 
 
 GROUP  OPTION                                                                                    
 --------------------------------------------------------------------------------------------------
@@ -9767,12 +9827,12 @@ NAME         AVAILABLE-CONNECTION-PATHS                                   AVAILA
 CONNECTIONS  /org/freedesktop/NetworkManager/Settings/Connection/{1,2,6}  5fcfd6d7-1e63-3332-8826-a7eda103792d | con-1 | UUID-con-xx1-REPLACED-REPLACED-REPLA | con-xx1 | UUID-ethernet-REPLACED-REPLACED-REPL | ethernet 
 
 <<<
-size: 4901
+size: 5081
 location: src/tests/client/test-client.py:test_003()/179
 cmd: $NMCLI --mode tabular --pretty --color yes -f all dev show eth0
 lang: pl_PL.UTF-8
 returncode: 0
-stdout: 4715 bytes
+stdout: 4895 bytes
 >>>
 ==================================
   Informacje o urządzeniu (eth0)
@@ -9793,17 +9853,17 @@ NAME              CARRIER   S390-SUBCHANNELS
 ----------------------------------------------
 WIRED-PROPERTIES  włączone  --               
 
-GROUP  ADDRESS           GATEWAY  ROUTE                                                                                                         DNS              DOMAIN          SEARCHES  WINS                           
----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-IP4    192.168.6.238/29  --       dst = 192.168.58.133/31, nh = 192.168.50.116, mt = 3130348792 | dst = 192.168.155.50/19, nh = 192.168.127.64  192.168.213.113  sear4.foo4.bar  --        192.168.156.115 | 192.168.8.33 
+GROUP  ADDRESS           GATEWAY  ROUTE                                                                                                         DNS              DOMAIN          SEARCHES  WINS                            CLAT-ADDRESS 
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+IP4    192.168.6.238/29  --       dst = 192.168.58.133/31, nh = 192.168.50.116, mt = 3130348792 | dst = 192.168.155.50/19, nh = 192.168.127.64  192.168.213.113  sear4.foo4.bar  --        192.168.156.115 | 192.168.8.33  192.0.0.1    
 
 GROUP  OPTION 
 ---------------
 DHCP4  --     
 
-GROUP  ADDRESS                                                                                          GATEWAY                      ROUTE                                                            DNS                                                                                     DOMAIN                         SEARCHES 
----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-IP6    2001:a::29c0:62b9:2e01:30a/69 | 2001:a::6433:6420:34f9:3801/115 | 2001:a::8191:ed6b:8ce:b60/103  2001:a::2b50:64d1:9a91:23b4  dst = 2001:a::5ecb:f5ee:fb96:856c/100, nh = ::, mt = 4249082794  2001:a::1323:9a78:2b82:d16b | 2001:a::4e1:24e6:b8c1:91bb | 2001:a::bd96:3bed:fbd6:19c5  sear6.fo.x.y | sear6.foo4.bar  --       
+GROUP  ADDRESS                                                                                          GATEWAY                      ROUTE                                                            DNS                                                                                     DOMAIN                         SEARCHES  CLAT-ADDRESS                    CLAT-PREF64  
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+IP6    2001:a::29c0:62b9:2e01:30a/69 | 2001:a::6433:6420:34f9:3801/115 | 2001:a::8191:ed6b:8ce:b60/103  2001:a::2b50:64d1:9a91:23b4  dst = 2001:a::5ecb:f5ee:fb96:856c/100, nh = ::, mt = 4249082794  2001:a::1323:9a78:2b82:d16b | 2001:a::4e1:24e6:b8c1:91bb | 2001:a::bd96:3bed:fbd6:19c5  sear6.fo.x.y | sear6.foo4.bar  --        2002:aaaa::2c0d:1e71:ef87:fac7  64:ff9b::/96 
 
 GROUP  OPTION                                                                                    
 --------------------------------------------------------------------------------------------------
@@ -9940,38 +10000,38 @@ proxy:none:no::
 GENERAL:ethernet:UUID-ethernet-REPLACED-REPLACED-REPL:eth0:eth0:deactivating:no:no::no:/org/freedesktop/NetworkManager/ActiveConnection/1:/org/freedesktop/NetworkManager/Settings/Connection/6::
 
 <<<
-size: 1451
+size: 1514
 location: src/tests/client/test-client.py:test_003()/188
 cmd: $NMCLI --mode tabular --terse -f all dev show eth0
 lang: C
 returncode: 0
-stdout: 1288 bytes
+stdout: 1351 bytes
 >>>
 GENERAL:eth0:ethernet:NMDeviceEthernet:/org/freedesktop/NetworkManager/Devices/1:::virtual:::C0\:61\:AE\:26\:4D\:D7:0:100 (connected):0 (No reason given):0 (unknown):0 (unknown):/sys/devices/virtual/eth0::eth0:no:yes:yes:no:no::ethernet:UUID-ethernet-REPLACED-REPLACED-REPL:/org/freedesktop/NetworkManager/ActiveConnection/1:unknown
 CAPABILITIES:no:100 Mb/s:no:no
 INTERFACE-FLAGS:yes:yes:no:no
 WIRED-PROPERTIES:on:
-IP4:192.168.6.238/29::dst = 192.168.58.133/31, nh = 192.168.50.116, mt = 3130348792 | dst = 192.168.155.50/19, nh = 192.168.127.64:192.168.213.113:sear4.foo4.bar::192.168.156.115 | 192.168.8.33
+IP4:192.168.6.238/29::dst = 192.168.58.133/31, nh = 192.168.50.116, mt = 3130348792 | dst = 192.168.155.50/19, nh = 192.168.127.64:192.168.213.113:sear4.foo4.bar::192.168.156.115 | 192.168.8.33:192.0.0.1
 DHCP4:
-IP6:2001\:a\:\:29c0\:62b9\:2e01\:30a/69 | 2001\:a\:\:6433\:6420\:34f9\:3801/115 | 2001\:a\:\:8191\:ed6b\:8ce\:b60/103:2001\:a\:\:2b50\:64d1\:9a91\:23b4:dst = 2001\:a\:\:5ecb\:f5ee\:fb96\:856c/100, nh = \:\:, mt = 4249082794:2001\:a\:\:1323\:9a78\:2b82\:d16b | 2001\:a\:\:4e1\:24e6\:b8c1\:91bb | 2001\:a\:\:bd96\:3bed\:fbd6\:19c5:sear6.fo.x.y | sear6.foo4.bar:
+IP6:2001\:a\:\:29c0\:62b9\:2e01\:30a/69 | 2001\:a\:\:6433\:6420\:34f9\:3801/115 | 2001\:a\:\:8191\:ed6b\:8ce\:b60/103:2001\:a\:\:2b50\:64d1\:9a91\:23b4:dst = 2001\:a\:\:5ecb\:f5ee\:fb96\:856c/100, nh = \:\:, mt = 4249082794:2001\:a\:\:1323\:9a78\:2b82\:d16b | 2001\:a\:\:4e1\:24e6\:b8c1\:91bb | 2001\:a\:\:bd96\:3bed\:fbd6\:19c5:sear6.fo.x.y | sear6.foo4.bar::2002\:aaaa\:\:2c0d\:1e71\:ef87\:fac7:64\:ff9b\:\:/96
 DHCP6:dhcp-6-opt-1 = val-1 | dhcp-6-opt-5 = val-5 | dhcp-6-opt-6 = val-6 | dhcp-6-opt-8 = val-8
 CONNECTIONS:/org/freedesktop/NetworkManager/Settings/Connection/{1,2,6}:5fcfd6d7-1e63-3332-8826-a7eda103792d | con-1 | UUID-con-xx1-REPLACED-REPLACED-REPLA | con-xx1 | UUID-ethernet-REPLACED-REPLACED-REPL | ethernet
 
 <<<
-size: 1461
+size: 1524
 location: src/tests/client/test-client.py:test_003()/189
 cmd: $NMCLI --mode tabular --terse -f all dev show eth0
 lang: pl_PL.UTF-8
 returncode: 0
-stdout: 1288 bytes
+stdout: 1351 bytes
 >>>
 GENERAL:eth0:ethernet:NMDeviceEthernet:/org/freedesktop/NetworkManager/Devices/1:::virtual:::C0\:61\:AE\:26\:4D\:D7:0:100 (connected):0 (No reason given):0 (unknown):0 (unknown):/sys/devices/virtual/eth0::eth0:no:yes:yes:no:no::ethernet:UUID-ethernet-REPLACED-REPLACED-REPL:/org/freedesktop/NetworkManager/ActiveConnection/1:unknown
 CAPABILITIES:no:100 Mb/s:no:no
 INTERFACE-FLAGS:yes:yes:no:no
 WIRED-PROPERTIES:on:
-IP4:192.168.6.238/29::dst = 192.168.58.133/31, nh = 192.168.50.116, mt = 3130348792 | dst = 192.168.155.50/19, nh = 192.168.127.64:192.168.213.113:sear4.foo4.bar::192.168.156.115 | 192.168.8.33
+IP4:192.168.6.238/29::dst = 192.168.58.133/31, nh = 192.168.50.116, mt = 3130348792 | dst = 192.168.155.50/19, nh = 192.168.127.64:192.168.213.113:sear4.foo4.bar::192.168.156.115 | 192.168.8.33:192.0.0.1
 DHCP4:
-IP6:2001\:a\:\:29c0\:62b9\:2e01\:30a/69 | 2001\:a\:\:6433\:6420\:34f9\:3801/115 | 2001\:a\:\:8191\:ed6b\:8ce\:b60/103:2001\:a\:\:2b50\:64d1\:9a91\:23b4:dst = 2001\:a\:\:5ecb\:f5ee\:fb96\:856c/100, nh = \:\:, mt = 4249082794:2001\:a\:\:1323\:9a78\:2b82\:d16b | 2001\:a\:\:4e1\:24e6\:b8c1\:91bb | 2001\:a\:\:bd96\:3bed\:fbd6\:19c5:sear6.fo.x.y | sear6.foo4.bar:
+IP6:2001\:a\:\:29c0\:62b9\:2e01\:30a/69 | 2001\:a\:\:6433\:6420\:34f9\:3801/115 | 2001\:a\:\:8191\:ed6b\:8ce\:b60/103:2001\:a\:\:2b50\:64d1\:9a91\:23b4:dst = 2001\:a\:\:5ecb\:f5ee\:fb96\:856c/100, nh = \:\:, mt = 4249082794:2001\:a\:\:1323\:9a78\:2b82\:d16b | 2001\:a\:\:4e1\:24e6\:b8c1\:91bb | 2001\:a\:\:bd96\:3bed\:fbd6\:19c5:sear6.fo.x.y | sear6.foo4.bar::2002\:aaaa\:\:2c0d\:1e71\:ef87\:fac7:64\:ff9b\:\:/96
 DHCP6:dhcp-6-opt-1 = val-1 | dhcp-6-opt-5 = val-5 | dhcp-6-opt-6 = val-6 | dhcp-6-opt-8 = val-8
 CONNECTIONS:/org/freedesktop/NetworkManager/Settings/Connection/{1,2,6}:5fcfd6d7-1e63-3332-8826-a7eda103792d | con-1 | UUID-con-xx1-REPLACED-REPLACED-REPLA | con-xx1 | UUID-ethernet-REPLACED-REPLACED-REPL | ethernet
 
@@ -10102,38 +10162,38 @@ proxy:none:no::
 GENERAL:ethernet:UUID-ethernet-REPLACED-REPLACED-REPL:eth0:eth0:deactivating:no:no::no:/org/freedesktop/NetworkManager/ActiveConnection/1:/org/freedesktop/NetworkManager/Settings/Connection/6::
 
 <<<
-size: 1463
+size: 1526
 location: src/tests/client/test-client.py:test_003()/198
 cmd: $NMCLI --mode tabular --terse --color yes -f all dev show eth0
 lang: C
 returncode: 0
-stdout: 1288 bytes
+stdout: 1351 bytes
 >>>
 GENERAL:eth0:ethernet:NMDeviceEthernet:/org/freedesktop/NetworkManager/Devices/1:::virtual:::C0\:61\:AE\:26\:4D\:D7:0:100 (connected):0 (No reason given):0 (unknown):0 (unknown):/sys/devices/virtual/eth0::eth0:no:yes:yes:no:no::ethernet:UUID-ethernet-REPLACED-REPLACED-REPL:/org/freedesktop/NetworkManager/ActiveConnection/1:unknown
 CAPABILITIES:no:100 Mb/s:no:no
 INTERFACE-FLAGS:yes:yes:no:no
 WIRED-PROPERTIES:on:
-IP4:192.168.6.238/29::dst = 192.168.58.133/31, nh = 192.168.50.116, mt = 3130348792 | dst = 192.168.155.50/19, nh = 192.168.127.64:192.168.213.113:sear4.foo4.bar::192.168.156.115 | 192.168.8.33
+IP4:192.168.6.238/29::dst = 192.168.58.133/31, nh = 192.168.50.116, mt = 3130348792 | dst = 192.168.155.50/19, nh = 192.168.127.64:192.168.213.113:sear4.foo4.bar::192.168.156.115 | 192.168.8.33:192.0.0.1
 DHCP4:
-IP6:2001\:a\:\:29c0\:62b9\:2e01\:30a/69 | 2001\:a\:\:6433\:6420\:34f9\:3801/115 | 2001\:a\:\:8191\:ed6b\:8ce\:b60/103:2001\:a\:\:2b50\:64d1\:9a91\:23b4:dst = 2001\:a\:\:5ecb\:f5ee\:fb96\:856c/100, nh = \:\:, mt = 4249082794:2001\:a\:\:1323\:9a78\:2b82\:d16b | 2001\:a\:\:4e1\:24e6\:b8c1\:91bb | 2001\:a\:\:bd96\:3bed\:fbd6\:19c5:sear6.fo.x.y | sear6.foo4.bar:
+IP6:2001\:a\:\:29c0\:62b9\:2e01\:30a/69 | 2001\:a\:\:6433\:6420\:34f9\:3801/115 | 2001\:a\:\:8191\:ed6b\:8ce\:b60/103:2001\:a\:\:2b50\:64d1\:9a91\:23b4:dst = 2001\:a\:\:5ecb\:f5ee\:fb96\:856c/100, nh = \:\:, mt = 4249082794:2001\:a\:\:1323\:9a78\:2b82\:d16b | 2001\:a\:\:4e1\:24e6\:b8c1\:91bb | 2001\:a\:\:bd96\:3bed\:fbd6\:19c5:sear6.fo.x.y | sear6.foo4.bar::2002\:aaaa\:\:2c0d\:1e71\:ef87\:fac7:64\:ff9b\:\:/96
 DHCP6:dhcp-6-opt-1 = val-1 | dhcp-6-opt-5 = val-5 | dhcp-6-opt-6 = val-6 | dhcp-6-opt-8 = val-8
 CONNECTIONS:/org/freedesktop/NetworkManager/Settings/Connection/{1,2,6}:5fcfd6d7-1e63-3332-8826-a7eda103792d | con-1 | UUID-con-xx1-REPLACED-REPLACED-REPLA | con-xx1 | UUID-ethernet-REPLACED-REPLACED-REPL | ethernet
 
 <<<
-size: 1473
+size: 1536
 location: src/tests/client/test-client.py:test_003()/199
 cmd: $NMCLI --mode tabular --terse --color yes -f all dev show eth0
 lang: pl_PL.UTF-8
 returncode: 0
-stdout: 1288 bytes
+stdout: 1351 bytes
 >>>
 GENERAL:eth0:ethernet:NMDeviceEthernet:/org/freedesktop/NetworkManager/Devices/1:::virtual:::C0\:61\:AE\:26\:4D\:D7:0:100 (connected):0 (No reason given):0 (unknown):0 (unknown):/sys/devices/virtual/eth0::eth0:no:yes:yes:no:no::ethernet:UUID-ethernet-REPLACED-REPLACED-REPL:/org/freedesktop/NetworkManager/ActiveConnection/1:unknown
 CAPABILITIES:no:100 Mb/s:no:no
 INTERFACE-FLAGS:yes:yes:no:no
 WIRED-PROPERTIES:on:
-IP4:192.168.6.238/29::dst = 192.168.58.133/31, nh = 192.168.50.116, mt = 3130348792 | dst = 192.168.155.50/19, nh = 192.168.127.64:192.168.213.113:sear4.foo4.bar::192.168.156.115 | 192.168.8.33
+IP4:192.168.6.238/29::dst = 192.168.58.133/31, nh = 192.168.50.116, mt = 3130348792 | dst = 192.168.155.50/19, nh = 192.168.127.64:192.168.213.113:sear4.foo4.bar::192.168.156.115 | 192.168.8.33:192.0.0.1
 DHCP4:
-IP6:2001\:a\:\:29c0\:62b9\:2e01\:30a/69 | 2001\:a\:\:6433\:6420\:34f9\:3801/115 | 2001\:a\:\:8191\:ed6b\:8ce\:b60/103:2001\:a\:\:2b50\:64d1\:9a91\:23b4:dst = 2001\:a\:\:5ecb\:f5ee\:fb96\:856c/100, nh = \:\:, mt = 4249082794:2001\:a\:\:1323\:9a78\:2b82\:d16b | 2001\:a\:\:4e1\:24e6\:b8c1\:91bb | 2001\:a\:\:bd96\:3bed\:fbd6\:19c5:sear6.fo.x.y | sear6.foo4.bar:
+IP6:2001\:a\:\:29c0\:62b9\:2e01\:30a/69 | 2001\:a\:\:6433\:6420\:34f9\:3801/115 | 2001\:a\:\:8191\:ed6b\:8ce\:b60/103:2001\:a\:\:2b50\:64d1\:9a91\:23b4:dst = 2001\:a\:\:5ecb\:f5ee\:fb96\:856c/100, nh = \:\:, mt = 4249082794:2001\:a\:\:1323\:9a78\:2b82\:d16b | 2001\:a\:\:4e1\:24e6\:b8c1\:91bb | 2001\:a\:\:bd96\:3bed\:fbd6\:19c5:sear6.fo.x.y | sear6.foo4.bar::2002\:aaaa\:\:2c0d\:1e71\:ef87\:fac7:64\:ff9b\:\:/96
 DHCP6:dhcp-6-opt-1 = val-1 | dhcp-6-opt-5 = val-5 | dhcp-6-opt-6 = val-6 | dhcp-6-opt-8 = val-8
 CONNECTIONS:/org/freedesktop/NetworkManager/Settings/Connection/{1,2,6}:5fcfd6d7-1e63-3332-8826-a7eda103792d | con-1 | UUID-con-xx1-REPLACED-REPLACED-REPLA | con-xx1 | UUID-ethernet-REPLACED-REPLACED-REPL | ethernet
 
@@ -11028,12 +11088,12 @@ GENERAL.ZONE:                           --
 GENERAL.MASTER-PATH:                    --
 
 <<<
-size: 3810
+size: 3984
 location: src/tests/client/test-client.py:test_003()/208
 cmd: $NMCLI --mode multiline -f all dev show eth0
 lang: C
 returncode: 0
-stdout: 3653 bytes
+stdout: 3827 bytes
 >>>
 GENERAL.DEVICE:                         eth0
 GENERAL.TYPE:                           ethernet
@@ -11080,6 +11140,7 @@ IP4.DNS[1]:                             192.168.213.113
 IP4.DOMAIN[1]:                          sear4.foo4.bar
 IP4.WINS[1]:                            192.168.156.115
 IP4.WINS[2]:                            192.168.8.33
+IP4.CLAT-ADDRESS:                       192.0.0.1
 IP6.ADDRESS[1]:                         2001:a::29c0:62b9:2e01:30a/69
 IP6.ADDRESS[2]:                         2001:a::6433:6420:34f9:3801/115
 IP6.ADDRESS[3]:                         2001:a::8191:ed6b:8ce:b60/103
@@ -11090,6 +11151,8 @@ IP6.DNS[2]:                             2001:a::4e1:24e6:b8c1:91bb
 IP6.DNS[3]:                             2001:a::bd96:3bed:fbd6:19c5
 IP6.DOMAIN[1]:                          sear6.fo.x.y
 IP6.DOMAIN[2]:                          sear6.foo4.bar
+IP6.CLAT-ADDRESS:                       2002:aaaa::2c0d:1e71:ef87:fac7
+IP6.CLAT-PREF64:                        64:ff9b::/96
 DHCP6.OPTION[1]:                        dhcp-6-opt-1 = val-1
 DHCP6.OPTION[2]:                        dhcp-6-opt-5 = val-5
 DHCP6.OPTION[3]:                        dhcp-6-opt-6 = val-6
@@ -11100,12 +11163,12 @@ CONNECTIONS.AVAILABLE-CONNECTIONS[2]:   UUID-con-xx1-REPLACED-REPLACED-REPLA | c
 CONNECTIONS.AVAILABLE-CONNECTIONS[3]:   UUID-ethernet-REPLACED-REPLACED-REPL | ethernet
 
 <<<
-size: 3848
+size: 4022
 location: src/tests/client/test-client.py:test_003()/209
 cmd: $NMCLI --mode multiline -f all dev show eth0
 lang: pl_PL.UTF-8
 returncode: 0
-stdout: 3681 bytes
+stdout: 3855 bytes
 >>>
 GENERAL.DEVICE:                         eth0
 GENERAL.TYPE:                           ethernet
@@ -11152,6 +11215,7 @@ IP4.DNS[1]:                             192.168.213.113
 IP4.DOMAIN[1]:                          sear4.foo4.bar
 IP4.WINS[1]:                            192.168.156.115
 IP4.WINS[2]:                            192.168.8.33
+IP4.CLAT-ADDRESS:                       192.0.0.1
 IP6.ADDRESS[1]:                         2001:a::29c0:62b9:2e01:30a/69
 IP6.ADDRESS[2]:                         2001:a::6433:6420:34f9:3801/115
 IP6.ADDRESS[3]:                         2001:a::8191:ed6b:8ce:b60/103
@@ -11162,6 +11226,8 @@ IP6.DNS[2]:                             2001:a::4e1:24e6:b8c1:91bb
 IP6.DNS[3]:                             2001:a::bd96:3bed:fbd6:19c5
 IP6.DOMAIN[1]:                          sear6.fo.x.y
 IP6.DOMAIN[2]:                          sear6.foo4.bar
+IP6.CLAT-ADDRESS:                       2002:aaaa::2c0d:1e71:ef87:fac7
+IP6.CLAT-PREF64:                        64:ff9b::/96
 DHCP6.OPTION[1]:                        dhcp-6-opt-1 = val-1
 DHCP6.OPTION[2]:                        dhcp-6-opt-5 = val-5
 DHCP6.OPTION[3]:                        dhcp-6-opt-6 = val-6
@@ -12062,12 +12128,12 @@ GENERAL.ZONE:                           --
 GENERAL.MASTER-PATH:                    --
 
 <<<
-size: 3822
+size: 3996
 location: src/tests/client/test-client.py:test_003()/218
 cmd: $NMCLI --mode multiline --color yes -f all dev show eth0
 lang: C
 returncode: 0
-stdout: 3653 bytes
+stdout: 3827 bytes
 >>>
 GENERAL.DEVICE:                         eth0
 GENERAL.TYPE:                           ethernet
@@ -12114,6 +12180,7 @@ IP4.DNS[1]:                             192.168.213.113
 IP4.DOMAIN[1]:                          sear4.foo4.bar
 IP4.WINS[1]:                            192.168.156.115
 IP4.WINS[2]:                            192.168.8.33
+IP4.CLAT-ADDRESS:                       192.0.0.1
 IP6.ADDRESS[1]:                         2001:a::29c0:62b9:2e01:30a/69
 IP6.ADDRESS[2]:                         2001:a::6433:6420:34f9:3801/115
 IP6.ADDRESS[3]:                         2001:a::8191:ed6b:8ce:b60/103
@@ -12124,6 +12191,8 @@ IP6.DNS[2]:                             2001:a::4e1:24e6:b8c1:91bb
 IP6.DNS[3]:                             2001:a::bd96:3bed:fbd6:19c5
 IP6.DOMAIN[1]:                          sear6.fo.x.y
 IP6.DOMAIN[2]:                          sear6.foo4.bar
+IP6.CLAT-ADDRESS:                       2002:aaaa::2c0d:1e71:ef87:fac7
+IP6.CLAT-PREF64:                        64:ff9b::/96
 DHCP6.OPTION[1]:                        dhcp-6-opt-1 = val-1
 DHCP6.OPTION[2]:                        dhcp-6-opt-5 = val-5
 DHCP6.OPTION[3]:                        dhcp-6-opt-6 = val-6
@@ -12134,12 +12203,12 @@ CONNECTIONS.AVAILABLE-CONNECTIONS[2]:   UUID-con-xx1-REPLACED-REPLACED-REPLA | c
 CONNECTIONS.AVAILABLE-CONNECTIONS[3]:   UUID-ethernet-REPLACED-REPLACED-REPL | ethernet
 
 <<<
-size: 3860
+size: 4034
 location: src/tests/client/test-client.py:test_003()/219
 cmd: $NMCLI --mode multiline --color yes -f all dev show eth0
 lang: pl_PL.UTF-8
 returncode: 0
-stdout: 3681 bytes
+stdout: 3855 bytes
 >>>
 GENERAL.DEVICE:                         eth0
 GENERAL.TYPE:                           ethernet
@@ -12186,6 +12255,7 @@ IP4.DNS[1]:                             192.168.213.113
 IP4.DOMAIN[1]:                          sear4.foo4.bar
 IP4.WINS[1]:                            192.168.156.115
 IP4.WINS[2]:                            192.168.8.33
+IP4.CLAT-ADDRESS:                       192.0.0.1
 IP6.ADDRESS[1]:                         2001:a::29c0:62b9:2e01:30a/69
 IP6.ADDRESS[2]:                         2001:a::6433:6420:34f9:3801/115
 IP6.ADDRESS[3]:                         2001:a::8191:ed6b:8ce:b60/103
@@ -12196,6 +12266,8 @@ IP6.DNS[2]:                             2001:a::4e1:24e6:b8c1:91bb
 IP6.DNS[3]:                             2001:a::bd96:3bed:fbd6:19c5
 IP6.DOMAIN[1]:                          sear6.fo.x.y
 IP6.DOMAIN[2]:                          sear6.foo4.bar
+IP6.CLAT-ADDRESS:                       2002:aaaa::2c0d:1e71:ef87:fac7
+IP6.CLAT-PREF64:                        64:ff9b::/96
 DHCP6.OPTION[1]:                        dhcp-6-opt-1 = val-1
 DHCP6.OPTION[2]:                        dhcp-6-opt-5 = val-5
 DHCP6.OPTION[3]:                        dhcp-6-opt-6 = val-6
@@ -13190,12 +13262,12 @@ GENERAL.MASTER-PATH:                    --
 -------------------------------------------------------------------------------
 
 <<<
-size: 4750
+size: 4924
 location: src/tests/client/test-client.py:test_003()/228
 cmd: $NMCLI --mode multiline --pretty -f all dev show eth0
 lang: C
 returncode: 0
-stdout: 4584 bytes
+stdout: 4758 bytes
 >>>
 ===============================================================================
                              Device details (eth0)
@@ -13249,6 +13321,7 @@ IP4.DNS[1]:                             192.168.213.113
 IP4.DOMAIN[1]:                          sear4.foo4.bar
 IP4.WINS[1]:                            192.168.156.115
 IP4.WINS[2]:                            192.168.8.33
+IP4.CLAT-ADDRESS:                       192.0.0.1
 -------------------------------------------------------------------------------
 -------------------------------------------------------------------------------
 IP6.ADDRESS[1]:                         2001:a::29c0:62b9:2e01:30a/69
@@ -13261,6 +13334,8 @@ IP6.DNS[2]:                             2001:a::4e1:24e6:b8c1:91bb
 IP6.DNS[3]:                             2001:a::bd96:3bed:fbd6:19c5
 IP6.DOMAIN[1]:                          sear6.fo.x.y
 IP6.DOMAIN[2]:                          sear6.foo4.bar
+IP6.CLAT-ADDRESS:                       2002:aaaa::2c0d:1e71:ef87:fac7
+IP6.CLAT-PREF64:                        64:ff9b::/96
 -------------------------------------------------------------------------------
 DHCP6.OPTION[1]:                        dhcp-6-opt-1 = val-1
 DHCP6.OPTION[2]:                        dhcp-6-opt-5 = val-5
@@ -13274,12 +13349,12 @@ CONNECTIONS.AVAILABLE-CONNECTIONS[3]:   UUID-ethernet-REPLACED-REPLACED-REPL | e
 -------------------------------------------------------------------------------
 
 <<<
-size: 4794
+size: 4968
 location: src/tests/client/test-client.py:test_003()/229
 cmd: $NMCLI --mode multiline --pretty -f all dev show eth0
 lang: pl_PL.UTF-8
 returncode: 0
-stdout: 4618 bytes
+stdout: 4792 bytes
 >>>
 ===============================================================================
                         Informacje o urządzeniu (eth0)
@@ -13333,6 +13408,7 @@ IP4.DNS[1]:                             192.168.213.113
 IP4.DOMAIN[1]:                          sear4.foo4.bar
 IP4.WINS[1]:                            192.168.156.115
 IP4.WINS[2]:                            192.168.8.33
+IP4.CLAT-ADDRESS:                       192.0.0.1
 -------------------------------------------------------------------------------
 -------------------------------------------------------------------------------
 IP6.ADDRESS[1]:                         2001:a::29c0:62b9:2e01:30a/69
@@ -13345,6 +13421,8 @@ IP6.DNS[2]:                             2001:a::4e1:24e6:b8c1:91bb
 IP6.DNS[3]:                             2001:a::bd96:3bed:fbd6:19c5
 IP6.DOMAIN[1]:                          sear6.fo.x.y
 IP6.DOMAIN[2]:                          sear6.foo4.bar
+IP6.CLAT-ADDRESS:                       2002:aaaa::2c0d:1e71:ef87:fac7
+IP6.CLAT-PREF64:                        64:ff9b::/96
 -------------------------------------------------------------------------------
 DHCP6.OPTION[1]:                        dhcp-6-opt-1 = val-1
 DHCP6.OPTION[2]:                        dhcp-6-opt-5 = val-5
@@ -14342,12 +14420,12 @@ GENERAL.MASTER-PATH:                    --
 -------------------------------------------------------------------------------
 
 <<<
-size: 4762
+size: 4936
 location: src/tests/client/test-client.py:test_003()/238
 cmd: $NMCLI --mode multiline --pretty --color yes -f all dev show eth0
 lang: C
 returncode: 0
-stdout: 4584 bytes
+stdout: 4758 bytes
 >>>
 ===============================================================================
                              Device details (eth0)
@@ -14401,6 +14479,7 @@ IP4.DNS[1]:                             192.168.213.113
 IP4.DOMAIN[1]:                          sear4.foo4.bar
 IP4.WINS[1]:                            192.168.156.115
 IP4.WINS[2]:                            192.168.8.33
+IP4.CLAT-ADDRESS:                       192.0.0.1
 -------------------------------------------------------------------------------
 -------------------------------------------------------------------------------
 IP6.ADDRESS[1]:                         2001:a::29c0:62b9:2e01:30a/69
@@ -14413,6 +14492,8 @@ IP6.DNS[2]:                             2001:a::4e1:24e6:b8c1:91bb
 IP6.DNS[3]:                             2001:a::bd96:3bed:fbd6:19c5
 IP6.DOMAIN[1]:                          sear6.fo.x.y
 IP6.DOMAIN[2]:                          sear6.foo4.bar
+IP6.CLAT-ADDRESS:                       2002:aaaa::2c0d:1e71:ef87:fac7
+IP6.CLAT-PREF64:                        64:ff9b::/96
 -------------------------------------------------------------------------------
 DHCP6.OPTION[1]:                        dhcp-6-opt-1 = val-1
 DHCP6.OPTION[2]:                        dhcp-6-opt-5 = val-5
@@ -14426,12 +14507,12 @@ CONNECTIONS.AVAILABLE-CONNECTIONS[3]:   UUID-ethernet-REPLACED-REPLACED-REPL | e
 -------------------------------------------------------------------------------
 
 <<<
-size: 4806
+size: 4980
 location: src/tests/client/test-client.py:test_003()/239
 cmd: $NMCLI --mode multiline --pretty --color yes -f all dev show eth0
 lang: pl_PL.UTF-8
 returncode: 0
-stdout: 4618 bytes
+stdout: 4792 bytes
 >>>
 ===============================================================================
                         Informacje o urządzeniu (eth0)
@@ -14485,6 +14566,7 @@ IP4.DNS[1]:                             192.168.213.113
 IP4.DOMAIN[1]:                          sear4.foo4.bar
 IP4.WINS[1]:                            192.168.156.115
 IP4.WINS[2]:                            192.168.8.33
+IP4.CLAT-ADDRESS:                       192.0.0.1
 -------------------------------------------------------------------------------
 -------------------------------------------------------------------------------
 IP6.ADDRESS[1]:                         2001:a::29c0:62b9:2e01:30a/69
@@ -14497,6 +14579,8 @@ IP6.DNS[2]:                             2001:a::4e1:24e6:b8c1:91bb
 IP6.DNS[3]:                             2001:a::bd96:3bed:fbd6:19c5
 IP6.DOMAIN[1]:                          sear6.fo.x.y
 IP6.DOMAIN[2]:                          sear6.foo4.bar
+IP6.CLAT-ADDRESS:                       2002:aaaa::2c0d:1e71:ef87:fac7
+IP6.CLAT-PREF64:                        64:ff9b::/96
 -------------------------------------------------------------------------------
 DHCP6.OPTION[1]:                        dhcp-6-opt-1 = val-1
 DHCP6.OPTION[2]:                        dhcp-6-opt-5 = val-5
@@ -15400,12 +15484,12 @@ GENERAL.ZONE:
 GENERAL.MASTER-PATH:
 
 <<<
-size: 2443
+size: 2547
 location: src/tests/client/test-client.py:test_003()/248
 cmd: $NMCLI --mode multiline --terse -f all dev show eth0
 lang: C
 returncode: 0
-stdout: 2278 bytes
+stdout: 2382 bytes
 >>>
 GENERAL.DEVICE:eth0
 GENERAL.TYPE:ethernet
@@ -15452,6 +15536,7 @@ IP4.DNS[1]:192.168.213.113
 IP4.DOMAIN[1]:sear4.foo4.bar
 IP4.WINS[1]:192.168.156.115
 IP4.WINS[2]:192.168.8.33
+IP4.CLAT-ADDRESS:192.0.0.1
 IP6.ADDRESS[1]:2001:a::29c0:62b9:2e01:30a/69
 IP6.ADDRESS[2]:2001:a::6433:6420:34f9:3801/115
 IP6.ADDRESS[3]:2001:a::8191:ed6b:8ce:b60/103
@@ -15462,6 +15547,8 @@ IP6.DNS[2]:2001:a::4e1:24e6:b8c1:91bb
 IP6.DNS[3]:2001:a::bd96:3bed:fbd6:19c5
 IP6.DOMAIN[1]:sear6.fo.x.y
 IP6.DOMAIN[2]:sear6.foo4.bar
+IP6.CLAT-ADDRESS:2002:aaaa::2c0d:1e71:ef87:fac7
+IP6.CLAT-PREF64:64:ff9b::/96
 DHCP6.OPTION[1]:dhcp-6-opt-1 = val-1
 DHCP6.OPTION[2]:dhcp-6-opt-5 = val-5
 DHCP6.OPTION[3]:dhcp-6-opt-6 = val-6
@@ -15472,12 +15559,12 @@ CONNECTIONS.AVAILABLE-CONNECTIONS[2]:UUID-con-xx1-REPLACED-REPLACED-REPLA | con-
 CONNECTIONS.AVAILABLE-CONNECTIONS[3]:UUID-ethernet-REPLACED-REPLACED-REPL | ethernet
 
 <<<
-size: 2453
+size: 2557
 location: src/tests/client/test-client.py:test_003()/249
 cmd: $NMCLI --mode multiline --terse -f all dev show eth0
 lang: pl_PL.UTF-8
 returncode: 0
-stdout: 2278 bytes
+stdout: 2382 bytes
 >>>
 GENERAL.DEVICE:eth0
 GENERAL.TYPE:ethernet
@@ -15524,6 +15611,7 @@ IP4.DNS[1]:192.168.213.113
 IP4.DOMAIN[1]:sear4.foo4.bar
 IP4.WINS[1]:192.168.156.115
 IP4.WINS[2]:192.168.8.33
+IP4.CLAT-ADDRESS:192.0.0.1
 IP6.ADDRESS[1]:2001:a::29c0:62b9:2e01:30a/69
 IP6.ADDRESS[2]:2001:a::6433:6420:34f9:3801/115
 IP6.ADDRESS[3]:2001:a::8191:ed6b:8ce:b60/103
@@ -15534,6 +15622,8 @@ IP6.DNS[2]:2001:a::4e1:24e6:b8c1:91bb
 IP6.DNS[3]:2001:a::bd96:3bed:fbd6:19c5
 IP6.DOMAIN[1]:sear6.fo.x.y
 IP6.DOMAIN[2]:sear6.foo4.bar
+IP6.CLAT-ADDRESS:2002:aaaa::2c0d:1e71:ef87:fac7
+IP6.CLAT-PREF64:64:ff9b::/96
 DHCP6.OPTION[1]:dhcp-6-opt-1 = val-1
 DHCP6.OPTION[2]:dhcp-6-opt-5 = val-5
 DHCP6.OPTION[3]:dhcp-6-opt-6 = val-6
@@ -16434,12 +16524,12 @@ GENERAL.ZONE:
 GENERAL.MASTER-PATH:
 
 <<<
-size: 2455
+size: 2559
 location: src/tests/client/test-client.py:test_003()/258
 cmd: $NMCLI --mode multiline --terse --color yes -f all dev show eth0
 lang: C
 returncode: 0
-stdout: 2278 bytes
+stdout: 2382 bytes
 >>>
 GENERAL.DEVICE:eth0
 GENERAL.TYPE:ethernet
@@ -16486,6 +16576,7 @@ IP4.DNS[1]:192.168.213.113
 IP4.DOMAIN[1]:sear4.foo4.bar
 IP4.WINS[1]:192.168.156.115
 IP4.WINS[2]:192.168.8.33
+IP4.CLAT-ADDRESS:192.0.0.1
 IP6.ADDRESS[1]:2001:a::29c0:62b9:2e01:30a/69
 IP6.ADDRESS[2]:2001:a::6433:6420:34f9:3801/115
 IP6.ADDRESS[3]:2001:a::8191:ed6b:8ce:b60/103
@@ -16496,6 +16587,8 @@ IP6.DNS[2]:2001:a::4e1:24e6:b8c1:91bb
 IP6.DNS[3]:2001:a::bd96:3bed:fbd6:19c5
 IP6.DOMAIN[1]:sear6.fo.x.y
 IP6.DOMAIN[2]:sear6.foo4.bar
+IP6.CLAT-ADDRESS:2002:aaaa::2c0d:1e71:ef87:fac7
+IP6.CLAT-PREF64:64:ff9b::/96
 DHCP6.OPTION[1]:dhcp-6-opt-1 = val-1
 DHCP6.OPTION[2]:dhcp-6-opt-5 = val-5
 DHCP6.OPTION[3]:dhcp-6-opt-6 = val-6
@@ -16506,12 +16599,12 @@ CONNECTIONS.AVAILABLE-CONNECTIONS[2]:UUID-con-xx1-REPLACED-REPLACED-REPLA | con-
 CONNECTIONS.AVAILABLE-CONNECTIONS[3]:UUID-ethernet-REPLACED-REPLACED-REPL | ethernet
 
 <<<
-size: 2465
+size: 2569
 location: src/tests/client/test-client.py:test_003()/259
 cmd: $NMCLI --mode multiline --terse --color yes -f all dev show eth0
 lang: pl_PL.UTF-8
 returncode: 0
-stdout: 2278 bytes
+stdout: 2382 bytes
 >>>
 GENERAL.DEVICE:eth0
 GENERAL.TYPE:ethernet
@@ -16558,6 +16651,7 @@ IP4.DNS[1]:192.168.213.113
 IP4.DOMAIN[1]:sear4.foo4.bar
 IP4.WINS[1]:192.168.156.115
 IP4.WINS[2]:192.168.8.33
+IP4.CLAT-ADDRESS:192.0.0.1
 IP6.ADDRESS[1]:2001:a::29c0:62b9:2e01:30a/69
 IP6.ADDRESS[2]:2001:a::6433:6420:34f9:3801/115
 IP6.ADDRESS[3]:2001:a::8191:ed6b:8ce:b60/103
@@ -16568,6 +16662,8 @@ IP6.DNS[2]:2001:a::4e1:24e6:b8c1:91bb
 IP6.DNS[3]:2001:a::bd96:3bed:fbd6:19c5
 IP6.DOMAIN[1]:sear6.fo.x.y
 IP6.DOMAIN[2]:sear6.foo4.bar
+IP6.CLAT-ADDRESS:2002:aaaa::2c0d:1e71:ef87:fac7
+IP6.CLAT-PREF64:64:ff9b::/96
 DHCP6.OPTION[1]:dhcp-6-opt-1 = val-1
 DHCP6.OPTION[2]:dhcp-6-opt-5 = val-5
 DHCP6.OPTION[3]:dhcp-6-opt-6 = val-6
@@ -16706,12 +16802,12 @@ GENERAL.ZONE:                           --
 GENERAL.MASTER-PATH:                    --
 
 <<<
-size: 3813
+size: 3987
 location: src/tests/client/test-client.py:test_003()/268
 cmd: $NMCLI -f all dev show eth0
 lang: C
 returncode: 0
-stdout: 3673 bytes
+stdout: 3847 bytes
 >>>
 GENERAL.DEVICE:                         eth0
 GENERAL.TYPE:                           ethernet
@@ -16758,6 +16854,7 @@ IP4.DNS[1]:                             192.168.213.113
 IP4.DOMAIN[1]:                          sear4.foo4.bar
 IP4.WINS[1]:                            192.168.156.115
 IP4.WINS[2]:                            192.168.8.33
+IP4.CLAT-ADDRESS:                       192.0.0.1
 IP6.ADDRESS[1]:                         2001:a::29c0:62b9:2e01:30a/69
 IP6.ADDRESS[2]:                         2001:a::6433:6420:34f9:3801/115
 IP6.ADDRESS[3]:                         2001:a::8191:ed6b:8ce:b60/103
@@ -16768,6 +16865,8 @@ IP6.DNS[2]:                             2001:a::4e1:24e6:b8c1:91bb
 IP6.DNS[3]:                             2001:a::bd96:3bed:fbd6:19c5
 IP6.DOMAIN[1]:                          sear6.fo.x.y
 IP6.DOMAIN[2]:                          sear6.foo4.bar
+IP6.CLAT-ADDRESS:                       2002:aaaa::2c0d:1e71:ef87:fac7
+IP6.CLAT-PREF64:                        64:ff9b::/96
 DHCP6.OPTION[1]:                        dhcp-6-opt-1 = val-1
 DHCP6.OPTION[2]:                        dhcp-6-opt-5 = val-5
 DHCP6.OPTION[3]:                        dhcp-6-opt-6 = val-6
@@ -16778,12 +16877,12 @@ CONNECTIONS.AVAILABLE-CONNECTIONS[2]:   UUID-con-xx1-REPLACED-REPLACED-REPLA | c
 CONNECTIONS.AVAILABLE-CONNECTIONS[3]:   <invisible> | /org/freedesktop/NetworkManager/Settings/Connection/6
 
 <<<
-size: 3853
+size: 4027
 location: src/tests/client/test-client.py:test_003()/269
 cmd: $NMCLI -f all dev show eth0
 lang: pl_PL.UTF-8
 returncode: 0
-stdout: 3703 bytes
+stdout: 3877 bytes
 >>>
 GENERAL.DEVICE:                         eth0
 GENERAL.TYPE:                           ethernet
@@ -16830,6 +16929,7 @@ IP4.DNS[1]:                             192.168.213.113
 IP4.DOMAIN[1]:                          sear4.foo4.bar
 IP4.WINS[1]:                            192.168.156.115
 IP4.WINS[2]:                            192.168.8.33
+IP4.CLAT-ADDRESS:                       192.0.0.1
 IP6.ADDRESS[1]:                         2001:a::29c0:62b9:2e01:30a/69
 IP6.ADDRESS[2]:                         2001:a::6433:6420:34f9:3801/115
 IP6.ADDRESS[3]:                         2001:a::8191:ed6b:8ce:b60/103
@@ -16840,6 +16940,8 @@ IP6.DNS[2]:                             2001:a::4e1:24e6:b8c1:91bb
 IP6.DNS[3]:                             2001:a::bd96:3bed:fbd6:19c5
 IP6.DOMAIN[1]:                          sear6.fo.x.y
 IP6.DOMAIN[2]:                          sear6.foo4.bar
+IP6.CLAT-ADDRESS:                       2002:aaaa::2c0d:1e71:ef87:fac7
+IP6.CLAT-PREF64:                        64:ff9b::/96
 DHCP6.OPTION[1]:                        dhcp-6-opt-1 = val-1
 DHCP6.OPTION[2]:                        dhcp-6-opt-5 = val-5
 DHCP6.OPTION[3]:                        dhcp-6-opt-6 = val-6
@@ -16978,12 +17080,12 @@ GENERAL.ZONE:                           --
 GENERAL.MASTER-PATH:                    --
 
 <<<
-size: 3825
+size: 3999
 location: src/tests/client/test-client.py:test_003()/278
 cmd: $NMCLI --color yes -f all dev show eth0
 lang: C
 returncode: 0
-stdout: 3673 bytes
+stdout: 3847 bytes
 >>>
 GENERAL.DEVICE:                         eth0
 GENERAL.TYPE:                           ethernet
@@ -17030,6 +17132,7 @@ IP4.DNS[1]:                             192.168.213.113
 IP4.DOMAIN[1]:                          sear4.foo4.bar
 IP4.WINS[1]:                            192.168.156.115
 IP4.WINS[2]:                            192.168.8.33
+IP4.CLAT-ADDRESS:                       192.0.0.1
 IP6.ADDRESS[1]:                         2001:a::29c0:62b9:2e01:30a/69
 IP6.ADDRESS[2]:                         2001:a::6433:6420:34f9:3801/115
 IP6.ADDRESS[3]:                         2001:a::8191:ed6b:8ce:b60/103
@@ -17040,6 +17143,8 @@ IP6.DNS[2]:                             2001:a::4e1:24e6:b8c1:91bb
 IP6.DNS[3]:                             2001:a::bd96:3bed:fbd6:19c5
 IP6.DOMAIN[1]:                          sear6.fo.x.y
 IP6.DOMAIN[2]:                          sear6.foo4.bar
+IP6.CLAT-ADDRESS:                       2002:aaaa::2c0d:1e71:ef87:fac7
+IP6.CLAT-PREF64:                        64:ff9b::/96
 DHCP6.OPTION[1]:                        dhcp-6-opt-1 = val-1
 DHCP6.OPTION[2]:                        dhcp-6-opt-5 = val-5
 DHCP6.OPTION[3]:                        dhcp-6-opt-6 = val-6
@@ -17050,12 +17155,12 @@ CONNECTIONS.AVAILABLE-CONNECTIONS[2]:   UUID-con-xx1-REPLACED-REPLACED-REPLA | c
 CONNECTIONS.AVAILABLE-CONNECTIONS[3]:   <invisible> | /org/freedesktop/NetworkManager/Settings/Connection/6
 
 <<<
-size: 3865
+size: 4039
 location: src/tests/client/test-client.py:test_003()/279
 cmd: $NMCLI --color yes -f all dev show eth0
 lang: pl_PL.UTF-8
 returncode: 0
-stdout: 3703 bytes
+stdout: 3877 bytes
 >>>
 GENERAL.DEVICE:                         eth0
 GENERAL.TYPE:                           ethernet
@@ -17102,6 +17207,7 @@ IP4.DNS[1]:                             192.168.213.113
 IP4.DOMAIN[1]:                          sear4.foo4.bar
 IP4.WINS[1]:                            192.168.156.115
 IP4.WINS[2]:                            192.168.8.33
+IP4.CLAT-ADDRESS:                       192.0.0.1
 IP6.ADDRESS[1]:                         2001:a::29c0:62b9:2e01:30a/69
 IP6.ADDRESS[2]:                         2001:a::6433:6420:34f9:3801/115
 IP6.ADDRESS[3]:                         2001:a::8191:ed6b:8ce:b60/103
@@ -17112,6 +17218,8 @@ IP6.DNS[2]:                             2001:a::4e1:24e6:b8c1:91bb
 IP6.DNS[3]:                             2001:a::bd96:3bed:fbd6:19c5
 IP6.DOMAIN[1]:                          sear6.fo.x.y
 IP6.DOMAIN[2]:                          sear6.foo4.bar
+IP6.CLAT-ADDRESS:                       2002:aaaa::2c0d:1e71:ef87:fac7
+IP6.CLAT-PREF64:                        64:ff9b::/96
 DHCP6.OPTION[1]:                        dhcp-6-opt-1 = val-1
 DHCP6.OPTION[2]:                        dhcp-6-opt-5 = val-5
 DHCP6.OPTION[3]:                        dhcp-6-opt-6 = val-6
@@ -17280,12 +17388,12 @@ GENERAL.MASTER-PATH:                    --
 -------------------------------------------------------------------------------
 
 <<<
-size: 4753
+size: 4927
 location: src/tests/client/test-client.py:test_003()/288
 cmd: $NMCLI --pretty -f all dev show eth0
 lang: C
 returncode: 0
-stdout: 4604 bytes
+stdout: 4778 bytes
 >>>
 ===============================================================================
                              Device details (eth0)
@@ -17339,6 +17447,7 @@ IP4.DNS[1]:                             192.168.213.113
 IP4.DOMAIN[1]:                          sear4.foo4.bar
 IP4.WINS[1]:                            192.168.156.115
 IP4.WINS[2]:                            192.168.8.33
+IP4.CLAT-ADDRESS:                       192.0.0.1
 -------------------------------------------------------------------------------
 -------------------------------------------------------------------------------
 IP6.ADDRESS[1]:                         2001:a::29c0:62b9:2e01:30a/69
@@ -17351,6 +17460,8 @@ IP6.DNS[2]:                             2001:a::4e1:24e6:b8c1:91bb
 IP6.DNS[3]:                             2001:a::bd96:3bed:fbd6:19c5
 IP6.DOMAIN[1]:                          sear6.fo.x.y
 IP6.DOMAIN[2]:                          sear6.foo4.bar
+IP6.CLAT-ADDRESS:                       2002:aaaa::2c0d:1e71:ef87:fac7
+IP6.CLAT-PREF64:                        64:ff9b::/96
 -------------------------------------------------------------------------------
 DHCP6.OPTION[1]:                        dhcp-6-opt-1 = val-1
 DHCP6.OPTION[2]:                        dhcp-6-opt-5 = val-5
@@ -17364,12 +17475,12 @@ CONNECTIONS.AVAILABLE-CONNECTIONS[3]:   <invisible> | /org/freedesktop/NetworkMa
 -------------------------------------------------------------------------------
 
 <<<
-size: 4799
+size: 4973
 location: src/tests/client/test-client.py:test_003()/289
 cmd: $NMCLI --pretty -f all dev show eth0
 lang: pl_PL.UTF-8
 returncode: 0
-stdout: 4640 bytes
+stdout: 4814 bytes
 >>>
 ===============================================================================
                         Informacje o urządzeniu (eth0)
@@ -17423,6 +17534,7 @@ IP4.DNS[1]:                             192.168.213.113
 IP4.DOMAIN[1]:                          sear4.foo4.bar
 IP4.WINS[1]:                            192.168.156.115
 IP4.WINS[2]:                            192.168.8.33
+IP4.CLAT-ADDRESS:                       192.0.0.1
 -------------------------------------------------------------------------------
 -------------------------------------------------------------------------------
 IP6.ADDRESS[1]:                         2001:a::29c0:62b9:2e01:30a/69
@@ -17435,6 +17547,8 @@ IP6.DNS[2]:                             2001:a::4e1:24e6:b8c1:91bb
 IP6.DNS[3]:                             2001:a::bd96:3bed:fbd6:19c5
 IP6.DOMAIN[1]:                          sear6.fo.x.y
 IP6.DOMAIN[2]:                          sear6.foo4.bar
+IP6.CLAT-ADDRESS:                       2002:aaaa::2c0d:1e71:ef87:fac7
+IP6.CLAT-PREF64:                        64:ff9b::/96
 -------------------------------------------------------------------------------
 DHCP6.OPTION[1]:                        dhcp-6-opt-1 = val-1
 DHCP6.OPTION[2]:                        dhcp-6-opt-5 = val-5
@@ -17606,12 +17720,12 @@ GENERAL.MASTER-PATH:                    --
 -------------------------------------------------------------------------------
 
 <<<
-size: 4765
+size: 4939
 location: src/tests/client/test-client.py:test_003()/298
 cmd: $NMCLI --pretty --color yes -f all dev show eth0
 lang: C
 returncode: 0
-stdout: 4604 bytes
+stdout: 4778 bytes
 >>>
 ===============================================================================
                              Device details (eth0)
@@ -17665,6 +17779,7 @@ IP4.DNS[1]:                             192.168.213.113
 IP4.DOMAIN[1]:                          sear4.foo4.bar
 IP4.WINS[1]:                            192.168.156.115
 IP4.WINS[2]:                            192.168.8.33
+IP4.CLAT-ADDRESS:                       192.0.0.1
 -------------------------------------------------------------------------------
 -------------------------------------------------------------------------------
 IP6.ADDRESS[1]:                         2001:a::29c0:62b9:2e01:30a/69
@@ -17677,6 +17792,8 @@ IP6.DNS[2]:                             2001:a::4e1:24e6:b8c1:91bb
 IP6.DNS[3]:                             2001:a::bd96:3bed:fbd6:19c5
 IP6.DOMAIN[1]:                          sear6.fo.x.y
 IP6.DOMAIN[2]:                          sear6.foo4.bar
+IP6.CLAT-ADDRESS:                       2002:aaaa::2c0d:1e71:ef87:fac7
+IP6.CLAT-PREF64:                        64:ff9b::/96
 -------------------------------------------------------------------------------
 DHCP6.OPTION[1]:                        dhcp-6-opt-1 = val-1
 DHCP6.OPTION[2]:                        dhcp-6-opt-5 = val-5
@@ -17690,12 +17807,12 @@ CONNECTIONS.AVAILABLE-CONNECTIONS[3]:   <invisible> | /org/freedesktop/NetworkMa
 -------------------------------------------------------------------------------
 
 <<<
-size: 4811
+size: 4985
 location: src/tests/client/test-client.py:test_003()/299
 cmd: $NMCLI --pretty --color yes -f all dev show eth0
 lang: pl_PL.UTF-8
 returncode: 0
-stdout: 4640 bytes
+stdout: 4814 bytes
 >>>
 ===============================================================================
                         Informacje o urządzeniu (eth0)
@@ -17749,6 +17866,7 @@ IP4.DNS[1]:                             192.168.213.113
 IP4.DOMAIN[1]:                          sear4.foo4.bar
 IP4.WINS[1]:                            192.168.156.115
 IP4.WINS[2]:                            192.168.8.33
+IP4.CLAT-ADDRESS:                       192.0.0.1
 -------------------------------------------------------------------------------
 -------------------------------------------------------------------------------
 IP6.ADDRESS[1]:                         2001:a::29c0:62b9:2e01:30a/69
@@ -17761,6 +17879,8 @@ IP6.DNS[2]:                             2001:a::4e1:24e6:b8c1:91bb
 IP6.DNS[3]:                             2001:a::bd96:3bed:fbd6:19c5
 IP6.DOMAIN[1]:                          sear6.fo.x.y
 IP6.DOMAIN[2]:                          sear6.foo4.bar
+IP6.CLAT-ADDRESS:                       2002:aaaa::2c0d:1e71:ef87:fac7
+IP6.CLAT-PREF64:                        64:ff9b::/96
 -------------------------------------------------------------------------------
 DHCP6.OPTION[1]:                        dhcp-6-opt-1 = val-1
 DHCP6.OPTION[2]:                        dhcp-6-opt-5 = val-5
@@ -17898,12 +18018,12 @@ GENERAL.ZONE:
 GENERAL.MASTER-PATH:
 
 <<<
-size: 2446
+size: 2550
 location: src/tests/client/test-client.py:test_003()/308
 cmd: $NMCLI --terse -f all dev show eth0
 lang: C
 returncode: 0
-stdout: 2298 bytes
+stdout: 2402 bytes
 >>>
 GENERAL.DEVICE:eth0
 GENERAL.TYPE:ethernet
@@ -17950,6 +18070,7 @@ IP4.DNS[1]:192.168.213.113
 IP4.DOMAIN[1]:sear4.foo4.bar
 IP4.WINS[1]:192.168.156.115
 IP4.WINS[2]:192.168.8.33
+IP4.CLAT-ADDRESS:192.0.0.1
 IP6.ADDRESS[1]:2001:a::29c0:62b9:2e01:30a/69
 IP6.ADDRESS[2]:2001:a::6433:6420:34f9:3801/115
 IP6.ADDRESS[3]:2001:a::8191:ed6b:8ce:b60/103
@@ -17960,6 +18081,8 @@ IP6.DNS[2]:2001:a::4e1:24e6:b8c1:91bb
 IP6.DNS[3]:2001:a::bd96:3bed:fbd6:19c5
 IP6.DOMAIN[1]:sear6.fo.x.y
 IP6.DOMAIN[2]:sear6.foo4.bar
+IP6.CLAT-ADDRESS:2002:aaaa::2c0d:1e71:ef87:fac7
+IP6.CLAT-PREF64:64:ff9b::/96
 DHCP6.OPTION[1]:dhcp-6-opt-1 = val-1
 DHCP6.OPTION[2]:dhcp-6-opt-5 = val-5
 DHCP6.OPTION[3]:dhcp-6-opt-6 = val-6
@@ -17970,12 +18093,12 @@ CONNECTIONS.AVAILABLE-CONNECTIONS[2]:UUID-con-xx1-REPLACED-REPLACED-REPLA | con-
 CONNECTIONS.AVAILABLE-CONNECTIONS[3]:<invisible> | /org/freedesktop/NetworkManager/Settings/Connection/6
 
 <<<
-size: 2456
+size: 2560
 location: src/tests/client/test-client.py:test_003()/309
 cmd: $NMCLI --terse -f all dev show eth0
 lang: pl_PL.UTF-8
 returncode: 0
-stdout: 2298 bytes
+stdout: 2402 bytes
 >>>
 GENERAL.DEVICE:eth0
 GENERAL.TYPE:ethernet
@@ -18022,6 +18145,7 @@ IP4.DNS[1]:192.168.213.113
 IP4.DOMAIN[1]:sear4.foo4.bar
 IP4.WINS[1]:192.168.156.115
 IP4.WINS[2]:192.168.8.33
+IP4.CLAT-ADDRESS:192.0.0.1
 IP6.ADDRESS[1]:2001:a::29c0:62b9:2e01:30a/69
 IP6.ADDRESS[2]:2001:a::6433:6420:34f9:3801/115
 IP6.ADDRESS[3]:2001:a::8191:ed6b:8ce:b60/103
@@ -18032,6 +18156,8 @@ IP6.DNS[2]:2001:a::4e1:24e6:b8c1:91bb
 IP6.DNS[3]:2001:a::bd96:3bed:fbd6:19c5
 IP6.DOMAIN[1]:sear6.fo.x.y
 IP6.DOMAIN[2]:sear6.foo4.bar
+IP6.CLAT-ADDRESS:2002:aaaa::2c0d:1e71:ef87:fac7
+IP6.CLAT-PREF64:64:ff9b::/96
 DHCP6.OPTION[1]:dhcp-6-opt-1 = val-1
 DHCP6.OPTION[2]:dhcp-6-opt-5 = val-5
 DHCP6.OPTION[3]:dhcp-6-opt-6 = val-6
@@ -18166,12 +18292,12 @@ GENERAL.ZONE:
 GENERAL.MASTER-PATH:
 
 <<<
-size: 2458
+size: 2562
 location: src/tests/client/test-client.py:test_003()/318
 cmd: $NMCLI --terse --color yes -f all dev show eth0
 lang: C
 returncode: 0
-stdout: 2298 bytes
+stdout: 2402 bytes
 >>>
 GENERAL.DEVICE:eth0
 GENERAL.TYPE:ethernet
@@ -18218,6 +18344,7 @@ IP4.DNS[1]:192.168.213.113
 IP4.DOMAIN[1]:sear4.foo4.bar
 IP4.WINS[1]:192.168.156.115
 IP4.WINS[2]:192.168.8.33
+IP4.CLAT-ADDRESS:192.0.0.1
 IP6.ADDRESS[1]:2001:a::29c0:62b9:2e01:30a/69
 IP6.ADDRESS[2]:2001:a::6433:6420:34f9:3801/115
 IP6.ADDRESS[3]:2001:a::8191:ed6b:8ce:b60/103
@@ -18228,6 +18355,8 @@ IP6.DNS[2]:2001:a::4e1:24e6:b8c1:91bb
 IP6.DNS[3]:2001:a::bd96:3bed:fbd6:19c5
 IP6.DOMAIN[1]:sear6.fo.x.y
 IP6.DOMAIN[2]:sear6.foo4.bar
+IP6.CLAT-ADDRESS:2002:aaaa::2c0d:1e71:ef87:fac7
+IP6.CLAT-PREF64:64:ff9b::/96
 DHCP6.OPTION[1]:dhcp-6-opt-1 = val-1
 DHCP6.OPTION[2]:dhcp-6-opt-5 = val-5
 DHCP6.OPTION[3]:dhcp-6-opt-6 = val-6
@@ -18238,12 +18367,12 @@ CONNECTIONS.AVAILABLE-CONNECTIONS[2]:UUID-con-xx1-REPLACED-REPLACED-REPLA | con-
 CONNECTIONS.AVAILABLE-CONNECTIONS[3]:<invisible> | /org/freedesktop/NetworkManager/Settings/Connection/6
 
 <<<
-size: 2468
+size: 2572
 location: src/tests/client/test-client.py:test_003()/319
 cmd: $NMCLI --terse --color yes -f all dev show eth0
 lang: pl_PL.UTF-8
 returncode: 0
-stdout: 2298 bytes
+stdout: 2402 bytes
 >>>
 GENERAL.DEVICE:eth0
 GENERAL.TYPE:ethernet
@@ -18290,6 +18419,7 @@ IP4.DNS[1]:192.168.213.113
 IP4.DOMAIN[1]:sear4.foo4.bar
 IP4.WINS[1]:192.168.156.115
 IP4.WINS[2]:192.168.8.33
+IP4.CLAT-ADDRESS:192.0.0.1
 IP6.ADDRESS[1]:2001:a::29c0:62b9:2e01:30a/69
 IP6.ADDRESS[2]:2001:a::6433:6420:34f9:3801/115
 IP6.ADDRESS[3]:2001:a::8191:ed6b:8ce:b60/103
@@ -18300,6 +18430,8 @@ IP6.DNS[2]:2001:a::4e1:24e6:b8c1:91bb
 IP6.DNS[3]:2001:a::bd96:3bed:fbd6:19c5
 IP6.DOMAIN[1]:sear6.fo.x.y
 IP6.DOMAIN[2]:sear6.foo4.bar
+IP6.CLAT-ADDRESS:2002:aaaa::2c0d:1e71:ef87:fac7
+IP6.CLAT-PREF64:64:ff9b::/96
 DHCP6.OPTION[1]:dhcp-6-opt-1 = val-1
 DHCP6.OPTION[2]:dhcp-6-opt-5 = val-5
 DHCP6.OPTION[3]:dhcp-6-opt-6 = val-6
@@ -18418,12 +18550,12 @@ GENERAL  ethernet  UUID-ethernet-REPLACED-REPLACED-REPL  eth0     eth0      deza
 
 
 <<<
-size: 3247
+size: 3367
 location: src/tests/client/test-client.py:test_003()/328
 cmd: $NMCLI --mode tabular -f all dev show eth0
 lang: C
 returncode: 0
-stdout: 3092 bytes
+stdout: 3212 bytes
 >>>
 NAME     DEVICE  TYPE      NM-TYPE           DBUS-PATH                                  VENDOR  PRODUCT  DRIVER   DRIVER-VERSION  FIRMWARE-VERSION  HWADDR             MTU  STATE            REASON               IP4-CONNECTIVITY  IP6-CONNECTIVITY  UDI                        PATH  IP-IFACE  IS-SOFTWARE  NM-MANAGED  AUTOCONNECT  FIRMWARE-MISSING  NM-PLUGIN-MISSING  PHYS-PORT-ID  CONNECTION  CON-UUID                              CON-PATH                                            METERED 
 GENERAL  eth0    ethernet  NMDeviceEthernet  /org/freedesktop/NetworkManager/Devices/1  --      --       virtual  --              --                C0:61:AE:26:4D:D7  0    100 (connected)  0 (No reason given)  0 (unknown)       0 (unknown)       /sys/devices/virtual/eth0  --    eth0      no           yes         yes          no                no                 --            ethernet    UUID-ethernet-REPLACED-REPLACED-REPL  /org/freedesktop/NetworkManager/ActiveConnection/1  unknown 
@@ -18437,14 +18569,14 @@ INTERFACE-FLAGS  yes  yes       no       no
 NAME              CARRIER  S390-SUBCHANNELS 
 WIRED-PROPERTIES  on       --               
 
-GROUP  ADDRESS           GATEWAY  ROUTE                                                                                                         DNS              DOMAIN          SEARCHES  WINS                           
-IP4    192.168.6.238/29  --       dst = 192.168.58.133/31, nh = 192.168.50.116, mt = 3130348792 | dst = 192.168.155.50/19, nh = 192.168.127.64  192.168.213.113  sear4.foo4.bar  --        192.168.156.115 | 192.168.8.33 
+GROUP  ADDRESS           GATEWAY  ROUTE                                                                                                         DNS              DOMAIN          SEARCHES  WINS                            CLAT-ADDRESS 
+IP4    192.168.6.238/29  --       dst = 192.168.58.133/31, nh = 192.168.50.116, mt = 3130348792 | dst = 192.168.155.50/19, nh = 192.168.127.64  192.168.213.113  sear4.foo4.bar  --        192.168.156.115 | 192.168.8.33  192.0.0.1    
 
 GROUP  OPTION 
 DHCP4  --     
 
-GROUP  ADDRESS                                                                                          GATEWAY                      ROUTE                                                            DNS                                                                                     DOMAIN                         SEARCHES 
-IP6    2001:a::29c0:62b9:2e01:30a/69 | 2001:a::6433:6420:34f9:3801/115 | 2001:a::8191:ed6b:8ce:b60/103  2001:a::2b50:64d1:9a91:23b4  dst = 2001:a::5ecb:f5ee:fb96:856c/100, nh = ::, mt = 4249082794  2001:a::1323:9a78:2b82:d16b | 2001:a::4e1:24e6:b8c1:91bb | 2001:a::bd96:3bed:fbd6:19c5  sear6.fo.x.y | sear6.foo4.bar  --       
+GROUP  ADDRESS                                                                                          GATEWAY                      ROUTE                                                            DNS                                                                                     DOMAIN                         SEARCHES  CLAT-ADDRESS                    CLAT-PREF64  
+IP6    2001:a::29c0:62b9:2e01:30a/69 | 2001:a::6433:6420:34f9:3801/115 | 2001:a::8191:ed6b:8ce:b60/103  2001:a::2b50:64d1:9a91:23b4  dst = 2001:a::5ecb:f5ee:fb96:856c/100, nh = ::, mt = 4249082794  2001:a::1323:9a78:2b82:d16b | 2001:a::4e1:24e6:b8c1:91bb | 2001:a::bd96:3bed:fbd6:19c5  sear6.fo.x.y | sear6.foo4.bar  --        2002:aaaa::2c0d:1e71:ef87:fac7  64:ff9b::/96 
 
 GROUP  OPTION                                                                                    
 DHCP6  dhcp-6-opt-1 = val-1 | dhcp-6-opt-5 = val-5 | dhcp-6-opt-6 = val-6 | dhcp-6-opt-8 = val-8 
@@ -18453,12 +18585,12 @@ NAME         AVAILABLE-CONNECTION-PATHS                                   AVAILA
 CONNECTIONS  /org/freedesktop/NetworkManager/Settings/Connection/{1,2,6}  5fcfd6d7-1e63-3332-8826-a7eda103792d | con-1 | UUID-con-xx1-REPLACED-REPLACED-REPLA | con-xx1 | <invisible> | /org/freedesktop/NetworkManager/Settings/Connection/6 
 
 <<<
-size: 3281
+size: 3401
 location: src/tests/client/test-client.py:test_003()/329
 cmd: $NMCLI --mode tabular -f all dev show eth0
 lang: pl_PL.UTF-8
 returncode: 0
-stdout: 3116 bytes
+stdout: 3236 bytes
 >>>
 NAME     DEVICE  TYPE      NM-TYPE           DBUS-PATH                                  VENDOR  PRODUCT  DRIVER   DRIVER-VERSION  FIRMWARE-VERSION  HWADDR             MTU  STATE            REASON                    IP4-CONNECTIVITY  IP6-CONNECTIVITY  UDI                        PATH  IP-IFACE  IS-SOFTWARE  NM-MANAGED  AUTOCONNECT  FIRMWARE-MISSING  NM-PLUGIN-MISSING  PHYS-PORT-ID  CONNECTION  CON-UUID                              CON-PATH                                            METERED  
 GENERAL  eth0    ethernet  NMDeviceEthernet  /org/freedesktop/NetworkManager/Devices/1  --      --       virtual  --              --                C0:61:AE:26:4D:D7  0    100 (połączono)  0 (Nie podano przyczyny)  0 (nieznane)      0 (nieznane)      /sys/devices/virtual/eth0  --    eth0      nie          tak         tak          nie               nie                --            ethernet    UUID-ethernet-REPLACED-REPLACED-REPL  /org/freedesktop/NetworkManager/ActiveConnection/1  nieznane 
@@ -18472,14 +18604,14 @@ INTERFACE-FLAGS  tak  tak       nie      nie
 NAME              CARRIER   S390-SUBCHANNELS 
 WIRED-PROPERTIES  włączone  --               
 
-GROUP  ADDRESS           GATEWAY  ROUTE                                                                                                         DNS              DOMAIN          SEARCHES  WINS                           
-IP4    192.168.6.238/29  --       dst = 192.168.58.133/31, nh = 192.168.50.116, mt = 3130348792 | dst = 192.168.155.50/19, nh = 192.168.127.64  192.168.213.113  sear4.foo4.bar  --        192.168.156.115 | 192.168.8.33 
+GROUP  ADDRESS           GATEWAY  ROUTE                                                                                                         DNS              DOMAIN          SEARCHES  WINS                            CLAT-ADDRESS 
+IP4    192.168.6.238/29  --       dst = 192.168.58.133/31, nh = 192.168.50.116, mt = 3130348792 | dst = 192.168.155.50/19, nh = 192.168.127.64  192.168.213.113  sear4.foo4.bar  --        192.168.156.115 | 192.168.8.33  192.0.0.1    
 
 GROUP  OPTION 
 DHCP4  --     
 
-GROUP  ADDRESS                                                                                          GATEWAY                      ROUTE                                                            DNS                                                                                     DOMAIN                         SEARCHES 
-IP6    2001:a::29c0:62b9:2e01:30a/69 | 2001:a::6433:6420:34f9:3801/115 | 2001:a::8191:ed6b:8ce:b60/103  2001:a::2b50:64d1:9a91:23b4  dst = 2001:a::5ecb:f5ee:fb96:856c/100, nh = ::, mt = 4249082794  2001:a::1323:9a78:2b82:d16b | 2001:a::4e1:24e6:b8c1:91bb | 2001:a::bd96:3bed:fbd6:19c5  sear6.fo.x.y | sear6.foo4.bar  --       
+GROUP  ADDRESS                                                                                          GATEWAY                      ROUTE                                                            DNS                                                                                     DOMAIN                         SEARCHES  CLAT-ADDRESS                    CLAT-PREF64  
+IP6    2001:a::29c0:62b9:2e01:30a/69 | 2001:a::6433:6420:34f9:3801/115 | 2001:a::8191:ed6b:8ce:b60/103  2001:a::2b50:64d1:9a91:23b4  dst = 2001:a::5ecb:f5ee:fb96:856c/100, nh = ::, mt = 4249082794  2001:a::1323:9a78:2b82:d16b | 2001:a::4e1:24e6:b8c1:91bb | 2001:a::bd96:3bed:fbd6:19c5  sear6.fo.x.y | sear6.foo4.bar  --        2002:aaaa::2c0d:1e71:ef87:fac7  64:ff9b::/96 
 
 GROUP  OPTION                                                                                    
 DHCP6  dhcp-6-opt-1 = val-1 | dhcp-6-opt-5 = val-5 | dhcp-6-opt-6 = val-6 | dhcp-6-opt-8 = val-8 
@@ -18596,12 +18728,12 @@ GENERAL  ethernet  UUID-ethernet-REPLACED-REPLACED-REPL  eth0     eth0      deza
 
 
 <<<
-size: 3259
+size: 3379
 location: src/tests/client/test-client.py:test_003()/338
 cmd: $NMCLI --mode tabular --color yes -f all dev show eth0
 lang: C
 returncode: 0
-stdout: 3092 bytes
+stdout: 3212 bytes
 >>>
 NAME     DEVICE  TYPE      NM-TYPE           DBUS-PATH                                  VENDOR  PRODUCT  DRIVER   DRIVER-VERSION  FIRMWARE-VERSION  HWADDR             MTU  STATE            REASON               IP4-CONNECTIVITY  IP6-CONNECTIVITY  UDI                        PATH  IP-IFACE  IS-SOFTWARE  NM-MANAGED  AUTOCONNECT  FIRMWARE-MISSING  NM-PLUGIN-MISSING  PHYS-PORT-ID  CONNECTION  CON-UUID                              CON-PATH                                            METERED 
 GENERAL  eth0    ethernet  NMDeviceEthernet  /org/freedesktop/NetworkManager/Devices/1  --      --       virtual  --              --                C0:61:AE:26:4D:D7  0    100 (connected)  0 (No reason given)  0 (unknown)       0 (unknown)       /sys/devices/virtual/eth0  --    eth0      no           yes         yes          no                no                 --            ethernet    UUID-ethernet-REPLACED-REPLACED-REPL  /org/freedesktop/NetworkManager/ActiveConnection/1  unknown 
@@ -18615,14 +18747,14 @@ INTERFACE-FLAGS  yes  yes       no       no
 NAME              CARRIER  S390-SUBCHANNELS 
 WIRED-PROPERTIES  on       --               
 
-GROUP  ADDRESS           GATEWAY  ROUTE                                                                                                         DNS              DOMAIN          SEARCHES  WINS                           
-IP4    192.168.6.238/29  --       dst = 192.168.58.133/31, nh = 192.168.50.116, mt = 3130348792 | dst = 192.168.155.50/19, nh = 192.168.127.64  192.168.213.113  sear4.foo4.bar  --        192.168.156.115 | 192.168.8.33 
+GROUP  ADDRESS           GATEWAY  ROUTE                                                                                                         DNS              DOMAIN          SEARCHES  WINS                            CLAT-ADDRESS 
+IP4    192.168.6.238/29  --       dst = 192.168.58.133/31, nh = 192.168.50.116, mt = 3130348792 | dst = 192.168.155.50/19, nh = 192.168.127.64  192.168.213.113  sear4.foo4.bar  --        192.168.156.115 | 192.168.8.33  192.0.0.1    
 
 GROUP  OPTION 
 DHCP4  --     
 
-GROUP  ADDRESS                                                                                          GATEWAY                      ROUTE                                                            DNS                                                                                     DOMAIN                         SEARCHES 
-IP6    2001:a::29c0:62b9:2e01:30a/69 | 2001:a::6433:6420:34f9:3801/115 | 2001:a::8191:ed6b:8ce:b60/103  2001:a::2b50:64d1:9a91:23b4  dst = 2001:a::5ecb:f5ee:fb96:856c/100, nh = ::, mt = 4249082794  2001:a::1323:9a78:2b82:d16b | 2001:a::4e1:24e6:b8c1:91bb | 2001:a::bd96:3bed:fbd6:19c5  sear6.fo.x.y | sear6.foo4.bar  --       
+GROUP  ADDRESS                                                                                          GATEWAY                      ROUTE                                                            DNS                                                                                     DOMAIN                         SEARCHES  CLAT-ADDRESS                    CLAT-PREF64  
+IP6    2001:a::29c0:62b9:2e01:30a/69 | 2001:a::6433:6420:34f9:3801/115 | 2001:a::8191:ed6b:8ce:b60/103  2001:a::2b50:64d1:9a91:23b4  dst = 2001:a::5ecb:f5ee:fb96:856c/100, nh = ::, mt = 4249082794  2001:a::1323:9a78:2b82:d16b | 2001:a::4e1:24e6:b8c1:91bb | 2001:a::bd96:3bed:fbd6:19c5  sear6.fo.x.y | sear6.foo4.bar  --        2002:aaaa::2c0d:1e71:ef87:fac7  64:ff9b::/96 
 
 GROUP  OPTION                                                                                    
 DHCP6  dhcp-6-opt-1 = val-1 | dhcp-6-opt-5 = val-5 | dhcp-6-opt-6 = val-6 | dhcp-6-opt-8 = val-8 
@@ -18631,12 +18763,12 @@ NAME         AVAILABLE-CONNECTION-PATHS                                   AVAILA
 CONNECTIONS  /org/freedesktop/NetworkManager/Settings/Connection/{1,2,6}  5fcfd6d7-1e63-3332-8826-a7eda103792d | con-1 | UUID-con-xx1-REPLACED-REPLACED-REPLA | con-xx1 | <invisible> | /org/freedesktop/NetworkManager/Settings/Connection/6 
 
 <<<
-size: 3293
+size: 3413
 location: src/tests/client/test-client.py:test_003()/339
 cmd: $NMCLI --mode tabular --color yes -f all dev show eth0
 lang: pl_PL.UTF-8
 returncode: 0
-stdout: 3116 bytes
+stdout: 3236 bytes
 >>>
 NAME     DEVICE  TYPE      NM-TYPE           DBUS-PATH                                  VENDOR  PRODUCT  DRIVER   DRIVER-VERSION  FIRMWARE-VERSION  HWADDR             MTU  STATE            REASON                    IP4-CONNECTIVITY  IP6-CONNECTIVITY  UDI                        PATH  IP-IFACE  IS-SOFTWARE  NM-MANAGED  AUTOCONNECT  FIRMWARE-MISSING  NM-PLUGIN-MISSING  PHYS-PORT-ID  CONNECTION  CON-UUID                              CON-PATH                                            METERED  
 GENERAL  eth0    ethernet  NMDeviceEthernet  /org/freedesktop/NetworkManager/Devices/1  --      --       virtual  --              --                C0:61:AE:26:4D:D7  0    100 (połączono)  0 (Nie podano przyczyny)  0 (nieznane)      0 (nieznane)      /sys/devices/virtual/eth0  --    eth0      nie          tak         tak          nie               nie                --            ethernet    UUID-ethernet-REPLACED-REPLACED-REPL  /org/freedesktop/NetworkManager/ActiveConnection/1  nieznane 
@@ -18650,14 +18782,14 @@ INTERFACE-FLAGS  tak  tak       nie      nie
 NAME              CARRIER   S390-SUBCHANNELS 
 WIRED-PROPERTIES  włączone  --               
 
-GROUP  ADDRESS           GATEWAY  ROUTE                                                                                                         DNS              DOMAIN          SEARCHES  WINS                           
-IP4    192.168.6.238/29  --       dst = 192.168.58.133/31, nh = 192.168.50.116, mt = 3130348792 | dst = 192.168.155.50/19, nh = 192.168.127.64  192.168.213.113  sear4.foo4.bar  --        192.168.156.115 | 192.168.8.33 
+GROUP  ADDRESS           GATEWAY  ROUTE                                                                                                         DNS              DOMAIN          SEARCHES  WINS                            CLAT-ADDRESS 
+IP4    192.168.6.238/29  --       dst = 192.168.58.133/31, nh = 192.168.50.116, mt = 3130348792 | dst = 192.168.155.50/19, nh = 192.168.127.64  192.168.213.113  sear4.foo4.bar  --        192.168.156.115 | 192.168.8.33  192.0.0.1    
 
 GROUP  OPTION 
 DHCP4  --     
 
-GROUP  ADDRESS                                                                                          GATEWAY                      ROUTE                                                            DNS                                                                                     DOMAIN                         SEARCHES 
-IP6    2001:a::29c0:62b9:2e01:30a/69 | 2001:a::6433:6420:34f9:3801/115 | 2001:a::8191:ed6b:8ce:b60/103  2001:a::2b50:64d1:9a91:23b4  dst = 2001:a::5ecb:f5ee:fb96:856c/100, nh = ::, mt = 4249082794  2001:a::1323:9a78:2b82:d16b | 2001:a::4e1:24e6:b8c1:91bb | 2001:a::bd96:3bed:fbd6:19c5  sear6.fo.x.y | sear6.foo4.bar  --       
+GROUP  ADDRESS                                                                                          GATEWAY                      ROUTE                                                            DNS                                                                                     DOMAIN                         SEARCHES  CLAT-ADDRESS                    CLAT-PREF64  
+IP6    2001:a::29c0:62b9:2e01:30a/69 | 2001:a::6433:6420:34f9:3801/115 | 2001:a::8191:ed6b:8ce:b60/103  2001:a::2b50:64d1:9a91:23b4  dst = 2001:a::5ecb:f5ee:fb96:856c/100, nh = ::, mt = 4249082794  2001:a::1323:9a78:2b82:d16b | 2001:a::4e1:24e6:b8c1:91bb | 2001:a::bd96:3bed:fbd6:19c5  sear6.fo.x.y | sear6.foo4.bar  --        2002:aaaa::2c0d:1e71:ef87:fac7  64:ff9b::/96 
 
 GROUP  OPTION                                                                                    
 DHCP6  dhcp-6-opt-1 = val-1 | dhcp-6-opt-5 = val-5 | dhcp-6-opt-6 = val-6 | dhcp-6-opt-8 = val-8 
@@ -18804,12 +18936,12 @@ GENERAL  ethernet  UUID-ethernet-REPLACED-REPLACED-REPL  eth0     eth0      deza
 
 
 <<<
-size: 4883
+size: 5063
 location: src/tests/client/test-client.py:test_003()/348
 cmd: $NMCLI --mode tabular --pretty -f all dev show eth0
 lang: C
 returncode: 0
-stdout: 4719 bytes
+stdout: 4899 bytes
 >>>
 =========================
   Device details (eth0)
@@ -18830,17 +18962,17 @@ NAME              CARRIER  S390-SUBCHANNELS
 ---------------------------------------------
 WIRED-PROPERTIES  on       --               
 
-GROUP  ADDRESS           GATEWAY  ROUTE                                                                                                         DNS              DOMAIN          SEARCHES  WINS                           
----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-IP4    192.168.6.238/29  --       dst = 192.168.58.133/31, nh = 192.168.50.116, mt = 3130348792 | dst = 192.168.155.50/19, nh = 192.168.127.64  192.168.213.113  sear4.foo4.bar  --        192.168.156.115 | 192.168.8.33 
+GROUP  ADDRESS           GATEWAY  ROUTE                                                                                                         DNS              DOMAIN          SEARCHES  WINS                            CLAT-ADDRESS 
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+IP4    192.168.6.238/29  --       dst = 192.168.58.133/31, nh = 192.168.50.116, mt = 3130348792 | dst = 192.168.155.50/19, nh = 192.168.127.64  192.168.213.113  sear4.foo4.bar  --        192.168.156.115 | 192.168.8.33  192.0.0.1    
 
 GROUP  OPTION 
 ---------------
 DHCP4  --     
 
-GROUP  ADDRESS                                                                                          GATEWAY                      ROUTE                                                            DNS                                                                                     DOMAIN                         SEARCHES 
----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-IP6    2001:a::29c0:62b9:2e01:30a/69 | 2001:a::6433:6420:34f9:3801/115 | 2001:a::8191:ed6b:8ce:b60/103  2001:a::2b50:64d1:9a91:23b4  dst = 2001:a::5ecb:f5ee:fb96:856c/100, nh = ::, mt = 4249082794  2001:a::1323:9a78:2b82:d16b | 2001:a::4e1:24e6:b8c1:91bb | 2001:a::bd96:3bed:fbd6:19c5  sear6.fo.x.y | sear6.foo4.bar  --       
+GROUP  ADDRESS                                                                                          GATEWAY                      ROUTE                                                            DNS                                                                                     DOMAIN                         SEARCHES  CLAT-ADDRESS                    CLAT-PREF64  
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+IP6    2001:a::29c0:62b9:2e01:30a/69 | 2001:a::6433:6420:34f9:3801/115 | 2001:a::8191:ed6b:8ce:b60/103  2001:a::2b50:64d1:9a91:23b4  dst = 2001:a::5ecb:f5ee:fb96:856c/100, nh = ::, mt = 4249082794  2001:a::1323:9a78:2b82:d16b | 2001:a::4e1:24e6:b8c1:91bb | 2001:a::bd96:3bed:fbd6:19c5  sear6.fo.x.y | sear6.foo4.bar  --        2002:aaaa::2c0d:1e71:ef87:fac7  64:ff9b::/96 
 
 GROUP  OPTION                                                                                    
 --------------------------------------------------------------------------------------------------
@@ -18851,12 +18983,12 @@ NAME         AVAILABLE-CONNECTION-PATHS                                   AVAILA
 CONNECTIONS  /org/freedesktop/NetworkManager/Settings/Connection/{1,2,6}  5fcfd6d7-1e63-3332-8826-a7eda103792d | con-1 | UUID-con-xx1-REPLACED-REPLACED-REPLA | con-xx1 | <invisible> | /org/freedesktop/NetworkManager/Settings/Connection/6 
 
 <<<
-size: 4955
+size: 5135
 location: src/tests/client/test-client.py:test_003()/349
 cmd: $NMCLI --mode tabular --pretty -f all dev show eth0
 lang: pl_PL.UTF-8
 returncode: 0
-stdout: 4781 bytes
+stdout: 4961 bytes
 >>>
 ==================================
   Informacje o urządzeniu (eth0)
@@ -18877,17 +19009,17 @@ NAME              CARRIER   S390-SUBCHANNELS
 ----------------------------------------------
 WIRED-PROPERTIES  włączone  --               
 
-GROUP  ADDRESS           GATEWAY  ROUTE                                                                                                         DNS              DOMAIN          SEARCHES  WINS                           
----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-IP4    192.168.6.238/29  --       dst = 192.168.58.133/31, nh = 192.168.50.116, mt = 3130348792 | dst = 192.168.155.50/19, nh = 192.168.127.64  192.168.213.113  sear4.foo4.bar  --        192.168.156.115 | 192.168.8.33 
+GROUP  ADDRESS           GATEWAY  ROUTE                                                                                                         DNS              DOMAIN          SEARCHES  WINS                            CLAT-ADDRESS 
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+IP4    192.168.6.238/29  --       dst = 192.168.58.133/31, nh = 192.168.50.116, mt = 3130348792 | dst = 192.168.155.50/19, nh = 192.168.127.64  192.168.213.113  sear4.foo4.bar  --        192.168.156.115 | 192.168.8.33  192.0.0.1    
 
 GROUP  OPTION 
 ---------------
 DHCP4  --     
 
-GROUP  ADDRESS                                                                                          GATEWAY                      ROUTE                                                            DNS                                                                                     DOMAIN                         SEARCHES 
----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-IP6    2001:a::29c0:62b9:2e01:30a/69 | 2001:a::6433:6420:34f9:3801/115 | 2001:a::8191:ed6b:8ce:b60/103  2001:a::2b50:64d1:9a91:23b4  dst = 2001:a::5ecb:f5ee:fb96:856c/100, nh = ::, mt = 4249082794  2001:a::1323:9a78:2b82:d16b | 2001:a::4e1:24e6:b8c1:91bb | 2001:a::bd96:3bed:fbd6:19c5  sear6.fo.x.y | sear6.foo4.bar  --       
+GROUP  ADDRESS                                                                                          GATEWAY                      ROUTE                                                            DNS                                                                                     DOMAIN                         SEARCHES  CLAT-ADDRESS                    CLAT-PREF64  
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+IP6    2001:a::29c0:62b9:2e01:30a/69 | 2001:a::6433:6420:34f9:3801/115 | 2001:a::8191:ed6b:8ce:b60/103  2001:a::2b50:64d1:9a91:23b4  dst = 2001:a::5ecb:f5ee:fb96:856c/100, nh = ::, mt = 4249082794  2001:a::1323:9a78:2b82:d16b | 2001:a::4e1:24e6:b8c1:91bb | 2001:a::bd96:3bed:fbd6:19c5  sear6.fo.x.y | sear6.foo4.bar  --        2002:aaaa::2c0d:1e71:ef87:fac7  64:ff9b::/96 
 
 GROUP  OPTION                                                                                    
 --------------------------------------------------------------------------------------------------
@@ -19036,12 +19168,12 @@ GENERAL  ethernet  UUID-ethernet-REPLACED-REPLACED-REPL  eth0     eth0      deza
 
 
 <<<
-size: 4895
+size: 5075
 location: src/tests/client/test-client.py:test_003()/358
 cmd: $NMCLI --mode tabular --pretty --color yes -f all dev show eth0
 lang: C
 returncode: 0
-stdout: 4719 bytes
+stdout: 4899 bytes
 >>>
 =========================
   Device details (eth0)
@@ -19062,17 +19194,17 @@ NAME              CARRIER  S390-SUBCHANNELS
 ---------------------------------------------
 WIRED-PROPERTIES  on       --               
 
-GROUP  ADDRESS           GATEWAY  ROUTE                                                                                                         DNS              DOMAIN          SEARCHES  WINS                           
----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-IP4    192.168.6.238/29  --       dst = 192.168.58.133/31, nh = 192.168.50.116, mt = 3130348792 | dst = 192.168.155.50/19, nh = 192.168.127.64  192.168.213.113  sear4.foo4.bar  --        192.168.156.115 | 192.168.8.33 
+GROUP  ADDRESS           GATEWAY  ROUTE                                                                                                         DNS              DOMAIN          SEARCHES  WINS                            CLAT-ADDRESS 
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+IP4    192.168.6.238/29  --       dst = 192.168.58.133/31, nh = 192.168.50.116, mt = 3130348792 | dst = 192.168.155.50/19, nh = 192.168.127.64  192.168.213.113  sear4.foo4.bar  --        192.168.156.115 | 192.168.8.33  192.0.0.1    
 
 GROUP  OPTION 
 ---------------
 DHCP4  --     
 
-GROUP  ADDRESS                                                                                          GATEWAY                      ROUTE                                                            DNS                                                                                     DOMAIN                         SEARCHES 
----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-IP6    2001:a::29c0:62b9:2e01:30a/69 | 2001:a::6433:6420:34f9:3801/115 | 2001:a::8191:ed6b:8ce:b60/103  2001:a::2b50:64d1:9a91:23b4  dst = 2001:a::5ecb:f5ee:fb96:856c/100, nh = ::, mt = 4249082794  2001:a::1323:9a78:2b82:d16b | 2001:a::4e1:24e6:b8c1:91bb | 2001:a::bd96:3bed:fbd6:19c5  sear6.fo.x.y | sear6.foo4.bar  --       
+GROUP  ADDRESS                                                                                          GATEWAY                      ROUTE                                                            DNS                                                                                     DOMAIN                         SEARCHES  CLAT-ADDRESS                    CLAT-PREF64  
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+IP6    2001:a::29c0:62b9:2e01:30a/69 | 2001:a::6433:6420:34f9:3801/115 | 2001:a::8191:ed6b:8ce:b60/103  2001:a::2b50:64d1:9a91:23b4  dst = 2001:a::5ecb:f5ee:fb96:856c/100, nh = ::, mt = 4249082794  2001:a::1323:9a78:2b82:d16b | 2001:a::4e1:24e6:b8c1:91bb | 2001:a::bd96:3bed:fbd6:19c5  sear6.fo.x.y | sear6.foo4.bar  --        2002:aaaa::2c0d:1e71:ef87:fac7  64:ff9b::/96 
 
 GROUP  OPTION                                                                                    
 --------------------------------------------------------------------------------------------------
@@ -19083,12 +19215,12 @@ NAME         AVAILABLE-CONNECTION-PATHS                                   AVAILA
 CONNECTIONS  /org/freedesktop/NetworkManager/Settings/Connection/{1,2,6}  5fcfd6d7-1e63-3332-8826-a7eda103792d | con-1 | UUID-con-xx1-REPLACED-REPLACED-REPLA | con-xx1 | <invisible> | /org/freedesktop/NetworkManager/Settings/Connection/6 
 
 <<<
-size: 4967
+size: 5147
 location: src/tests/client/test-client.py:test_003()/359
 cmd: $NMCLI --mode tabular --pretty --color yes -f all dev show eth0
 lang: pl_PL.UTF-8
 returncode: 0
-stdout: 4781 bytes
+stdout: 4961 bytes
 >>>
 ==================================
   Informacje o urządzeniu (eth0)
@@ -19109,17 +19241,17 @@ NAME              CARRIER   S390-SUBCHANNELS
 ----------------------------------------------
 WIRED-PROPERTIES  włączone  --               
 
-GROUP  ADDRESS           GATEWAY  ROUTE                                                                                                         DNS              DOMAIN          SEARCHES  WINS                           
----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-IP4    192.168.6.238/29  --       dst = 192.168.58.133/31, nh = 192.168.50.116, mt = 3130348792 | dst = 192.168.155.50/19, nh = 192.168.127.64  192.168.213.113  sear4.foo4.bar  --        192.168.156.115 | 192.168.8.33 
+GROUP  ADDRESS           GATEWAY  ROUTE                                                                                                         DNS              DOMAIN          SEARCHES  WINS                            CLAT-ADDRESS 
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+IP4    192.168.6.238/29  --       dst = 192.168.58.133/31, nh = 192.168.50.116, mt = 3130348792 | dst = 192.168.155.50/19, nh = 192.168.127.64  192.168.213.113  sear4.foo4.bar  --        192.168.156.115 | 192.168.8.33  192.0.0.1    
 
 GROUP  OPTION 
 ---------------
 DHCP4  --     
 
-GROUP  ADDRESS                                                                                          GATEWAY                      ROUTE                                                            DNS                                                                                     DOMAIN                         SEARCHES 
----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-IP6    2001:a::29c0:62b9:2e01:30a/69 | 2001:a::6433:6420:34f9:3801/115 | 2001:a::8191:ed6b:8ce:b60/103  2001:a::2b50:64d1:9a91:23b4  dst = 2001:a::5ecb:f5ee:fb96:856c/100, nh = ::, mt = 4249082794  2001:a::1323:9a78:2b82:d16b | 2001:a::4e1:24e6:b8c1:91bb | 2001:a::bd96:3bed:fbd6:19c5  sear6.fo.x.y | sear6.foo4.bar  --       
+GROUP  ADDRESS                                                                                          GATEWAY                      ROUTE                                                            DNS                                                                                     DOMAIN                         SEARCHES  CLAT-ADDRESS                    CLAT-PREF64  
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+IP6    2001:a::29c0:62b9:2e01:30a/69 | 2001:a::6433:6420:34f9:3801/115 | 2001:a::8191:ed6b:8ce:b60/103  2001:a::2b50:64d1:9a91:23b4  dst = 2001:a::5ecb:f5ee:fb96:856c/100, nh = ::, mt = 4249082794  2001:a::1323:9a78:2b82:d16b | 2001:a::4e1:24e6:b8c1:91bb | 2001:a::bd96:3bed:fbd6:19c5  sear6.fo.x.y | sear6.foo4.bar  --        2002:aaaa::2c0d:1e71:ef87:fac7  64:ff9b::/96 
 
 GROUP  OPTION                                                                                    
 --------------------------------------------------------------------------------------------------
@@ -19230,38 +19362,38 @@ stdout: 194 bytes
 GENERAL:ethernet:UUID-ethernet-REPLACED-REPLACED-REPL:eth0:eth0:deactivating:no:no::no:/org/freedesktop/NetworkManager/ActiveConnection/1:/org/freedesktop/NetworkManager/Settings/Connection/6::
 
 <<<
-size: 1471
+size: 1534
 location: src/tests/client/test-client.py:test_003()/368
 cmd: $NMCLI --mode tabular --terse -f all dev show eth0
 lang: C
 returncode: 0
-stdout: 1308 bytes
+stdout: 1371 bytes
 >>>
 GENERAL:eth0:ethernet:NMDeviceEthernet:/org/freedesktop/NetworkManager/Devices/1:::virtual:::C0\:61\:AE\:26\:4D\:D7:0:100 (connected):0 (No reason given):0 (unknown):0 (unknown):/sys/devices/virtual/eth0::eth0:no:yes:yes:no:no::ethernet:UUID-ethernet-REPLACED-REPLACED-REPL:/org/freedesktop/NetworkManager/ActiveConnection/1:unknown
 CAPABILITIES:no:100 Mb/s:no:no
 INTERFACE-FLAGS:yes:yes:no:no
 WIRED-PROPERTIES:on:
-IP4:192.168.6.238/29::dst = 192.168.58.133/31, nh = 192.168.50.116, mt = 3130348792 | dst = 192.168.155.50/19, nh = 192.168.127.64:192.168.213.113:sear4.foo4.bar::192.168.156.115 | 192.168.8.33
+IP4:192.168.6.238/29::dst = 192.168.58.133/31, nh = 192.168.50.116, mt = 3130348792 | dst = 192.168.155.50/19, nh = 192.168.127.64:192.168.213.113:sear4.foo4.bar::192.168.156.115 | 192.168.8.33:192.0.0.1
 DHCP4:
-IP6:2001\:a\:\:29c0\:62b9\:2e01\:30a/69 | 2001\:a\:\:6433\:6420\:34f9\:3801/115 | 2001\:a\:\:8191\:ed6b\:8ce\:b60/103:2001\:a\:\:2b50\:64d1\:9a91\:23b4:dst = 2001\:a\:\:5ecb\:f5ee\:fb96\:856c/100, nh = \:\:, mt = 4249082794:2001\:a\:\:1323\:9a78\:2b82\:d16b | 2001\:a\:\:4e1\:24e6\:b8c1\:91bb | 2001\:a\:\:bd96\:3bed\:fbd6\:19c5:sear6.fo.x.y | sear6.foo4.bar:
+IP6:2001\:a\:\:29c0\:62b9\:2e01\:30a/69 | 2001\:a\:\:6433\:6420\:34f9\:3801/115 | 2001\:a\:\:8191\:ed6b\:8ce\:b60/103:2001\:a\:\:2b50\:64d1\:9a91\:23b4:dst = 2001\:a\:\:5ecb\:f5ee\:fb96\:856c/100, nh = \:\:, mt = 4249082794:2001\:a\:\:1323\:9a78\:2b82\:d16b | 2001\:a\:\:4e1\:24e6\:b8c1\:91bb | 2001\:a\:\:bd96\:3bed\:fbd6\:19c5:sear6.fo.x.y | sear6.foo4.bar::2002\:aaaa\:\:2c0d\:1e71\:ef87\:fac7:64\:ff9b\:\:/96
 DHCP6:dhcp-6-opt-1 = val-1 | dhcp-6-opt-5 = val-5 | dhcp-6-opt-6 = val-6 | dhcp-6-opt-8 = val-8
 CONNECTIONS:/org/freedesktop/NetworkManager/Settings/Connection/{1,2,6}:5fcfd6d7-1e63-3332-8826-a7eda103792d | con-1 | UUID-con-xx1-REPLACED-REPLACED-REPLA | con-xx1 | <invisible> | /org/freedesktop/NetworkManager/Settings/Connection/6
 
 <<<
-size: 1481
+size: 1544
 location: src/tests/client/test-client.py:test_003()/369
 cmd: $NMCLI --mode tabular --terse -f all dev show eth0
 lang: pl_PL.UTF-8
 returncode: 0
-stdout: 1308 bytes
+stdout: 1371 bytes
 >>>
 GENERAL:eth0:ethernet:NMDeviceEthernet:/org/freedesktop/NetworkManager/Devices/1:::virtual:::C0\:61\:AE\:26\:4D\:D7:0:100 (connected):0 (No reason given):0 (unknown):0 (unknown):/sys/devices/virtual/eth0::eth0:no:yes:yes:no:no::ethernet:UUID-ethernet-REPLACED-REPLACED-REPL:/org/freedesktop/NetworkManager/ActiveConnection/1:unknown
 CAPABILITIES:no:100 Mb/s:no:no
 INTERFACE-FLAGS:yes:yes:no:no
 WIRED-PROPERTIES:on:
-IP4:192.168.6.238/29::dst = 192.168.58.133/31, nh = 192.168.50.116, mt = 3130348792 | dst = 192.168.155.50/19, nh = 192.168.127.64:192.168.213.113:sear4.foo4.bar::192.168.156.115 | 192.168.8.33
+IP4:192.168.6.238/29::dst = 192.168.58.133/31, nh = 192.168.50.116, mt = 3130348792 | dst = 192.168.155.50/19, nh = 192.168.127.64:192.168.213.113:sear4.foo4.bar::192.168.156.115 | 192.168.8.33:192.0.0.1
 DHCP4:
-IP6:2001\:a\:\:29c0\:62b9\:2e01\:30a/69 | 2001\:a\:\:6433\:6420\:34f9\:3801/115 | 2001\:a\:\:8191\:ed6b\:8ce\:b60/103:2001\:a\:\:2b50\:64d1\:9a91\:23b4:dst = 2001\:a\:\:5ecb\:f5ee\:fb96\:856c/100, nh = \:\:, mt = 4249082794:2001\:a\:\:1323\:9a78\:2b82\:d16b | 2001\:a\:\:4e1\:24e6\:b8c1\:91bb | 2001\:a\:\:bd96\:3bed\:fbd6\:19c5:sear6.fo.x.y | sear6.foo4.bar:
+IP6:2001\:a\:\:29c0\:62b9\:2e01\:30a/69 | 2001\:a\:\:6433\:6420\:34f9\:3801/115 | 2001\:a\:\:8191\:ed6b\:8ce\:b60/103:2001\:a\:\:2b50\:64d1\:9a91\:23b4:dst = 2001\:a\:\:5ecb\:f5ee\:fb96\:856c/100, nh = \:\:, mt = 4249082794:2001\:a\:\:1323\:9a78\:2b82\:d16b | 2001\:a\:\:4e1\:24e6\:b8c1\:91bb | 2001\:a\:\:bd96\:3bed\:fbd6\:19c5:sear6.fo.x.y | sear6.foo4.bar::2002\:aaaa\:\:2c0d\:1e71\:ef87\:fac7:64\:ff9b\:\:/96
 DHCP6:dhcp-6-opt-1 = val-1 | dhcp-6-opt-5 = val-5 | dhcp-6-opt-6 = val-6 | dhcp-6-opt-8 = val-8
 CONNECTIONS:/org/freedesktop/NetworkManager/Settings/Connection/{1,2,6}:5fcfd6d7-1e63-3332-8826-a7eda103792d | con-1 | UUID-con-xx1-REPLACED-REPLACED-REPLA | con-xx1 | <invisible> | /org/freedesktop/NetworkManager/Settings/Connection/6
 
@@ -19366,38 +19498,38 @@ stdout: 194 bytes
 GENERAL:ethernet:UUID-ethernet-REPLACED-REPLACED-REPL:eth0:eth0:deactivating:no:no::no:/org/freedesktop/NetworkManager/ActiveConnection/1:/org/freedesktop/NetworkManager/Settings/Connection/6::
 
 <<<
-size: 1483
+size: 1546
 location: src/tests/client/test-client.py:test_003()/378
 cmd: $NMCLI --mode tabular --terse --color yes -f all dev show eth0
 lang: C
 returncode: 0
-stdout: 1308 bytes
+stdout: 1371 bytes
 >>>
 GENERAL:eth0:ethernet:NMDeviceEthernet:/org/freedesktop/NetworkManager/Devices/1:::virtual:::C0\:61\:AE\:26\:4D\:D7:0:100 (connected):0 (No reason given):0 (unknown):0 (unknown):/sys/devices/virtual/eth0::eth0:no:yes:yes:no:no::ethernet:UUID-ethernet-REPLACED-REPLACED-REPL:/org/freedesktop/NetworkManager/ActiveConnection/1:unknown
 CAPABILITIES:no:100 Mb/s:no:no
 INTERFACE-FLAGS:yes:yes:no:no
 WIRED-PROPERTIES:on:
-IP4:192.168.6.238/29::dst = 192.168.58.133/31, nh = 192.168.50.116, mt = 3130348792 | dst = 192.168.155.50/19, nh = 192.168.127.64:192.168.213.113:sear4.foo4.bar::192.168.156.115 | 192.168.8.33
+IP4:192.168.6.238/29::dst = 192.168.58.133/31, nh = 192.168.50.116, mt = 3130348792 | dst = 192.168.155.50/19, nh = 192.168.127.64:192.168.213.113:sear4.foo4.bar::192.168.156.115 | 192.168.8.33:192.0.0.1
 DHCP4:
-IP6:2001\:a\:\:29c0\:62b9\:2e01\:30a/69 | 2001\:a\:\:6433\:6420\:34f9\:3801/115 | 2001\:a\:\:8191\:ed6b\:8ce\:b60/103:2001\:a\:\:2b50\:64d1\:9a91\:23b4:dst = 2001\:a\:\:5ecb\:f5ee\:fb96\:856c/100, nh = \:\:, mt = 4249082794:2001\:a\:\:1323\:9a78\:2b82\:d16b | 2001\:a\:\:4e1\:24e6\:b8c1\:91bb | 2001\:a\:\:bd96\:3bed\:fbd6\:19c5:sear6.fo.x.y | sear6.foo4.bar:
+IP6:2001\:a\:\:29c0\:62b9\:2e01\:30a/69 | 2001\:a\:\:6433\:6420\:34f9\:3801/115 | 2001\:a\:\:8191\:ed6b\:8ce\:b60/103:2001\:a\:\:2b50\:64d1\:9a91\:23b4:dst = 2001\:a\:\:5ecb\:f5ee\:fb96\:856c/100, nh = \:\:, mt = 4249082794:2001\:a\:\:1323\:9a78\:2b82\:d16b | 2001\:a\:\:4e1\:24e6\:b8c1\:91bb | 2001\:a\:\:bd96\:3bed\:fbd6\:19c5:sear6.fo.x.y | sear6.foo4.bar::2002\:aaaa\:\:2c0d\:1e71\:ef87\:fac7:64\:ff9b\:\:/96
 DHCP6:dhcp-6-opt-1 = val-1 | dhcp-6-opt-5 = val-5 | dhcp-6-opt-6 = val-6 | dhcp-6-opt-8 = val-8
 CONNECTIONS:/org/freedesktop/NetworkManager/Settings/Connection/{1,2,6}:5fcfd6d7-1e63-3332-8826-a7eda103792d | con-1 | UUID-con-xx1-REPLACED-REPLACED-REPLA | con-xx1 | <invisible> | /org/freedesktop/NetworkManager/Settings/Connection/6
 
 <<<
-size: 1493
+size: 1556
 location: src/tests/client/test-client.py:test_003()/379
 cmd: $NMCLI --mode tabular --terse --color yes -f all dev show eth0
 lang: pl_PL.UTF-8
 returncode: 0
-stdout: 1308 bytes
+stdout: 1371 bytes
 >>>
 GENERAL:eth0:ethernet:NMDeviceEthernet:/org/freedesktop/NetworkManager/Devices/1:::virtual:::C0\:61\:AE\:26\:4D\:D7:0:100 (connected):0 (No reason given):0 (unknown):0 (unknown):/sys/devices/virtual/eth0::eth0:no:yes:yes:no:no::ethernet:UUID-ethernet-REPLACED-REPLACED-REPL:/org/freedesktop/NetworkManager/ActiveConnection/1:unknown
 CAPABILITIES:no:100 Mb/s:no:no
 INTERFACE-FLAGS:yes:yes:no:no
 WIRED-PROPERTIES:on:
-IP4:192.168.6.238/29::dst = 192.168.58.133/31, nh = 192.168.50.116, mt = 3130348792 | dst = 192.168.155.50/19, nh = 192.168.127.64:192.168.213.113:sear4.foo4.bar::192.168.156.115 | 192.168.8.33
+IP4:192.168.6.238/29::dst = 192.168.58.133/31, nh = 192.168.50.116, mt = 3130348792 | dst = 192.168.155.50/19, nh = 192.168.127.64:192.168.213.113:sear4.foo4.bar::192.168.156.115 | 192.168.8.33:192.0.0.1
 DHCP4:
-IP6:2001\:a\:\:29c0\:62b9\:2e01\:30a/69 | 2001\:a\:\:6433\:6420\:34f9\:3801/115 | 2001\:a\:\:8191\:ed6b\:8ce\:b60/103:2001\:a\:\:2b50\:64d1\:9a91\:23b4:dst = 2001\:a\:\:5ecb\:f5ee\:fb96\:856c/100, nh = \:\:, mt = 4249082794:2001\:a\:\:1323\:9a78\:2b82\:d16b | 2001\:a\:\:4e1\:24e6\:b8c1\:91bb | 2001\:a\:\:bd96\:3bed\:fbd6\:19c5:sear6.fo.x.y | sear6.foo4.bar:
+IP6:2001\:a\:\:29c0\:62b9\:2e01\:30a/69 | 2001\:a\:\:6433\:6420\:34f9\:3801/115 | 2001\:a\:\:8191\:ed6b\:8ce\:b60/103:2001\:a\:\:2b50\:64d1\:9a91\:23b4:dst = 2001\:a\:\:5ecb\:f5ee\:fb96\:856c/100, nh = \:\:, mt = 4249082794:2001\:a\:\:1323\:9a78\:2b82\:d16b | 2001\:a\:\:4e1\:24e6\:b8c1\:91bb | 2001\:a\:\:bd96\:3bed\:fbd6\:19c5:sear6.fo.x.y | sear6.foo4.bar::2002\:aaaa\:\:2c0d\:1e71\:ef87\:fac7:64\:ff9b\:\:/96
 DHCP6:dhcp-6-opt-1 = val-1 | dhcp-6-opt-5 = val-5 | dhcp-6-opt-6 = val-6 | dhcp-6-opt-8 = val-8
 CONNECTIONS:/org/freedesktop/NetworkManager/Settings/Connection/{1,2,6}:5fcfd6d7-1e63-3332-8826-a7eda103792d | con-1 | UUID-con-xx1-REPLACED-REPLACED-REPLA | con-xx1 | <invisible> | /org/freedesktop/NetworkManager/Settings/Connection/6
 
@@ -19732,12 +19864,12 @@ GENERAL.ZONE:                           --
 GENERAL.MASTER-PATH:                    --
 
 <<<
-size: 3830
+size: 4004
 location: src/tests/client/test-client.py:test_003()/388
 cmd: $NMCLI --mode multiline -f all dev show eth0
 lang: C
 returncode: 0
-stdout: 3673 bytes
+stdout: 3847 bytes
 >>>
 GENERAL.DEVICE:                         eth0
 GENERAL.TYPE:                           ethernet
@@ -19784,6 +19916,7 @@ IP4.DNS[1]:                             192.168.213.113
 IP4.DOMAIN[1]:                          sear4.foo4.bar
 IP4.WINS[1]:                            192.168.156.115
 IP4.WINS[2]:                            192.168.8.33
+IP4.CLAT-ADDRESS:                       192.0.0.1
 IP6.ADDRESS[1]:                         2001:a::29c0:62b9:2e01:30a/69
 IP6.ADDRESS[2]:                         2001:a::6433:6420:34f9:3801/115
 IP6.ADDRESS[3]:                         2001:a::8191:ed6b:8ce:b60/103
@@ -19794,6 +19927,8 @@ IP6.DNS[2]:                             2001:a::4e1:24e6:b8c1:91bb
 IP6.DNS[3]:                             2001:a::bd96:3bed:fbd6:19c5
 IP6.DOMAIN[1]:                          sear6.fo.x.y
 IP6.DOMAIN[2]:                          sear6.foo4.bar
+IP6.CLAT-ADDRESS:                       2002:aaaa::2c0d:1e71:ef87:fac7
+IP6.CLAT-PREF64:                        64:ff9b::/96
 DHCP6.OPTION[1]:                        dhcp-6-opt-1 = val-1
 DHCP6.OPTION[2]:                        dhcp-6-opt-5 = val-5
 DHCP6.OPTION[3]:                        dhcp-6-opt-6 = val-6
@@ -19804,12 +19939,12 @@ CONNECTIONS.AVAILABLE-CONNECTIONS[2]:   UUID-con-xx1-REPLACED-REPLACED-REPLA | c
 CONNECTIONS.AVAILABLE-CONNECTIONS[3]:   <invisible> | /org/freedesktop/NetworkManager/Settings/Connection/6
 
 <<<
-size: 3870
+size: 4044
 location: src/tests/client/test-client.py:test_003()/389
 cmd: $NMCLI --mode multiline -f all dev show eth0
 lang: pl_PL.UTF-8
 returncode: 0
-stdout: 3703 bytes
+stdout: 3877 bytes
 >>>
 GENERAL.DEVICE:                         eth0
 GENERAL.TYPE:                           ethernet
@@ -19856,6 +19991,7 @@ IP4.DNS[1]:                             192.168.213.113
 IP4.DOMAIN[1]:                          sear4.foo4.bar
 IP4.WINS[1]:                            192.168.156.115
 IP4.WINS[2]:                            192.168.8.33
+IP4.CLAT-ADDRESS:                       192.0.0.1
 IP6.ADDRESS[1]:                         2001:a::29c0:62b9:2e01:30a/69
 IP6.ADDRESS[2]:                         2001:a::6433:6420:34f9:3801/115
 IP6.ADDRESS[3]:                         2001:a::8191:ed6b:8ce:b60/103
@@ -19866,6 +20002,8 @@ IP6.DNS[2]:                             2001:a::4e1:24e6:b8c1:91bb
 IP6.DNS[3]:                             2001:a::bd96:3bed:fbd6:19c5
 IP6.DOMAIN[1]:                          sear6.fo.x.y
 IP6.DOMAIN[2]:                          sear6.foo4.bar
+IP6.CLAT-ADDRESS:                       2002:aaaa::2c0d:1e71:ef87:fac7
+IP6.CLAT-PREF64:                        64:ff9b::/96
 DHCP6.OPTION[1]:                        dhcp-6-opt-1 = val-1
 DHCP6.OPTION[2]:                        dhcp-6-opt-5 = val-5
 DHCP6.OPTION[3]:                        dhcp-6-opt-6 = val-6
@@ -20206,12 +20344,12 @@ GENERAL.ZONE:                           --
 GENERAL.MASTER-PATH:                    --
 
 <<<
-size: 3842
+size: 4016
 location: src/tests/client/test-client.py:test_003()/398
 cmd: $NMCLI --mode multiline --color yes -f all dev show eth0
 lang: C
 returncode: 0
-stdout: 3673 bytes
+stdout: 3847 bytes
 >>>
 GENERAL.DEVICE:                         eth0
 GENERAL.TYPE:                           ethernet
@@ -20258,6 +20396,7 @@ IP4.DNS[1]:                             192.168.213.113
 IP4.DOMAIN[1]:                          sear4.foo4.bar
 IP4.WINS[1]:                            192.168.156.115
 IP4.WINS[2]:                            192.168.8.33
+IP4.CLAT-ADDRESS:                       192.0.0.1
 IP6.ADDRESS[1]:                         2001:a::29c0:62b9:2e01:30a/69
 IP6.ADDRESS[2]:                         2001:a::6433:6420:34f9:3801/115
 IP6.ADDRESS[3]:                         2001:a::8191:ed6b:8ce:b60/103
@@ -20268,6 +20407,8 @@ IP6.DNS[2]:                             2001:a::4e1:24e6:b8c1:91bb
 IP6.DNS[3]:                             2001:a::bd96:3bed:fbd6:19c5
 IP6.DOMAIN[1]:                          sear6.fo.x.y
 IP6.DOMAIN[2]:                          sear6.foo4.bar
+IP6.CLAT-ADDRESS:                       2002:aaaa::2c0d:1e71:ef87:fac7
+IP6.CLAT-PREF64:                        64:ff9b::/96
 DHCP6.OPTION[1]:                        dhcp-6-opt-1 = val-1
 DHCP6.OPTION[2]:                        dhcp-6-opt-5 = val-5
 DHCP6.OPTION[3]:                        dhcp-6-opt-6 = val-6
@@ -20278,12 +20419,12 @@ CONNECTIONS.AVAILABLE-CONNECTIONS[2]:   UUID-con-xx1-REPLACED-REPLACED-REPLA | c
 CONNECTIONS.AVAILABLE-CONNECTIONS[3]:   <invisible> | /org/freedesktop/NetworkManager/Settings/Connection/6
 
 <<<
-size: 3882
+size: 4056
 location: src/tests/client/test-client.py:test_003()/399
 cmd: $NMCLI --mode multiline --color yes -f all dev show eth0
 lang: pl_PL.UTF-8
 returncode: 0
-stdout: 3703 bytes
+stdout: 3877 bytes
 >>>
 GENERAL.DEVICE:                         eth0
 GENERAL.TYPE:                           ethernet
@@ -20330,6 +20471,7 @@ IP4.DNS[1]:                             192.168.213.113
 IP4.DOMAIN[1]:                          sear4.foo4.bar
 IP4.WINS[1]:                            192.168.156.115
 IP4.WINS[2]:                            192.168.8.33
+IP4.CLAT-ADDRESS:                       192.0.0.1
 IP6.ADDRESS[1]:                         2001:a::29c0:62b9:2e01:30a/69
 IP6.ADDRESS[2]:                         2001:a::6433:6420:34f9:3801/115
 IP6.ADDRESS[3]:                         2001:a::8191:ed6b:8ce:b60/103
@@ -20340,6 +20482,8 @@ IP6.DNS[2]:                             2001:a::4e1:24e6:b8c1:91bb
 IP6.DNS[3]:                             2001:a::bd96:3bed:fbd6:19c5
 IP6.DOMAIN[1]:                          sear6.fo.x.y
 IP6.DOMAIN[2]:                          sear6.foo4.bar
+IP6.CLAT-ADDRESS:                       2002:aaaa::2c0d:1e71:ef87:fac7
+IP6.CLAT-PREF64:                        64:ff9b::/96
 DHCP6.OPTION[1]:                        dhcp-6-opt-1 = val-1
 DHCP6.OPTION[2]:                        dhcp-6-opt-5 = val-5
 DHCP6.OPTION[3]:                        dhcp-6-opt-6 = val-6
@@ -20730,12 +20874,12 @@ GENERAL.MASTER-PATH:                    --
 -------------------------------------------------------------------------------
 
 <<<
-size: 4770
+size: 4944
 location: src/tests/client/test-client.py:test_003()/408
 cmd: $NMCLI --mode multiline --pretty -f all dev show eth0
 lang: C
 returncode: 0
-stdout: 4604 bytes
+stdout: 4778 bytes
 >>>
 ===============================================================================
                              Device details (eth0)
@@ -20789,6 +20933,7 @@ IP4.DNS[1]:                             192.168.213.113
 IP4.DOMAIN[1]:                          sear4.foo4.bar
 IP4.WINS[1]:                            192.168.156.115
 IP4.WINS[2]:                            192.168.8.33
+IP4.CLAT-ADDRESS:                       192.0.0.1
 -------------------------------------------------------------------------------
 -------------------------------------------------------------------------------
 IP6.ADDRESS[1]:                         2001:a::29c0:62b9:2e01:30a/69
@@ -20801,6 +20946,8 @@ IP6.DNS[2]:                             2001:a::4e1:24e6:b8c1:91bb
 IP6.DNS[3]:                             2001:a::bd96:3bed:fbd6:19c5
 IP6.DOMAIN[1]:                          sear6.fo.x.y
 IP6.DOMAIN[2]:                          sear6.foo4.bar
+IP6.CLAT-ADDRESS:                       2002:aaaa::2c0d:1e71:ef87:fac7
+IP6.CLAT-PREF64:                        64:ff9b::/96
 -------------------------------------------------------------------------------
 DHCP6.OPTION[1]:                        dhcp-6-opt-1 = val-1
 DHCP6.OPTION[2]:                        dhcp-6-opt-5 = val-5
@@ -20814,12 +20961,12 @@ CONNECTIONS.AVAILABLE-CONNECTIONS[3]:   <invisible> | /org/freedesktop/NetworkMa
 -------------------------------------------------------------------------------
 
 <<<
-size: 4816
+size: 4990
 location: src/tests/client/test-client.py:test_003()/409
 cmd: $NMCLI --mode multiline --pretty -f all dev show eth0
 lang: pl_PL.UTF-8
 returncode: 0
-stdout: 4640 bytes
+stdout: 4814 bytes
 >>>
 ===============================================================================
                         Informacje o urządzeniu (eth0)
@@ -20873,6 +21020,7 @@ IP4.DNS[1]:                             192.168.213.113
 IP4.DOMAIN[1]:                          sear4.foo4.bar
 IP4.WINS[1]:                            192.168.156.115
 IP4.WINS[2]:                            192.168.8.33
+IP4.CLAT-ADDRESS:                       192.0.0.1
 -------------------------------------------------------------------------------
 -------------------------------------------------------------------------------
 IP6.ADDRESS[1]:                         2001:a::29c0:62b9:2e01:30a/69
@@ -20885,6 +21033,8 @@ IP6.DNS[2]:                             2001:a::4e1:24e6:b8c1:91bb
 IP6.DNS[3]:                             2001:a::bd96:3bed:fbd6:19c5
 IP6.DOMAIN[1]:                          sear6.fo.x.y
 IP6.DOMAIN[2]:                          sear6.foo4.bar
+IP6.CLAT-ADDRESS:                       2002:aaaa::2c0d:1e71:ef87:fac7
+IP6.CLAT-PREF64:                        64:ff9b::/96
 -------------------------------------------------------------------------------
 DHCP6.OPTION[1]:                        dhcp-6-opt-1 = val-1
 DHCP6.OPTION[2]:                        dhcp-6-opt-5 = val-5
@@ -21278,12 +21428,12 @@ GENERAL.MASTER-PATH:                    --
 -------------------------------------------------------------------------------
 
 <<<
-size: 4782
+size: 4956
 location: src/tests/client/test-client.py:test_003()/418
 cmd: $NMCLI --mode multiline --pretty --color yes -f all dev show eth0
 lang: C
 returncode: 0
-stdout: 4604 bytes
+stdout: 4778 bytes
 >>>
 ===============================================================================
                              Device details (eth0)
@@ -21337,6 +21487,7 @@ IP4.DNS[1]:                             192.168.213.113
 IP4.DOMAIN[1]:                          sear4.foo4.bar
 IP4.WINS[1]:                            192.168.156.115
 IP4.WINS[2]:                            192.168.8.33
+IP4.CLAT-ADDRESS:                       192.0.0.1
 -------------------------------------------------------------------------------
 -------------------------------------------------------------------------------
 IP6.ADDRESS[1]:                         2001:a::29c0:62b9:2e01:30a/69
@@ -21349,6 +21500,8 @@ IP6.DNS[2]:                             2001:a::4e1:24e6:b8c1:91bb
 IP6.DNS[3]:                             2001:a::bd96:3bed:fbd6:19c5
 IP6.DOMAIN[1]:                          sear6.fo.x.y
 IP6.DOMAIN[2]:                          sear6.foo4.bar
+IP6.CLAT-ADDRESS:                       2002:aaaa::2c0d:1e71:ef87:fac7
+IP6.CLAT-PREF64:                        64:ff9b::/96
 -------------------------------------------------------------------------------
 DHCP6.OPTION[1]:                        dhcp-6-opt-1 = val-1
 DHCP6.OPTION[2]:                        dhcp-6-opt-5 = val-5
@@ -21362,12 +21515,12 @@ CONNECTIONS.AVAILABLE-CONNECTIONS[3]:   <invisible> | /org/freedesktop/NetworkMa
 -------------------------------------------------------------------------------
 
 <<<
-size: 4828
+size: 5002
 location: src/tests/client/test-client.py:test_003()/419
 cmd: $NMCLI --mode multiline --pretty --color yes -f all dev show eth0
 lang: pl_PL.UTF-8
 returncode: 0
-stdout: 4640 bytes
+stdout: 4814 bytes
 >>>
 ===============================================================================
                         Informacje o urządzeniu (eth0)
@@ -21421,6 +21574,7 @@ IP4.DNS[1]:                             192.168.213.113
 IP4.DOMAIN[1]:                          sear4.foo4.bar
 IP4.WINS[1]:                            192.168.156.115
 IP4.WINS[2]:                            192.168.8.33
+IP4.CLAT-ADDRESS:                       192.0.0.1
 -------------------------------------------------------------------------------
 -------------------------------------------------------------------------------
 IP6.ADDRESS[1]:                         2001:a::29c0:62b9:2e01:30a/69
@@ -21433,6 +21587,8 @@ IP6.DNS[2]:                             2001:a::4e1:24e6:b8c1:91bb
 IP6.DNS[3]:                             2001:a::bd96:3bed:fbd6:19c5
 IP6.DOMAIN[1]:                          sear6.fo.x.y
 IP6.DOMAIN[2]:                          sear6.foo4.bar
+IP6.CLAT-ADDRESS:                       2002:aaaa::2c0d:1e71:ef87:fac7
+IP6.CLAT-PREF64:                        64:ff9b::/96
 -------------------------------------------------------------------------------
 DHCP6.OPTION[1]:                        dhcp-6-opt-1 = val-1
 DHCP6.OPTION[2]:                        dhcp-6-opt-5 = val-5
@@ -21776,12 +21932,12 @@ GENERAL.ZONE:
 GENERAL.MASTER-PATH:
 
 <<<
-size: 2463
+size: 2567
 location: src/tests/client/test-client.py:test_003()/428
 cmd: $NMCLI --mode multiline --terse -f all dev show eth0
 lang: C
 returncode: 0
-stdout: 2298 bytes
+stdout: 2402 bytes
 >>>
 GENERAL.DEVICE:eth0
 GENERAL.TYPE:ethernet
@@ -21828,6 +21984,7 @@ IP4.DNS[1]:192.168.213.113
 IP4.DOMAIN[1]:sear4.foo4.bar
 IP4.WINS[1]:192.168.156.115
 IP4.WINS[2]:192.168.8.33
+IP4.CLAT-ADDRESS:192.0.0.1
 IP6.ADDRESS[1]:2001:a::29c0:62b9:2e01:30a/69
 IP6.ADDRESS[2]:2001:a::6433:6420:34f9:3801/115
 IP6.ADDRESS[3]:2001:a::8191:ed6b:8ce:b60/103
@@ -21838,6 +21995,8 @@ IP6.DNS[2]:2001:a::4e1:24e6:b8c1:91bb
 IP6.DNS[3]:2001:a::bd96:3bed:fbd6:19c5
 IP6.DOMAIN[1]:sear6.fo.x.y
 IP6.DOMAIN[2]:sear6.foo4.bar
+IP6.CLAT-ADDRESS:2002:aaaa::2c0d:1e71:ef87:fac7
+IP6.CLAT-PREF64:64:ff9b::/96
 DHCP6.OPTION[1]:dhcp-6-opt-1 = val-1
 DHCP6.OPTION[2]:dhcp-6-opt-5 = val-5
 DHCP6.OPTION[3]:dhcp-6-opt-6 = val-6
@@ -21848,12 +22007,12 @@ CONNECTIONS.AVAILABLE-CONNECTIONS[2]:UUID-con-xx1-REPLACED-REPLACED-REPLA | con-
 CONNECTIONS.AVAILABLE-CONNECTIONS[3]:<invisible> | /org/freedesktop/NetworkManager/Settings/Connection/6
 
 <<<
-size: 2473
+size: 2577
 location: src/tests/client/test-client.py:test_003()/429
 cmd: $NMCLI --mode multiline --terse -f all dev show eth0
 lang: pl_PL.UTF-8
 returncode: 0
-stdout: 2298 bytes
+stdout: 2402 bytes
 >>>
 GENERAL.DEVICE:eth0
 GENERAL.TYPE:ethernet
@@ -21900,6 +22059,7 @@ IP4.DNS[1]:192.168.213.113
 IP4.DOMAIN[1]:sear4.foo4.bar
 IP4.WINS[1]:192.168.156.115
 IP4.WINS[2]:192.168.8.33
+IP4.CLAT-ADDRESS:192.0.0.1
 IP6.ADDRESS[1]:2001:a::29c0:62b9:2e01:30a/69
 IP6.ADDRESS[2]:2001:a::6433:6420:34f9:3801/115
 IP6.ADDRESS[3]:2001:a::8191:ed6b:8ce:b60/103
@@ -21910,6 +22070,8 @@ IP6.DNS[2]:2001:a::4e1:24e6:b8c1:91bb
 IP6.DNS[3]:2001:a::bd96:3bed:fbd6:19c5
 IP6.DOMAIN[1]:sear6.fo.x.y
 IP6.DOMAIN[2]:sear6.foo4.bar
+IP6.CLAT-ADDRESS:2002:aaaa::2c0d:1e71:ef87:fac7
+IP6.CLAT-PREF64:64:ff9b::/96
 DHCP6.OPTION[1]:dhcp-6-opt-1 = val-1
 DHCP6.OPTION[2]:dhcp-6-opt-5 = val-5
 DHCP6.OPTION[3]:dhcp-6-opt-6 = val-6
@@ -22250,12 +22412,12 @@ GENERAL.ZONE:
 GENERAL.MASTER-PATH:
 
 <<<
-size: 2475
+size: 2579
 location: src/tests/client/test-client.py:test_003()/438
 cmd: $NMCLI --mode multiline --terse --color yes -f all dev show eth0
 lang: C
 returncode: 0
-stdout: 2298 bytes
+stdout: 2402 bytes
 >>>
 GENERAL.DEVICE:eth0
 GENERAL.TYPE:ethernet
@@ -22302,6 +22464,7 @@ IP4.DNS[1]:192.168.213.113
 IP4.DOMAIN[1]:sear4.foo4.bar
 IP4.WINS[1]:192.168.156.115
 IP4.WINS[2]:192.168.8.33
+IP4.CLAT-ADDRESS:192.0.0.1
 IP6.ADDRESS[1]:2001:a::29c0:62b9:2e01:30a/69
 IP6.ADDRESS[2]:2001:a::6433:6420:34f9:3801/115
 IP6.ADDRESS[3]:2001:a::8191:ed6b:8ce:b60/103
@@ -22312,6 +22475,8 @@ IP6.DNS[2]:2001:a::4e1:24e6:b8c1:91bb
 IP6.DNS[3]:2001:a::bd96:3bed:fbd6:19c5
 IP6.DOMAIN[1]:sear6.fo.x.y
 IP6.DOMAIN[2]:sear6.foo4.bar
+IP6.CLAT-ADDRESS:2002:aaaa::2c0d:1e71:ef87:fac7
+IP6.CLAT-PREF64:64:ff9b::/96
 DHCP6.OPTION[1]:dhcp-6-opt-1 = val-1
 DHCP6.OPTION[2]:dhcp-6-opt-5 = val-5
 DHCP6.OPTION[3]:dhcp-6-opt-6 = val-6
@@ -22322,12 +22487,12 @@ CONNECTIONS.AVAILABLE-CONNECTIONS[2]:UUID-con-xx1-REPLACED-REPLACED-REPLA | con-
 CONNECTIONS.AVAILABLE-CONNECTIONS[3]:<invisible> | /org/freedesktop/NetworkManager/Settings/Connection/6
 
 <<<
-size: 2485
+size: 2589
 location: src/tests/client/test-client.py:test_003()/439
 cmd: $NMCLI --mode multiline --terse --color yes -f all dev show eth0
 lang: pl_PL.UTF-8
 returncode: 0
-stdout: 2298 bytes
+stdout: 2402 bytes
 >>>
 GENERAL.DEVICE:eth0
 GENERAL.TYPE:ethernet
@@ -22374,6 +22539,7 @@ IP4.DNS[1]:192.168.213.113
 IP4.DOMAIN[1]:sear4.foo4.bar
 IP4.WINS[1]:192.168.156.115
 IP4.WINS[2]:192.168.8.33
+IP4.CLAT-ADDRESS:192.0.0.1
 IP6.ADDRESS[1]:2001:a::29c0:62b9:2e01:30a/69
 IP6.ADDRESS[2]:2001:a::6433:6420:34f9:3801/115
 IP6.ADDRESS[3]:2001:a::8191:ed6b:8ce:b60/103
@@ -22384,6 +22550,8 @@ IP6.DNS[2]:2001:a::4e1:24e6:b8c1:91bb
 IP6.DNS[3]:2001:a::bd96:3bed:fbd6:19c5
 IP6.DOMAIN[1]:sear6.fo.x.y
 IP6.DOMAIN[2]:sear6.foo4.bar
+IP6.CLAT-ADDRESS:2002:aaaa::2c0d:1e71:ef87:fac7
+IP6.CLAT-PREF64:64:ff9b::/96
 DHCP6.OPTION[1]:dhcp-6-opt-1 = val-1
 DHCP6.OPTION[2]:dhcp-6-opt-5 = val-5
 DHCP6.OPTION[3]:dhcp-6-opt-6 = val-6

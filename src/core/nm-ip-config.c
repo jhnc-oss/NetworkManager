@@ -26,6 +26,7 @@ GType nm_ip6_config_get_type(void);
 /*****************************************************************************/
 
 #define NM_IP_CONFIG_ADDRESS_DATA "address-data"
+#define NM_IP_CONFIG_CLAT_ADDRESS "clat-address"
 #define NM_IP_CONFIG_DNS_OPTIONS  "dns-options"
 #define NM_IP_CONFIG_DNS_PRIORITY "dns-priority"
 #define NM_IP_CONFIG_DOMAINS      "domains"
@@ -41,6 +42,7 @@ NM_GOBJECT_PROPERTIES_DEFINE_FULL(_ip,
                                   NMIPConfig,
                                   PROP_IP_L3CFG,
                                   PROP_IP_ADDRESS_DATA,
+                                  PROP_IP_CLAT_ADDRESS,
                                   PROP_IP_GATEWAY,
                                   PROP_IP_ROUTE_DATA,
                                   PROP_IP_DOMAINS,
@@ -164,6 +166,8 @@ get_property_ip(GObject *object, guint prop_id, GValue *value, GParamSpec *pspec
     const int          addr_family = nm_ip_config_get_addr_family(self);
     char             **to_free     = NULL;
     char               sbuf_addr[NM_INET_ADDRSTRLEN];
+    in_addr_t          addr4;
+    struct in6_addr    addr6;
     const char *const *strv;
     guint              len;
     int                v_i;
@@ -217,6 +221,20 @@ get_property_ip(GObject *object, guint prop_id, GValue *value, GParamSpec *pspec
     case PROP_IP_DNS_OPTIONS:
         strv = nm_l3_config_data_get_dns_options(priv->l3cd, addr_family, &len);
         _value_set_variant_as(value, strv, len);
+        break;
+    case PROP_IP_CLAT_ADDRESS:
+        if (nm_l3_config_data_get_clat_state(priv->l3cd, &addr6, NULL, NULL, &addr4)) {
+            if (addr_family == AF_INET) {
+                g_value_set_variant(value,
+                                    g_variant_new_string(nm_inet_ntop(AF_INET, &addr4, sbuf_addr)));
+            } else {
+                g_value_set_variant(
+                    value,
+                    g_variant_new_string(nm_inet_ntop(AF_INET6, &addr6, sbuf_addr)));
+            }
+        } else {
+            g_value_set_variant(value, nm_g_variant_singleton_s_empty());
+        }
         break;
     default:
         G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
@@ -334,6 +352,13 @@ nm_ip_config_class_init(NMIPConfigClass *klass)
                              "",
                              "",
                              G_VARIANT_TYPE("aa{sv}"),
+                             NULL,
+                             G_PARAM_READABLE | G_PARAM_STATIC_STRINGS);
+    obj_properties_ip[PROP_IP_CLAT_ADDRESS] =
+        g_param_spec_variant(NM_IP_CONFIG_CLAT_ADDRESS,
+                             "",
+                             "",
+                             G_VARIANT_TYPE("s"),
                              NULL,
                              G_PARAM_READABLE | G_PARAM_STATIC_STRINGS);
     obj_properties_ip[PROP_IP_GATEWAY] =
@@ -512,6 +537,9 @@ static const NMDBusInterfaceInfoExtended interface_info_ip4_config = {
             NM_DEFINE_DBUS_PROPERTY_INFO_EXTENDED_READABLE("AddressData",
                                                            "aa{sv}",
                                                            NM_IP_CONFIG_ADDRESS_DATA),
+            NM_DEFINE_DBUS_PROPERTY_INFO_EXTENDED_READABLE("ClatAddress",
+                                                           "s",
+                                                           NM_IP_CONFIG_CLAT_ADDRESS),
             NM_DEFINE_DBUS_PROPERTY_INFO_EXTENDED_READABLE("Gateway", "s", NM_IP_CONFIG_GATEWAY),
             NM_DEFINE_DBUS_PROPERTY_INFO_EXTENDED_READABLE(
                 "Routes",
@@ -614,6 +642,7 @@ nm_ip4_config_class_init(NMIP4ConfigClass *klass)
 /*****************************************************************************/
 
 /* public */
+#define NM_IP6_CONFIG_CLAT_PREF64 "clat-pref64"
 #define NM_IP6_CONFIG_NAMESERVERS "nameservers"
 
 /* deprecated */
@@ -625,6 +654,7 @@ typedef struct _NMIP6ConfigClass NMIP6ConfigClass;
 
 NM_GOBJECT_PROPERTIES_DEFINE_FULL(_ip6,
                                   NMIP6Config,
+                                  PROP_IP6_CLAT_PREF64,
                                   PROP_IP6_NAMESERVERS,
                                   PROP_IP6_ADDRESSES,
                                   PROP_IP6_ROUTES, );
@@ -651,6 +681,12 @@ static const NMDBusInterfaceInfoExtended interface_info_ip6_config = {
             NM_DEFINE_DBUS_PROPERTY_INFO_EXTENDED_READABLE("AddressData",
                                                            "aa{sv}",
                                                            NM_IP_CONFIG_ADDRESS_DATA),
+            NM_DEFINE_DBUS_PROPERTY_INFO_EXTENDED_READABLE("ClatAddress",
+                                                           "s",
+                                                           NM_IP_CONFIG_CLAT_ADDRESS),
+            NM_DEFINE_DBUS_PROPERTY_INFO_EXTENDED_READABLE("ClatPref64",
+                                                           "s",
+                                                           NM_IP6_CONFIG_CLAT_PREF64),
             NM_DEFINE_DBUS_PROPERTY_INFO_EXTENDED_READABLE("Gateway", "s", NM_IP_CONFIG_GATEWAY),
             NM_DEFINE_DBUS_PROPERTY_INFO_EXTENDED_READABLE(
                 "Routes",
@@ -682,10 +718,23 @@ get_property_ip6(GObject *object, guint prop_id, GValue *value, GParamSpec *pspe
     guint              len;
     guint              i;
     const char *const *strarr;
+    guint8             plen;
+    struct in6_addr    addr6;
+    char               sbuf[NM_UTILS_INET_ADDRSTRLEN];
 
     switch (prop_id) {
     case PROP_IP6_ADDRESSES:
         g_value_set_variant(value, priv->v_addresses);
+        break;
+    case PROP_IP6_CLAT_PREF64:
+        if (nm_l3_config_data_get_clat_state(priv->l3cd, NULL, &addr6, &plen, NULL)) {
+            nm_inet6_ntop(&addr6, sbuf);
+            g_value_set_variant(value,
+                                g_variant_new_string(
+                                    nm_sprintf_bufa(NM_INET_ADDRSTRLEN + 32, "%s/%u", sbuf, plen)));
+        } else {
+            g_value_set_variant(value, nm_g_variant_singleton_s_empty());
+        }
         break;
     case PROP_IP6_ROUTES:
         g_value_set_variant(value, priv->v_routes);
@@ -740,6 +789,13 @@ nm_ip6_config_class_init(NMIP6ConfigClass *klass)
                              G_VARIANT_TYPE("a(ayuay)"),
                              NULL,
                              G_PARAM_READABLE | G_PARAM_STATIC_STRINGS);
+    obj_properties_ip6[PROP_IP6_CLAT_PREF64] =
+        g_param_spec_variant(NM_IP6_CONFIG_CLAT_PREF64,
+                             "",
+                             "",
+                             G_VARIANT_TYPE("s"),
+                             NULL,
+                             G_PARAM_READABLE | G_PARAM_STATIC_STRINGS);
     obj_properties_ip6[PROP_IP6_ROUTES] =
         g_param_spec_variant(NM_IP6_CONFIG_ROUTES,
                              "",
@@ -787,7 +843,7 @@ _handle_l3cd_changed(NMIPConfig *self, const NML3ConfigData *l3cd)
     const int                                IS_IPv4     = NM_IS_IPv4(addr_family);
     NMIPConfigPrivate                       *priv        = NM_IP_CONFIG_GET_PRIVATE(self);
     nm_auto_unref_l3cd const NML3ConfigData *l3cd_old    = NULL;
-    GParamSpec                              *changed_params[8];
+    GParamSpec                              *changed_params[10];
     guint                                    n_changed_params = 0;
     const char *const                       *strarr;
     const char *const                       *strarr_old;
@@ -837,6 +893,59 @@ _handle_l3cd_changed(NMIPConfig *self, const NML3ConfigData *l3cd)
         if (!nm_memeq_n(addrs_old, len_old, addrs, len, sizeof(in_addr_t))) {
             changed_params[n_changed_params++] = obj_properties_ip4[PROP_IP4_WINS_SERVER_DATA];
             changed_params[n_changed_params++] = obj_properties_ip4[PROP_IP4_WINS_SERVERS];
+        }
+    }
+
+    /* CLAT state */
+    {
+        struct in6_addr clat_ip6;
+        struct in6_addr clat_pref64;
+        guint8          clat_pref64_plen;
+        in_addr_t       clat_ip4;
+        gboolean        clat_enabled;
+        struct in6_addr clat_ip6_old;
+        struct in6_addr clat_pref64_old;
+        guint8          clat_pref64_plen_old;
+        in_addr_t       clat_ip4_old;
+        gboolean        clat_enabled_old;
+        gboolean        changed;
+
+        clat_enabled_old = nm_l3_config_data_get_clat_state(l3cd_old,
+                                                            &clat_ip6_old,
+                                                            &clat_pref64_old,
+                                                            &clat_pref64_plen_old,
+                                                            &clat_ip4_old);
+        clat_enabled     = nm_l3_config_data_get_clat_state(priv->l3cd,
+                                                        &clat_ip6,
+                                                        &clat_pref64,
+                                                        &clat_pref64_plen,
+                                                        &clat_ip4);
+
+        /* CLAT address */
+        if (clat_enabled != clat_enabled_old) {
+            changed = TRUE;
+        } else if (!clat_enabled) {
+            changed = FALSE;
+        } else if (IS_IPv4) {
+            changed = (clat_ip4 != clat_ip4_old);
+        } else {
+            changed = !IN6_ARE_ADDR_EQUAL(&clat_ip6, &clat_ip6_old);
+        }
+        if (changed)
+            changed_params[n_changed_params++] = obj_properties_ip[PROP_IP_CLAT_ADDRESS];
+
+        /*  PREF64 */
+        if (!IS_IPv4) {
+            if (clat_enabled != clat_enabled_old) {
+                changed = TRUE;
+            } else if (!clat_enabled) {
+                changed = FALSE;
+            } else {
+                changed = (clat_pref64_plen != clat_pref64_plen_old)
+                          || (!IN6_ARE_ADDR_EQUAL(&clat_pref64, &clat_pref64_old));
+            }
+            if (changed)
+                changed_params[n_changed_params++] = obj_properties_ip6[PROP_IP6_CLAT_PREF64];
         }
     }
 

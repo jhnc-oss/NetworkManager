@@ -162,7 +162,6 @@ receive_ra(struct ndp *ndp, struct ndp_msg *msg, gpointer user_data)
     int                  offset;
     int                  hop_limit;
     guint32              val;
-    gboolean             pref64_found = FALSE;
 
     /* Router discovery is subject to the following RFC documents:
      *
@@ -402,30 +401,29 @@ receive_ra(struct ndp *ndp, struct ndp_msg *msg, gpointer user_data)
         }
     }
 
+#if HAVE_CLAT
     /* PREF64 */
     ndp_msg_opt_for_each_offset (offset, msg, NDP_MSG_OPT_PREF64) {
-        struct in6_addr pref64_prefix = *ndp_msg_opt_pref64_prefix(msg, offset);
-        guint8          pref64_length = ndp_msg_opt_pref64_prefix_length(msg, offset);
-        gint64          expiry_msec =
-            _nm_ndisc_lifetime_to_expiry(now_msec, ndp_msg_opt_pref64_lifetime(msg, offset));
+        NMNDiscPref64 pref64;
+
+        pref64 = (NMNDiscPref64) {
+            .prefix             = *ndp_msg_opt_pref64_prefix(msg, offset),
+            .plen               = ndp_msg_opt_pref64_prefix_length(msg, offset),
+            .gateway            = gateway.address,
+            .gateway_preference = gateway.preference,
+            .expiry_msec =
+                _nm_ndisc_lifetime_to_expiry(now_msec, ndp_msg_opt_pref64_lifetime(msg, offset)),
+            .gateway_expiry_msec = gateway.expiry_msec,
+        };
 
         /* libndp should only return lengths defined in RFC 8781 */
-        nm_assert(NM_IN_SET(pref64_length, 96, 64, 56, 48, 40, 32));
+        nm_assert(NM_IN_SET(pref64.plen, 96, 64, 56, 48, 40, 32));
 
-        /* Newer RA has more up to date information, prefer it: */
-        if (!pref64_found) {
-            pref64_found                     = TRUE;
-            rdata->public.pref64.expiry_msec = 0;
-        }
-
-        if (expiry_msec >= rdata->public.pref64.expiry_msec) {
-            rdata->public.pref64.network     = pref64_prefix;
-            rdata->public.pref64.expiry_msec = expiry_msec;
-            rdata->public.pref64.plen        = pref64_length;
-            rdata->public.pref64.valid       = TRUE;
+        if (nm_ndisc_add_pref64(ndisc, &pref64, now_msec)) {
             changed |= NM_NDISC_CONFIG_PREF64;
         }
     }
+#endif
 
     nm_ndisc_ra_received(ndisc, now_msec, changed);
     return 0;

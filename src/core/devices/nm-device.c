@@ -1525,7 +1525,7 @@ _prop_get_connection_dnssec(NMDevice *self, NMConnection *connection)
 }
 
 static NMSettingIp4ConfigClat
-_prop_get_ipv4_clat(NMDevice *self)
+_prop_get_ipv4_clat(NMDevice *self, gboolean do_log)
 {
     NMSettingIP4Config    *s_ip4 = NULL;
     NMSettingIp4ConfigClat clat;
@@ -1552,6 +1552,16 @@ _prop_get_ipv4_clat(NMDevice *self)
     if (clat == NM_SETTING_IP4_CONFIG_CLAT_AUTO
         && !nm_streq(method, NM_SETTING_IP4_CONFIG_METHOD_AUTO)) {
         /* clat=auto enables CLAT only with method=auto */
+        clat = NM_SETTING_IP4_CONFIG_CLAT_NO;
+    }
+
+    if (!HAVE_CLAT
+        && NM_IN_SET(clat, NM_SETTING_IP4_CONFIG_CLAT_AUTO, NM_SETTING_IP4_CONFIG_CLAT_FORCE)) {
+        if (do_log) {
+            _NMLOG(clat == NM_SETTING_IP4_CONFIG_CLAT_FORCE ? LOGL_WARN : LOGL_TRACE,
+                   LOGD_DEVICE,
+                   "CLAT will not work because it is disabled at build time");
+        }
         clat = NM_SETTING_IP4_CONFIG_CLAT_NO;
     }
 
@@ -1988,7 +1998,7 @@ _prop_get_ipv4_dhcp_ipv6_only_preferred(NMDevice *self, gboolean *out_is_auto)
 
     if (nm_streq0(nm_device_get_effective_ip_config_method(self, AF_INET6),
                   NM_SETTING_IP6_CONFIG_METHOD_AUTO)
-        && _prop_get_ipv4_clat(self) != NM_SETTING_IP4_CONFIG_CLAT_NO) {
+        && _prop_get_ipv4_clat(self, FALSE) != NM_SETTING_IP4_CONFIG_CLAT_NO) {
         return TRUE;
     }
 
@@ -11521,7 +11531,7 @@ _dev_ipmanual_start(NMDevice *self)
             nm_l3_config_data_set_routed_dns(l3cd, AF_INET6, TRUE);
         }
 
-        nm_l3_config_data_set_clat(l3cd, _prop_get_ipv4_clat(self));
+        nm_l3_config_data_set_clat_config(l3cd, _prop_get_ipv4_clat(self, TRUE));
     }
 
     if (!l3cd) {
