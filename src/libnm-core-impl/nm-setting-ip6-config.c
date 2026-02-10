@@ -464,6 +464,18 @@ verify(NMSetting *setting, NMConnection *connection, GError **error)
         return FALSE;
     }
 
+    if (nm_setting_ip_config_has_dhcp_request_options(s_ip)) {
+        g_set_error_literal(error,
+                            NM_CONNECTION_ERROR,
+                            NM_CONNECTION_ERROR_INVALID_PROPERTY,
+                            _("Requesting additional DHCPv6 options is not supported for IPv6"));
+        g_prefix_error(error,
+                       "%s.%s: ",
+                       NM_SETTING_IP6_CONFIG_SETTING_NAME,
+                       NM_SETTING_IP_CONFIG_DHCP_REQUEST_OPTIONS);
+        return FALSE;
+    }
+
     /* Failures from here on, are NORMALIZABLE_ERROR... */
 
     if (token_needs_normalization) {
