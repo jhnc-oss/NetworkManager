@@ -1852,9 +1852,9 @@
           connections with an option of restoring the network configuration to a
           known good state in case of an error.</para>
 
-          <para>If the a list of interface names is specified, the checkpoint is
-          taken, the checkpoint is takes only on the specified devices. Otherwise
-          a checkpoint is taken for all devices.</para>
+          <para>If a list of interface names is specified, the checkpoint is
+          taken only on the specified devices. Otherwise a checkpoint is taken for
+          all devices.</para>
 
           <para>Currently the timeout defaults to 15 seconds. This may change in
           a future version.</para>
