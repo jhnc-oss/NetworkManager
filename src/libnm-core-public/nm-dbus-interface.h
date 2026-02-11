@@ -1246,6 +1246,18 @@ typedef enum /*< flags >*/ {
 } NMDeviceReapplyFlags;
 
 /**
+ * NMDeviceManagedFlags:
+ * @NM_DEVICE_MANAGED_FLAGS_NONE: no flag set.
+ *
+ * Flags for the SetManaged() D-Bus call of a device and nm_device_set_managed_async().
+ *
+ * Since: 1.58
+ */
+typedef enum /*< flags >*/ {
+    NM_DEVICE_MANAGED_FLAGS_NONE = 0,
+} NMDeviceManagedFlags;
+
+/**
  * NMTernary:
  * @NM_TERNARY_DEFAULT: use the globally-configured default value.
  * @NM_TERNARY_FALSE: the option is disabled.

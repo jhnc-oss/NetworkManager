@@ -2106,6 +2106,9 @@ global:
 
 libnm_1_58_0 {
 global:
+	nm_device_managed_flags_get_type;
+	nm_device_set_managed_async;
+	nm_device_set_managed_finish;
 	nm_utils_wifi_6ghz_freqs;
 	nm_utils_wifi_freq_to_band;
 	nm_wifi_band_get_type;
