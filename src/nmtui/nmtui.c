@@ -76,7 +76,7 @@ static NmtNewtForm *
 nmtui_main(gboolean is_top, int argc, char **argv)
 {
     NmtNewtForm      *form;
-    NmtNewtWidget    *widget, *ok;
+    NmtNewtWidget    *widget, *quit;
     NmtNewtGrid      *grid;
     NmtNewtListbox   *listbox;
     NmtNewtButtonBox *bbox;
@@ -93,7 +93,7 @@ nmtui_main(gboolean is_top, int argc, char **argv)
 
     widget = g_object_new(NMT_TYPE_NEWT_LISTBOX,
                           "height",
-                          num_subprograms + 2,
+                          num_subprograms + 1,
                           "skip-null-keys",
                           TRUE,
                           NULL);
@@ -105,15 +105,13 @@ nmtui_main(gboolean is_top, int argc, char **argv)
     for (i = 0; i < num_subprograms; i++) {
         nmt_newt_listbox_append(listbox, _(subprograms[i].display_name), subprograms[i].func);
     }
-    nmt_newt_listbox_append(listbox, "", NULL);
-    nmt_newt_listbox_append(listbox, _("Quit"), quit_func);
 
     widget = nmt_newt_button_box_new(NMT_NEWT_BUTTON_BOX_HORIZONTAL);
     nmt_newt_grid_add(grid, widget, 0, 2);
     bbox = NMT_NEWT_BUTTON_BOX(widget);
 
-    ok = nmt_newt_button_box_add_end(bbox, _("OK"));
-    g_signal_connect(ok, "activated", G_CALLBACK(main_list_activated), listbox);
+    quit = nmt_newt_button_box_add_end(bbox, _("Quit"));
+    g_signal_connect(quit, "activated", G_CALLBACK(quit_func), NULL);
 
     toplevel_form = form;
 
