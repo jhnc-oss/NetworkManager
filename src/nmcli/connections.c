@@ -5669,6 +5669,14 @@ connection_warnings(NmCli *nmc, NMConnection *connection)
                      nm_connection_get_uuid(NM_CONNECTION(connection)),
                      found);
     }
+
+    {
+        gs_free char *gw_warning = NULL;
+
+        gw_warning = nm_connection_get_unreachable_gateways_warning(connection, TRUE);
+        if (gw_warning)
+            nmc_printerr("Warning: %s.\n", gw_warning);
+    }
 }
 
 static void
