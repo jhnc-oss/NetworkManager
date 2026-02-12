@@ -1149,3 +1149,142 @@ nm_setting_ovs_other_config_check_val(const char *val, GError **error)
 
     return TRUE;
 }
+
+/*****************************************************************************/
+
+typedef struct {
+    NMIPAddr dest;
+    guint    prefix;
+} DirectRoute;
+
+static void
+_setting_ip_config_collect_unreachable_gateways(NMSettingIPConfig *s_ip, GPtrArray **result)
+{
+    const int            addr_family = nm_setting_ip_config_get_addr_family(s_ip);
+    guint                num_routes;
+    guint                num_addrs;
+    guint                n_direct_routes = 0;
+    guint                i;
+    guint                j;
+    const char          *gateway;
+    gs_free DirectRoute *direct_routes = NULL;
+
+    num_routes = nm_setting_ip_config_get_num_routes(s_ip);
+    num_addrs  = nm_setting_ip_config_get_num_addresses(s_ip);
+
+    direct_routes = g_new0(DirectRoute, num_routes + num_addrs);
+
+    /* Collect direct routes (routes without a gateway) from the setting. */
+    for (i = 0; i < num_routes; i++) {
+        NMIPRoute *route = nm_setting_ip_config_get_route(s_ip, i);
+
+        if (nm_ip_route_get_next_hop(route))
+            continue;
+
+        nm_ip_route_get_dest_binary(route, &direct_routes[n_direct_routes].dest);
+        direct_routes[n_direct_routes].prefix = nm_ip_route_get_prefix(route);
+        n_direct_routes++;
+    }
+
+    /* Add prefix routes (device routes) for each static address. */
+    for (i = 0; i < num_addrs; i++) {
+        NMIPAddress *addr = nm_setting_ip_config_get_address(s_ip, i);
+
+        nm_ip_address_get_address_binary(addr, &direct_routes[n_direct_routes].dest);
+        direct_routes[n_direct_routes].prefix = nm_ip_address_get_prefix(addr);
+        n_direct_routes++;
+    }
+
+    /* Check the setting's default gateway. */
+    gateway = nm_setting_ip_config_get_gateway(s_ip);
+    if (gateway) {
+        NMIPAddr gw_bin    = NM_IP_ADDR_INIT;
+        gboolean reachable = FALSE;
+
+        if (nm_inet_parse_bin(addr_family, gateway, NULL, &gw_bin)) {
+            for (j = 0; j < n_direct_routes; j++) {
+                if (nm_ip_addr_same_prefix(addr_family,
+                                           &gw_bin,
+                                           &direct_routes[j].dest,
+                                           direct_routes[j].prefix)) {
+                    reachable = TRUE;
+                    break;
+                }
+            }
+
+            if (!reachable) {
+                if (!*result)
+                    *result = g_ptr_array_new();
+                g_ptr_array_add(*result, (gpointer) gateway);
+            }
+        }
+    }
+
+    /* Check gateways of each route in the setting. */
+    for (i = 0; i < num_routes; i++) {
+        NMIPRoute *route     = nm_setting_ip_config_get_route(s_ip, i);
+        NMIPAddr   next_hop  = NM_IP_ADDR_INIT;
+        gboolean   reachable = FALSE;
+
+        if (!nm_ip_route_get_next_hop_binary(route, &next_hop))
+            continue;
+
+        for (j = 0; j < n_direct_routes; j++) {
+            if (nm_ip_addr_same_prefix(addr_family,
+                                       &next_hop,
+                                       &direct_routes[j].dest,
+                                       direct_routes[j].prefix)) {
+                reachable = TRUE;
+                break;
+            }
+        }
+
+        if (!reachable) {
+            if (!*result)
+                *result = g_ptr_array_new();
+            g_ptr_array_add(*result, (gpointer) nm_ip_route_get_next_hop(route));
+        }
+    }
+}
+
+/**
+ * nm_connection_get_unreachable_gateways:
+ * @connection: the #NMConnection
+ *
+ * Checks whether there are gateways (either the default gateway or gateways
+ * of routes) that are not directly reachable in the IPv4 and IPv6 settings
+ * of the connection. A gateway is considered directly reachable if it falls
+ * within the subnet of a direct route (a route without a next hop) or of a
+ * prefix route from a static address.
+ *
+ * Returns: a %NULL-terminated array of gateway strings not directly reachable,
+ *   or %NULL if all gateways are reachable. Free it with g_free().
+ */
+const char **
+nm_connection_get_unreachable_gateways(NMConnection *connection)
+{
+    GPtrArray         *result = NULL;
+    NMSettingIPConfig *s_ip;
+
+    if (!connection)
+        return NULL;
+
+    s_ip = nm_connection_get_setting_ip4_config(connection);
+    if (s_ip
+        && nm_streq0(nm_setting_ip_config_get_method(s_ip), NM_SETTING_IP4_CONFIG_METHOD_MANUAL)) {
+        _setting_ip_config_collect_unreachable_gateways(s_ip, &result);
+    }
+
+    s_ip = nm_connection_get_setting_ip6_config(connection);
+    if (s_ip
+        && nm_streq0(nm_setting_ip_config_get_method(s_ip), NM_SETTING_IP6_CONFIG_METHOD_MANUAL)) {
+        _setting_ip_config_collect_unreachable_gateways(s_ip, &result);
+    }
+
+    if (result) {
+        g_ptr_array_add(result, NULL);
+        return (const char **) g_ptr_array_free(result, FALSE);
+    }
+
+    return NULL;
+}
