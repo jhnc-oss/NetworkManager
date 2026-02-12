@@ -14874,15 +14874,73 @@ typedef struct {
     NMDeviceManagedFlags managed_flags;
 } SetManagedData;
 
+/**
+ * set_managed:
+ * @self: the device
+ * @managed: the new managed state to set.
+ * @flags: flags to select different behaviors like storing to disk.
+ * @error: return location for a #GError, or %NULL
+ *
+ * Sets the managed state of the device. If the %NM_DEVICE_MANAGED_FLAGS_TO_DISK
+ * flag is set, the new state will be persisted to disk so it will be restored
+ * after a reboot. If the %NM_DEVICE_MANAGED_FLAGS_CLEAR_DISK flag is set, the
+ * managed flag will be cleared from disk.
+ *
+ * Returns: %TRUE if the managed state was set successfully, %FALSE otherwise.
+ */
 static gboolean
 set_managed(NMDevice *self, gboolean managed, NMDeviceManagedFlags flags, GError **error)
 {
-    gboolean old;
+    NMDevicePrivate *priv = NM_DEVICE_GET_PRIVATE(self);
+    gboolean         managed_old;
+    NMTernary        managed_to_disk, managed_to_disk_old;
 
-    g_object_get(self, NM_DEVICE_MANAGED, &old, NULL);
-    g_object_set(self, NM_DEVICE_MANAGED, managed, NULL);
+    if (flags & NM_DEVICE_MANAGED_FLAGS_CLEAR_DISK)
+        flags |= NM_DEVICE_MANAGED_FLAGS_TO_DISK;
+
+    if (flags & NM_DEVICE_MANAGED_FLAGS_TO_DISK) {
+        managed_to_disk = flags & NM_DEVICE_MANAGED_FLAGS_CLEAR_DISK ? NM_TERNARY_DEFAULT : managed;
+
+        managed_to_disk_old = nm_config_get_device_managed(nm_manager_get_config(priv->manager),
+                                                           nm_device_get_iface(self));
+
+        if (!nm_config_set_device_managed(nm_manager_get_config(priv->manager),
+                                          nm_device_get_iface(self),
+                                          nm_device_get_permanent_hw_address(self),
+                                          managed_to_disk,
+                                          flags & NM_DEVICE_MANAGED_FLAGS_BY_MAC,
+                                          error))
+            return FALSE;
+
+        /* Update the unmanaged flags after the change on disk */
+        nm_device_set_unmanaged_by_user_conf(self);
+
+        if (!(flags & NM_DEVICE_MANAGED_FLAGS_CLEAR_DISK)
+            && !!nm_device_get_unmanaged_flags(self, NM_UNMANAGED_USER_CONF) != !managed) {
+            /* We failed to make the new state effective on disk. Maybe the new config
+             * collides with other config. Try to revert and return error. Otherwise,
+             * we would set the runtime state correctly, but get an unexpected state
+             * after a reboot. */
+            nm_config_set_device_managed(nm_manager_get_config(priv->manager),
+                                         nm_device_get_iface(self),
+                                         nm_device_get_permanent_hw_address(self),
+                                         managed_to_disk_old,
+                                         flags & NM_DEVICE_MANAGED_FLAGS_BY_MAC,
+                                         error);
+            g_set_error(error,
+                        NM_DEVICE_ERROR,
+                        NM_DEVICE_ERROR_FAILED,
+                        _("failed to persist 'managed=%d' on disk, other configurations may be "
+                          "overriding it"),
+                        managed);
+            return FALSE;
+        }
+    }
+
+    g_object_get(self, NM_DEVICE_MANAGED, &managed_old, NULL);
+    g_object_set(self, NM_DEVICE_MANAGED, !!managed, NULL);
     g_object_get(self, NM_DEVICE_MANAGED, &managed, NULL);
-    if (old != managed)
+    if (managed_old != managed)
         _notify(self, PROP_MANAGED);
 
     return TRUE;

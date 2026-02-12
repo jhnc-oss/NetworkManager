@@ -142,6 +142,14 @@ gboolean nm_config_set_global_dns(NMConfig *self, NMGlobalDnsConfig *global_dns,
 
 void nm_config_set_connectivity_check_enabled(NMConfig *self, gboolean enabled);
 
+NMTernary nm_config_get_device_managed(NMConfig *self, const char *ifname);
+gboolean  nm_config_set_device_managed(NMConfig   *self,
+                                       const char *ifname,
+                                       const char *hwaddr,
+                                       NMTernary   managed,
+                                       gboolean    by_mac,
+                                       GError    **error);
+
 /* internal defines ... */
 extern guint _nm_config_match_nm_version;
 extern char *_nm_config_match_env;

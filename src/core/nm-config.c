@@ -2076,6 +2076,109 @@ nm_config_set_connectivity_check_enabled(NMConfig *self, gboolean enabled)
     g_key_file_unref(keyfile);
 }
 
+/*****************************************************************************/
+
+/**
+ * nm_config_get_device_managed:
+ * @self: the NMConfig instance
+ * @ifname: the interface name
+ *
+ * Returns: the current managed state of the device in the intern keyfile. If it
+ * is not set or it's invalid, returns %NM_TERNARY_DEFAULT.
+ */
+NMTernary
+nm_config_get_device_managed(NMConfig *self, const char *ifname)
+{
+    NMConfigPrivate *priv;
+    const GKeyFile  *keyfile = NULL;
+    gs_free char    *group   = NULL;
+
+    g_return_val_if_fail(NM_IS_CONFIG(self), FALSE);
+    g_return_val_if_fail(NM_CONFIG_GET_PRIVATE(self)->config_data, FALSE);
+    g_return_val_if_fail(ifname, FALSE);
+
+    priv    = NM_CONFIG_GET_PRIVATE(self);
+    keyfile = _nm_config_data_get_keyfile_intern(priv->config_data);
+    group   = g_strdup_printf(NM_CONFIG_KEYFILE_GROUPPREFIX_INTERN_DEVICE "-%s", ifname);
+
+    if (!keyfile)
+        return NM_TERNARY_DEFAULT;
+
+    return (NMTernary) nm_config_keyfile_get_boolean(keyfile,
+                                                     group,
+                                                     NM_CONFIG_KEYFILE_KEY_DEVICE_MANAGED,
+                                                     NM_TERNARY_DEFAULT);
+}
+
+/**
+ * nm_config_set_device_managed:
+ * @self: the NMConfig instance
+ * @ifname: the interface name
+ * @hwaddr: the hardware address
+ * @managed: the managed state to set
+ * @by_mac: if %TRUE, match by MAC address, otherwise by interface name. This is
+ *   only used when @managed = TRUE.
+ * @error: return location for a #GError, or %NULL
+ *
+ * Sets the managed state of the device to the intern keyfile. Here we store the
+ * configuration received via the D-Bus API. Configurations from other config
+ * files are still in place and may have higher precedence.
+ *
+ * Prior to setting the new state, the existing configuration is removed. If
+ * @managed is set to %NM_TERNARY_DEFAULT, we only do the removal of the previous
+ * configuration.
+ */
+gboolean
+nm_config_set_device_managed(NMConfig   *self,
+                             const char *ifname,
+                             const char *hwaddr,
+                             NMTernary   managed,
+                             gboolean    by_mac,
+                             GError    **error)
+{
+    NMConfigPrivate *priv;
+    g_autoptr(GKeyFile) keyfile = NULL;
+    gs_free char *group         = NULL;
+    gs_free char *match_value   = NULL;
+    gboolean      changed       = FALSE;
+
+    g_return_val_if_fail(NM_IS_CONFIG(self), FALSE);
+    g_return_val_if_fail(NM_CONFIG_GET_PRIVATE(self)->config_data, FALSE);
+    g_return_val_if_fail(ifname && hwaddr, FALSE);
+
+    priv    = NM_CONFIG_GET_PRIVATE(self);
+    keyfile = nm_config_data_clone_keyfile_intern(priv->config_data);
+    group   = g_strdup_printf(NM_CONFIG_KEYFILE_GROUPPREFIX_INTERN_DEVICE "-%s", ifname);
+
+    /* Remove existing configs. Search them only by group name [.intern.device-*]. In
+     * the intern file, 'device' sections are only used for this purpose, so we won't remove
+     * any other device's config. */
+    if (g_key_file_remove_group(keyfile, group, NULL))
+        changed = TRUE;
+
+    /* If the new state is not explicitly TRUE of FALSE, we only remove the configs */
+    if (managed == NM_TERNARY_DEFAULT)
+        goto done;
+
+    /* Set new values */
+    if (by_mac)
+        match_value = g_strdup_printf("mac:%s", hwaddr);
+    else
+        match_value = g_strdup_printf("interface-name:=%s", ifname);
+
+    g_key_file_set_value(keyfile, group, NM_CONFIG_KEYFILE_KEY_MATCH_DEVICE, match_value);
+    g_key_file_set_value(keyfile, group, NM_CONFIG_KEYFILE_KEY_DEVICE_MANAGED, managed ? "1" : "0");
+    changed = TRUE;
+
+done:
+    if (changed)
+        nm_config_set_values(self, keyfile, TRUE, FALSE);
+
+    return TRUE;
+}
+
+/*****************************************************************************/
+
 /**
  * nm_config_set_values:
  * @self: the NMConfig instance

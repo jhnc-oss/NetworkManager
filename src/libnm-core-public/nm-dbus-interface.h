@@ -1248,13 +1248,21 @@ typedef enum /*< flags >*/ {
 /**
  * NMDeviceManagedFlags:
  * @NM_DEVICE_MANAGED_FLAGS_NONE: no flag set.
+ * @NM_DEVICE_MANAGED_FLAGS_TO_DISK: to also persist the device managed state to disk.
+ * @NM_DEVICE_MANAGED_FLAGS_BY_MAC: to match the device by MAC address, not by name.
+ *   This option only makes sense together with %NM_DEVICE_MANAGED_FLAGS_TO_DISK.
+ * @NM_DEVICE_MANAGED_FLAGS_CLEAR_DISK: to clear the managed flag from disk. Implies
+ *   %NM_DEVICE_MANAGED_FLAGS_TO_DISK.
  *
  * Flags for the SetManaged() D-Bus call of a device and nm_device_set_managed_async().
  *
  * Since: 1.58
  */
 typedef enum /*< flags >*/ {
-    NM_DEVICE_MANAGED_FLAGS_NONE = 0,
+    NM_DEVICE_MANAGED_FLAGS_NONE       = 0,
+    NM_DEVICE_MANAGED_FLAGS_TO_DISK    = 0x1,
+    NM_DEVICE_MANAGED_FLAGS_BY_MAC     = 0x2,
+    NM_DEVICE_MANAGED_FLAGS_CLEAR_DISK = 0x4,
 } NMDeviceManagedFlags;
 
 /**
