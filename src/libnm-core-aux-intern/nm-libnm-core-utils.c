@@ -1306,3 +1306,45 @@ nm_connection_get_unreachable_gateways(NMConnection *connection)
 
     return NULL;
 }
+
+/**
+ * nm_connection_get_unreachable_gateways_warning:
+ * @connection: the #NMConnection
+ * @translate: whether to translate the message (use %TRUE for user-facing
+ *   tools like nmcli, %FALSE for daemon logs)
+ *
+ * Checks whether there are unreachable gateways in the connection and returns
+ * a formatted warning message if so.
+ *
+ * Returns: a warning message string, or %NULL if all gateways are reachable.
+ *   Free with g_free().
+ */
+char *
+nm_connection_get_unreachable_gateways_warning(NMConnection *connection, gboolean translate)
+{
+    gs_free const char **gateways = NULL;
+    gs_free char        *gw_list  = NULL;
+
+    gateways = nm_connection_get_unreachable_gateways(connection);
+    if (!gateways)
+        return NULL;
+
+    gw_list = g_strjoinv(", ", (char **) gateways);
+
+    /* Keep the following two strings in sync. */
+    if (translate) {
+        return g_strdup_printf(
+            _("the following gateways are not directly reachable from any configured address or "
+              "route: %s. NetworkManager currently adds on-link routes for them automatically, "
+              "but this will change in the future. Consider adding addresses or routes whose "
+              "subnets cover these gateways"),
+            gw_list);
+    }
+
+    return g_strdup_printf(
+        "the following gateways are not directly reachable from any configured address or "
+        "route: %s. NetworkManager currently adds on-link routes for them automatically, "
+        "but this will change in the future. Consider adding addresses or routes whose "
+        "subnets cover these gateways",
+        gw_list);
+}
