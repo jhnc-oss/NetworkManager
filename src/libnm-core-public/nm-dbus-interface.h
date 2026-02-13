@@ -1253,16 +1253,20 @@ typedef enum /*< flags >*/ {
  *   This option only makes sense together with %NM_DEVICE_MANAGED_FLAGS_TO_DISK.
  * @NM_DEVICE_MANAGED_FLAGS_CLEAR_DISK: to clear the managed flag from disk. Implies
  *   %NM_DEVICE_MANAGED_FLAGS_TO_DISK.
+ * @NM_DEVICE_MANAGED_FLAGS_SET_ADMIN_STATE: to set the administrative state of the
+ *   device to up if the managed state is TRUE, and down if the managed state is FALSE.
+ *   If the flag is not set, the administrative state is not changed.
  *
  * Flags for the SetManaged() D-Bus call of a device and nm_device_set_managed_async().
  *
  * Since: 1.58
  */
 typedef enum /*< flags >*/ {
-    NM_DEVICE_MANAGED_FLAGS_NONE       = 0,
-    NM_DEVICE_MANAGED_FLAGS_TO_DISK    = 0x1,
-    NM_DEVICE_MANAGED_FLAGS_BY_MAC     = 0x2,
-    NM_DEVICE_MANAGED_FLAGS_CLEAR_DISK = 0x4,
+    NM_DEVICE_MANAGED_FLAGS_NONE            = 0,
+    NM_DEVICE_MANAGED_FLAGS_TO_DISK         = 0x1,
+    NM_DEVICE_MANAGED_FLAGS_BY_MAC          = 0x2,
+    NM_DEVICE_MANAGED_FLAGS_CLEAR_DISK      = 0x4,
+    NM_DEVICE_MANAGED_FLAGS_SET_ADMIN_STATE = 0x8,
 } NMDeviceManagedFlags;
 
 /**

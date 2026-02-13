@@ -14943,6 +14943,13 @@ set_managed(NMDevice *self, gboolean managed, NMDeviceManagedFlags flags, GError
     if (managed_old != managed)
         _notify(self, PROP_MANAGED);
 
+    if (flags & NM_DEVICE_MANAGED_FLAGS_SET_ADMIN_STATE) {
+        nm_platform_link_change_flags(nm_device_get_platform(self),
+                                      nm_device_get_ifindex(self),
+                                      IFF_UP,
+                                      managed);
+    }
+
     return TRUE;
 }
 
