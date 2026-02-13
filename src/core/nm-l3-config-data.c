@@ -50,6 +50,9 @@ struct _NML3ConfigData {
         const NMPObject *best_default_route_x[2];
     };
 
+    struct in6_addr pref64_prefix;
+    guint32         pref64_plen;
+
     GArray *wins;
     GArray *nis_servers;
 
@@ -122,6 +125,19 @@ struct _NML3ConfigData {
     NMSettingConnectionDnsOverTls dns_over_tls;
     NMSettingConnectionDnssec     dnssec;
     NMUtilsIPv6IfaceId            ip6_token;
+    NMRefString                  *network_id;
+    NMSettingIp4ConfigClat        clat_config; /* this indicates the 'administrative' CLAT
+                                                * state, i.e. whether CLAT will be started
+                                                * once we receive a PREF64 */
+
+    /* The runtime CLAT state */
+    struct {
+        struct in6_addr ip6;
+        struct in6_addr pref64;
+        in_addr_t       ip4;
+        guint8          pref64_plen;
+        bool            enabled;
+    } clat_state;
 
     NML3ConfigDatFlags flags;
 
@@ -130,7 +146,8 @@ struct _NML3ConfigData {
     int ndisc_hop_limit_val;
 
     guint32 mtu;
-    guint32 ip6_mtu;
+    guint32 ip6_mtu_static; /* IPv6 MTU from the connection profile */
+    guint32 ip6_mtu_ra;     /* IPv6 MTU from Router Advertisement */
     guint32 ndisc_reachable_time_msec_val;
     guint32 ndisc_retrans_timer_msec_val;
 
@@ -167,6 +184,8 @@ struct _NML3ConfigData {
 
     bool routed_dns_4 : 1;
     bool routed_dns_6 : 1;
+
+    bool pref64_valid : 1;
 };
 
 /*****************************************************************************/
@@ -390,8 +409,11 @@ nm_l3_config_data_log(const NML3ConfigData *self,
            : "",
        !self->is_sealed ? ", not-sealed" : "");
 
-    if (self->mtu != 0 || self->ip6_mtu != 0) {
-        _L("mtu: %u, ip6-mtu: %u", self->mtu, self->ip6_mtu);
+    if (self->mtu != 0 || self->ip6_mtu_static != 0 || self->ip6_mtu_ra != 0) {
+        _L("mtu: %u, ip6-mtu-static: %u, ip6-mtu-ra %u",
+           self->mtu,
+           self->ip6_mtu_static,
+           self->ip6_mtu_ra);
     }
 
     for (IS_IPv4 = 1; IS_IPv4 >= 0; IS_IPv4--) {
@@ -519,6 +541,27 @@ nm_l3_config_data_log(const NML3ConfigData *self,
                 _L("nis-domain: %s", self->nis_domain->str);
         }
 
+        if (!IS_IPv4) {
+            if (self->clat_config == NM_SETTING_IP4_CONFIG_CLAT_AUTO)
+                _L("clat-config: auto");
+            else if (self->clat_config == NM_SETTING_IP4_CONFIG_CLAT_FORCE)
+                _L("clat-config: force");
+
+            if (self->clat_state.enabled) {
+                _L("clat-state: ip4=%s/32, pref64=%s/%u, ip6=%s/64",
+                   nm_inet4_ntop(self->clat_state.ip4, sbuf + NM_INET_ADDRSTRLEN),
+                   nm_inet6_ntop(&self->clat_state.pref64, sbuf),
+                   self->clat_state.pref64_plen,
+                   nm_inet6_ntop(&self->clat_state.ip6, sbuf_addr));
+            }
+        }
+
+        if (!IS_IPv4 && self->pref64_valid) {
+            _L("pref64_prefix: %s/%d",
+               nm_utils_inet6_ntop(&self->pref64_prefix, sbuf_addr),
+               self->pref64_plen);
+        }
+
         if (self->dhcp_lease_x[IS_IPv4]) {
             gs_free NMUtilsNamedValue *options_free = NULL;
             NMUtilsNamedValue          options_buffer[30];
@@ -601,6 +644,10 @@ nm_l3_config_data_log(const NML3ConfigData *self,
     if (self->ip6_token.id != 0) {
         _L("ipv6-token: %s",
            nm_utils_inet6_interface_identifier_to_token(&self->ip6_token, sbuf_addr));
+    }
+
+    if (self->network_id) {
+        _L("network-id: %s", self->network_id->str);
     }
 
     if (self->metered != NM_TERNARY_DEFAULT)
@@ -709,6 +756,7 @@ nm_l3_config_data_new(NMDedupMultiIndex *multi_idx, int ifindex, NMIPConfigSourc
         .flags                          = NM_L3_CONFIG_DAT_FLAGS_NONE,
         .metered                        = NM_TERNARY_DEFAULT,
         .proxy_browser_only             = NM_TERNARY_DEFAULT,
+        .clat_config                    = NM_SETTING_IP4_CONFIG_CLAT_NO,
         .proxy_method                   = NM_PROXY_CONFIG_METHOD_UNKNOWN,
         .route_table_sync_4             = NM_IP_ROUTE_TABLE_SYNC_MODE_NONE,
         .route_table_sync_6             = NM_IP_ROUTE_TABLE_SYNC_MODE_NONE,
@@ -722,6 +770,7 @@ nm_l3_config_data_new(NMDedupMultiIndex *multi_idx, int ifindex, NMIPConfigSourc
         .ndisc_retrans_timer_msec_set   = FALSE,
         .allow_routes_without_address_4 = TRUE,
         .allow_routes_without_address_6 = TRUE,
+        .pref64_valid                   = FALSE,
     };
 
     _idx_type_init(&self->idx_addresses_4, NMP_OBJECT_TYPE_IP4_ADDRESS);
@@ -822,6 +871,7 @@ nm_l3_config_data_unref(const NML3ConfigData *self)
     nm_ref_string_unref(mutable->nis_domain);
     nm_ref_string_unref(mutable->proxy_pac_url);
     nm_ref_string_unref(mutable->proxy_pac_script);
+    nm_ref_string_unref(mutable->network_id);
 
     nm_g_slice_free(mutable);
 }
@@ -1890,22 +1940,42 @@ nm_l3_config_data_set_mtu(NML3ConfigData *self, guint32 mtu)
 }
 
 guint32
-nm_l3_config_data_get_ip6_mtu(const NML3ConfigData *self)
+nm_l3_config_data_get_ip6_mtu_static(const NML3ConfigData *self)
 {
     nm_assert(_NM_IS_L3_CONFIG_DATA(self, TRUE));
 
-    return self->ip6_mtu;
+    return self->ip6_mtu_static;
 }
 
 gboolean
-nm_l3_config_data_set_ip6_mtu(NML3ConfigData *self, guint32 ip6_mtu)
+nm_l3_config_data_set_ip6_mtu_static(NML3ConfigData *self, guint32 ip6_mtu)
 {
     nm_assert(_NM_IS_L3_CONFIG_DATA(self, FALSE));
 
-    if (self->ip6_mtu == ip6_mtu)
+    if (self->ip6_mtu_static == ip6_mtu)
         return FALSE;
 
-    self->ip6_mtu = ip6_mtu;
+    self->ip6_mtu_static = ip6_mtu;
+    return TRUE;
+}
+
+guint32
+nm_l3_config_data_get_ip6_mtu_ra(const NML3ConfigData *self)
+{
+    nm_assert(_NM_IS_L3_CONFIG_DATA(self, TRUE));
+
+    return self->ip6_mtu_ra;
+}
+
+gboolean
+nm_l3_config_data_set_ip6_mtu_ra(NML3ConfigData *self, guint32 ip6_mtu)
+{
+    nm_assert(_NM_IS_L3_CONFIG_DATA(self, FALSE));
+
+    if (self->ip6_mtu_ra == ip6_mtu)
+        return FALSE;
+
+    self->ip6_mtu_ra = ip6_mtu;
     return TRUE;
 }
 
@@ -1954,6 +2024,132 @@ nm_l3_config_data_set_ip6_token(NML3ConfigData *self, NMUtilsIPv6IfaceId ipv6_to
         return FALSE;
 
     self->ip6_token.id = ipv6_token.id;
+    return TRUE;
+}
+
+const char *
+nm_l3_config_data_get_network_id(const NML3ConfigData *self)
+{
+    nm_assert(_NM_IS_L3_CONFIG_DATA(self, TRUE));
+
+    return nm_ref_string_get_str(self->network_id);
+}
+
+gboolean
+nm_l3_config_data_set_network_id(NML3ConfigData *self, const char *value)
+{
+    nm_assert(_NM_IS_L3_CONFIG_DATA(self, FALSE));
+
+    return nm_ref_string_reset_str(&self->network_id, value);
+}
+
+gboolean
+nm_l3_config_data_set_clat_config(NML3ConfigData *self, NMSettingIp4ConfigClat val)
+{
+    nm_assert(_NM_IS_L3_CONFIG_DATA(self, FALSE));
+    nm_assert(NM_IN_SET(val,
+                        NM_SETTING_IP4_CONFIG_CLAT_NO,
+                        NM_SETTING_IP4_CONFIG_CLAT_FORCE,
+                        NM_SETTING_IP4_CONFIG_CLAT_AUTO));
+
+    if (self->clat_config == val)
+        return FALSE;
+    self->clat_config = val;
+    return TRUE;
+}
+
+NMSettingIp4ConfigClat
+nm_l3_config_data_get_clat_config(const NML3ConfigData *self)
+{
+    nm_assert(_NM_IS_L3_CONFIG_DATA(self, TRUE));
+
+    return self->clat_config;
+}
+
+gboolean
+nm_l3_config_data_get_clat_state(const NML3ConfigData *self,
+                                 struct in6_addr      *out_ip6,
+                                 struct in6_addr      *out_pref64,
+                                 guint8               *out_pref64_plen,
+                                 in_addr_t            *out_ip4)
+{
+    if (!self || !self->clat_state.enabled)
+        return FALSE;
+    NM_SET_OUT(out_ip6, self->clat_state.ip6);
+    NM_SET_OUT(out_pref64, self->clat_state.pref64);
+    NM_SET_OUT(out_pref64_plen, self->clat_state.pref64_plen);
+    NM_SET_OUT(out_ip4, self->clat_state.ip4);
+    return TRUE;
+}
+
+void
+nm_l3_config_data_set_clat_state(NML3ConfigData        *self,
+                                 gboolean               enabled,
+                                 const struct in6_addr *ip6,
+                                 const struct in6_addr *pref64,
+                                 guint8                 pref64_plen,
+                                 in_addr_t              ip4)
+{
+    nm_assert(_NM_IS_L3_CONFIG_DATA(self, FALSE));
+
+    self->clat_state.enabled = enabled;
+    if (enabled) {
+        self->clat_state.ip6         = *ip6;
+        self->clat_state.pref64      = *pref64;
+        self->clat_state.pref64_plen = pref64_plen;
+        self->clat_state.ip4         = ip4;
+    } else {
+        self->clat_state.ip6         = in6addr_any;
+        self->clat_state.pref64      = in6addr_any;
+        self->clat_state.pref64_plen = 0;
+        self->clat_state.ip4         = 0;
+    }
+}
+
+gboolean
+nm_l3_config_data_set_pref64_valid(NML3ConfigData *self, gboolean val)
+{
+    if (self->pref64_valid == val)
+        return FALSE;
+    self->pref64_valid = val;
+    return TRUE;
+}
+
+gboolean
+nm_l3_config_data_get_pref64_valid(const NML3ConfigData *self)
+{
+    nm_assert(_NM_IS_L3_CONFIG_DATA(self, TRUE));
+
+    return self->pref64_valid;
+}
+
+gboolean
+nm_l3_config_data_get_pref64(const NML3ConfigData *self,
+                             struct in6_addr      *out_prefix,
+                             guint32              *out_plen)
+{
+    nm_assert(_NM_IS_L3_CONFIG_DATA(self, TRUE));
+
+    if (!self->pref64_valid)
+        return FALSE;
+    NM_SET_OUT(out_prefix, self->pref64_prefix);
+    NM_SET_OUT(out_plen, self->pref64_plen);
+    return TRUE;
+}
+
+gboolean
+nm_l3_config_data_set_pref64(NML3ConfigData *self, struct in6_addr prefix, guint32 plen)
+{
+    if (self->pref64_valid) {
+        if (self->pref64_plen == plen
+            && nm_ip6_addr_same_prefix(&self->pref64_prefix, &prefix, plen)) {
+            return FALSE;
+        }
+    } else {
+        self->pref64_valid = TRUE;
+    }
+    self->pref64_prefix = prefix;
+    self->pref64_plen   = plen;
     return TRUE;
 }
 
@@ -2484,8 +2680,10 @@ nm_l3_config_data_cmp_full(const NML3ConfigData *a,
     if (NM_FLAGS_HAS(flags, NM_L3_CONFIG_CMP_FLAGS_OTHER)) {
         NM_CMP_DIRECT(a->flags, b->flags);
         NM_CMP_DIRECT(a->ip6_token.id, b->ip6_token.id);
+        NM_CMP_DIRECT_REF_STRING(a->network_id, b->network_id);
         NM_CMP_DIRECT(a->mtu, b->mtu);
-        NM_CMP_DIRECT(a->ip6_mtu, b->ip6_mtu);
+        NM_CMP_DIRECT(a->ip6_mtu_static, b->ip6_mtu_static);
+        NM_CMP_DIRECT(a->ip6_mtu_ra, b->ip6_mtu_ra);
         NM_CMP_DIRECT_UNSAFE(a->metered, b->metered);
         NM_CMP_DIRECT_UNSAFE(a->proxy_browser_only, b->proxy_browser_only);
         NM_CMP_DIRECT_UNSAFE(a->proxy_method, b->proxy_method);
@@ -2509,6 +2707,23 @@ nm_l3_config_data_cmp_full(const NML3ConfigData *a,
         NM_CMP_DIRECT_UNSAFE(a->routed_dns_4, b->routed_dns_4);
         NM_CMP_DIRECT_UNSAFE(a->routed_dns_6, b->routed_dns_6);
 
+        NM_CMP_DIRECT_UNSAFE(a->clat_config, b->clat_config);
+
+        NM_CMP_DIRECT(!!a->clat_state.enabled, !!b->clat_state.enabled);
+        if (a->clat_state.enabled) {
+            NM_CMP_DIRECT_IN6ADDR(&a->clat_state.ip6, &b->clat_state.ip6);
+            NM_CMP_DIRECT_IN6ADDR(&a->clat_state.pref64, &b->clat_state.pref64);
+            NM_CMP_DIRECT(a->clat_state.pref64_plen, b->clat_state.pref64_plen);
+            NM_CMP_DIRECT(a->clat_state.ip4, b->clat_state.ip4);
+        }
+
+        NM_CMP_DIRECT(!!a->pref64_valid, !!b->pref64_valid);
+        if (a->pref64_valid) {
+            NM_CMP_DIRECT(a->pref64_plen, b->pref64_plen);
+            NM_CMP_RETURN_DIRECT(
+                nm_ip6_addr_same_prefix_cmp(&a->pref64_prefix, &b->pref64_prefix, a->pref64_plen));
+        }
+
         NM_CMP_FIELD(a, b, source);
     }
 
@@ -2524,8 +2739,10 @@ nm_l3_config_data_cmp_full(const NML3ConfigData *a,
 
 /*****************************************************************************/
 
-static const NMPObject *
-_data_get_direct_route_for_host(const NML3ConfigData *self, int addr_family, gconstpointer host)
+const NMPObject *
+nm_l3_config_data_get_direct_route_for_host(const NML3ConfigData *self,
+                                            int                   addr_family,
+                                            gconstpointer         host)
 {
     const int                 IS_IPv4        = NM_IS_IPv4(addr_family);
     const NMPObject          *best_route_obj = NULL;
@@ -2683,7 +2900,7 @@ nm_l3_config_data_add_dependent_onlink_routes(NML3ConfigData *self, int addr_fam
         if (NM_FLAGS_HAS(route_src->rx.r_rtm_flags, (unsigned) RTNH_F_ONLINK))
             continue;
 
-        if (_data_get_direct_route_for_host(self, addr_family, p_gateway))
+        if (nm_l3_config_data_get_direct_route_for_host(self, addr_family, p_gateway))
             continue;
 
         new_route = nmp_object_clone(obj_src, FALSE);
@@ -3030,6 +3247,9 @@ _init_from_connection_ip(NML3ConfigData *self, int addr_family, NMConnection *co
         nm_l3_config_data_set_ip6_privacy(
             self,
             nm_setting_ip6_config_get_ip6_privacy(NM_SETTING_IP6_CONFIG(s_ip)));
+        nm_l3_config_data_set_ip6_mtu_static(
+            self,
+            nm_setting_ip6_config_get_mtu(NM_SETTING_IP6_CONFIG(s_ip)));
     }
 }
 
@@ -3506,6 +3726,9 @@ nm_l3_config_data_merge(NML3ConfigData       *self,
     if (self->ip6_token.id == 0)
         self->ip6_token.id = src->ip6_token.id;
 
+    if (!self->network_id)
+        self->network_id = nm_ref_string_ref(src->network_id);
+
     self->metered = NM_MAX((NMTernary) self->metered, (NMTernary) src->metered);
 
     if (self->proxy_method == NM_PROXY_CONFIG_METHOD_UNKNOWN)
@@ -3544,8 +3767,11 @@ nm_l3_config_data_merge(NML3ConfigData       *self,
     if (self->mtu == 0u)
         self->mtu = src->mtu;
 
-    if (self->ip6_mtu == 0u)
-        self->ip6_mtu = src->ip6_mtu;
+    if (self->ip6_mtu_static == 0u)
+        self->ip6_mtu_static = src->ip6_mtu_static;
+
+    if (self->ip6_mtu_ra == 0u)
+        self->ip6_mtu_ra = src->ip6_mtu_ra;
 
     if (NM_FLAGS_HAS(merge_flags, NM_L3_CONFIG_MERGE_FLAGS_CLONE)) {
         _nm_unused nm_auto_unref_dhcplease NMDhcpLease *dhcp_lease_6 =
@@ -3567,6 +3793,24 @@ nm_l3_config_data_merge(NML3ConfigData       *self,
         self->routed_dns_4 = TRUE;
     if (src->routed_dns_6)
         self->routed_dns_6 = TRUE;
+
+    if (self->clat_config == NM_SETTING_IP4_CONFIG_CLAT_NO) {
+        /* 'no' always loses to 'force' and 'auto' */
+        self->clat_config = src->clat_config;
+    } else if (src->clat_config == NM_SETTING_IP4_CONFIG_CLAT_FORCE) {
+        /* 'force' always takes precedence */
+        self->clat_config = src->clat_config;
+    }
+
+    if (!self->clat_state.enabled && src->clat_state.enabled) {
+        self->clat_state = src->clat_state;
+    }
+
+    if (src->pref64_valid) {
+        self->pref64_prefix = src->pref64_prefix;
+        self->pref64_plen   = src->pref64_plen;
+        self->pref64_valid  = src->pref64_valid;
+    }
 }
 
 NML3ConfigData *

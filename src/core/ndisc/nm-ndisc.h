@@ -119,6 +119,15 @@ typedef struct _NMNDiscRoute {
     bool               duplicate : 1;
 } NMNDiscRoute;
 
+typedef struct _NMNDiscPref64 {
+    struct in6_addr    prefix;
+    struct in6_addr    gateway;
+    gint64             expiry_msec;
+    gint64             gateway_expiry_msec;
+    NMIcmpv6RouterPref gateway_preference;
+    guint8             plen;
+} NMNDiscPref64;
+
 typedef struct {
     struct in6_addr address;
     gint64          expiry_msec;
@@ -141,6 +150,7 @@ typedef enum {
     NM_NDISC_CONFIG_MTU            = 1 << 7,
     NM_NDISC_CONFIG_REACHABLE_TIME = 1 << 8,
     NM_NDISC_CONFIG_RETRANS_TIMER  = 1 << 9,
+    NM_NDISC_CONFIG_PREF64         = 1 << 10,
 } NMNDiscConfigMap;
 
 typedef enum {
@@ -188,12 +198,14 @@ typedef struct {
     guint gateways_n;
     guint addresses_n;
     guint routes_n;
+    guint pref64_n;
     guint dns_servers_n;
     guint dns_domains_n;
 
     const NMNDiscGateway   *gateways;
     const NMNDiscAddress   *addresses;
     const NMNDiscRoute     *routes;
+    const NMNDiscPref64    *pref64;
     const NMNDiscDNSServer *dns_servers;
     const NMNDiscDNSDomain *dns_domains;
 } NMNDiscData;
@@ -282,6 +294,7 @@ struct _NML3ConfigData *nm_ndisc_data_to_l3cd(NMDedupMultiIndex        *multi_id
                                               int                       ifindex,
                                               const NMNDiscData        *rdata,
                                               NMSettingIP6ConfigPrivacy ip6_privacy,
-                                              NMUtilsIPv6IfaceId       *token);
+                                              NMUtilsIPv6IfaceId       *token,
+                                              const char               *network_id);
 
 #endif /* __NETWORKMANAGER_NDISC_H__ */

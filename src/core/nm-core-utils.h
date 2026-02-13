@@ -304,6 +304,7 @@ typedef enum {
     NM_UTILS_STABLE_TYPE_STABLE_ID = 1,
     NM_UTILS_STABLE_TYPE_GENERATED = 2,
     NM_UTILS_STABLE_TYPE_RANDOM    = 3,
+    NM_UTILS_STABLE_TYPE_CLAT      = 4,
 } NMUtilsStableType;
 
 #define NM_UTILS_STABLE_TYPE_NONE ((NMUtilsStableType) - 1)
@@ -519,5 +520,20 @@ void        nm_utils_read_private_files(const char *const  *paths,
                                         GAsyncReadyCallback callback,
                                         gpointer            cb_data);
 GHashTable *nm_utils_read_private_files_finish(GAsyncResult *result, GError **error);
+
+/*****************************************************************************/
+
+void nm_utils_ping_host(NMIPAddrTyped       address,
+                        int                 ifindex,
+                        guint               timeout_sec,
+                        GCancellable       *cancellable,
+                        GAsyncReadyCallback callback,
+                        gpointer            cb_data);
+
+gboolean nm_utils_ping_host_finish(GAsyncResult *result, GError **error);
+
+uint16_t nm_utils_icmp6_checksum(const void *ip6_src, size_t data_len, const void *data);
+
+gboolean nm_utils_ipv6_dad_send(const struct in6_addr *addr, int ifindex, int arptype);
 
 #endif /* __NM_CORE_UTILS_H__ */

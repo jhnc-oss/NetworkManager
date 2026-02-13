@@ -194,6 +194,9 @@ static void supplicant_iface_notify_p2p_available(NMSupplicantInterface *iface,
 static void supplicant_iface_notify_wpa_psk_mismatch_cb(NMSupplicantInterface *iface,
                                                         NMDeviceWifi          *self);
 
+static void supplicant_iface_notify_wpa_sae_mismatch_cb(NMSupplicantInterface *iface,
+                                                        NMDeviceWifi          *self);
+
 static void periodic_update(NMDeviceWifi *self);
 
 static void ap_add_remove(NMDeviceWifi *self,
@@ -630,6 +633,10 @@ supplicant_interface_acquire_cb(NMSupplicantManager         *supplicant_manager,
     g_signal_connect(priv->sup_iface,
                      NM_SUPPLICANT_INTERFACE_PSK_MISMATCH,
                      G_CALLBACK(supplicant_iface_notify_wpa_psk_mismatch_cb),
+                     self);
+    g_signal_connect(priv->sup_iface,
+                     NM_SUPPLICANT_INTERFACE_SAE_MISMATCH,
+                     G_CALLBACK(supplicant_iface_notify_wpa_sae_mismatch_cb),
                      self);
 
     _scan_notify_is_scanning(self);
@@ -2244,6 +2251,26 @@ wps_timeout_cb(gpointer user_data)
     return G_SOURCE_REMOVE;
 }
 
+static gboolean
+wifi_connection_is_new(NMDeviceWifi *self)
+{
+    NMDevice             *device = NM_DEVICE(self);
+    NMActRequest         *req;
+    NMSettingsConnection *connection;
+    guint64               timestamp = 0;
+
+    req = nm_device_get_act_request(device);
+    g_return_val_if_fail(NM_IS_ACT_REQUEST(req), TRUE);
+
+    connection = nm_act_request_get_settings_connection(req);
+    g_return_val_if_fail(NM_IS_SETTINGS_CONNECTION(connection), TRUE);
+
+    if (nm_settings_connection_get_timestamp(connection, &timestamp) && timestamp != 0)
+        return FALSE;
+
+    return TRUE;
+}
+
 static void
 wifi_secrets_get_secrets(NMDeviceWifi                *self,
                          const char                  *setting_name,
@@ -2398,10 +2425,11 @@ handle_8021x_or_psk_auth_fail(NMDeviceWifi              *self,
                               NMSupplicantInterfaceState old_state,
                               int                        disconnect_reason)
 {
-    NMDevice     *device = NM_DEVICE(self);
-    NMActRequest *req;
-    const char   *setting_name = NULL;
-    gboolean      handled      = FALSE;
+    NMDevice                    *device = NM_DEVICE(self);
+    NMActRequest                *req;
+    const char                  *setting_name = NULL;
+    NMSecretAgentGetSecretsFlags secret_flags = NM_SECRET_AGENT_GET_SECRETS_FLAG_ALLOW_INTERACTION
+                                                | NM_SECRET_AGENT_GET_SECRETS_FLAG_REQUEST_NEW;
 
     g_return_val_if_fail(new_state == NM_SUPPLICANT_INTERFACE_STATE_DISCONNECTED, FALSE);
 
@@ -2411,8 +2439,7 @@ handle_8021x_or_psk_auth_fail(NMDeviceWifi              *self,
     req = nm_device_get_act_request(NM_DEVICE(self));
     g_return_val_if_fail(req != NULL, FALSE);
 
-    if (need_new_8021x_secrets(self, old_state, &setting_name)
-        || need_new_wpa_psk(self, old_state, disconnect_reason, &setting_name)) {
+    if (need_new_8021x_secrets(self, old_state, &setting_name)) {
         nm_act_request_clear_secrets(req);
 
         _LOGI(LOGD_DEVICE | LOGD_WIFI,
@@ -2422,14 +2449,54 @@ handle_8021x_or_psk_auth_fail(NMDeviceWifi              *self,
         nm_device_state_changed(device,
                                 NM_DEVICE_STATE_NEED_AUTH,
                                 NM_DEVICE_STATE_REASON_SUPPLICANT_DISCONNECT);
-        wifi_secrets_get_secrets(self,
-                                 setting_name,
-                                 NM_SECRET_AGENT_GET_SECRETS_FLAG_ALLOW_INTERACTION
-                                     | NM_SECRET_AGENT_GET_SECRETS_FLAG_REQUEST_NEW);
-        handled = TRUE;
+        wifi_secrets_get_secrets(self, setting_name, secret_flags);
+        return TRUE;
     }
 
-    return handled;
+    if (need_new_wpa_psk(self, old_state, disconnect_reason, &setting_name)) {
+        nm_act_request_clear_secrets(req);
+        cleanup_association_attempt(self, TRUE);
+
+        if (wifi_connection_is_new(self)) {
+            _LOGI(LOGD_DEVICE | LOGD_WIFI,
+                  "Activation: (wifi) new connection disconnected during association, asking for "
+                  "new key");
+            nm_device_state_changed(device,
+                                    NM_DEVICE_STATE_NEED_AUTH,
+                                    NM_DEVICE_STATE_REASON_SUPPLICANT_DISCONNECT);
+            wifi_secrets_get_secrets(self, setting_name, secret_flags);
+            return TRUE;
+        }
+
+        if (!nm_device_auth_retries_try_next(device)) {
+            nm_device_state_changed(device,
+                                    NM_DEVICE_STATE_FAILED,
+                                    NM_DEVICE_STATE_REASON_NO_SECRETS);
+            return TRUE;
+        }
+
+        if (nm_device_auth_retries_has_next(device)) {
+            secret_flags &= ~NM_SECRET_AGENT_GET_SECRETS_FLAG_REQUEST_NEW;
+            _LOGI(
+                LOGD_DEVICE | LOGD_WIFI,
+                "Activation: (wifi) disconnected during association, reauthenticating connection");
+        } else {
+            _LOGI(LOGD_DEVICE | LOGD_WIFI,
+                  "Activation: (wifi) disconnected during association, asking for new key");
+        }
+
+        nm_device_state_changed(device,
+                                NM_DEVICE_STATE_NEED_AUTH,
+                                NM_DEVICE_STATE_REASON_SUPPLICANT_DISCONNECT);
+        wifi_secrets_get_secrets(self, setting_name, secret_flags);
+
+        return TRUE;
+    }
+
+    _LOGI(LOGD_DEVICE | LOGD_WIFI,
+          "Activation: (wifi) disconnected during association, retrying connection");
+
+    return FALSE;
 }
 
 static gboolean
@@ -2861,8 +2928,42 @@ supplicant_iface_notify_wpa_psk_mismatch_cb(NMSupplicantInterface *iface, NMDevi
     if (nm_device_get_state(device) != NM_DEVICE_STATE_CONFIG)
         return;
 
+    if (!wifi_connection_is_new(self) && nm_device_auth_retries_has_next(device)) {
+        _LOGI(LOGD_DEVICE | LOGD_WIFI,
+              "Activation: (wifi) psk mismatch reported by supplicant, retrying connection");
+        return;
+    }
+
     _LOGI(LOGD_DEVICE | LOGD_WIFI,
           "Activation: (wifi) psk mismatch reported by supplicant, asking for new key");
+
+    req = nm_device_get_act_request(NM_DEVICE(self));
+    g_return_if_fail(req != NULL);
+
+    nm_act_request_clear_secrets(req);
+
+    cleanup_association_attempt(self, TRUE);
+    nm_device_state_changed(device,
+                            NM_DEVICE_STATE_NEED_AUTH,
+                            NM_DEVICE_STATE_REASON_SUPPLICANT_DISCONNECT);
+    wifi_secrets_get_secrets(self,
+                             setting_name,
+                             NM_SECRET_AGENT_GET_SECRETS_FLAG_ALLOW_INTERACTION
+                                 | NM_SECRET_AGENT_GET_SECRETS_FLAG_REQUEST_NEW);
+}
+
+static void
+supplicant_iface_notify_wpa_sae_mismatch_cb(NMSupplicantInterface *iface, NMDeviceWifi *self)
+{
+    NMDevice     *device = NM_DEVICE(self);
+    NMActRequest *req;
+    const char   *setting_name = NM_SETTING_WIRELESS_SECURITY_SETTING_NAME;
+
+    if (nm_device_get_state(device) != NM_DEVICE_STATE_CONFIG)
+        return;
+
+    _LOGI(LOGD_DEVICE | LOGD_WIFI,
+          "Activation: (wifi) SAE password mismatch reported by supplicant, asking for new key");
 
     req = nm_device_get_act_request(NM_DEVICE(self));
     g_return_if_fail(req != NULL);
@@ -3222,8 +3323,19 @@ act_stage1_prepare(NMDevice *device, NMDeviceStateReason *out_failure_reason)
 static void
 ensure_hotspot_frequency(NMDeviceWifi *self, NMSettingWireless *s_wifi, NMWifiAP *ap)
 {
-    guint32     a_freqs[]  = {5180, 5200, 5220, 5745, 5765, 5785, 5805, 0};
-    guint32     bg_freqs[] = {2412, 2437, 2462, 2472, 0};
+    guint32     freqs_a[]    = {5180, /* only U-NII-1 channels: non-DFS and available everywhere */
+                                5200,
+                                5220,
+                                5240,
+                                0};
+    guint32     freqs_bg[]   = {2412, 2437, 2462, 2472, 0};
+    guint32     freqs_6ghz[] = {5975, /* only U-NII-5 PSC channels, for better compatibility */
+                                6055,
+                                6135,
+                                6215,
+                                6295,
+                                6375,
+                                0};
     guint32    *rnd_freqs;
     guint       rnd_freqs_len;
     NMDevice   *device = NM_DEVICE(self);
@@ -3234,7 +3346,7 @@ ensure_hotspot_frequency(NMDeviceWifi *self, NMSettingWireless *s_wifi, NMWifiAP
     guint       l;
 
     nm_assert(ap);
-    nm_assert(NM_IN_STRSET(band, NULL, "a", "bg"));
+    nm_assert(NM_IN_STRSET(band, NULL, "a", "bg", "6GHz"));
 
     if (nm_wifi_ap_get_freq(ap))
         return;
@@ -3268,11 +3380,14 @@ ensure_hotspot_frequency(NMDeviceWifi *self, NMSettingWireless *s_wifi, NMWifiAP
     }
 
     if (nm_streq0(band, "a")) {
-        rnd_freqs     = a_freqs;
-        rnd_freqs_len = G_N_ELEMENTS(a_freqs) - 1;
+        rnd_freqs     = freqs_a;
+        rnd_freqs_len = G_N_ELEMENTS(freqs_a) - 1;
+    } else if (nm_streq0(band, "6GHz")) {
+        rnd_freqs     = freqs_6ghz;
+        rnd_freqs_len = G_N_ELEMENTS(freqs_6ghz) - 1;
     } else {
-        rnd_freqs     = bg_freqs;
-        rnd_freqs_len = G_N_ELEMENTS(bg_freqs) - 1;
+        rnd_freqs     = freqs_bg;
+        rnd_freqs_len = G_N_ELEMENTS(freqs_bg) - 1;
     }
 
     /* shuffle the frequencies (inplace). The idea is to choose

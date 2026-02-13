@@ -4094,6 +4094,7 @@ test_connection_diff_a_only(void)
              {NM_SETTING_IP_CONFIG_DHCP_REJECT_SERVERS, NM_SETTING_DIFF_RESULT_IN_A},
              {NM_SETTING_IP4_CONFIG_LINK_LOCAL, NM_SETTING_DIFF_RESULT_IN_A},
              {NM_SETTING_IP4_CONFIG_DHCP_IPV6_ONLY_PREFERRED, NM_SETTING_DIFF_RESULT_IN_A},
+             {NM_SETTING_IP4_CONFIG_CLAT, NM_SETTING_DIFF_RESULT_IN_A},
              {NM_SETTING_IP_CONFIG_AUTO_ROUTE_EXT_GW, NM_SETTING_DIFF_RESULT_IN_A},
              {NM_SETTING_IP_CONFIG_REPLACE_LOCAL_RULE, NM_SETTING_DIFF_RESULT_IN_A},
              {NM_SETTING_IP_CONFIG_DHCP_SEND_RELEASE, NM_SETTING_DIFF_RESULT_IN_A},
@@ -11140,7 +11141,7 @@ _do_wifi_ghz_freqs(const guint *freqs, const char *band)
     int j;
     int i;
 
-    g_assert(NM_IN_STRSET(band, "a", "bg"));
+    g_assert(NM_IN_STRSET(band, "a", "bg", "6GHz"));
     g_assert(freqs);
     g_assert(freqs[0] != 0);
 
@@ -11178,6 +11179,7 @@ test_nm_utils_wifi_ghz_freqs(void)
 {
     _do_wifi_ghz_freqs(nm_utils_wifi_2ghz_freqs(), "bg");
     _do_wifi_ghz_freqs(nm_utils_wifi_5ghz_freqs(), "a");
+    _do_wifi_ghz_freqs(nm_utils_wifi_6ghz_freqs(), "6GHz");
 }
 
 /*****************************************************************************/

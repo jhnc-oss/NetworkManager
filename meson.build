@@ -5,7 +5,7 @@ project(
 # NOTE: When incrementing version also add corresponding
 #       NM_VERSION_x_y_z macros in
 #       "src/libnm-core-public/nm-version-macros.h.in"
-  version: '1.56.0',
+  version: '1.57.2-dev',
   license: 'GPL2+',
   default_options: [
     'buildtype=debugoptimized',
@@ -358,7 +358,11 @@ enable_iwd = get_option('iwd')
 assert((not enable_iwd) or enable_wifi, 'Enabling iwd support requires Wi-Fi support as well')
 config_h.set10('WITH_IWD', enable_iwd)
 
-enable_wext = get_option('wext')
+wext = get_option('wext')
+if wext == 'true'
+  error('Wireless Extensions support is deprecated and will be removed in the future. Use -Dwext=force to keep using it')
+endif
+enable_wext = (wext == 'force')
 config_h.set10('HAVE_WEXT', enable_wext)
 
 # Checks for libdl - on certain platforms its part of libc
@@ -406,6 +410,14 @@ install_systemdunitdir = (systemd_systemdsystemunitdir != 'no')
 if install_systemdunitdir and systemd_systemdsystemunitdir == ''
   assert(systemd_dep.found(), 'systemd required but not found, please provide a valid systemd user unit dir or disable it')
   systemd_systemdsystemunitdir = systemd_dep.get_variable(pkgconfig: 'systemdsystemunitdir', pkgconfig_define: ['rootprefix', nm_prefix])
+endif
+
+systemd_systemdsystemgeneratordir = get_option('systemdsystemgeneratordir')
+install_systemdgeneratordir = (systemd_systemdsystemgeneratordir != 'no')
+
+if install_systemdgeneratordir and systemd_systemdsystemgeneratordir == ''
+  assert(systemd_dep.found(), 'systemd required but not found, please provide a valid systemd user generator dir or disable it')
+  systemd_systemdsystemgeneratordir = systemd_dep.get_variable(pkgconfig: 'systemdsystemgeneratordir', pkgconfig_define: ['rootprefix', nm_prefix])
 endif
 
 enable_systemd_journal = get_option('systemd_journal')
@@ -502,6 +514,16 @@ if enable_selinux
 endif
 config_h.set10('HAVE_SELINUX', enable_selinux)
 
+# CLAT support
+enable_clat = get_option('clat')
+if enable_clat
+  libbpf = dependency('libbpf', version: '>= 0.1.0', required: false)
+  assert(libbpf.found(), 'You must have libbpf installed to build. Use -Dclat=false to disable use of it')
+  libndp_dep = dependency('libndp', version: '>= 1.9', required: false)
+  assert(libndp_dep.found(), 'You must have libndp >= 1.9 installed to build with CLAT support. Use -Dclat=false to disable it')
+endif
+config_h.set10('HAVE_CLAT', enable_clat)
+
 # libaudit support
 libaudit = get_option('libaudit')
 enable_libaudit = libaudit.contains('yes')
@@ -526,7 +548,8 @@ config_h.set10('WITH_TEAMDCTL', enable_teamdctl)
 enable_polkit = get_option('polkit')
 if enable_polkit
   # FIXME: policydir should be relative to `datadir`, not `prefix`. Fixed in https://gitlab.freedesktop.org/polkit/polkit/merge_requests/2
-  polkit_gobject_policydir = dependency('polkit-gobject-1').get_variable(pkgconfig: 'policydir', pkgconfig_define: ['prefix', nm_prefix])
+  polkit_policydir = dependency('polkit-gobject-1').get_variable(pkgconfig: 'policydir', pkgconfig_define: ['prefix', nm_prefix])
+  polkit_rulesdir = join_paths(fs.parent(polkit_policydir), 'rules.d')
 endif
 
 config_auth_polkit_default = get_option('config_auth_polkit_default')
@@ -536,6 +559,12 @@ endif
 config_h.set_quoted('NM_CONFIG_DEFAULT_MAIN_AUTH_POLKIT', config_auth_polkit_default)
 
 enable_modify_system = get_option('modify_system')
+if enable_modify_system
+  # FIXME: remove this after everyone has stopped using modify_system
+  error('modify_system=true is no longer allowed due to security reasons')
+endif
+
+polkit_noauth_group = get_option('polkit_noauth_group')
 
 polkit_agent_helper_1_path = get_option('polkit_agent_helper_1')
 foreach p : [ '/usr/libexec/polkit-agent-helper-1',
@@ -968,7 +997,6 @@ data_conf.set('NM_DHCP_CLIENTS_ENABLED',                 ', '.join(config_dhcp_c
 data_conf.set('NM_MAJOR_VERSION',                        nm_major_version)
 data_conf.set('NM_MICRO_VERSION',                        nm_micro_version)
 data_conf.set('NM_MINOR_VERSION',                        nm_minor_version)
-data_conf.set('NM_MODIFY_SYSTEM_POLICY',                 (enable_modify_system ? 'yes' : 'auth_admin_keep'))
 data_conf.set('NM_VERSION',                              nm_version)
 data_conf.set('VERSION',                                 nm_version)
 data_conf.set('bindir',                                  nm_bindir)
@@ -1084,6 +1112,7 @@ output = '\nSystem paths:\n'
 output += '  prefix: ' + nm_prefix + '\n'
 output += '  exec_prefix: ' + nm_prefix + '\n'
 output += '  systemdunitdir: ' + systemd_systemdsystemunitdir + '\n'
+output += '  systemdgeneratordir: ' + systemd_systemdsystemgeneratordir + '\n'
 output += '  udev_dir: ' + udev_udevdir + '\n'
 output += '  nmbinary: ' + nm_pkgsbindir + '\n'
 output += '  nmconfdir: ' + nm_pkgconfdir + '\n'
@@ -1098,17 +1127,7 @@ output += '  dbus_conf_dir: ' + dbus_conf_dir + '\n'
 output += '\nPlatform:\n'
 output += '  session tracking: ' + ','.join(session_trackers) + '\n'
 output += '  suspend/resume: ' + suspend_resume + '\n'
-output += '  policykit: ' + enable_polkit.to_string() + ' (default: ' + config_auth_polkit_default + ')'
-if enable_polkit
-  output += ' ('
-  if enable_modify_system
-    output += 'permissive'
-  else
-    output += 'restrictive'
-  endif
-  output += ' modify.system)'
-endif
-output += '\n'
+output += '  policykit: ' + enable_polkit.to_string() + ' (default: ' + config_auth_polkit_default + ', noauth_group: "' + polkit_noauth_group + '")\n'
 output += '  polkit-agent-helper-1: ' + polkit_agent_helper_1_path + '\n'
 output += '  selinux: ' + enable_selinux.to_string() + '\n'
 output += '  systemd-journald: ' + enable_systemd_journal.to_string() + ' (default: logging.backend=' + config_logging_backend_default + ')\n'
@@ -1136,6 +1155,7 @@ output += '  ofono: ' + enable_ofono.to_string() + '\n'
 output += '  concheck: ' + enable_concheck.to_string() + '\n'
 output += '  libteamdctl: ' + enable_teamdctl.to_string() + '\n'
 output += '  ovs: ' + enable_ovs.to_string() + '\n'
+output += '  clat: ' + enable_clat.to_string() + '\n'
 output += '  nmcli: ' + enable_nmcli.to_string() + '\n'
 output += '  nmtui: ' + enable_nmtui.to_string() + '\n'
 output += '  nm-cloud-setup: ' + enable_nm_cloud_setup.to_string() + '\n'

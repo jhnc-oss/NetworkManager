@@ -1,5 +1,6 @@
 # system paths
 option('systemdsystemunitdir', type: 'string', value: '', description: 'Directory for systemd service files')
+option('systemdsystemgeneratordir', type: 'string', value: '', description: 'Directory for systemd generator files')
 option('system_ca_path', type: 'string', value: '/etc/ssl/certs', description: 'path to system CA certificates')
 option('udev_dir', type: 'string', value: '', description: 'Absolute path of the udev base directory. Set to \'no\' not to install the udev rule')
 option('dbus_conf_dir', type: 'string', value: '', description: 'where D-Bus system.d directory is')
@@ -18,7 +19,8 @@ option('session_tracking', type: 'combo', choices: ['systemd', 'elogind', 'no'],
 option('suspend_resume', type: 'combo', choices: ['systemd', 'elogind', 'consolekit', 'auto'], value: 'auto', description: 'Build NetworkManager with specific suspend/resume support')
 option('polkit', type: 'boolean', value: true, description: 'User auth-polkit configuration option.')
 option('config_auth_polkit_default', type: 'combo', choices: ['default', 'true', 'false', 'root-only'], value: 'default', description: 'Default value for configuration main.auth-polkit.')
-option('modify_system', type: 'boolean', value: false, description: 'Allow users to modify system connections')
+option('modify_system', type: 'boolean', value: false, description: 'Allow users to modify system connections (option no longer supported, don\'t use)')
+option('polkit_noauth_group', type: 'string', value: '', description: 'Allow users of the selected group, typically sudo or wheel, to modify system connections without introducing a password (discouraged)')
 option('polkit_agent_helper_1', type: 'string', value: '', description: 'Path name to the polkit-agent-helper-1 binary from polkit')
 option('selinux', type: 'boolean', value: true, description: 'Build with SELinux')
 option('systemd_journal', type: 'boolean', value: true, description: 'Use systemd journal for logging')
@@ -28,7 +30,7 @@ option('hostname_persist', type: 'combo', choices: ['default', 'suse', 'gentoo',
 option('libaudit', type: 'combo', choices: ['yes', 'yes-disabled-by-default', 'no'], value: 'yes', description: 'Build with audit daemon support. yes-disabled-by-default enables support, but disables it unless explicitly configured via NetworkManager.conf')
 
 # features
-option('wext', type: 'boolean', value: true, description: 'Enable or disable Linux Wireless Extensions')
+option('wext', type: 'combo', choices: ['true', 'false', 'force' ], value: 'false', description: 'Enable or disable Linux Wireless Extensions (deprecated). wext support will be removed in a future release, don\'t rely on this.')
 option('wifi', type: 'boolean', value: true, description: 'enable Wi-Fi support')
 option('iwd', type: 'boolean', value: false, description: 'enable iwd support (experimental)')
 option('ppp', type: 'boolean', value: true, description: 'enable PPP/PPPoE support')
@@ -46,6 +48,9 @@ option('nm_cloud_setup', type: 'boolean', value: true, description: 'Build nm-cl
 option('bluez5_dun', type: 'boolean', value: false, description: 'enable Bluez5 DUN support')
 option('ebpf', type: 'combo', choices: ['auto', 'true', 'false'], description: 'Enable eBPF support (deprecated)')
 option('nbft', type: 'boolean', value: true, description: 'Enable NBFT support in the initrd generator')
+option('clat', type: 'boolean', value: true, description: 'Build with CLAT support')
+option('bpf-compiler', type : 'combo', choices : ['auto', 'clang', 'gcc'],
+       description : 'compiler used to build BPF programs')
 
 # configuration plugins
 option('config_plugins_default', type: 'string', value: '', description: 'Default configuration option for main.plugins setting, used as fallback if the configuration option is unset')

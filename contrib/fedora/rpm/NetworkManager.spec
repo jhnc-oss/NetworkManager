@@ -100,7 +100,17 @@ Release: __RELEASE_VERSION__%{?dist}
 %else
 %bcond_without iwd
 %endif
-
+%if 0%{?fedora} <= 43 || 0%{?rhel} <= 10
+%bcond_without polkit_noauth_group
+%else
+%bcond_with polkit_noauth_group
+%endif
+%ifarch %{ix86}
+# there is no bpftool in i686
+%bcond_with clat
+%else
+%bcond_without clat
+%endif
 ###############################################################################
 
 %global dbus_version 1.9.18
@@ -178,7 +188,9 @@ Requires: dbus >= %{dbus_version}
 Requires: glib2 >= %{glib2_version}
 Requires: %{name}-libnm%{?_isa} = %{epoch}:%{version}-%{release}
 
-Recommends: iputils
+%if %{with clat}
+Requires: libbpf
+%endif
 
 %if 0%{?rhel} == 8
 # Older libndp versions use select() (rh#1933041). On well known distros,
@@ -227,6 +239,7 @@ Conflicts: NetworkManager-dispatcher-routing-rules <= 1:1.47.5-3
 %endif
 
 BuildRequires: gcc
+BuildRequires: clang
 BuildRequires: pkgconfig
 BuildRequires: meson
 BuildRequires: gettext-devel >= 0.19.8
@@ -281,6 +294,10 @@ BuildRequires: firewalld-filesystem
 BuildRequires: iproute
 BuildRequires: iproute-tc
 BuildRequires: libnvme-devel >= 1.5
+%if %{with clat}
+BuildRequires: libbpf-devel
+BuildRequires: bpftool
+%endif
 
 Provides: %{name}-dispatcher%{?_isa} = %{epoch}:%{version}-%{release}
 
@@ -600,18 +617,19 @@ Preferably use nmcli instead.
 %endif
 %if %{with wifi}
 	-Dwifi=true \
-%if 0%{?fedora}
-	-Dwext=true \
-%else
-	-Dwext=false \
-%endif
 %else
 	-Dwifi=false \
 %endif
+	-Dwext=false \
 %if %{with iwd}
 	-Diwd=true \
 %else
 	-Diwd=false \
+%endif
+%if %{with clat}
+	-Dclat=true \
+%else
+	-Dclat=false \
 %endif
 %if %{with bluetooth}
 	-Dbluez5_dun=true \
@@ -649,7 +667,9 @@ Preferably use nmcli instead.
 	-Dselinux=true \
 	-Dpolkit=true  \
 	-Dconfig_auth_polkit_default=true \
-	-Dmodify_system=true \
+%if %{with polkit_noauth_group}
+	-Dpolkit_noauth_group=wheel \
+%endif
 	-Dconcheck=true \
 %if 0%{?fedora}
 	-Dlibpsl=true \
@@ -659,6 +679,7 @@ Preferably use nmcli instead.
 	-Dsession_tracking=systemd \
 	-Dsuspend_resume=systemd \
 	-Dsystemdsystemunitdir=%{_unitdir} \
+	-Dsystemdsystemgeneratordir=%{_systemdgeneratordir} \
 	-Dsystem_ca_path=/etc/pki/ca-trust/extracted/pem/tls-ca-bundle.pem \
 	-Ddbus_conf_dir=%{dbus_sys_dir} \
 	-Dtests=yes \
@@ -731,6 +752,7 @@ rm -f %{buildroot}%{_libdir}/pppd/%{ppp_version}/*.la
 rm -f %{buildroot}%{nmplugindir}/*.la
 
 # Don't use the *-initrd.service files yet, wait dracut to support them
+rm -f %{buildroot}%{_systemdgeneratordir}/nm-initrd-generator.sh
 rm -f %{buildroot}%{_unitdir}/NetworkManager-config-initrd.service
 rm -f %{buildroot}%{_unitdir}/NetworkManager-initrd.service
 rm -f %{buildroot}%{_unitdir}/NetworkManager-wait-online-initrd.service
@@ -896,6 +918,9 @@ fi
 %{_datadir}/dbus-1/system-services/org.freedesktop.nm_dispatcher.service
 %{_datadir}/dbus-1/system-services/org.freedesktop.nm_priv_helper.service
 %{_datadir}/polkit-1/actions/*.policy
+%if %{with polkit_noauth_group}
+%{_datadir}/polkit-1/rules.d/org.freedesktop.NetworkManager.rules
+%endif
 %{_prefix}/lib/udev/rules.d/*.rules
 %{_prefix}/lib/firewalld/zones/nm-shared.xml
 # systemd stuff

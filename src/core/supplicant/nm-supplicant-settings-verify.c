@@ -6,6 +6,7 @@
 #include "src/core/nm-default-daemon.h"
 
 #include "nm-supplicant-settings-verify.h"
+#include "libnm-core-aux-intern/nm-libnm-core-utils.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -71,7 +72,7 @@ static const struct Opt opt_table[] = {
     OPT_BYTES("engine_id", 0),
     OPT_INT("fragment_size", 1, 2000),
     OPT_KEYWORD("freq_list", NULL),
-    OPT_INT("frequency", 2412, 5825),
+    OPT_INT("frequency", _NM_WIFI_FREQ_MIN, _NM_WIFI_FREQ_MAX),
     OPT_KEYWORD("group", NM_MAKE_STRV("CCMP", "TKIP", "WEP104", "WEP40", "GCMP-256", )),
     OPT_INT("ht40", 0, 1),
     OPT_BYTES("identity", 0),
@@ -212,18 +213,19 @@ validate_type_utf8(const struct Opt *opt, const char *value, const guint32 len)
 }
 
 static gboolean
-validate_type_keyword(const struct Opt *opt, const char *value, const guint32 len)
+validate_type_keyword(const struct Opt *opt, const char *value_in, const guint32 len)
 {
     gs_free char *value_free = NULL;
+    char         *value;
 
     nm_assert(opt);
-    nm_assert(value);
+    nm_assert(value_in);
 
     /* Allow everything */
     if (!opt->str_allowed)
         return TRUE;
 
-    value = nm_strndup_a(300, value, len, &value_free);
+    value = nm_strndup_a(300, value_in, len, &value_free);
 
     /* validate each space-separated word in 'value' */
 

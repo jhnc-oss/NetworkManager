@@ -805,7 +805,7 @@ typedef struct _NMDevicePrivate {
 
     GVariant *ports_variant; /* Array of port devices D-Bus path */
     char     *prop_ip_iface; /* IP interface D-Bus property */
-    GList    *ping_operations;
+    CList     ping_ops_lst_head;
     GSource  *ping_timeout;
 } NMDevicePrivate;
 
@@ -850,7 +850,6 @@ static const char *_activation_func_to_string(ActivationHandleFunc func);
 static void
 _set_state_full(NMDevice *self, NMDeviceState state, NMDeviceStateReason reason, gboolean quitting);
 static void queued_state_clear(NMDevice *device);
-static void ip_check_ping_watch_cb(GPid pid, int status, gpointer user_data);
 static void nm_device_start_ip_check(NMDevice *self);
 static void realize_start_setup(NMDevice             *self,
                                 const NMPlatformLink *plink,
@@ -907,10 +906,11 @@ static void concheck_update_state(NMDevice           *self,
 static void sriov_op_cb(GError *error, gpointer user_data);
 
 static void device_ifindex_changed_cb(NMManager *manager, NMDevice *device_changed, NMDevice *self);
-static gboolean device_link_changed(gpointer user_data);
-static gboolean _get_maybe_ipv6_disabled(NMDevice *self);
-static void     deactivate_ready(NMDevice *self, NMDeviceStateReason reason);
-static void     carrier_disconnected_action_cancel(NMDevice *self);
+static gboolean    device_link_changed(gpointer user_data);
+static gboolean    _get_maybe_ipv6_disabled(NMDevice *self);
+static void        deactivate_ready(NMDevice *self, NMDeviceStateReason reason);
+static void        carrier_disconnected_action_cancel(NMDevice *self);
+static const char *nm_device_get_effective_ip_config_method(NMDevice *self, int addr_family);
 
 /*****************************************************************************/
 
@@ -1524,6 +1524,50 @@ _prop_get_connection_dnssec(NMDevice *self, NMConnection *connection)
                                                        NM_SETTING_CONNECTION_DNSSEC_DEFAULT);
 }
 
+static NMSettingIp4ConfigClat
+_prop_get_ipv4_clat(NMDevice *self, gboolean do_log)
+{
+    NMSettingIP4Config    *s_ip4 = NULL;
+    NMSettingIp4ConfigClat clat;
+    const char            *method;
+
+    s_ip4 = nm_device_get_applied_setting(self, NM_TYPE_SETTING_IP4_CONFIG);
+    if (!s_ip4)
+        return NM_SETTING_IP4_CONFIG_CLAT_NO;
+
+    method = nm_device_get_effective_ip_config_method(self, AF_INET);
+    if (nm_streq(method, NM_SETTING_IP4_CONFIG_METHOD_DISABLED))
+        return NM_SETTING_IP4_CONFIG_CLAT_NO;
+
+    clat = nm_setting_ip4_config_get_clat(s_ip4);
+    if (clat == NM_SETTING_IP4_CONFIG_CLAT_DEFAULT) {
+        clat = nm_config_data_get_connection_default_int64(NM_CONFIG_GET_DATA,
+                                                           NM_CON_DEFAULT("ipv4.clat"),
+                                                           self,
+                                                           NM_SETTING_IP4_CONFIG_CLAT_NO,
+                                                           NM_SETTING_IP4_CONFIG_CLAT_FORCE,
+                                                           NM_SETTING_IP4_CONFIG_CLAT_NO);
+    }
+
+    if (clat == NM_SETTING_IP4_CONFIG_CLAT_AUTO
+        && !nm_streq(method, NM_SETTING_IP4_CONFIG_METHOD_AUTO)) {
+        /* clat=auto enables CLAT only with method=auto */
+        clat = NM_SETTING_IP4_CONFIG_CLAT_NO;
+    }
+
+    if (!HAVE_CLAT
+        && NM_IN_SET(clat, NM_SETTING_IP4_CONFIG_CLAT_AUTO, NM_SETTING_IP4_CONFIG_CLAT_FORCE)) {
+        if (do_log) {
+            _NMLOG(clat == NM_SETTING_IP4_CONFIG_CLAT_FORCE ? LOGL_WARN : LOGL_TRACE,
+                   LOGD_DEVICE,
+                   "CLAT will not work because it is disabled at build time");
+        }
+        clat = NM_SETTING_IP4_CONFIG_CLAT_NO;
+    }
+
+    return clat;
+}
+
 static NMMptcpFlags
 _prop_get_connection_mptcp_flags(NMDevice *self, NMConnection *connection)
 {
@@ -1922,26 +1966,43 @@ _prop_get_ipvx_may_fail_cached(NMDevice *self, int addr_family, NMTernary *cache
 }
 
 static gboolean
-_prop_get_ipv4_dhcp_ipv6_only_preferred(NMDevice *self)
+_prop_get_ipv4_dhcp_ipv6_only_preferred(NMDevice *self, gboolean *out_is_auto)
 {
     NMSettingIP4Config               *s_ip4;
     NMSettingIP4DhcpIpv6OnlyPreferred ipv6_only;
+
+    NM_SET_OUT(out_is_auto, FALSE);
 
     s_ip4 = nm_device_get_applied_setting(self, NM_TYPE_SETTING_IP4_CONFIG);
     if (!s_ip4)
         return FALSE;
 
     ipv6_only = nm_setting_ip4_config_get_dhcp_ipv6_only_preferred(s_ip4);
-    if (ipv6_only != NM_SETTING_IP4_DHCP_IPV6_ONLY_PREFERRED_DEFAULT)
-        return ipv6_only;
+    if (ipv6_only == NM_SETTING_IP4_DHCP_IPV6_ONLY_PREFERRED_DEFAULT) {
+        ipv6_only = nm_config_data_get_connection_default_int64(
+            NM_CONFIG_GET_DATA,
+            NM_CON_DEFAULT("ipv4.dhcp-ipv6-only-preferred"),
+            self,
+            NM_SETTING_IP4_DHCP_IPV6_ONLY_PREFERRED_NO,
+            NM_SETTING_IP4_DHCP_IPV6_ONLY_PREFERRED_AUTO,
+            NM_SETTING_IP4_DHCP_IPV6_ONLY_PREFERRED_AUTO);
+    }
 
-    return nm_config_data_get_connection_default_int64(
-        NM_CONFIG_GET_DATA,
-        NM_CON_DEFAULT("ipv4.dhcp-ipv6-only-preferred"),
-        self,
-        NM_SETTING_IP4_DHCP_IPV6_ONLY_PREFERRED_NO,
-        NM_SETTING_IP4_DHCP_IPV6_ONLY_PREFERRED_YES,
-        NM_SETTING_IP4_DHCP_IPV6_ONLY_PREFERRED_NO);
+    if (NM_IN_SET(ipv6_only,
+                  NM_SETTING_IP4_DHCP_IPV6_ONLY_PREFERRED_YES,
+                  NM_SETTING_IP4_DHCP_IPV6_ONLY_PREFERRED_NO))
+        return ipv6_only == NM_SETTING_IP4_DHCP_IPV6_ONLY_PREFERRED_YES;
+
+    /* auto */
+    NM_SET_OUT(out_is_auto, TRUE);
+
+    if (nm_streq0(nm_device_get_effective_ip_config_method(self, AF_INET6),
+                  NM_SETTING_IP6_CONFIG_METHOD_AUTO)
+        && _prop_get_ipv4_clat(self, FALSE) != NM_SETTING_IP4_CONFIG_CLAT_NO) {
+        return TRUE;
+    }
+
+    return FALSE;
 }
 
 /**
@@ -3642,6 +3703,7 @@ nm_device_create_l3_config_data_from_connection(NMDevice *self, NMConnection *co
     nm_l3_config_data_set_dnssec(l3cd, _prop_get_connection_dnssec(self, connection));
     nm_l3_config_data_set_ip6_privacy(l3cd, _prop_get_ipv6_ip6_privacy(self, connection));
     nm_l3_config_data_set_mptcp_flags(l3cd, _prop_get_connection_mptcp_flags(self, connection));
+
     return l3cd;
 }
 
@@ -4924,7 +4986,7 @@ _dev_l3_cfg_notify_cb(NML3Cfg *l3cfg, const NML3ConfigNotifyData *notify_data, N
         if (state >= NM_DEVICE_STATE_IP_CONFIG && state < NM_DEVICE_STATE_DEACTIVATING) {
             /* FIXME(l3cfg): MTU handling should be moved to l3cfg. */
             if (l3cd)
-                priv->ip6_mtu = nm_l3_config_data_get_ip6_mtu(l3cd);
+                priv->ip6_mtu = nm_l3_config_data_get_ip6_mtu_ra(l3cd);
             _commit_mtu(self);
         }
         _dev_ipll4_check_fallback(self, l3cd);
@@ -6344,6 +6406,14 @@ concheck_is_possible(NMDevice *self)
     if (priv->state == NM_DEVICE_STATE_UNKNOWN)
         return FALSE;
 
+    if (!nm_config_data_get_device_config_boolean_by_device(
+            NM_CONFIG_GET_DATA,
+            NM_CONFIG_KEYFILE_KEY_DEVICE_CHECK_CONNECTIVITY,
+            self,
+            TRUE,
+            TRUE))
+        return FALSE;
+
     return TRUE;
 }
 
@@ -6364,8 +6434,10 @@ concheck_periodic_schedule_do(NMDevice *self, int addr_family, gint64 now_ns)
         goto out;
     }
 
-    if (!concheck_is_possible(self))
+    if (!concheck_is_possible(self)) {
+        concheck_update_state(self, addr_family, NM_CONNECTIVITY_UNKNOWN, FALSE);
         goto out;
+    }
 
     nm_assert(now_ns > 0);
     nm_assert(priv->concheck_x[IS_IPv4].p_cur_interval > 0);
@@ -6588,7 +6660,11 @@ concheck_update_interval(NMDevice *self, int addr_family, gboolean check_now)
         concheck_periodic_schedule_do(self, addr_family, 0);
 
         /* also update the fake connectivity state. */
-        concheck_update_state(self, addr_family, NM_CONNECTIVITY_FAKE, TRUE);
+        if (concheck_is_possible(self))
+            concheck_update_state(self, addr_family, NM_CONNECTIVITY_FAKE, TRUE);
+        else
+            concheck_update_state(self, addr_family, NM_CONNECTIVITY_UNKNOWN, FALSE);
+
         return;
     }
 
@@ -6617,6 +6693,7 @@ concheck_update_state(NMDevice           *self,
     /* @state is a result of the connectivity check. We only expect a precise
      * number of possible values. */
     nm_assert(NM_IN_SET(state,
+                        NM_CONNECTIVITY_UNKNOWN,
                         NM_CONNECTIVITY_LIMITED,
                         NM_CONNECTIVITY_PORTAL,
                         NM_CONNECTIVITY_FULL,
@@ -6940,8 +7017,11 @@ nm_device_check_connectivity(NMDevice                    *self,
                              NMDeviceConnectivityCallback callback,
                              gpointer                     user_data)
 {
-    if (!concheck_is_possible(self))
+    if (!concheck_is_possible(self)) {
+        concheck_update_state(self, AF_INET, NM_CONNECTIVITY_UNKNOWN, FALSE);
+        concheck_update_state(self, AF_INET6, NM_CONNECTIVITY_UNKNOWN, FALSE);
         return NULL;
+    }
 
     concheck_periodic_schedule_set(self, addr_family, CONCHECK_SCHEDULE_CHECK_EXTERNAL);
     return concheck_start(self, addr_family, callback, user_data, FALSE);
@@ -8328,6 +8408,17 @@ config_changed(NMConfig           *config,
         if (NM_FLAGS_HAS(changes, NM_CONFIG_CHANGE_VALUES)
             && !nm_device_get_applied_setting(self, NM_TYPE_SETTING_SRIOV))
             device_init_static_sriov_num_vfs(self);
+    }
+
+    if (NM_FLAGS_HAS(changes, NM_CONFIG_CHANGE_VALUES) && concheck_is_possible(self)) {
+        /* restart (periodic) connectivity checks if they were previously disabled */
+        if (!nm_config_data_get_device_config_boolean_by_device(
+                old_data,
+                NM_CONFIG_KEYFILE_KEY_DEVICE_CHECK_CONNECTIVITY,
+                self,
+                TRUE,
+                TRUE))
+            nm_device_check_connectivity_update_interval(self);
     }
 }
 
@@ -11439,6 +11530,8 @@ _dev_ipmanual_start(NMDevice *self)
         if (_prop_get_ipvx_routed_dns(self, AF_INET6) == NM_SETTING_IP_CONFIG_ROUTED_DNS_YES) {
             nm_l3_config_data_set_routed_dns(l3cd, AF_INET6, TRUE);
         }
+
+        nm_l3_config_data_set_clat_config(l3cd, _prop_get_ipv4_clat(self, TRUE));
     }
 
     if (!l3cd) {
@@ -11747,8 +11840,9 @@ _dev_ipdhcpx_start(NMDevice *self, int addr_family)
         gboolean               hostname_is_fqdn;
         gboolean               send_client_id;
         guint8                 dscp;
-        gboolean               dscp_explicit  = FALSE;
-        gboolean               ipv6_only_pref = FALSE;
+        gboolean               dscp_explicit       = FALSE;
+        gboolean               ipv6_only_pref      = FALSE;
+        gboolean               ipv6_only_pref_auto = FALSE;
 
         client_id = _prop_get_ipv4_dhcp_client_id(self, connection, hwaddr, &send_client_id);
         dscp      = _prop_get_ipv4_dhcp_dscp(self, &dscp_explicit);
@@ -11767,13 +11861,15 @@ _dev_ipdhcpx_start(NMDevice *self, int addr_family)
             hostname         = nm_setting_ip_config_get_dhcp_hostname(s_ip);
         }
 
-        if (_prop_get_ipv4_dhcp_ipv6_only_preferred(self)) {
+        if (_prop_get_ipv4_dhcp_ipv6_only_preferred(self, &ipv6_only_pref_auto)) {
             if (nm_streq0(priv->ipv6_method, NM_SETTING_IP6_CONFIG_METHOD_DISABLED)) {
                 _LOGI_ipdhcp(
                     addr_family,
                     "not requesting the \"IPv6-only preferred\" option because IPv6 is disabled");
             } else {
-                _LOGD_ipdhcp(addr_family, "requesting the \"IPv6-only preferred\" option");
+                _LOGD_ipdhcp(addr_family,
+                             "requesting the \"IPv6-only preferred\" option (%s enabled)",
+                             ipv6_only_pref_auto ? "automatically" : "explicitly");
                 ipv6_only_pref = TRUE;
             }
         }
@@ -15352,35 +15448,15 @@ _dispatcher_complete_proceed_state(NMDispatcherCallId *call_id, gpointer user_da
 /*****************************************************************************/
 
 typedef struct {
-    NMLogDomain log_domain;
-    NMDevice   *device;
-    gboolean    ping_addresses_require_all;
-    GSource    *watch;
-    GPid        pid;
-    char       *binary;
-    char       *address;
-    guint       deadline;
+    char         *addr_str;
+    NMIPAddrTyped addr_bin;
+
+    NMLogDomain   log_domain;
+    NMDevice     *device;
+    GCancellable *cancellable;
+    gboolean      require_all;
+    CList         ping_ops_lst;
 } PingOperation;
-
-static PingOperation *
-ping_operation_new(NMDevice   *self,
-                   NMLogDomain log_domain,
-                   const char *address,
-                   const char *ping_binary,
-                   guint       ping_timeout,
-                   gboolean    ip_ping_addresses_require_all)
-{
-    PingOperation *ping_op = g_new0(PingOperation, 1);
-
-    ping_op->device                     = self;
-    ping_op->log_domain                 = log_domain;
-    ping_op->address                    = g_strdup(address);
-    ping_op->binary                     = g_strdup(ping_binary);
-    ping_op->deadline                   = ping_timeout + 10;
-    ping_op->ping_addresses_require_all = ip_ping_addresses_require_all;
-
-    return ping_op;
-}
 
 static void
 ip_check_pre_up(NMDevice *self)
@@ -15404,185 +15480,151 @@ ip_check_pre_up(NMDevice *self)
 }
 
 static void
-cleanup_ping_operation(PingOperation *ping_op)
+ping_op_cleanup(PingOperation *ping_op)
 {
-    if (ping_op->watch) {
-        nm_clear_g_source_inst(&ping_op->watch);
-    }
-
-    if (ping_op->pid) {
-        nm_utils_kill_child_async(ping_op->pid,
-                                  SIGTERM,
-                                  ping_op->log_domain,
-                                  "ping",
-                                  1000,
-                                  NULL,
-                                  NULL);
-        ping_op->pid = 0;
-    }
-
-    nm_clear_g_free(&ping_op->binary);
-    nm_clear_g_free(&ping_op->address);
+    nm_clear_g_cancellable(&ping_op->cancellable);
+    nm_clear_g_free(&ping_op->addr_str);
+    c_list_unlink_stale(&ping_op->ping_ops_lst);
 
     g_free(ping_op);
 }
 
-static gboolean
-spawn_ping_for_operation(NMDevice *self, PingOperation *ping_op)
+static void
+ping_cleanup(NMDevice *self)
 {
-    gs_free char         *str_timeout = NULL;
-    gs_free char         *tmp_str     = NULL;
-    const char           *args[]      = {ping_op->binary,
-                                         "-I",
-                                         nm_device_get_ip_iface(self),
-                                         "-c",
-                                         "1",
-                                         "-w",
-                                         NULL,
-                                         ping_op->address,
-                                         NULL};
-    gs_free_error GError *error       = NULL;
-    gboolean              ret;
+    NMDevicePrivate *priv = NM_DEVICE_GET_PRIVATE(self);
+    PingOperation   *ping_op;
 
-    args[6] = str_timeout = g_strdup_printf("%u", ping_op->deadline);
-
-    tmp_str = g_strjoinv(" ", (char **) args);
-    _LOGD(ping_op->log_domain, "ping: running '%s'", tmp_str);
-
-    ret = g_spawn_async("/",
-                        (char **) args,
-                        NULL,
-                        G_SPAWN_DO_NOT_REAP_CHILD,
-                        NULL,
-                        NULL,
-                        &ping_op->pid,
-                        &error);
-
-    if (ret) {
-        ping_op->watch = nm_g_child_watch_add_source(ping_op->pid, ip_check_ping_watch_cb, ping_op);
-    } else {
-        _LOGD(ping_op->log_domain, "ping: could not spawn %s: %s", ping_op->binary, error->message);
+    while ((ping_op = c_list_first_entry(&priv->ping_ops_lst_head, PingOperation, ping_ops_lst))) {
+        ping_op_cleanup(ping_op);
     }
 
-    return ret;
-}
-
-static gboolean
-respawn_ping_cb(gpointer user_data)
-{
-    PingOperation   *ping_op = (PingOperation *) user_data;
-    NMDevice        *self    = ping_op->device;
-    NMDevicePrivate *priv    = NM_DEVICE_GET_PRIVATE(self);
-
-    nm_clear_g_source_inst(&ping_op->watch);
-
-    if (!spawn_ping_for_operation(self, ping_op)) {
-        priv->ping_operations = g_list_remove(priv->ping_operations, ping_op);
-        cleanup_ping_operation(ping_op);
-
-        if (g_list_length(priv->ping_operations) == 0) {
-            ip_check_pre_up(self);
-        }
-    }
-
-    return FALSE;
+    nm_clear_g_source_inst(&priv->ping_timeout);
 }
 
 static void
-ip_check_ping_watch_cb(GPid pid, int status, gpointer user_data)
+ping_host_cb(GObject *source, GAsyncResult *result, gpointer user_data)
 {
-    PingOperation   *ping_op = (PingOperation *) user_data;
-    NMDevice        *self    = ping_op->device;
-    NMDevicePrivate *priv    = NM_DEVICE_GET_PRIVATE(self);
-    gboolean         success = FALSE;
+    NMDevice             *self;
+    NMDevicePrivate      *priv;
+    PingOperation        *ping_op = user_data;
+    gs_free_error GError *error   = NULL;
+    gboolean              success;
+    NMLogDomain           log_domain;
+    gs_free char         *addr_str = NULL;
 
-    if (!ping_op->watch)
+    success = nm_utils_ping_host_finish(result, &error);
+    if (nm_utils_error_is_cancelled(error))
         return;
 
-    nm_clear_g_source_inst(&ping_op->watch);
-    ping_op->pid = 0;
+    self       = NM_DEVICE(ping_op->device);
+    priv       = NM_DEVICE_GET_PRIVATE(self);
+    log_domain = ping_op->log_domain;
+    addr_str   = g_steal_pointer(&ping_op->addr_str);
 
-    if (WIFEXITED(status)) {
-        if (WEXITSTATUS(status) == 0) {
-            _LOGD(ping_op->log_domain, "ping: ping succeeded on %s", ping_op->address);
-            success = TRUE;
-        } else {
-            _LOGD(ping_op->log_domain,
-                  "ping: ping failed with error code %d on %s",
-                  WEXITSTATUS(status),
-                  ping_op->address);
-        }
-    } else {
-        _LOGD(ping_op->log_domain,
-              "ping: stopped unexpectedly with status %d on %s",
-              status,
-              ping_op->address);
+    if (!success) {
+        /* it should never fail because we set an infinite timeout */
+        nm_assert_not_reached();
+        return;
     }
 
-    if (success) {
-        if (ping_op->ping_addresses_require_all) {
-            priv->ping_operations = g_list_remove(priv->ping_operations, ping_op);
-            if (g_list_length(priv->ping_operations) == 0) {
-                _LOGD(ping_op->log_domain,
-                      "ping: ip-ping-addresses requires all, all ping checks on ip-ping-addresses "
-                      "succeeded");
-                if (priv->ping_timeout)
-                    nm_clear_g_source_inst(&priv->ping_timeout);
-                ip_check_pre_up(self);
-            }
-            cleanup_ping_operation(ping_op);
-        } else {
-            nm_assert(priv->ping_operations);
-
-            g_list_free_full(priv->ping_operations, (GDestroyNotify) cleanup_ping_operation);
-            priv->ping_operations = NULL;
-
-            if (priv->ping_timeout)
-                nm_clear_g_source_inst(&priv->ping_timeout);
-
-            _LOGD(ping_op->log_domain,
-                  "ping: ip-ping-addresses requires any, one ping check on ip-ping-addresses "
-                  "succeeded");
-            ip_check_pre_up(self);
+    if (ping_op->require_all) {
+        ping_op_cleanup(ping_op);
+        if (!c_list_is_empty(&priv->ping_ops_lst_head)) {
+            _LOGD(log_domain,
+                  "ping: check on address %s succeeded, waiting for other addresses",
+                  addr_str);
+            return;
         }
-    } else {
-        /* If ping exited with an error it may have returned early,
-         * wait 1 second and restart it */
-        ping_op->watch = nm_g_timeout_add_seconds_source(1, respawn_ping_cb, ping_op);
     }
+
+    _LOGD(log_domain, "ping: check on address %s succeeded, continuing the activation", addr_str);
+
+    ping_cleanup(self);
+    ip_check_pre_up(self);
+}
+
+static void
+ping_operation_start(NMDevice      *self,
+                     const char    *addr_str,
+                     NMIPAddrTyped *addr_bin,
+                     gboolean       require_all)
+{
+    PingOperation   *ping_op;
+    NMDevicePrivate *priv = NM_DEVICE_GET_PRIVATE(self);
+    NMIPAddrTyped    addr_bin_local;
+    char             buf[NM_INET_ADDRSTRLEN];
+    int              addr_family;
+    int              ret;
+
+    /* Exactly one of the two must be set */
+    nm_assert(!!addr_str ^ !!addr_bin);
+
+    /* Derive the string address from the binary and vice versa */
+    if (addr_str) {
+        ret = nm_inet_parse_bin_full(AF_UNSPEC,
+                                     FALSE,
+                                     addr_str,
+                                     &addr_family,
+                                     &addr_bin_local.addr.addr_ptr);
+        nm_assert(ret);
+        addr_bin_local.addr_family = addr_family;
+        addr_bin                   = &addr_bin_local;
+    } else {
+        nm_inet_ntop(addr_bin->addr_family, addr_bin->addr.addr_ptr, buf);
+        addr_str = buf;
+    }
+
+    /* When pinging the gateway, the caller must ensure that the IP configuration is ready.
+     * For the ip-ping-addresses property, a valid connection always has may-fail=no for
+     * the families of all the target addresses. Thus, at this point the IP configuration
+     * must also be ready. */
+    nm_assert(priv->ip_data_x[NM_IS_IPv4(addr_bin->addr_family)].state == NM_DEVICE_IP_STATE_READY);
+
+    ping_op  = g_new(PingOperation, 1);
+    *ping_op = (PingOperation) {
+        .device      = self,
+        .cancellable = g_cancellable_new(),
+        .require_all = require_all,
+        .addr_bin    = *addr_bin,
+        .addr_str    = g_strdup(addr_str),
+        .log_domain  = (addr_bin->addr_family == AF_INET) ? LOGD_IP4 : LOGD_IP6,
+    };
+
+    /* Start the asynchronous ping operation */
+    nm_utils_ping_host(ping_op->addr_bin,
+                       nm_device_get_ip_ifindex(self),
+                       0, /* try forever */
+                       ping_op->cancellable,
+                       ping_host_cb,
+                       ping_op);
+
+    c_list_link_tail(&priv->ping_ops_lst_head, &ping_op->ping_ops_lst);
 }
 
 static gboolean
 ip_check_ping_timeout_cb(gpointer user_data)
 {
-    NMDevice        *self = NM_DEVICE(user_data);
-    NMDevicePrivate *priv = NM_DEVICE_GET_PRIVATE(self);
+    NMDevice                     *self = NM_DEVICE(user_data);
+    NMDevicePrivate              *priv = NM_DEVICE_GET_PRIVATE(self);
+    PingOperation                *ping_op;
+    nm_auto_free_gstring GString *str = NULL;
 
-    _LOGW(LOGD_DEVICE, "ping timeout: unreachable gateway or ip-ping-addresses");
-
-    if (priv->ping_operations) {
-        g_list_free_full(priv->ping_operations, (GDestroyNotify) cleanup_ping_operation);
-        priv->ping_operations = NULL;
+    if (_LOGW_ENABLED(LOGD_DEVICE)) {
+        str = g_string_new("");
+        c_list_for_each_entry (ping_op, &priv->ping_ops_lst_head, ping_ops_lst) {
+            if (str->len != 0)
+                g_string_append(str, ", ");
+            g_string_append(str, ping_op->addr_str);
+        }
+        _LOGW(LOGD_DEVICE,
+              "ping: the following addresses were not reachable within the timeout: %s",
+              str->str);
     }
 
-    if (priv->ping_timeout)
-        nm_clear_g_source_inst(&priv->ping_timeout);
+    ping_cleanup(self);
     ip_check_pre_up(self);
 
-    return FALSE;
-}
-
-static gboolean
-start_ping(NMDevice *self, PingOperation *ping_op)
-{
-    NMDevicePrivate *priv = NM_DEVICE_GET_PRIVATE(self);
-
-    if (spawn_ping_for_operation(self, ping_op)) {
-        priv->ping_operations = g_list_append(priv->ping_operations, ping_op);
-        return TRUE;
-    }
-
-    cleanup_ping_operation(ping_op);
     return FALSE;
 }
 
@@ -15594,17 +15636,13 @@ nm_device_start_ip_check(NMDevice *self)
     NMSettingConnection *s_con;
     guint                gw_ping_timeout = 0;
     guint                ip_ping_timeout = 0;
-    const char          *ping_binary     = NULL;
-    char                 buf[NM_INET_ADDRSTRLEN];
-    NMLogDomain          log_domain = LOGD_IP4;
-    gboolean             ip_ping_addresses_require_all;
-    gboolean             ping_started = FALSE;
+    gboolean             require_all;
+    NMIPAddrTyped        addr_bin = {};
 
     /* Shouldn't be any active ping here, since IP_CHECK happens after the
      * first IP method completes.  Any subsequently completing IP method doesn't
-     * get checked.
-     */
-    g_return_if_fail(priv->ping_operations == NULL);
+     * get checked. */
+    g_return_if_fail(c_list_is_empty(&priv->ping_ops_lst_head));
     g_return_if_fail(priv->ip_data_4.state == NM_DEVICE_IP_STATE_READY
                      || priv->ip_data_6.state == NM_DEVICE_IP_STATE_READY);
 
@@ -15613,16 +15651,16 @@ nm_device_start_ip_check(NMDevice *self)
 
     s_con = nm_connection_get_setting_connection(connection);
     g_assert(s_con);
-    gw_ping_timeout               = nm_setting_connection_get_gateway_ping_timeout(s_con);
-    ip_ping_addresses_require_all = _prop_get_connection_ip_ping_addresses_require_all(self, s_con);
-    ip_ping_timeout               = nm_setting_connection_get_ip_ping_timeout(s_con);
+    gw_ping_timeout = nm_setting_connection_get_gateway_ping_timeout(s_con);
+    ip_ping_timeout = nm_setting_connection_get_ip_ping_timeout(s_con);
+    require_all     = _prop_get_connection_ip_ping_addresses_require_all(self, s_con);
 
-    buf[0] = '\0';
-    if (gw_ping_timeout != 0 && ip_ping_timeout == 0) {
+    /* the timeouts are mutually exclusive */
+    nm_assert(gw_ping_timeout == 0 || ip_ping_timeout == 0);
+
+    if (gw_ping_timeout > 0) {
         const NMPObject      *gw;
         const NML3ConfigData *l3cd;
-
-        _LOGD(LOGD_DEVICE, "starting ping gateway...");
 
         l3cd = priv->l3cfg ? nm_l3cfg_get_combined_l3cd(priv->l3cfg, TRUE) : NULL;
         if (!l3cd) {
@@ -15630,83 +15668,54 @@ nm_device_start_ip_check(NMDevice *self)
         } else if (priv->ip_data_4.state == NM_DEVICE_IP_STATE_READY) {
             gw = nm_l3_config_data_get_best_default_route(l3cd, AF_INET);
             if (gw) {
-                nm_inet4_ntop(NMP_OBJECT_CAST_IP4_ROUTE(gw)->gateway, buf);
-                ping_binary = nm_utils_find_helper("ping", "/usr/bin/ping", NULL);
-                log_domain  = LOGD_IP4;
+                addr_bin.addr_family = AF_INET;
+                addr_bin.addr.addr4  = NMP_OBJECT_CAST_IP4_ROUTE(gw)->gateway;
             }
         } else if (priv->ip_data_6.state == NM_DEVICE_IP_STATE_READY) {
             gw = nm_l3_config_data_get_best_default_route(l3cd, AF_INET6);
             if (gw) {
-                nm_inet6_ntop(&NMP_OBJECT_CAST_IP6_ROUTE(gw)->gateway, buf);
-                ping_binary = nm_utils_find_helper("ping6", "/usr/bin/ping6", NULL);
-                log_domain  = LOGD_IP6;
+                addr_bin.addr_family = AF_INET6;
+                addr_bin.addr.addr6  = NMP_OBJECT_CAST_IP6_ROUTE(gw)->gateway;
             }
         }
-    }
 
-    if (buf[0]) {
-        PingOperation *ping_op = ping_operation_new(self,
-                                                    log_domain,
-                                                    buf,
-                                                    ping_binary,
-                                                    gw_ping_timeout,
-                                                    ip_ping_addresses_require_all);
-
-        if (start_ping(self, ping_op))
-            ping_started = TRUE;
-    }
-
-    if (gw_ping_timeout == 0 && ip_ping_timeout != 0) {
+        if (addr_bin.addr_family != AF_UNSPEC) {
+            _LOGD(LOGD_DEVICE,
+                  "starting ping on the IPv%c gateway with a %u seconds timeout",
+                  nm_utils_addr_family_to_char(addr_bin.addr_family),
+                  gw_ping_timeout);
+            ping_operation_start(self, NULL, &addr_bin, require_all);
+        }
+    } else if (ip_ping_timeout > 0) {
         const NML3ConfigData *l3cd;
+        GArray               *ip_ping_addresses;
+        const char *const    *strv;
         guint                 i;
-        GArray            *ip_ping_addresses = _nm_setting_connection_get_ip_ping_addresses(s_con);
-        const char *const *strv = nm_strvarray_get_strv_notempty(ip_ping_addresses, NULL);
 
-        _LOGD(LOGD_DEVICE, "starting ping ip addresses...");
+        ip_ping_addresses = _nm_setting_connection_get_ip_ping_addresses(s_con);
+        strv              = nm_strvarray_get_strv_notnull(ip_ping_addresses, NULL);
+
+        _LOGD(LOGD_DEVICE,
+              "starting ping on the ip-ping-addresses with a %u seconds timeout",
+              ip_ping_timeout);
 
         l3cd = priv->l3cfg ? nm_l3cfg_get_combined_l3cd(priv->l3cfg, TRUE) : NULL;
-
         if (l3cd) {
             for (i = 0; strv[i]; i++) {
-                const char     *s = strv[i];
-                struct in_addr  ipv4_addr;
-                struct in6_addr ipv6_addr;
-
-                if (priv->ip_data_4.state == NM_DEVICE_IP_STATE_READY
-                    && inet_pton(AF_INET, (const char *) s, &ipv4_addr)) {
-                    ping_binary = nm_utils_find_helper("ping", "/usr/bin/ping", NULL);
-                    log_domain  = LOGD_IP4;
-                } else if (priv->ip_data_6.state == NM_DEVICE_IP_STATE_READY
-                           && inet_pton(AF_INET6, (const char *) s, &ipv6_addr)) {
-                    ping_binary = nm_utils_find_helper("ping6", "/usr/bin/ping6", NULL);
-                    log_domain  = LOGD_IP6;
-                } else
-                    continue;
-
-                if (s[0]) {
-                    PingOperation *ping_op = ping_operation_new(self,
-                                                                log_domain,
-                                                                s,
-                                                                ping_binary,
-                                                                ip_ping_timeout,
-                                                                ip_ping_addresses_require_all);
-
-                    if (start_ping(self, ping_op))
-                        ping_started = TRUE;
-                }
+                ping_operation_start(self, strv[i], NULL, require_all);
             }
         }
     }
 
-    if (ping_started) {
+    if (c_list_is_empty(&priv->ping_ops_lst_head)) {
+        /* No ping operation in progress, advance to pre-up */
+        ip_check_pre_up(self);
+    } else {
         priv->ping_timeout =
-            nm_g_timeout_add_seconds_source(gw_ping_timeout ? gw_ping_timeout : ip_ping_timeout,
+            nm_g_timeout_add_seconds_source(ip_ping_timeout > 0 ? ip_ping_timeout : gw_ping_timeout,
                                             ip_check_ping_timeout_cb,
                                             self);
     }
-    /* If no ping was started, just advance to pre_up. */
-    else
-        ip_check_pre_up(self);
 }
 
 /*****************************************************************************/
@@ -17165,16 +17174,10 @@ _cancel_activation(NMDevice *self)
 
     _dispatcher_cleanup(self);
 
-    if (priv->ping_operations) {
-        g_list_free_full(priv->ping_operations, (GDestroyNotify) cleanup_ping_operation);
-        priv->ping_operations = NULL;
-    }
-
-    if (priv->ping_timeout)
-        nm_clear_g_source_inst(&priv->ping_timeout);
-
     _dev_ip_state_cleanup(self, AF_INET, FALSE);
     _dev_ip_state_cleanup(self, AF_INET6, FALSE);
+
+    ping_cleanup(self);
 
     /* Break the activation chain */
     activation_source_clear(self);
@@ -17931,13 +17934,8 @@ _set_state_full(NMDevice *self, NMDeviceState state, NMDeviceStateReason reason,
         break;
     }
     case NM_DEVICE_STATE_SECONDARIES:
-        if (priv->ping_operations) {
-            g_list_free_full(priv->ping_operations, (GDestroyNotify) cleanup_ping_operation);
-            priv->ping_operations = NULL;
-        }
-        if (priv->ping_timeout)
-            nm_clear_g_source_inst(&priv->ping_timeout);
         _LOGD(LOGD_DEVICE, "device entered SECONDARIES state");
+        ping_cleanup(self);
         break;
     default:
         break;
@@ -18917,14 +18915,14 @@ nm_device_get_supplicant_timeout(NMDevice *self)
                                                        SUPPLICANT_DEFAULT_TIMEOUT);
 }
 
-gboolean
-nm_device_auth_retries_try_next(NMDevice *self)
+static int
+_device_get_auth_retries(NMDevice *self)
 {
     NMDevicePrivate     *priv;
     NMSettingConnection *s_con;
     int                  auth_retries;
 
-    g_return_val_if_fail(NM_IS_DEVICE(self), FALSE);
+    g_return_val_if_fail(NM_IS_DEVICE(self), 0);
 
     priv         = NM_DEVICE_GET_PRIVATE(self);
     auth_retries = priv->auth_retries;
@@ -18956,13 +18954,47 @@ nm_device_auth_retries_try_next(NMDevice *self)
         priv->auth_retries = auth_retries;
     }
 
+    return auth_retries;
+}
+
+gboolean
+nm_device_auth_retries_has_next(NMDevice *self)
+{
+    int auth_retries;
+
+    g_return_val_if_fail(NM_IS_DEVICE(self), FALSE);
+
+    auth_retries = _device_get_auth_retries(self);
+
+    if (auth_retries == NM_DEVICE_AUTH_RETRIES_INFINITY)
+        return TRUE;
+
+    if (auth_retries > 0)
+        return TRUE;
+
+    return FALSE;
+}
+
+gboolean
+nm_device_auth_retries_try_next(NMDevice *self)
+{
+    NMDevicePrivate *priv;
+    int              auth_retries;
+
+    g_return_val_if_fail(NM_IS_DEVICE(self), FALSE);
+
+    priv         = NM_DEVICE_GET_PRIVATE(self);
+    auth_retries = _device_get_auth_retries(self);
+
     if (auth_retries == NM_DEVICE_AUTH_RETRIES_INFINITY)
         return TRUE;
     if (auth_retries <= 0) {
         nm_assert(auth_retries == 0);
         return FALSE;
     }
+
     priv->auth_retries--;
+
     return TRUE;
 }
 
@@ -19601,6 +19633,8 @@ nm_device_init(NMDevice *self)
     priv->unmanaged_mask        = priv->unmanaged_flags;
     priv->available_connections = g_hash_table_new_full(nm_direct_hash, NULL, g_object_unref, NULL);
     priv->ip6_saved_properties  = g_hash_table_new_full(nm_str_hash, g_str_equal, NULL, g_free);
+
+    c_list_init(&priv->ping_ops_lst_head);
 
     priv->managed_type_ = NM_DEVICE_MANAGED_TYPE_EXTERNAL;
     /* If networking is already disabled at boot, we want to manage all devices

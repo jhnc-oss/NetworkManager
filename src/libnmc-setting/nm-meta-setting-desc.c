@@ -4292,7 +4292,8 @@ _set_fcn_wireless_channel(ARGS_SET_FCN)
     }
 
     if (!nm_utils_wifi_is_channel_valid(chan_int, "a")
-        && !nm_utils_wifi_is_channel_valid(chan_int, "bg")) {
+        && !nm_utils_wifi_is_channel_valid(chan_int, "bg")
+        && !nm_utils_wifi_is_channel_valid(chan_int, "6GHz")) {
         nm_utils_error_set(error,
                            NM_UTILS_ERROR_UNKNOWN,
                            _("'%ld' is not a valid channel"),
@@ -6600,6 +6601,9 @@ static const NMMetaPropertyInfo *const property_infos_IP4_CONFIG[] = {
     PROPERTY_INFO_WITH_DESC (NM_SETTING_IP4_CONFIG_DHCP_IPV6_ONLY_PREFERRED,
         .property_type =                &_pt_gobject_enum,
     ),
+    PROPERTY_INFO (NM_SETTING_IP4_CONFIG_CLAT, DESCRIBE_DOC_NM_SETTING_IP4_CONFIG_CLAT,
+        .property_type =                &_pt_gobject_enum,
+    ),
     PROPERTY_INFO_WITH_DESC (NM_SETTING_IP4_CONFIG_LINK_LOCAL,
         .property_type =                &_pt_gobject_enum,
         .property_typ_data = DEFINE_PROPERTY_TYP_DATA (
@@ -8530,7 +8534,7 @@ static const NMMetaPropertyInfo *const property_infos_WIRELESS[] = {
     PROPERTY_INFO_WITH_DESC (NM_SETTING_WIRELESS_BAND,
         .property_type =                &_pt_gobject_string,
         .property_typ_data = DEFINE_PROPERTY_TYP_DATA (
-            .values_static =            NM_MAKE_STRV ("a", "bg"),
+            .values_static =            NM_MAKE_STRV ("a", "bg", "6GHz"),
         ),
     ),
     PROPERTY_INFO_WITH_DESC (NM_SETTING_WIRELESS_CHANNEL,
