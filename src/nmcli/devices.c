@@ -855,7 +855,7 @@ usage(void)
           "delete | monitor | wifi | lldp }\n\n"
           "  status\n\n"
           "  show [<ifname>]\n\n"
-          "  set [ifname] <ifname> [autoconnect yes|no] [managed yes|no]\n\n"
+          "  set [ifname] <ifname> [autoconnect yes|no] [managed [--permanent] yes|no|up|down]\n\n"
           "  connect <ifname>\n\n"
           "  reapply <ifname>\n\n"
           "  modify <ifname> ([+|-]<setting>.<property> <value>)+\n\n"
@@ -978,7 +978,7 @@ usage_device_set(void)
                    "ARGUMENTS := DEVICE { PROPERTY [ PROPERTY ... ] }\n"
                    "DEVICE    := [ifname] <ifname> \n"
                    "PROPERTY  := { autoconnect { yes | no } |\n"
-                   "             { managed { yes | no }\n"
+                   "             { managed [--permanent] { yes | no | up | down }\n"
                    "\n"
                    "Modify device properties.\n\n"));
 }
@@ -2878,13 +2878,22 @@ do_device_set(const NMCCommand *cmd, NmCli *nmc, int argc, const char *const *ar
             }
 
             if (argc == 1 && nmc->complete) {
-                if (**argv == '-')
-                    nmc_complete_strings(*argv, "--permanent");
-                else
-                    nmc_complete_bool(*argv);
+                nmc_complete_strings(*argv,
+                                     "true",
+                                     "yes",
+                                     "on",
+                                     "false",
+                                     "no",
+                                     "off",
+                                     "up",
+                                     "down",
+                                     "--permanent");
             }
 
-            if (!nmc_string_to_bool(*argv, &val, &error)) {
+            if (matches(*argv, "up") || matches(*argv, "down")) {
+                flags |= NM_DEVICE_MANAGED_FLAGS_SET_ADMIN_STATE;
+                val = matches(*argv, "up") ? TRUE : FALSE;
+            } else if (!nmc_string_to_bool(*argv, &val, &error)) {
                 g_string_printf(nmc->return_text, _("Error: 'managed': %s."), error->message);
                 nmc->return_value = NMC_RESULT_ERROR_USER_INPUT;
                 return;
