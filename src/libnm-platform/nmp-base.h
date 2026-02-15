@@ -142,6 +142,8 @@ typedef struct _NMPlatformIP4Address     NMPlatformIP4Address;
 typedef struct _NMPlatformIP4Route       NMPlatformIP4Route;
 typedef struct _NMPlatformIP6Address     NMPlatformIP6Address;
 typedef struct _NMPlatformIP6Route       NMPlatformIP6Route;
+typedef struct _NMPlatformIP4NextHop     NMPlatformIP4NextHop;
+typedef struct _NMPlatformIP6NextHop     NMPlatformIP6NextHop;
 typedef struct _NMPlatformLink           NMPlatformLink;
 typedef struct _NMPObject                NMPObject;
 
@@ -158,6 +160,11 @@ typedef enum _nm_packed {
     ((is_ipv4) ? NMP_OBJECT_TYPE_IP4_ROUTE : NMP_OBJECT_TYPE_IP6_ROUTE)
     NMP_OBJECT_TYPE_IP4_ROUTE,
     NMP_OBJECT_TYPE_IP6_ROUTE,
+
+#define NMP_OBJECT_TYPE_IP_NEXTHOP(is_ipv4) \
+    ((is_ipv4) ? NMP_OBJECT_TYPE_IP4_NEXTHOP : NMP_OBJECT_TYPE_IP6_NEXTHOP)
+    NMP_OBJECT_TYPE_IP4_NEXTHOP,
+    NMP_OBJECT_TYPE_IP6_NEXTHOP,
 
     NMP_OBJECT_TYPE_ROUTING_RULE,
 
@@ -194,15 +201,15 @@ typedef enum _nm_packed {
     NMP_OBJECT_TYPE_MAX = __NMP_OBJECT_TYPE_LAST - 1,
 } NMPObjectType;
 
-static inline guint32
+static inline guint64
 nmp_object_type_to_flags(NMPObjectType obj_type)
 {
-    G_STATIC_ASSERT_EXPR(NMP_OBJECT_TYPE_MAX < 32);
+    G_STATIC_ASSERT_EXPR(NMP_OBJECT_TYPE_MAX < 64);
 
     nm_assert(_NM_INT_NOT_NEGATIVE(obj_type));
     nm_assert(obj_type < NMP_OBJECT_TYPE_MAX);
 
-    return ((guint32) 1u) << obj_type;
+    return ((guint64) 1u) << obj_type;
 }
 
 /*****************************************************************************/
