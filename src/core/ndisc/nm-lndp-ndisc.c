@@ -32,6 +32,7 @@ typedef struct {
     struct {
         NMRateLimit pio_lft;
         NMRateLimit mtu;
+        NMRateLimit code;
         NMRateLimit omit_prefix;
         NMRateLimit omit_dns;
         NMRateLimit omit_dnssl;
@@ -162,6 +163,7 @@ receive_ra(struct ndp *ndp, struct ndp_msg *msg, gpointer user_data)
     int                  offset;
     int                  hop_limit;
     guint32              val;
+    uint8_t              icmp6_code;
 
     /* Router discovery is subject to the following RFC documents:
      *
@@ -177,6 +179,17 @@ receive_ra(struct ndp *ndp, struct ndp_msg *msg, gpointer user_data)
     _LOGD("received router advertisement at timestamp %" G_GINT64_FORMAT ".%03d seconds",
           now_msec / 1000,
           (int) (now_msec % 1000));
+
+    /* RFC 4861 section 6.1.2 states that Router Advertisements MUST be silently discarded if certain
+     * criteria are not met. One of these critiria is that the ICMPv6 code field is zero. */
+    icmp6_code = ndp_msg_code(msg);
+    if (icmp6_code != 0) {
+        _LOG_INVALID_RA(ndisc,
+                        &priv->msg_ratelimit.code,
+                        "discarding router advertisement with non-zero ICMPv6 code %u",
+                        icmp6_code);
+        return 0;
+    }
 
     gateway_addr = *ndp_msg_addrto(msg);
     if (IN6_IS_ADDR_UNSPECIFIED(&gateway_addr))
@@ -668,7 +681,20 @@ dns_domains_done:
 static int
 receive_rs(struct ndp *ndp, struct ndp_msg *msg, gpointer user_data)
 {
-    NMNDisc *ndisc = user_data;
+    NMNDisc            *ndisc = user_data;
+    NMLndpNDiscPrivate *priv  = NM_LNDP_NDISC_GET_PRIVATE(ndisc);
+    uint8_t             icmp6_code;
+
+    /* RFC 4861 section 6.1.1 states that Router Solicitations MUST be silently discarded if certain
+     * criteria are not met. One of these critiria is that the ICMPv6 code field is zero. */
+    icmp6_code = ndp_msg_code(msg);
+    if (icmp6_code != 0) {
+        _LOG_INVALID_RA(ndisc,
+                        &priv->msg_ratelimit.code,
+                        "discarding router solicitation with non-zero ICMPv6 code %u",
+                        icmp6_code);
+        return 0;
+    }
 
     nm_ndisc_rs_received(ndisc);
     return 0;
