@@ -111,6 +111,7 @@ libNetworkManager = static_library(
     'devices/nm-device-ethernet-utils.c',
     'devices/nm-device-factory.c',
     'devices/nm-device-generic.c',
+    'devices/nm-device-geneve.c',
     'devices/nm-device-hsr.c',
     'devices/nm-device-infiniband.c',
     'devices/nm-device-ip-tunnel.c',
