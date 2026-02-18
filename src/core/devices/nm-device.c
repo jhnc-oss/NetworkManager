@@ -14905,8 +14905,7 @@ set_managed(NMDevice *self, gboolean managed, NMDeviceManagedFlags flags, GError
                                                            nm_device_get_iface(self));
 
         if (!nm_config_set_device_managed(nm_manager_get_config(priv->manager),
-                                          nm_device_get_iface(self),
-                                          nm_device_get_permanent_hw_address(self),
+                                          self,
                                           managed_to_disk,
                                           flags & NM_DEVICE_MANAGED_FLAGS_BY_MAC,
                                           error))
@@ -14922,8 +14921,7 @@ set_managed(NMDevice *self, gboolean managed, NMDeviceManagedFlags flags, GError
              * we would set the runtime state correctly, but get an unexpected state
              * after a reboot. */
             nm_config_set_device_managed(nm_manager_get_config(priv->manager),
-                                         nm_device_get_iface(self),
-                                         nm_device_get_permanent_hw_address(self),
+                                         self,
                                          managed_to_disk_old,
                                          flags & NM_DEVICE_MANAGED_FLAGS_BY_MAC,
                                          error);
