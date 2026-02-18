@@ -855,7 +855,8 @@ usage(void)
           "delete | monitor | wifi | lldp }\n\n"
           "  status\n\n"
           "  show [<ifname>]\n\n"
-          "  set [ifname] <ifname> [autoconnect yes|no] [managed [--permanent] yes|no|up|down]\n\n"
+          "  set [ifname] <ifname> [autoconnect yes|no] [managed [--permanent] [--by-mac] "
+          "yes|no|up|down]\n\n"
           "  connect <ifname>\n\n"
           "  reapply <ifname>\n\n"
           "  modify <ifname> ([+|-]<setting>.<property> <value>)+\n\n"
@@ -973,14 +974,22 @@ usage_device_delete(void)
 static void
 usage_device_set(void)
 {
-    nmc_printerr(_("Usage: nmcli device set { ARGUMENTS | help }\n"
-                   "\n"
-                   "ARGUMENTS := DEVICE { PROPERTY [ PROPERTY ... ] }\n"
-                   "DEVICE    := [ifname] <ifname> \n"
-                   "PROPERTY  := { autoconnect { yes | no } |\n"
-                   "             { managed [--permanent] { yes | no | up | down }\n"
-                   "\n"
-                   "Modify device properties.\n\n"));
+    nmc_printerr(
+        _("Usage: nmcli device set { ARGUMENTS | help }\n"
+          "\n"
+          "ARGUMENTS := DEVICE { PROPERTY [ PROPERTY ... ] }\n"
+          "DEVICE    := [ifname] <ifname>\n"
+          "PROPERTY  := { autoconnect { yes | no } |\n"
+          "              managed [--permanent] [--by-mac] { yes | no | up | down } }\n"
+          "\n"
+          "Modify device properties.\n"
+          "\n"
+          "  managed              yes|no = managed by NetworkManager or not; up|down = link\n"
+          "                      admin state. Without --permanent, only runtime is changed.\n"
+          "  --permanent          Persist the managed state to disk (survives reboot).\n"
+          "  --by-mac             With --permanent only: store by MAC address so the setting\n"
+          "                      survives interface rename. Omit to store by interface name.\n"
+          "\n"));
 }
 
 static void
@@ -2858,10 +2867,17 @@ do_device_set(const NMCCommand *cmd, NmCli *nmc, int argc, const char *const *ar
             argc--;
             argv++;
 
-            if (argc > 0 && matches(*argv, "--permanent")) {
+            /* Consume only exact matches so "managed --" completes to --permanent/--by-mac */
+            if (argc > 0 && nm_streq0(*argv, "--permanent")) {
                 argc--;
                 argv++;
-                flags |= NM_DEVICE_MANAGED_FLAGS_TO_DISK | NM_DEVICE_MANAGED_FLAGS_BY_MAC;
+                flags |= NM_DEVICE_MANAGED_FLAGS_TO_DISK;
+            }
+
+            if (argc > 0 && nm_streq0(*argv, "--by-mac")) {
+                argc--;
+                argv++;
+                flags |= NM_DEVICE_MANAGED_FLAGS_BY_MAC;
             }
 
             if (!argc) {
@@ -2887,6 +2903,7 @@ do_device_set(const NMCCommand *cmd, NmCli *nmc, int argc, const char *const *ar
                                      "off",
                                      "up",
                                      "down",
+                                     "--by-mac",
                                      "--permanent");
             }
 
@@ -2901,6 +2918,14 @@ do_device_set(const NMCCommand *cmd, NmCli *nmc, int argc, const char *const *ar
             values[DEV_SET_MANAGED].idx   = i++;
             values[DEV_SET_MANAGED].value = val;
             values[DEV_SET_MANAGED].flags = flags;
+            if ((flags & NM_DEVICE_MANAGED_FLAGS_BY_MAC)
+                && !(flags & NM_DEVICE_MANAGED_FLAGS_TO_DISK)) {
+                g_string_printf(
+                    nmc->return_text,
+                    _("Error: '--by-mac' only applies when '--permanent' is specified."));
+                nmc->return_value = NMC_RESULT_ERROR_USER_INPUT;
+                return;
+            }
         } else if (matches(*argv, "autoconnect")) {
             argc--;
             argv++;
