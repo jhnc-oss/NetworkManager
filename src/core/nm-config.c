@@ -2113,6 +2113,7 @@ nm_config_get_device_managed(NMConfig *self, const char *ifname)
 /**
  * nm_config_set_device_managed:
  * @self: the NMConfig instance
+ * @device: the NMDevice instance associated with this config change
  * @ifname: the interface name
  * @hwaddr: the hardware address
  * @managed: the managed state to set
@@ -2130,6 +2131,7 @@ nm_config_get_device_managed(NMConfig *self, const char *ifname)
  */
 gboolean
 nm_config_set_device_managed(NMConfig   *self,
+                             NMDevice   *device,
                              const char *ifname,
                              const char *hwaddr,
                              NMTernary   managed,
@@ -2138,7 +2140,8 @@ nm_config_set_device_managed(NMConfig   *self,
 {
     NMConfigPrivate *priv;
     g_autoptr(GKeyFile) keyfile = NULL;
-    gs_free char *group         = NULL;
+    gs_free char *group_by_name = NULL;
+    gs_free char *group_by_mac  = NULL;
     gs_free char *match_value   = NULL;
     gboolean      changed       = FALSE;
 
@@ -2146,14 +2149,17 @@ nm_config_set_device_managed(NMConfig   *self,
     g_return_val_if_fail(NM_CONFIG_GET_PRIVATE(self)->config_data, FALSE);
     g_return_val_if_fail(ifname && hwaddr, FALSE);
 
-    priv    = NM_CONFIG_GET_PRIVATE(self);
-    keyfile = nm_config_data_clone_keyfile_intern(priv->config_data);
-    group   = g_strdup_printf(NM_CONFIG_KEYFILE_GROUPPREFIX_INTERN_DEVICE "-%s", ifname);
+    priv          = NM_CONFIG_GET_PRIVATE(self);
+    keyfile       = nm_config_data_clone_keyfile_intern(priv->config_data);
+    group_by_name = g_strdup_printf(NM_CONFIG_KEYFILE_GROUPPREFIX_INTERN_DEVICE "-%s", ifname);
+    group_by_mac =
+        g_strdup_printf(NM_CONFIG_KEYFILE_GROUPPREFIX_INTERN_DEVICE ".by-mac.%s", hwaddr);
 
-    /* Remove existing configs. Search them only by group name [.intern.device-*]. In
+    /* Remove existing configs. Search them by group name [.intern.device-*] or [.intern.device.by-mac.*]. In
      * the intern file, 'device' sections are only used for this purpose, so we won't remove
      * any other device's config. */
-    if (g_key_file_remove_group(keyfile, group, NULL))
+    if (g_key_file_remove_group(keyfile, group_by_name, NULL)
+        || g_key_file_remove_group(keyfile, group_by_mac, NULL))
         changed = TRUE;
 
     /* If the new state is not explicitly TRUE of FALSE, we only remove the configs */
@@ -2166,8 +2172,14 @@ nm_config_set_device_managed(NMConfig   *self,
     else
         match_value = g_strdup_printf("interface-name:=%s", ifname);
 
-    g_key_file_set_value(keyfile, group, NM_CONFIG_KEYFILE_KEY_MATCH_DEVICE, match_value);
-    g_key_file_set_value(keyfile, group, NM_CONFIG_KEYFILE_KEY_DEVICE_MANAGED, managed ? "1" : "0");
+    g_key_file_set_value(keyfile,
+                         by_mac ? group_by_mac : group_by_name,
+                         NM_CONFIG_KEYFILE_KEY_MATCH_DEVICE,
+                         match_value);
+    g_key_file_set_value(keyfile,
+                         by_mac ? group_by_mac : group_by_name,
+                         NM_CONFIG_KEYFILE_KEY_DEVICE_MANAGED,
+                         managed ? "1" : "0");
     changed = TRUE;
 
 done:

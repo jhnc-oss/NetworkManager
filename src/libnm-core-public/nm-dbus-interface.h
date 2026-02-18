@@ -1251,8 +1251,7 @@ typedef enum /*< flags >*/ {
  * @NM_DEVICE_MANAGED_FLAGS_TO_DISK: to also persist the device managed state to disk.
  * @NM_DEVICE_MANAGED_FLAGS_BY_MAC: to match the device by MAC address, not by name.
  *   This option only makes sense together with %NM_DEVICE_MANAGED_FLAGS_TO_DISK.
- * @NM_DEVICE_MANAGED_FLAGS_CLEAR_DISK: to clear the managed flag from disk. Implies
- *   %NM_DEVICE_MANAGED_FLAGS_TO_DISK.
+ * @NM_DEVICE_MANAGED_FLAGS_CLEAR_DISK: to clear the managed flag from disk.
  * @NM_DEVICE_MANAGED_FLAGS_SET_ADMIN_STATE: to set the administrative state of the
  *   device to up if the managed state is TRUE, and down if the managed state is FALSE.
  *   If the flag is not set, the administrative state is not changed.

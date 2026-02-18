@@ -144,6 +144,7 @@ void nm_config_set_connectivity_check_enabled(NMConfig *self, gboolean enabled);
 
 NMTernary nm_config_get_device_managed(NMConfig *self, const char *ifname);
 gboolean  nm_config_set_device_managed(NMConfig   *self,
+                                       NMDevice   *device,
                                        const char *ifname,
                                        const char *hwaddr,
                                        NMTernary   managed,
