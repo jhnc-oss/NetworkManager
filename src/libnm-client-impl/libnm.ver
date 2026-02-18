@@ -2106,8 +2106,25 @@ global:
 
 libnm_1_58_0 {
 global:
+	nm_connection_get_setting_geneve;
+	nm_device_geneve_get_df;
+	nm_device_geneve_get_dst_port;
+	nm_device_geneve_get_id;
+	nm_device_geneve_get_remote;
+	nm_device_geneve_get_tos;
+	nm_device_geneve_get_ttl;
+	nm_device_geneve_get_type;
 	nm_ip_config_get_clat_address;
 	nm_ip_config_get_clat_pref64;
+	nm_setting_geneve_df_get_type;
+	nm_setting_geneve_get_destination_port;
+	nm_setting_geneve_get_df;
+	nm_setting_geneve_get_id;
+	nm_setting_geneve_get_remote;
+	nm_setting_geneve_get_tos;
+	nm_setting_geneve_get_ttl;
+	nm_setting_geneve_get_type;
+	nm_setting_geneve_new;
 	nm_setting_ip4_config_clat_get_type;
 	nm_setting_ip4_config_get_clat;
 	nm_utils_wifi_6ghz_freqs;
