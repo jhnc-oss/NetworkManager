@@ -852,9 +852,11 @@ ipv6.ip6-privacy=0
       <variablelist>
         <varlistentry>
           <term><varname>802-1x.auth-timeout</varname></term>
+          <listitem><para>If left unspecified or set to 0, the default value of 25 seconds is used.</para></listitem>
         </varlistentry>
         <varlistentry>
           <term><varname>cdma.mtu</varname></term>
+          <listitem><para>If left unspecified, the MTU is not explicitly set.</para></listitem>
         </varlistentry>
         <varlistentry>
           <term><varname>connection.auth-retries</varname></term>
@@ -863,6 +865,8 @@ ipv6.ip6-privacy=0
         </varlistentry>
         <varlistentry>
           <term><varname>connection.autoconnect-ports</varname></term>
+          <listitem><para>If left unspecified, defaults to 0 (no).
+            The accepted values are: 0 (no), 1 (yes).</para></listitem>
         </varlistentry>
         <varlistentry>
           <term><varname>connection.autoconnect-slaves</varname></term>
@@ -871,11 +875,13 @@ ipv6.ip6-privacy=0
         </varlistentry>
         <varlistentry>
           <term><varname>connection.down-on-poweroff</varname></term>
-          <listitem><para>Whether the connection will be brought down before the system is powered off.</para></listitem>
+          <listitem><para>If left unspecified, defaults to 0 (no).
+            The accepted values are: 0 (no), 1 (yes).</para></listitem>
         </varlistentry>
         <varlistentry>
           <term><varname>connection.ip-ping-addresses-require-all</varname></term>
-          <listitem><para>Whether it is sufficient for any ping check to succeed among the list of target addresses, or if all ping checks must succeed for the entire list of target addresses.</para></listitem>
+          <listitem><para>If left unspecified, defaults to 0 (no).
+            The accepted values are: 0 (no), 1 (yes).</para></listitem>
         </varlistentry>
         <varlistentry>
           <term><varname>connection.mud-url</varname></term>
@@ -883,35 +889,36 @@ ipv6.ip6-privacy=0
         </varlistentry>
         <varlistentry>
           <term><varname>connection.lldp</varname></term>
+          <listitem><para>If left unspecified, defaults to 0 (disable).
+            The accepted values are: 0 (disable), 1 (enable-rx).</para></listitem>
         </varlistentry>
         <varlistentry>
           <term><varname>connection.llmnr</varname></term>
-          <listitem><para>If unspecified, the ultimate default values depends on the DNS plugin. With systemd-resolved the default currently is "yes" (2) and for all other plugins "no" (0).</para></listitem>
+          <listitem><para>If unspecified, the ultimate default depends on the DNS plugin. With systemd-resolved the default currently is 2 (yes) and for all other plugins 0 (no).
+            The accepted values are: 0 (no), 1 (resolve), 2 (yes).</para></listitem>
         </varlistentry>
         <varlistentry>
           <term><varname>connection.mdns</varname></term>
-          <listitem><para>
-            Currently only the systemd-resolve DNS plugin supports this setting.
-            If the setting is unspecified both in the profile and in the global
-            default here, then the default is determined by systemd-resolved.
-            See <literal>MulticastDNS=</literal> in
-            <citerefentry><refentrytitle>resolved.conf</refentrytitle><manvolnum>5</manvolnum></citerefentry>.
-          </para></listitem>
+          <listitem><para>If left unspecified, the default is determined by systemd-resolved.
+            The accepted values are: 0 (no), 1 (resolve), 2 (yes).</para></listitem>
         </varlistentry>
         <varlistentry>
           <term><varname>connection.mptcp-flags</varname></term>
-          <listitem><para>If unspecified, the fallback is 0x122 (<literal>"enabled,subflow,laminar"</literal>). Note that if sysctl <literal>/proc/sys/net/mptcp/enabled</literal> is disabled, NetworkManager will still not configure endpoints.</para></listitem>
+          <listitem><para>If left unspecified, the fallback is 0x122 (<literal>"enabled,subflow,laminar"</literal>).</para></listitem>
         </varlistentry>
         <varlistentry>
           <term><varname>connection.dns-over-tls</varname></term>
-          <listitem><para>If unspecified, the ultimate default values depends on the DNS plugin. With systemd-resolved the default currently is its global setting and for all other plugins "no" (0).</para></listitem>
+          <listitem><para>If unspecified, the ultimate default depends on the DNS plugin. With systemd-resolved the default currently is its global setting and for all other plugins 0 (no).
+            The accepted values are: 0 (no), 1 (opportunistic), 2 (yes).</para></listitem>
         </varlistentry>
         <varlistentry>
           <term><varname>connection.dnssec</varname></term>
-          <listitem><para>If unspecified, the ultimate default values depends on the DNS plugin. With systemd-resolved the default currently is its global setting and for all other plugins "no" (0).</para></listitem>
+          <listitem><para>If unspecified, the ultimate default depends on the DNS plugin. With systemd-resolved the default currently is its global setting and for all other plugins 0 (no).
+            The accepted values are: 0 (no), 1 (allow-downgrade), 2 (yes).</para></listitem>
         </varlistentry>
         <varlistentry>
           <term><varname>connection.stable-id</varname></term>
+          <listitem><para>If left unspecified, the default is "default${CONNECTION}".</para></listitem>
         </varlistentry>
         <varlistentry>
           <term><varname>ethernet.cloned-mac-address</varname></term>
@@ -919,56 +926,78 @@ ipv6.ip6-privacy=0
         </varlistentry>
         <varlistentry>
           <term><varname>ethernet.generate-mac-address-mask</varname></term>
+          <listitem><para>If left unspecified, the default is to create a locally-administered,
+            unicast MAC address.</para></listitem>
         </varlistentry>
         <varlistentry>
           <term><varname>ethernet.mtu</varname></term>
-          <listitem><para>If configured explicitly to 0, the MTU is not reconfigured during device activation unless it is required due to IPv6 constraints. If left unspecified, a DHCP/IPv6 SLAAC provided value is used or the MTU is not reconfigured during activation.</para></listitem>
+          <listitem><para>If left unspecified, a DHCP/IPv6 SLAAC provided value is used or the MTU is not reconfigured during activation.</para></listitem>
         </varlistentry>
         <varlistentry>
           <term><varname>ethernet.wake-on-lan</varname></term>
+          <listitem><para>If left unspecified, defaults to 0x8000 (ignore).
+            The accepted flags are (can be combined): 0x2 (phy), 0x4 (unicast), 0x8 (multicast),
+            0x10 (broadcast), 0x20 (arp), 0x40 (magic), 0x8000 (ignore).</para></listitem>
         </varlistentry>
         <varlistentry>
           <term><varname>gsm.mtu</varname></term>
+          <listitem><para>If left unspecified, the MTU is not explicitly set.</para></listitem>
         </varlistentry>
         <varlistentry>
           <term><varname>hostname.from-dhcp</varname></term>
+          <listitem><para>If left unspecified, defaults to 1 (yes).
+            The accepted values are: 0 (no), 1 (yes).</para></listitem>
         </varlistentry>
         <varlistentry>
           <term><varname>hostname.from-dns-lookup</varname></term>
+          <listitem><para>If left unspecified, defaults to 1 (yes).
+            The accepted values are: 0 (no), 1 (yes).</para></listitem>
         </varlistentry>
         <varlistentry>
           <term><varname>hostname.only-from-default</varname></term>
+          <listitem><para>If left unspecified, defaults to 0 (no).
+            The accepted values are: 0 (no), 1 (yes).</para></listitem>
         </varlistentry>
         <varlistentry>
           <term><varname>hostname.priority</varname></term>
+          <listitem><para>If left unspecified or set to 0, the built-in default of 100 is used.</para></listitem>
         </varlistentry>
         <varlistentry>
           <term><varname>infiniband.mtu</varname></term>
-          <listitem><para>If configured explicitly to 0, the MTU is not reconfigured during device activation unless it is required due to IPv6 constraints. If left unspecified, a DHCP/IPv6 SLAAC provided value is used or the MTU is left unspecified on activation.</para></listitem>
+          <listitem><para>If left unspecified, a DHCP/IPv6 SLAAC provided value is used or the MTU is left unspecified on activation.</para></listitem>
         </varlistentry>
         <varlistentry>
           <term><varname>ip-tunnel.mtu</varname></term>
-          <listitem><para>If configured explicitly to 0, the MTU is not reconfigured during device activation unless it is required due to IPv6 constraints. If left unspecified, a DHCP/IPv6 SLAAC provided value is used or a default of 1500.</para></listitem>
+          <listitem><para>If left unspecified, a DHCP/IPv6 SLAAC provided value is used or a default of 1500.</para></listitem>
         </varlistentry>
         <varlistentry>
           <term><varname>ipv4.forwarding</varname></term>
-          <listitem><para>Whether to configure IPv4 sysctl interface-specific forwarding. When enabled, the interface will act as a router to forward the IPv4 packet from one interface to another. If left unspecified, "auto" is used, so NetworkManager sets the IPv4 forwarding if any shared connection is active, or it will use the kernel default value otherwise. The "ipv4.forwarding" property is ignored when "ipv4.method" is set to "shared", because forwarding is always enabled in this case. The accepted values are: 0: disabled, 1: enabled, 2: auto, 3: ignored (leave the forwarding unchanged).</para></listitem>
+          <listitem><para>If left unspecified, defaults to 2 (auto).
+            The accepted values are: 0 (disabled), 1 (enabled), 2 (auto), 3 (ignored).</para></listitem>
         </varlistentry>
         <varlistentry>
           <term><varname>ipv4.clat</varname></term>
-          <listitem><para>If left unspecified, defaults to "no".</para></listitem>
+          <listitem><para>If left unspecified, defaults to 0 (no).
+            The accepted values are: 0 (no), 1 (auto), 2 (force).</para></listitem>
         </varlistentry>
         <varlistentry>
           <term><varname>ipv4.routed-dns</varname></term>
+          <listitem><para>If left unspecified, defaults to 0 (no).
+            The accepted values are: 0 (no), 1 (yes).</para></listitem>
         </varlistentry>
         <varlistentry>
           <term><varname>ipv4.dad-timeout</varname></term>
+          <listitem><para>If left unspecified, the built-in default of 200 ms is used.</para></listitem>
         </varlistentry>
         <varlistentry>
           <term><varname>ipv4.dhcp-client-id</varname></term>
+          <listitem><para>If left unspecified, the default depends on the DHCP plugin ("mac" for the
+            internal plugin).</para></listitem>
         </varlistentry>
         <varlistentry>
           <term><varname>ipv4.dhcp-dscp</varname></term>
+          <listitem><para>If left unspecified, "CS0" is assumed.
+            Allowed values are: "CS0", "CS4", "CS6".</para></listitem>
         </varlistentry>
         <varlistentry>
           <term><varname>ipv4.dhcp-iaid</varname></term>
@@ -976,7 +1005,8 @@ ipv6.ip6-privacy=0
         </varlistentry>
         <varlistentry>
           <term><varname>ipv4.dhcp-ipv6-only-preferred</varname></term>
-          <listitem><para>If left unspecified, it defaults to "auto".</para></listitem>
+          <listitem><para>If left unspecified, it defaults to 2 (auto).
+            The accepted values are: 0 (no), 1 (yes), 2 (auto).</para></listitem>
         </varlistentry>
         <varlistentry>
           <term><varname>ipv4.dhcp-hostname-flags</varname></term>
@@ -984,11 +1014,13 @@ ipv6.ip6-privacy=0
         </varlistentry>
         <varlistentry>
           <term><varname>ipv4.dhcp-send-hostname</varname></term>
-          <listitem><para>Whether a hostname is sent to the DHCP server when acquiring a lease. When the property is not specified in the connection, the global value from NetworkManager configuration is looked up. If the global value is not set, the value from ipv4.dhcp-send-hostname-deprecated, which defaults to true, is used for backwards compatibility. In the future this will change and, in absence of a global default, it will always fallback to true.</para></listitem>
+          <listitem><para>If left unspecified, defaults to 1 (yes).
+            The accepted values are: 0 (no), 1 (yes).</para></listitem>
         </varlistentry>
         <varlistentry>
           <term><varname>ipv4.dhcp-send-release</varname></term>
-          <listitem><para>Whether the DHCP client will send RELEASE message when bringing the connection down.</para></listitem>
+          <listitem><para>If left unspecified, defaults to 0 (no).
+            The accepted values are: 0 (no), 1 (yes).</para></listitem>
         </varlistentry>
         <varlistentry>
           <term><varname>ipv4.dhcp-timeout</varname></term>
@@ -1006,29 +1038,32 @@ ipv6.ip6-privacy=0
         </varlistentry>
         <varlistentry>
           <term><varname>ipv4.required-timeout</varname></term>
+          <listitem><para>If left unspecified, no required timeout is applied.</para></listitem>
         </varlistentry>
         <varlistentry>
           <term><varname>ipv4.link-local</varname></term>
-          <listitem><para>If left unspecified, fallback to "auto" which makes it dependent on "ipv4.method" setting.</para></listitem>
+          <listitem><para>If left unspecified, defaults to 1 (auto).
+            The accepted values are: 1 (auto), 2 (disabled), 3 (enabled), 4 (fallback).</para></listitem>
         </varlistentry>
         <varlistentry>
           <term><varname>ipv4.route-metric</varname></term>
+          <listitem><para>If left unspecified, defaults to -1 (chosen automatically based on the
+            device type).</para></listitem>
         </varlistentry>
         <varlistentry>
           <term><varname>ipv4.route-table</varname></term>
-          <listitem><para>If left unspecified, routes are only added to the main table. Note that this
-            is different from explicitly selecting the main table 254, because of how NetworkManager
-            removes extraneous routes from the tables.
-          </para></listitem>
+          <listitem><para>If left unspecified, routes are only added to the main table.</para></listitem>
         </varlistentry>
         <varlistentry>
           <term><varname>ipv6.routed-dns</varname></term>
+          <listitem><para>If left unspecified, defaults to 0 (no).
+            The accepted values are: 0 (no), 1 (yes).</para></listitem>
         </varlistentry>
         <varlistentry>
           <term><varname>ipv6.addr-gen-mode</varname></term>
-          <listitem><para>If the per-profile setting is either "default" or "default-or-eui64", the
-            global default is used. If the default is unspecified, the fallback value is either "stable-privacy"
-            or "eui64", depending on whether the per-profile setting is "default" or "default-or-eui64, respectively.</para></listitem>
+          <listitem><para>If left unspecified, defaults to 1 (stable-privacy) or 0 (eui64),
+            depending on whether the per-profile setting is "default" or "default-or-eui64".
+            The accepted values are: 0 (eui64), 1 (stable-privacy).</para></listitem>
         </varlistentry>
         <varlistentry>
           <term><varname>ipv6.ra-timeout</varname></term>
@@ -1048,11 +1083,13 @@ ipv6.ip6-privacy=0
         </varlistentry>
         <varlistentry>
           <term><varname>ipv6.dhcp-send-hostname</varname></term>
-          <listitem><para>Whether a hostname is sent to the DHCP server when acquiring a lease. When the property is not specified in the connection, the global value from NetworkManager configuration is looked up. If the global value is not set, the value from ipv6.dhcp-send-hostname-deprecated, which defaults to true, is used for backwards compatibility. In the future this will change and, in absence of a global default, it will always fallback to true.</para></listitem>
+          <listitem><para>If left unspecified, defaults to 1 (yes).
+            The accepted values are: 0 (no), 1 (yes).</para></listitem>
         </varlistentry>
         <varlistentry>
           <term><varname>ipv6.dhcp-send-release</varname></term>
-          <listitem><para>Whether the DHCP client will send RELEASE message when bringing the connection down.</para></listitem>
+          <listitem><para>If left unspecified, defaults to 0 (no).
+            The accepted values are: 0 (no), 1 (yes).</para></listitem>
         </varlistentry>
         <varlistentry>
           <term><varname>ipv6.dhcp-timeout</varname></term>
@@ -1068,6 +1105,7 @@ ipv6.ip6-privacy=0
           <term><varname>ipv6.ip6-privacy</varname></term>
           <listitem><para>If <literal>ipv6.ip6-privacy</literal> is unset, use the content of
             "/proc/sys/net/ipv6/conf/default/use_tempaddr" as last fallback.
+            The accepted values are: 0 (disabled), 1 (prefer-public-addr), 2 (prefer-temp-addr).
           </para></listitem>
         </varlistentry>
         <varlistentry>
@@ -1084,33 +1122,35 @@ ipv6.ip6-privacy=0
         </varlistentry>
         <varlistentry>
           <term><varname>ipv6.required-timeout</varname></term>
+          <listitem><para>If left unspecified, no required timeout is applied.</para></listitem>
         </varlistentry>
         <varlistentry>
           <term><varname>ipv6.route-metric</varname></term>
+          <listitem><para>If left unspecified, defaults to -1 (chosen automatically based on the
+            device type).</para></listitem>
         </varlistentry>
         <varlistentry>
           <term><varname>ipv6.route-table</varname></term>
-          <listitem><para>If left unspecified, routes are only added to the main table. Note that this
-            is different from explicitly selecting the main table 254, because of how NetworkManager
-            removes extraneous routes from the tables.
-          </para></listitem>
+          <listitem><para>If left unspecified, routes are only added to the main table.</para></listitem>
         </varlistentry>
         <varlistentry>
           <term><varname>loopback.mtu</varname></term>
-          <listitem><para>If configured explicitly to 0, the MTU is not reconfigured during device activation unless it is required due to IPv6 constraints. If left unspecified, a DHCP/IPv6 SLAAC provided value is used or the MTU is left unspecified on activation.</para></listitem>
+          <listitem><para>If left unspecified, a DHCP/IPv6 SLAAC provided value is used or the MTU is left unspecified on activation.</para></listitem>
         </varlistentry>
         <varlistentry>
           <term><varname>macsec.offload</varname></term>
+          <listitem><para>If left unspecified, defaults to 0 (off).
+            The accepted values are: 0 (off), 1 (phy), 2 (mac).</para></listitem>
         </varlistentry>
         <varlistentry>
           <term><varname>sriov.autoprobe-drivers</varname></term>
-          <listitem><para>If left unspecified, drivers are autoprobed when the SR-IOV VF gets created.</para></listitem>
+          <listitem><para>If left unspecified, defaults to 1 (yes).
+            The accepted values are: 0 (no), 1 (yes).</para></listitem>
         </varlistentry>
         <varlistentry>
           <term><varname>sriov.preserve-on-down</varname></term>
-          <listitem><para>Set to 0 or 1 to select whether the SR-IOV parameters are
-          preserved when the connection is deactivated. If left unspecified, default
-          to 0 (parameters are not preserved). </para></listitem>
+          <listitem><para>If left unspecified, defaults to 0 (no).
+            The accepted values are: 0 (no), 1 (yes).</para></listitem>
         </varlistentry>
         <varlistentry>
           <term><varname>vpn.timeout</varname></term>
@@ -1118,7 +1158,8 @@ ipv6.ip6-privacy=0
         </varlistentry>
         <varlistentry>
           <term><varname>wifi.ap-isolation</varname></term>
-          <listitem><para>If left unspecified, AP isolation is disabled.</para></listitem>
+          <listitem><para>If left unspecified, defaults to 0 (no).
+            The accepted values are: 0 (no), 1 (yes).</para></listitem>
         </varlistentry>
         <varlistentry>
           <term><varname>wifi.cloned-mac-address</varname></term>
@@ -1126,37 +1167,44 @@ ipv6.ip6-privacy=0
         </varlistentry>
         <varlistentry>
           <term><varname>wifi.generate-mac-address-mask</varname></term>
+          <listitem><para>If left unspecified, the default is to create a locally-administered,
+            unicast MAC address.</para></listitem>
         </varlistentry>
         <varlistentry>
           <term><varname>wifi.mac-address-randomization</varname></term>
-          <listitem><para>If left unspecified, MAC address randomization is disabled.
+          <listitem><para>If left unspecified, defaults to 1 (never).
             This setting is deprecated for <literal>wifi.cloned-mac-address</literal>.
-          </para></listitem>
+            The accepted values are: 1 (never), 2 (always).</para></listitem>
         </varlistentry>
         <varlistentry>
           <term><varname>wifi.mtu</varname></term>
-          <listitem><para>If configured explicitly to 0, the MTU is not reconfigured during device activation unless it is required due to IPv6 constraints. If left unspecified, a DHCP/IPv6 SLAAC provided value is used or a default of 1500.</para></listitem>
+          <listitem><para>If left unspecified, a DHCP/IPv6 SLAAC provided value is used or a default of 1500.</para></listitem>
         </varlistentry>
         <varlistentry>
           <term><varname>wifi.powersave</varname></term>
-          <listitem><para>If left unspecified, the default value
-          "<literal>ignore</literal>" will be used.</para></listitem>
+          <listitem><para>If left unspecified, defaults to 1 (ignore).
+            The accepted values are: 1 (ignore), 2 (disable), 3 (enable).</para></listitem>
         </varlistentry>
         <varlistentry>
           <term><varname>wifi-sec.pmf</varname></term>
-          <listitem><para>If left unspecified, the default value
-          "<literal>optional</literal>" will be used.</para></listitem>
+          <listitem><para>If left unspecified, defaults to 2 (optional).
+            The accepted values are: 1 (disable), 2 (optional), 3 (required).</para></listitem>
         </varlistentry>
         <varlistentry>
           <term><varname>wifi-sec.fils</varname></term>
-          <listitem><para>If left unspecified, the default value
-          "<literal>optional</literal>" will be used.</para></listitem>
+          <listitem><para>If left unspecified, defaults to 2 (optional).
+            The accepted values are: 1 (disable), 2 (optional), 3 (required).</para></listitem>
         </varlistentry>
         <varlistentry>
           <term><varname>wifi.wake-on-wlan</varname></term>
+          <listitem><para>If left unspecified, defaults to 0x8000 (ignore).
+            The accepted flags are (can be combined): 0x2 (any), 0x4 (disconnect), 0x8 (magic),
+            0x10 (gtk-rekey-failure), 0x20 (eap-identity-request), 0x40 (4way-handshake),
+            0x80 (rfkill-release), 0x100 (tcp), 0x8000 (ignore).</para></listitem>
         </varlistentry>
         <varlistentry>
           <term><varname>wireguard.mtu</varname></term>
+          <listitem><para>If left unspecified, a default MTU is used.</para></listitem>
         </varlistentry>
       </variablelist>
       <!-- The following comment is used by check-config-options.sh, don't remove it. -->
