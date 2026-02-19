@@ -277,7 +277,7 @@ modem_state_cb(NMModem *modem, int new_state_i, int old_state_i, gpointer user_d
          * to NetworkManager (eg something using MM's D-Bus API directly).
          */
 
-        if (!NM_MODEM_GET_CLASS(priv->modem)->set_mm_enabled) {
+        if (!NM_MODEM_GET_CLASS(priv->modem)->set_enabled) {
             /* We cannot re-enable this modem, thus device becomes unavailable. */
             nm_device_state_changed(device,
                                     NM_DEVICE_STATE_UNAVAILABLE,
@@ -307,7 +307,7 @@ modem_state_cb(NMModem *modem, int new_state_i, int old_state_i, gpointer user_d
         /* If the modem is now unlocked, enable/disable it according to the
          * device's enabled/disabled state.
          */
-        nm_modem_set_mm_enabled(priv->modem, priv->rf_enabled);
+        nm_modem_set_enabled(priv->modem, priv->rf_enabled);
 
         if (dev_state == NM_DEVICE_STATE_NEED_AUTH) {
             /* The modem was unlocked externally to NetworkManager,
@@ -325,6 +325,23 @@ modem_state_cb(NMModem *modem, int new_state_i, int old_state_i, gpointer user_d
     nm_device_queue_recheck_available(device,
                                       NM_DEVICE_STATE_REASON_MODEM_AVAILABLE,
                                       NM_DEVICE_STATE_REASON_MODEM_FAILED);
+}
+
+static void
+caps_changed_cb(NMModem *modem, guint modem_caps, guint current_caps, gpointer user_data)
+{
+    NMDeviceModem        *self = NM_DEVICE_MODEM(user_data);
+    NMDeviceModemPrivate *priv = NM_DEVICE_MODEM_GET_PRIVATE(self);
+
+    if (priv->caps != modem_caps) {
+        priv->caps = modem_caps;
+        _notify(self, PROP_CAPABILITIES);
+    }
+
+    if (priv->current_caps != current_caps) {
+        priv->current_caps = current_caps;
+        _notify(self, PROP_CURRENT_CAPABILITIES);
+    }
 }
 
 static void
@@ -450,7 +467,7 @@ check_connection_available(NMDevice                      *device,
         return FALSE;
     }
 
-    if (!NM_MODEM_GET_CLASS(priv->modem)->set_mm_enabled && state <= NM_MODEM_STATE_DISABLING) {
+    if (!NM_MODEM_GET_CLASS(priv->modem)->set_enabled && state <= NM_MODEM_STATE_DISABLING) {
         nm_utils_error_set_literal(error,
                                    NM_UTILS_ERROR_CONNECTION_AVAILABLE_TEMPORARY,
                                    "modem is disabled and NM cannot enable it");
@@ -616,7 +633,7 @@ set_enabled(NMDevice *device, gboolean enabled)
 
     if (priv->modem) {
         /* Sync the ModemManager modem enabled/disabled with rfkill/user preference */
-        nm_modem_set_mm_enabled(priv->modem, enabled);
+        nm_modem_set_enabled(priv->modem, enabled);
     }
 
     if (enabled == FALSE) {
@@ -644,7 +661,7 @@ is_available(NMDevice *device, NMDeviceCheckDevAvailableFlags flags)
     if (modem_state <= NM_MODEM_STATE_INITIALIZING)
         return FALSE;
 
-    if (!NM_MODEM_GET_CLASS(priv->modem)->set_mm_enabled && modem_state <= NM_MODEM_STATE_DISABLING)
+    if (!NM_MODEM_GET_CLASS(priv->modem)->set_enabled && modem_state <= NM_MODEM_STATE_DISABLING)
         return FALSE;
 
     return TRUE;
@@ -677,6 +694,7 @@ set_modem(NMDeviceModem *self, NMModem *modem)
     g_signal_connect(modem, NM_MODEM_AUTH_REQUESTED, G_CALLBACK(modem_auth_requested), self);
     g_signal_connect(modem, NM_MODEM_AUTH_RESULT, G_CALLBACK(modem_auth_result), self);
     g_signal_connect(modem, NM_MODEM_STATE_CHANGED, G_CALLBACK(modem_state_cb), self);
+    g_signal_connect(modem, NM_MODEM_CAPABILITIES_CHANGED, G_CALLBACK(caps_changed_cb), self);
     g_signal_connect(modem, NM_MODEM_REMOVED, G_CALLBACK(modem_removed_cb), self);
 
     g_signal_connect(modem,
