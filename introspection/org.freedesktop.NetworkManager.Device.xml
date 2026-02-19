@@ -405,9 +405,8 @@
         clearing previous managed state from disk.
     -->
     <method name="SetManaged">
+      <arg name="managed" type="b" direction="in"/>
       <arg name="flags" type="u" direction="in"/>
-      <arg name="connection" type="a{sa{sv}}" direction="out"/>
-      <arg name="version_id" type="t" direction="out"/>
       </method>
 
     <!--
