@@ -31,7 +31,9 @@ GType nm_device_wifi_p2p_get_type(void);
 NMDeviceWifiP2P *nm_device_wifi_p2p_new(const char *iface);
 
 NMSupplicantInterface *nm_device_wifi_p2p_get_mgmt_iface(NMDeviceWifiP2P *self);
-void nm_device_wifi_p2p_set_mgmt_iface(NMDeviceWifiP2P *self, NMSupplicantInterface *iface);
+void                   nm_device_wifi_p2p_set_mgmt_iface(NMDeviceWifiP2P       *self,
+                                                         NMSupplicantInterface *iface,
+                                                         int                    parent_ifindex);
 
 void nm_device_wifi_p2p_remove(NMDeviceWifiP2P *self);
 

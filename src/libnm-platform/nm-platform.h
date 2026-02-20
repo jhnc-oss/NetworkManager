@@ -8,6 +8,7 @@
 
 #include "libnm-platform/nmp-base.h"
 #include "libnm-base/nm-base.h"
+#include "libnm-platform/wifi/nm-wifi-utils.h"
 #include "nmp-plobj.h"
 
 #define NM_TYPE_PLATFORM (nm_platform_get_type())
@@ -1294,6 +1295,11 @@ typedef struct {
     gboolean (*wifi_set_wake_on_wlan)(NMPlatform                  *self,
                                       int                          ifindex,
                                       _NMSettingWirelessWakeOnWLan wowl);
+    gboolean (*wifi_can_concurrent)(NMPlatform     *self,
+                                    int             ifindex,
+                                    NMWifiIfaceType iftype1,
+                                    NMWifiIfaceType iftype2,
+                                    guint8         *out_num_channels);
 
     guint32 (*mesh_get_channel)(NMPlatform *self, int ifindex);
     gboolean (*mesh_set_channel)(NMPlatform *self, int ifindex, guint32 channel);
@@ -2253,6 +2259,12 @@ void nm_platform_wifi_indicate_addressing_running(NMPlatform *self, int ifindex,
 _NMSettingWirelessWakeOnWLan nm_platform_wifi_get_wake_on_wlan(NMPlatform *self, int ifindex);
 gboolean
 nm_platform_wifi_set_wake_on_wlan(NMPlatform *self, int ifindex, _NMSettingWirelessWakeOnWLan wowl);
+
+gboolean nm_platform_wifi_can_concurrent(NMPlatform     *self,
+                                         int             ifindex,
+                                         NMWifiIfaceType iftype1,
+                                         NMWifiIfaceType iftype2,
+                                         guint8         *out_num_channels);
 
 guint32  nm_platform_mesh_get_channel(NMPlatform *self, int ifindex);
 gboolean nm_platform_mesh_set_channel(NMPlatform *self, int ifindex, guint32 channel);

@@ -53,6 +53,9 @@ typedef struct {
     guint peer_dump_id;
     guint peer_missing_id;
 
+    /* Parent Wi-Fi device ifindex for checking interface combination capabilities */
+    int parent_ifindex;
+
     bool is_waiting_for_supplicant : 1;
     bool enabled : 1;
 } NMDeviceWifiP2PPrivate;
@@ -363,6 +366,32 @@ act_stage1_prepare(NMDevice *device, NMDeviceStateReason *out_failure_reason)
     if (!priv->mgmt_iface) {
         NM_SET_OUT(out_failure_reason, NM_DEVICE_STATE_REASON_SUPPLICANT_FAILED);
         return NM_ACT_STAGE_RETURN_FAILURE;
+    }
+
+    /* Check if the hardware supports concurrent Station + P2P operation.
+     * We use NL80211_IFTYPE_STATION (2) and NL80211_IFTYPE_P2P_CLIENT (8).
+     * If concurrency is not supported, log a warning but proceed anyway
+     * (the kernel/supplicant will handle the actual switching).
+     */
+    if (priv->parent_ifindex > 0) {
+        guint8   num_channels = 0;
+        gboolean can_concurrent;
+
+        can_concurrent = nm_platform_wifi_can_concurrent(NM_PLATFORM_GET,
+                                                         priv->parent_ifindex,
+                                                         NM_WIFI_IFACE_TYPE_STATION,
+                                                         NM_WIFI_IFACE_TYPE_P2P_CLIENT,
+                                                         &num_channels);
+
+        if (can_concurrent) {
+            _LOGI(LOGD_DEVICE | LOGD_WIFI,
+                  "P2P: Hardware supports concurrent Station + P2P operation (channels: %u)",
+                  num_channels);
+        } else {
+            _LOGW(LOGD_DEVICE | LOGD_WIFI,
+                  "P2P: Hardware may not support concurrent Station + P2P operation. "
+                  "Infrastructure connection may be interrupted.");
+        }
     }
 
     connection = nm_device_get_applied_connection(NM_DEVICE(self));
@@ -1158,7 +1187,9 @@ nm_device_wifi_p2p_get_mgmt_iface(NMDeviceWifiP2P *self)
 }
 
 void
-nm_device_wifi_p2p_set_mgmt_iface(NMDeviceWifiP2P *self, NMSupplicantInterface *iface)
+nm_device_wifi_p2p_set_mgmt_iface(NMDeviceWifiP2P       *self,
+                                  NMSupplicantInterface *iface,
+                                  int                    parent_ifindex)
 {
     NMDeviceWifiP2PPrivate *priv;
 
@@ -1172,14 +1203,17 @@ nm_device_wifi_p2p_set_mgmt_iface(NMDeviceWifiP2P *self, NMSupplicantInterface *
 
     supplicant_interfaces_release(self, FALSE);
 
-    if (!iface)
+    if (!iface) {
+        priv->parent_ifindex = 0;
         goto done;
+    }
 
     _LOGD(LOGD_DEVICE | LOGD_WIFI,
           "P2P: WPA supplicant management interface changed to %s.",
           nm_ref_string_get_str(nm_supplicant_interface_get_object_path(iface)));
 
-    priv->mgmt_iface = g_object_ref(iface);
+    priv->mgmt_iface     = g_object_ref(iface);
+    priv->parent_ifindex = parent_ifindex;
 
     g_signal_connect(priv->mgmt_iface,
                      NM_SUPPLICANT_INTERFACE_STATE,
