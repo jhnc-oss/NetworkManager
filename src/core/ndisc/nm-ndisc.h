@@ -183,6 +183,7 @@ typedef struct {
     NMSettingIP6ConfigAddrGenMode addr_gen_mode;
     NMNDiscNodeType               node_type;
     NMSettingIP6ConfigPrivacy     ip6_privacy;
+    bool                          pd_evict_oldest;
 } NMNDiscConfig;
 
 struct _NMNDiscPrivate;
