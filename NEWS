@@ -8,6 +8,8 @@ subject to change and not guaranteed to be compatible with
 the later release.
 USE AT YOUR OWN RISK.  NOT RECOMMENDED FOR PRODUCTION USE!
 
+* A new "prefix-delegation.evict-oldest" configuration option is available to
+  evict old prefixes rather than dropping new ones when the limit is reached.
 * Unify the versioning to use everywhere the scheme with the -rcX or -dev
   suffixes when appropriate. This affects, for example, the URL and filename
   of the release tarball and the version reported by nmcli and the daemon.

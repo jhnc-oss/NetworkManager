@@ -664,8 +664,33 @@ nm_ndisc_add_address(NMNDisc              *ndisc,
      * what the kernel does, because it considers *all* addresses (including
      * static and other temporary addresses).
      **/
-    if (rdata->addresses->len >= priv->config.max_addresses)
-        return FALSE;
+    if (rdata->addresses->len >= priv->config.max_addresses) {
+        guint  oldest_idx    = 0;
+        gint64 oldest_expiry = G_MAXINT64;
+
+        /* In PD mode with evict_oldest enabled, and the new address is still
+         * preferred (active), find and evict the address with shortest remaining
+         * lifetime to make room for the new prefix. */
+        if (from_ra || !priv->config.pd_evict_oldest
+            || new_item->expiry_preferred_msec <= NM_NDISC_EXPIRY_BASE_TIMESTAMP) {
+            return FALSE;
+        }
+
+        for (i = 0; i < rdata->addresses->len; i++) {
+            NMNDiscAddress *item = &nm_g_array_index(rdata->addresses, NMNDiscAddress, i);
+            if (item->expiry_msec >= oldest_expiry)
+                continue;
+
+            oldest_expiry = item->expiry_msec;
+            oldest_idx    = i;
+        }
+
+        _LOGI("add_address: max_addresses=%u reached, evicting oldest "
+              "(expiry=%" G_GINT64_FORMAT " ms)",
+              priv->config.max_addresses,
+              oldest_expiry);
+        g_array_remove_index(rdata->addresses, oldest_idx);
+    }
 
     if (new_item->expiry_msec <= now_msec)
         return FALSE;
