@@ -53,8 +53,8 @@ update_properties(NMDevice *device)
     nm_device_parent_set_ifindex(device, peer_ifindex);
 
     peer = nm_device_parent_get_device(device);
-    if (peer && NM_IS_DEVICE_VETH(peer) && nm_device_parent_get_ifindex(peer) <= 0)
-        update_properties(peer);
+    if (peer && NM_IS_DEVICE_VETH(peer) && !nm_device_parent_get_device(peer))
+        nm_device_parent_set_ifindex(peer, ifindex);
 }
 
 static gboolean
