@@ -7369,6 +7369,13 @@ do_sleep_wake(NMManager *self, gboolean sleeping_changed)
          * suspend/resume?
          */
         c_list_for_each_entry (device, &priv->devices_lst_head, devices_lst) {
+            /* Loopback device must never be taken down. It's essential for
+             * local communication (127.0.0.1) and many system services depend
+             * on it. Unlike other software devices, loopback cannot be
+             * recreated by NetworkManager. */
+            if (NM_IS_DEVICE_LOOPBACK(device))
+                continue;
+
             if (nm_device_is_software(device)) {
                 /* If a user disables networking we consider that as an
                  * indication that also software devices must be disconnected.
