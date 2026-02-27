@@ -216,6 +216,17 @@ on_supplicant_wfd_ies_set(GObject *source_object, GAsyncResult *result, gpointer
         _LOGD("failed to set WFD IEs on wpa_supplicant: %s", error->message);
 }
 
+static void
+on_supplicant_p2p_device_name_set(GObject *source_object, GAsyncResult *result, gpointer user_data)
+{
+    gs_unref_variant GVariant *res   = NULL;
+    gs_free_error GError      *error = NULL;
+
+    res = g_dbus_connection_call_finish(G_DBUS_CONNECTION(source_object), result, &error);
+    if (!res)
+        _LOGD("failed to set P2P device name on wpa_supplicant: %s", error->message);
+}
+
 /**
  * nm_supplicant_manager_set_wfd_ies:
  * @self: the #NMSupplicantManager
@@ -257,6 +268,51 @@ nm_supplicant_manager_set_wfd_ies(NMSupplicantManager *self, GBytes *wfd_ies)
                            3000,
                            NULL,
                            on_supplicant_wfd_ies_set,
+                           NULL);
+}
+
+/**
+ * nm_supplicant_manager_set_p2p_device_name:
+ * @self: the #NMSupplicantManager
+ * @p2p_device_name: the P2P device name to set or %NULL
+ *
+ * This function sets the global P2P device name on wpa_supplicant.
+ * The P2P device name is used during Wi-Fi Direct (P2P) discovery
+ * and connection to identify this device to peers.
+ * */
+void
+nm_supplicant_manager_set_p2p_device_name(NMSupplicantManager *self, const char *p2p_device_name)
+{
+    NMSupplicantManagerPrivate *priv;
+    GVariantBuilder             params;
+
+    g_return_if_fail(NM_IS_SUPPLICANT_MANAGER(self));
+
+    priv = NM_SUPPLICANT_MANAGER_GET_PRIVATE(self);
+
+    if (!priv->name_owner)
+        return;
+
+    _LOGD("setting P2P device name to \"%s\" on %s", p2p_device_name ?: "", priv->name_owner->str);
+
+    g_variant_builder_init(&params, G_VARIANT_TYPE("(ssv)"));
+
+    g_variant_builder_add(&params, "s", NM_WPAS_DBUS_INTERFACE);
+    g_variant_builder_add(&params, "s", "P2PDeviceName");
+    g_variant_builder_add_value(&params,
+                                g_variant_new_variant(g_variant_new_string(p2p_device_name ?: "")));
+
+    g_dbus_connection_call(priv->dbus_connection,
+                           priv->name_owner->str,
+                           NM_WPAS_DBUS_PATH,
+                           DBUS_INTERFACE_PROPERTIES,
+                           "Set",
+                           g_variant_builder_end(&params),
+                           G_VARIANT_TYPE("()"),
+                           G_DBUS_CALL_FLAGS_NO_AUTO_START,
+                           3000,
+                           NULL,
+                           on_supplicant_p2p_device_name_set,
                            NULL);
 }
 
