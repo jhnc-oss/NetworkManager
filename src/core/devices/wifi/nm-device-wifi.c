@@ -702,7 +702,7 @@ supplicant_interface_release(NMDeviceWifi *self)
 
     if (priv->p2p_device) {
         /* Signal to P2P device to also release its reference */
-        nm_device_wifi_p2p_set_mgmt_iface(priv->p2p_device, NULL);
+        nm_device_wifi_p2p_set_mgmt_iface(priv->p2p_device, NULL, 0);
     }
 
     _scan_notify_is_scanning(self);
@@ -1344,8 +1344,22 @@ is_available(NMDevice *device, NMDeviceCheckDevAvailableFlags flags)
 
     supplicant_state = nm_supplicant_interface_get_state(priv->sup_iface);
     if (supplicant_state <= NM_SUPPLICANT_INTERFACE_STATE_STARTING
-        || supplicant_state > NM_SUPPLICANT_INTERFACE_STATE_COMPLETED)
+        || supplicant_state > NM_SUPPLICANT_INTERFACE_STATE_COMPLETED) {
+        guint8 num_channels = 0;
+
+        if (nm_platform_wifi_can_concurrent(nm_device_get_platform(device),
+                                            nm_device_get_ifindex(device),
+                                            NM_WIFI_IFACE_TYPE_STATION,
+                                            NM_WIFI_IFACE_TYPE_P2P_CLIENT,
+                                            &num_channels)) {
+            _LOGI(LOGD_DEVICE | LOGD_WIFI,
+                  "Device is available (state %d) due to hardware concurrency support",
+                  supplicant_state);
+            return TRUE;
+        }
+
         return FALSE;
+    }
 
     return TRUE;
 }
@@ -2809,7 +2823,9 @@ recheck_p2p_availability(NMDeviceWifi *self)
 
         priv->p2p_device = nm_device_wifi_p2p_new(iface_name);
 
-        nm_device_wifi_p2p_set_mgmt_iface(priv->p2p_device, priv->sup_iface);
+        nm_device_wifi_p2p_set_mgmt_iface(priv->p2p_device,
+                                          priv->sup_iface,
+                                          nm_device_get_ifindex(NM_DEVICE(self)));
 
         g_signal_emit(self, signals[P2P_DEVICE_CREATED], 0, priv->p2p_device);
         g_object_add_weak_pointer(G_OBJECT(priv->p2p_device), (gpointer *) &priv->p2p_device);
@@ -2818,7 +2834,9 @@ recheck_p2p_availability(NMDeviceWifi *self)
     }
 
     if (p2p_available && priv->p2p_device) {
-        nm_device_wifi_p2p_set_mgmt_iface(priv->p2p_device, priv->sup_iface);
+        nm_device_wifi_p2p_set_mgmt_iface(priv->p2p_device,
+                                          priv->sup_iface,
+                                          nm_device_get_ifindex(NM_DEVICE(self)));
         return;
     }
 

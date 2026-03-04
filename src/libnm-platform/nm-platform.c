@@ -3472,6 +3472,20 @@ nm_platform_wifi_set_wake_on_wlan(NMPlatform *self, int ifindex, _NMSettingWirel
     return klass->wifi_set_wake_on_wlan(self, ifindex, wowl);
 }
 
+gboolean
+nm_platform_wifi_can_concurrent(NMPlatform     *self,
+                                int             ifindex,
+                                NMWifiIfaceType iftype1,
+                                NMWifiIfaceType iftype2,
+                                guint8         *out_num_channels)
+{
+    _CHECK_SELF(self, klass, FALSE);
+
+    g_return_val_if_fail(ifindex > 0, FALSE);
+
+    return klass->wifi_can_concurrent(self, ifindex, iftype1, iftype2, out_num_channels);
+}
+
 guint32
 nm_platform_mesh_get_channel(NMPlatform *self, int ifindex)
 {

@@ -8,6 +8,36 @@
 
 #include "nm-wifi-utils.h"
 
+/**
+ * NMWifiIfaceCombLimit:
+ * @max: Maximum number of interfaces in this limit set
+ * @types: Bitmask of interface types (NL80211_IFTYPE_*)
+ *
+ * Represents a single interface limit within a combination.
+ */
+typedef struct {
+    guint16 max;
+    guint16 types;
+} NMWifiIfaceCombLimit;
+
+/**
+ * NMWifiIfaceCombination:
+ * @limits: Array of interface limits
+ * @n_limits: Number of limits
+ * @max_num: Maximum total number of interfaces
+ * @num_channels: Number of different channels that may be used
+ * @sta_ap_bi_match: Whether beacon intervals must match
+ *
+ * Represents a valid interface combination from the kernel.
+ */
+typedef struct {
+    GArray *limits;
+    guint32 max_num;
+    guint32 num_channels;
+} NMWifiIfaceCombination;
+
+
+
 typedef struct {
     GObjectClass parent;
 
@@ -61,6 +91,9 @@ struct NMWifiUtils {
 
     int                       ifindex;
     _NMDeviceWifiCapabilities caps;
+
+    /* Interface combination capabilities from NL80211_ATTR_INTERFACE_COMBINATIONS */
+    GArray *iface_combinations;
 };
 
 #endif /* __WIFI_UTILS_PRIVATE_H__ */
