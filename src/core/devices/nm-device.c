@@ -13026,19 +13026,21 @@ _dev_ipac6_grace_period_start(NMDevice *self, guint32 timeout_sec, gboolean forc
 static void
 _dev_ipac6_start(NMDevice *self)
 {
-    NMDevicePrivate    *priv = NM_DEVICE_GET_PRIVATE(self);
-    NMConnection       *connection;
-    NMSettingIP6Config *s_ip = NULL;
-    NMNDiscNodeType     node_type;
-    NMUtilsStableType   stable_type;
-    const char         *stable_id;
-    int                 max_addresses;
-    int                 router_solicitations;
-    int                 router_solicitation_interval;
-    guint32             ra_timeout;
-    guint32             default_ra_timeout;
-    NMUtilsIPv6IfaceId  iid;
-    gboolean            is_token;
+    NMDevicePrivate           *priv = NM_DEVICE_GET_PRIVATE(self);
+    NMConnection              *connection;
+    NMSettingIP6Config        *s_ip = NULL;
+    NMSettingPrefixDelegation *s_pd;
+    bool                       pd_evict_oldest = FALSE;
+    NMNDiscNodeType            node_type;
+    NMUtilsStableType          stable_type;
+    const char                *stable_id;
+    int                        max_addresses;
+    int                        router_solicitations;
+    int                        router_solicitation_interval;
+    guint32                    ra_timeout;
+    guint32                    default_ra_timeout;
+    NMUtilsIPv6IfaceId         iid;
+    gboolean                   is_token;
 
     if (priv->ipac6_data.state == NM_DEVICE_IP_STATE_NONE)
         _dev_ipac6_set_state(self, NM_DEVICE_IP_STATE_PENDING);
@@ -13083,6 +13085,10 @@ _dev_ipac6_start(NMDevice *self)
 
     stable_id = _prop_get_connection_stable_id(self, connection, &stable_type);
 
+    s_pd = nm_device_get_applied_setting(self, NM_TYPE_SETTING_PREFIX_DELEGATION);
+    if (s_pd)
+        pd_evict_oldest = nm_setting_prefix_delegation_get_evict_oldest(s_pd);
+
     {
         const NMNDiscConfig config = {
             .l3cfg                        = nm_device_get_l3cfg(self),
@@ -13096,6 +13102,7 @@ _dev_ipac6_start(NMDevice *self)
             .router_solicitation_interval = router_solicitation_interval,
             .ra_timeout                   = ra_timeout,
             .ip6_privacy                  = _prop_get_ipv6_ip6_privacy(self, connection),
+            .pd_evict_oldest              = pd_evict_oldest,
         };
 
         priv->ipac6_data.ndisc = nm_lndp_ndisc_new(&config);

@@ -2127,6 +2127,7 @@ global:
 	nm_setting_geneve_new;
 	nm_setting_ip4_config_clat_get_type;
 	nm_setting_ip4_config_get_clat;
+	nm_setting_prefix_delegation_get_evict_oldest;
 	nm_utils_wifi_6ghz_freqs;
 	nm_utils_wifi_freq_to_band;
 	nm_wifi_band_get_type;
