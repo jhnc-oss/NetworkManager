@@ -20,6 +20,7 @@
 #include "libnm-std-aux/nm-dbus-compat.h"
 #include "nm-modem.h"
 #include "nm-modem-broadband.h"
+#include "systemd/sd-device.h"
 
 #if WITH_OFONO
 #include "nm-modem-ofono.h"
@@ -164,6 +165,7 @@ modm_handle_object_added(MMManager *modem_manager, MMObject *modem_object, NMMod
 {
     NMModemManagerPrivate *priv = NM_MODEM_MANAGER_GET_PRIVATE(self);
     const char            *path;
+    const char            *sysfs_path;
     MMModem               *modem_iface;
     NMModem               *modem;
     GError                *error = NULL;
@@ -188,6 +190,22 @@ modm_handle_object_added(MMManager *modem_manager, MMObject *modem_object, NMMod
         return;
     }
 
+    sysfs_path = mm_modem_get_device(modem_iface);
+    if (sysfs_path) {
+        sd_device *device = NULL;
+        const char *unmanaged = NULL;
+
+        if (sd_device_new_from_syspath(&device, sysfs_path) >= 0) {
+            if (sd_device_get_property_value(device, "NM_UNMANAGED", &unmanaged) >= 0 &&
+            nm_streq0(unmanaged, "1")) {
+                _LOGI("modem with path %s is marked unmanaged by udev, ignoring", path);
+                sd_device_unref(device);
+                return;
+            }
+            sd_device_unref(device);
+        }
+    }
+    
     /* Create a new modem object */
     modem = nm_modem_broadband_new(G_OBJECT(modem_object), &error);
     if (modem)
