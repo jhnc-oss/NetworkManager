@@ -18056,6 +18056,14 @@ _set_state_full(NMDevice *self, NMDeviceState state, NMDeviceStateReason reason,
             nm_config_data_get_ignore_carrier_by_device(NM_CONFIG_GET_DATA, self);
 
         if (quitting) {
+             /*
+              * Clean up IP DHCP explicitly when deactivating on daemon quit.
+              * nm_device_removed() might not be called timely for OVS internal
+              * interfaces that get removed from kernel early, so we ensure
+              * DHCP state is cleared and released here.
+              */
+            _dev_ipdhcpx_cleanup(self, AF_INET, TRUE, FALSE);
+            _dev_ipdhcpx_cleanup(self, AF_INET6, TRUE, FALSE);
             nm_dispatcher_call_device_sync(NM_DISPATCHER_ACTION_PRE_DOWN, self, req);
         } else {
             priv->dispatcher.post_state        = NM_DEVICE_STATE_DISCONNECTED;
