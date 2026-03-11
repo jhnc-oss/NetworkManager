@@ -8146,6 +8146,28 @@ nm_manager_start(NMManager *self, GError **error)
     return TRUE;
 }
 
+/* Return 0 if has config of DHCPv4 or DHCPv6
+ * Return 1 otherwise */
+static int
+nm_device_has_dhcp(NMDevice *device)
+{
+    if (nm_device_get_dhcp_config(device, AF_INET) != NULL
+        || nm_device_get_dhcp_config(device, AF_INET6) != NULL) {
+        return 0;
+    } else {
+        return 1;
+    }
+}
+
+static int
+compare_device_remove_order(const CList *a, const CList *b, const void *user_data)
+{
+    NMDevice *dev_a = c_list_entry(a, NMDevice, devices_lst);
+    NMDevice *dev_b = c_list_entry(b, NMDevice, devices_lst);
+
+    return nm_device_has_dhcp(dev_a) - nm_device_has_dhcp(dev_b);
+}
+
 void
 nm_manager_stop(NMManager *self)
 {
@@ -8167,6 +8189,12 @@ nm_manager_stop(NMManager *self)
 
     nm_dbus_manager_stop(nm_dbus_object_get_manager(NM_DBUS_OBJECT(self)));
 
+    /* When OVS internal interface or linux bridge holds DHCP, if we delete its
+     * physical interface first, then we cannot send out DHCP release request
+     * anymore. To fix that, we need to remove/deactivate interface holds DHCP
+     * config first.
+     */
+    c_list_sort(&priv->devices_lst_head, compare_device_remove_order, NULL);
     while ((device = c_list_first_entry(&priv->devices_lst_head, NMDevice, devices_lst)))
         remove_device(self, device, TRUE);
 
