@@ -16,6 +16,7 @@
 #include "nm-modem.h"
 #include "libnm-platform/nm-platform.h"
 #include "nm-l3-config-data.h"
+#include "nm-device-modem.h"
 
 #define VARIANT_IS_OF_TYPE_BOOLEAN(v) \
     ((v) != NULL && (g_variant_is_of_type((v), G_VARIANT_TYPE_BOOLEAN)))
@@ -39,6 +40,27 @@ typedef struct {
 } OfonoContextData;
 
 typedef struct {
+    guint32 address;
+    guint32 gateway;
+    guint32 subnet_mask;
+    guint32 plen;
+
+    guint32 proxy;
+
+    guint32 *dns;
+    guint32  n_dns;
+} IPv4ConfigData;
+
+typedef struct {
+    struct in6_addr address;
+    struct in6_addr gateway;
+    guint           plen;
+
+    struct in6_addr *dns;
+    guint32          n_dns;
+} IPv6ConfigData;
+
+typedef struct {
     GHashTable *connect_properties;
     GHashTable *connections;
     GHashTable *contexts;
@@ -46,21 +68,29 @@ typedef struct {
     GDBusProxy *modem_proxy;
     GDBusProxy *connman_proxy;
     GDBusProxy *sim_proxy;
+    GDBusProxy *rat_proxy;
 
     GCancellable *modem_proxy_cancellable;
     GCancellable *connman_proxy_cancellable;
     GCancellable *connect_cancellable;
     GCancellable *sim_proxy_cancellable;
+    GCancellable *rat_proxy_cancellable;
 
     GError *property_error;
 
     char *imsi;
+    char *mnc;
+    char *mcc;
+    char *operator_code;
+    char *apn;
 
     gboolean modem_online;
-    gboolean connman_powered;
+    gboolean modem_powered;
     gboolean gprs_attached;
 
-    NML3ConfigData *l3cd_4;
+    IPv4ConfigData *ipv4_config;
+    IPv6ConfigData *ipv6_config;
+    char           *ifname;
     NMSettings     *settings;
 
     guint n_context_proxy_pending;
@@ -69,6 +99,9 @@ typedef struct {
     OfonoContextData *current_octx;
 
     GSource *deferred_connection_timeout_source;
+
+    gchar **available_technologies;
+    char   *preferred_technology;
 } NMModemOfonoPrivate;
 
 struct _NMModemOfono {
@@ -137,9 +170,48 @@ get_capabilities(NMModem                   *_self,
                  NMDeviceModemCapabilities *modem_caps,
                  NMDeviceModemCapabilities *current_caps)
 {
-    /* FIXME: auto-detect capabilities to allow LTE */
-    *modem_caps   = NM_DEVICE_MODEM_CAPABILITY_GSM_UMTS;
-    *current_caps = NM_DEVICE_MODEM_CAPABILITY_GSM_UMTS;
+    NMModemOfono        *self = NM_MODEM_OFONO(_self);
+    NMModemOfonoPrivate *priv = NM_MODEM_OFONO_GET_PRIVATE(self);
+
+    *modem_caps   = NM_DEVICE_MODEM_CAPABILITY_NONE;
+    *current_caps = NM_DEVICE_MODEM_CAPABILITY_NONE;
+
+    /* Example values:
+     * AvailableTechnologies: "gsm umts lte"
+     * TechnologyPreference: "lte"
+    */
+
+    if (!priv->available_technologies || !priv->preferred_technology) {
+        _LOGD("no technology information available");
+        return;
+    }
+
+    for (gint i = 0; priv->available_technologies[i]; i++) {
+        const char *tech = priv->available_technologies[i];
+
+        _LOGD("available technology: %s", tech);
+
+        if (nm_streq(tech, "gsm") || nm_streq(tech, "umts"))
+            *modem_caps |= NM_DEVICE_MODEM_CAPABILITY_GSM_UMTS;
+        else if (nm_streq(tech, "lte"))
+            *modem_caps |= NM_DEVICE_MODEM_CAPABILITY_LTE;
+    }
+
+    if (nm_streq(priv->preferred_technology, "gsm") || nm_streq(priv->preferred_technology, "umts"))
+        *current_caps |= NM_DEVICE_MODEM_CAPABILITY_GSM_UMTS;
+    else if (nm_streq(priv->preferred_technology, "lte"))
+        *current_caps |= NM_DEVICE_MODEM_CAPABILITY_LTE;
+}
+
+static void
+set_capabilities_changed(NMModemOfono *self)
+{
+    NMDeviceModemCapabilities modem_caps   = NM_DEVICE_MODEM_CAPABILITY_NONE;
+    NMDeviceModemCapabilities current_caps = NM_DEVICE_MODEM_CAPABILITY_NONE;
+
+    get_capabilities(NM_MODEM(self), &modem_caps, &current_caps);
+
+    nm_modem_set_capabilities(NM_MODEM(self), modem_caps, current_caps);
 }
 
 static void do_context_activate(NMModemOfono *self);
@@ -155,15 +227,13 @@ update_modem_state(NMModemOfono *self)
     _LOGI("'Attached': %s 'Online': %s 'Powered': %s 'IMSI': %s",
           priv->gprs_attached ? "true" : "false",
           priv->modem_online ? "true" : "false",
-          priv->connman_powered ? "true" : "false",
+          priv->modem_powered ? "true" : "false",
           priv->imsi);
 
     if (priv->modem_online == FALSE) {
         reason = "modem 'Online=false'";
-    } else if (priv->connman_powered == FALSE) {
-        reason = "ConnectionManager 'Powered=false'";
-    } else if (priv->imsi == NULL && state != NM_MODEM_STATE_ENABLING) {
-        reason = "modem not ready";
+    } else if (priv->modem_powered == FALSE) {
+        reason = "modem 'Powered=false'";
     } else if (priv->gprs_attached == FALSE) {
         new_state = NM_MODEM_STATE_SEARCHING;
         reason    = "modem searching";
@@ -192,6 +262,25 @@ update_modem_state(NMModemOfono *self)
             nm_clear_g_source_inst(&priv->deferred_connection_timeout_source);
             do_context_activate(self);
         }
+    }
+}
+
+static void
+operator_code_changed(NMModemOfono *self)
+{
+    NMModemOfonoPrivate *priv = NM_MODEM_OFONO_GET_PRIVATE(self);
+
+    _LOGD("MCC: %s MNC: %s", priv->mcc ? priv->mcc : "(null)", priv->mnc ? priv->mnc : "(null)");
+
+    if (priv->mcc && priv->mnc) {
+        char operator_code[7];
+        g_snprintf(operator_code, sizeof(operator_code), "%s%s", priv->mcc, priv->mnc);
+
+        if (priv->operator_code)
+            g_free(priv->operator_code);
+
+        priv->operator_code = g_strdup(operator_code);
+        _nm_modem_set_operator_code(NM_MODEM(self), priv->operator_code);
     }
 }
 
@@ -302,11 +391,55 @@ deactivate_cleanup(NMModem *modem, NMDevice *device, gboolean stop_ppp_manager)
     NMModemOfonoPrivate *priv = NM_MODEM_OFONO_GET_PRIVATE(self);
 
     /* TODO: cancel SimpleConnect() if any */
-
-    nm_clear_l3cd(&priv->l3cd_4);
+    if (priv->ipv4_config) {
+        g_free(priv->ipv4_config->dns);
+        g_free(priv->ipv4_config);
+        priv->ipv4_config = NULL;
+    }
+    if (priv->ipv6_config) {
+        g_free(priv->ipv6_config->dns);
+        g_free(priv->ipv6_config);
+        priv->ipv6_config = NULL;
+    }
+    g_free(priv->ifname);
+    priv->ifname = NULL;
 
     NM_MODEM_CLASS(nm_modem_ofono_parent_class)
         ->deactivate_cleanup(modem, device, stop_ppp_manager);
+}
+
+static void
+powered_done(GObject *source, GAsyncResult *result, gpointer user_data)
+{
+    NMModemOfono        *self = NM_MODEM_OFONO(user_data);
+    NMModemOfonoPrivate *priv = NM_MODEM_OFONO_GET_PRIVATE(self);
+
+    if (nm_modem_get_state(NM_MODEM(user_data)) == NM_MODEM_STATE_ENABLING) {
+        g_dbus_proxy_call(priv->modem_proxy,
+                          "SetProperty",
+                          g_variant_new("(sv)", "Online", g_variant_new("b", TRUE)),
+                          G_DBUS_CALL_FLAGS_NONE,
+                          20000,
+                          NULL,
+                          NULL,
+                          NULL);
+    }
+}
+
+static void
+set_ofono_enabled(NMModem *modem, gboolean enabled)
+{
+    NMModemOfono        *self = NM_MODEM_OFONO(modem);
+    NMModemOfonoPrivate *priv = NM_MODEM_OFONO_GET_PRIVATE(self);
+
+    g_dbus_proxy_call(priv->modem_proxy,
+                      "SetProperty",
+                      g_variant_new("(sv)", "Powered", g_variant_new("b", enabled)),
+                      G_DBUS_CALL_FLAGS_NONE,
+                      20000,
+                      NULL,
+                      powered_done,
+                      self);
 }
 
 static gboolean
@@ -366,6 +499,26 @@ handle_sim_property(GDBusProxy *proxy, const char *property, GVariant *v, gpoint
             priv->imsi = g_strdup(value_str);
             update_modem_state(self);
         }
+    } else if (g_strcmp0(property, "MobileCountryCode") == 0 && VARIANT_IS_OF_TYPE_STRING(v)) {
+        const char *value_str = g_variant_get_string(v, NULL);
+
+        _LOGD("MobileCountryCode: %s", value_str);
+
+        if (priv->mcc)
+            g_free(priv->mcc);
+
+        priv->mcc = g_strdup(value_str);
+        operator_code_changed(self);
+    } else if (g_strcmp0(property, "MobileNetworkCode") == 0 && VARIANT_IS_OF_TYPE_STRING(v)) {
+        const char *value_str = g_variant_get_string(v, NULL);
+
+        _LOGD("MobileNetworkCode: %s", value_str);
+
+        if (priv->mnc)
+            g_free(priv->mnc);
+
+        priv->mnc = g_strdup(value_str);
+        operator_code_changed(self);
     }
 }
 
@@ -525,19 +678,6 @@ handle_connman_property(GDBusProxy *proxy, const char *property, GVariant *v, gp
 
             update_modem_state(self);
         }
-    } else if (nm_streq(property, "Powered") && VARIANT_IS_OF_TYPE_BOOLEAN(v)) {
-        gboolean powered     = g_variant_get_boolean(v);
-        gboolean old_powered = priv->connman_powered;
-
-        _LOGD("Powered: %s", powered ? "True" : "False");
-
-        if (old_powered != powered) {
-            priv->connman_powered = powered;
-
-            _LOGI("Powered %s -> %s", old_powered ? "true" : "false", powered ? "true" : "false");
-
-            update_modem_state(self);
-        }
     }
 }
 
@@ -680,7 +820,7 @@ add_or_update_connection(NMModemOfono *self, const char *context_name, const cha
                                       connection,
                                       NM_SETTINGS_CONNECTION_PERSIST_MODE_IN_MEMORY_ONLY,
                                       NM_SETTINGS_CONNECTION_INT_FLAGS_NM_GENERATED,
-                                      NM_SETTINGS_CONNECTION_INT_FLAGS_NONE,
+                                      NM_SETTINGS_CONNECTION_INT_FLAGS_NM_GENERATED,
                                       NM_SETTINGS_CONNECTION_UPDATE_REASON_NONE,
                                       /* log_context_name */ "ofono",
                                       &error);
@@ -799,7 +939,8 @@ context_property_changed(GDBusProxy *proxy, const char *property, GVariant *v, g
         octx->preferred = g_variant_get_boolean(v_inner);
 
         update_connection_list(self);
-    } else if (nm_streq(property, "Settings") && priv->current_octx == octx) {
+    } else if ((nm_streq(property, "Settings") || nm_streq(property, "IPv6.Settings"))
+               && priv->current_octx == octx) {
         g_return_if_fail(g_variant_is_of_type(v_inner, G_VARIANT_TYPE_VARDICT));
         handle_settings(self, v_inner);
     }
@@ -1064,17 +1205,181 @@ handle_connman_iface(NMModemOfono *self, gboolean found)
 }
 
 static void
+handle_rat_property(GDBusProxy *proxy, const char *property, GVariant *v, gpointer user_data)
+{
+    NMModemOfono        *self = NM_MODEM_OFONO(user_data);
+    NMModemOfonoPrivate *priv = NM_MODEM_OFONO_GET_PRIVATE(self);
+
+    if (nm_streq(property, "AvailableTechnologies") && VARIANT_IS_OF_TYPE_STRING_ARRAY(v)) {
+        gchar **available_technologies = g_variant_dup_strv(v, NULL);
+
+        if (!priv->available_technologies) {
+            priv->available_technologies = available_technologies;
+            set_capabilities_changed(self);
+        }
+    } else if (nm_streq(property, "TechnologyPreference") && VARIANT_IS_OF_TYPE_STRING(v)) {
+        const char *technology_preference = g_variant_get_string(v, NULL);
+
+        if (!priv->preferred_technology
+            || !nm_streq(priv->preferred_technology, technology_preference)) {
+            g_free(priv->preferred_technology);
+            priv->preferred_technology = g_strdup(technology_preference);
+            set_capabilities_changed(self);
+        }
+    }
+}
+
+static void
+rat_property_changed(GDBusProxy *proxy, const char *property, GVariant *v, gpointer user_data)
+{
+    GVariant *v_child = g_variant_get_child_value(v, 0);
+
+    handle_rat_property(proxy, property, v_child, user_data);
+    g_variant_unref(v_child);
+}
+
+static void
+rat_get_properties_done(GObject *source, GAsyncResult *result, gpointer user_data)
+{
+    NMModemOfono              *self;
+    NMModemOfonoPrivate       *priv;
+    gs_free_error GError      *error        = NULL;
+    gs_unref_variant GVariant *v_properties = NULL;
+    gs_unref_variant GVariant *v_dict       = NULL;
+    gs_unref_variant GVariant *v            = NULL;
+    GVariantIter               i;
+    const char                *property;
+
+    v_properties =
+        _nm_dbus_proxy_call_finish(G_DBUS_PROXY(source), result, G_VARIANT_TYPE("(a{sv})"), &error);
+    if (!v_properties && g_error_matches(error, G_IO_ERROR, G_IO_ERROR_CANCELLED))
+        return;
+
+    self = NM_MODEM_OFONO(user_data);
+    priv = NM_MODEM_OFONO_GET_PRIVATE(self);
+
+    g_clear_object(&priv->rat_proxy_cancellable);
+
+    if (!v_properties) {
+        g_dbus_error_strip_remote_error(error);
+        _LOGW("error getting RadioSettings properties: %s", error->message);
+        return;
+    }
+
+    _LOGD("rat v_properties is type: %s", g_variant_get_type_string(v_properties));
+
+    v_dict = g_variant_get_child_value(v_properties, 0);
+    if (!v_dict) {
+        _LOGW("error getting RadioSettings properties: no v_dict");
+        return;
+    }
+
+    _LOGD("rat v_dict is type: %s", g_variant_get_type_string(v_dict));
+
+    g_variant_iter_init(&i, v_dict);
+    while (g_variant_iter_loop(&i, "{&sv}", &property, &v)) {
+        handle_rat_property(NULL, property, v, self);
+    }
+}
+
+static void
+_rat_proxy_new_cb(GObject *source, GAsyncResult *result, gpointer user_data)
+{
+    NMModemOfono         *self;
+    NMModemOfonoPrivate  *priv;
+    gs_free_error GError *error = NULL;
+    GDBusProxy           *proxy;
+
+    proxy = g_dbus_proxy_new_for_bus_finish(result, &error);
+    if (!proxy && g_error_matches(error, G_IO_ERROR, G_IO_ERROR_CANCELLED))
+        return;
+
+    self = user_data;
+    priv = NM_MODEM_OFONO_GET_PRIVATE(self);
+
+    if (!proxy) {
+        _LOGW("failed to create RadioSettings proxy: %s", error->message);
+        g_clear_object(&priv->rat_proxy_cancellable);
+        return;
+    }
+
+    priv->rat_proxy = proxy;
+
+    /* Watch for custom ofono PropertyChanged signals */
+    _nm_dbus_proxy_signal_connect(priv->rat_proxy,
+                                  "PropertyChanged",
+                                  G_VARIANT_TYPE("(sv)"),
+                                  G_CALLBACK(rat_property_changed),
+                                  self);
+
+    g_dbus_proxy_call(priv->rat_proxy,
+                      "GetProperties",
+                      NULL,
+                      G_DBUS_CALL_FLAGS_NONE,
+                      20000,
+                      priv->rat_proxy_cancellable,
+                      rat_get_properties_done,
+                      self);
+}
+
+static void
+handle_rat_iface(NMModemOfono *self, gboolean found)
+{
+    NMModemOfonoPrivate *priv = NM_MODEM_OFONO_GET_PRIVATE(self);
+
+    if (!found && (priv->rat_proxy || priv->rat_proxy_cancellable)) {
+        _LOGI("RadioSettings interface disappeared");
+        nm_clear_g_cancellable(&priv->rat_proxy_cancellable);
+        if (priv->rat_proxy) {
+            g_signal_handlers_disconnect_by_data(priv->rat_proxy, self);
+            g_clear_object(&priv->rat_proxy);
+        }
+    } else if (found && (!priv->rat_proxy && !priv->rat_proxy_cancellable)) {
+        _LOGI("found new RadioSettings interface");
+
+        priv->rat_proxy_cancellable = g_cancellable_new();
+
+        g_dbus_proxy_new_for_bus(G_BUS_TYPE_SYSTEM,
+                                 G_DBUS_PROXY_FLAGS_DO_NOT_LOAD_PROPERTIES
+                                     | G_DBUS_PROXY_FLAGS_DO_NOT_AUTO_START,
+                                 NULL, /* GDBusInterfaceInfo */
+                                 OFONO_DBUS_SERVICE,
+                                 nm_modem_get_path(NM_MODEM(self)),
+                                 OFONO_DBUS_INTERFACE_RADIO_SETTINGS,
+                                 priv->rat_proxy_cancellable,
+                                 _rat_proxy_new_cb,
+                                 self);
+    }
+}
+
+static void
 handle_modem_property(GDBusProxy *proxy, const char *property, GVariant *v, gpointer user_data)
 {
     NMModemOfono        *self = NM_MODEM_OFONO(user_data);
     NMModemOfonoPrivate *priv = NM_MODEM_OFONO_GET_PRIVATE(self);
 
-    if ((g_strcmp0(property, "Online") == 0) && VARIANT_IS_OF_TYPE_BOOLEAN(v)) {
+    if (nm_streq(property, "Powered") && VARIANT_IS_OF_TYPE_BOOLEAN(v)) {
+        gboolean powered     = g_variant_get_boolean(v);
+        gboolean old_powered = priv->modem_powered;
+
+        _LOGI("Powered: %s", powered ? "True" : "False");
+
+        if (old_powered != powered) {
+            priv->modem_powered = powered;
+
+            _LOGI("Powered %s -> %s", old_powered ? "true" : "false", powered ? "true" : "false");
+
+            update_modem_state(self);
+        }
+    } else if ((g_strcmp0(property, "Online") == 0) && VARIANT_IS_OF_TYPE_BOOLEAN(v)) {
         gboolean online = g_variant_get_boolean(v);
 
-        _LOGD("Online: %s", online ? "True" : "False");
+        _LOGI("Online: %s, and state: %d",
+              online ? "True" : "False",
+              nm_modem_get_state(NM_MODEM(self)));
 
-        if (online != priv->modem_online) {
+        if (online != priv->modem_online
+            || nm_modem_get_state(NM_MODEM(self)) == NM_MODEM_STATE_INITIALIZING) {
             priv->modem_online = online;
             _LOGI("modem is now %s", online ? "Online" : "Offline");
             update_modem_state(self);
@@ -1084,6 +1389,7 @@ handle_modem_property(GDBusProxy *proxy, const char *property, GVariant *v, gpoi
         const char **array, **iter;
         gboolean     found_connman = FALSE;
         gboolean     found_sim     = FALSE;
+        gboolean     found_rat     = FALSE;
 
         _LOGD("Interfaces found");
 
@@ -1094,12 +1400,15 @@ handle_modem_property(GDBusProxy *proxy, const char *property, GVariant *v, gpoi
                     found_sim = TRUE;
                 else if (g_strcmp0(OFONO_DBUS_INTERFACE_CONNECTION_MANAGER, *iter) == 0)
                     found_connman = TRUE;
+                else if (g_strcmp0(OFONO_DBUS_INTERFACE_RADIO_SETTINGS, *iter) == 0)
+                    found_rat = TRUE;
             }
             g_free(array);
         }
 
         handle_sim_iface(self, found_sim);
         handle_connman_iface(self, found_connman);
+        handle_rat_iface(self, found_rat);
     }
 }
 
@@ -1189,32 +1498,21 @@ stage1_prepare_done(GObject *source, GAsyncResult *result, gpointer user_data)
     }
 }
 
-static void
-handle_settings(NMModemOfono *self, GVariant *v_dict)
+static bool
+handle_ipv4_settings(NMModemOfono *self, GVariant *v_dict)
 {
     NMModemOfonoPrivate *priv = NM_MODEM_OFONO_GET_PRIVATE(self);
-    char                 sbuf[NM_UTILS_TO_STRING_BUFFER_SIZE];
-    NMPlatformIP4Address address;
-    gboolean             ret = FALSE;
     const char          *interface;
     const char          *s;
-    gs_free const char **array = NULL;
-    guint32              address_network, gateway_network;
-    int                  ifindex;
-    GError              *error = NULL;
+    gs_free const char **array     = NULL;
+    guint                array_len = 0;
+    IPv4ConfigData      *config    = g_new0(IPv4ConfigData, 1);
 
-    /*
-     * TODO: might be a good idea and re-factor this to mimic bluez-device,
-     * ie. have this function just check the key, and call a sub-func to
-     * handle the action.
-     */
-
-    if (nm_modem_get_state(NM_MODEM(self)) < NM_MODEM_STATE_REGISTERED) {
-        /*
-         * Connection definitely isn't happening. Avoid trigering bogus
-         * failure which would put device in a wrong state.
-         */
-        return;
+    if (priv->ipv4_config) {
+        _LOGI("freeing existing IPv4 config");
+        g_free(priv->ipv4_config->dns);
+        g_free(priv->ipv4_config);
+        priv->ipv4_config = NULL;
     }
 
     _LOGI("IPv4 static Settings:");
@@ -1224,56 +1522,34 @@ handle_settings(NMModemOfono *self, GVariant *v_dict)
         goto out;
     }
 
-    _LOGD("Interface: %s", interface);
-    if (!nm_modem_set_data_port(NM_MODEM(self),
-                                NM_PLATFORM_GET,
-                                interface,
-                                NM_MODEM_IP_METHOD_STATIC,
-                                NM_MODEM_IP_METHOD_UNKNOWN,
-                                0,
-                                &error)) {
-        _LOGW("failed to connect to modem: %s", error->message);
-        g_clear_error(&error);
-        goto out;
-    }
+    /* IPv4 always comes first, so if we have an ifname, clear it. */
+    if (priv->ifname)
+        g_free(priv->ifname);
 
-    ifindex = nm_modem_get_ip_ifindex(NM_MODEM(self));
-    g_return_if_fail(ifindex > 0);
+    priv->ifname = g_strdup(interface);
 
-    /* TODO: verify handling of l3cd_4; check other places it's used... */
-    nm_clear_l3cd(&priv->l3cd_4);
-
-    priv->l3cd_4 = nm_l3_config_data_new(nm_platform_get_multi_idx(NM_PLATFORM_GET),
-                                         ifindex,
-                                         NM_IP_CONFIG_SOURCE_WWAN);
+    _LOGI("Interface: %s", interface);
 
     if (!g_variant_lookup(v_dict, "Address", "&s", &s)) {
         _LOGW("Settings 'Address' missing");
         goto out;
     }
-    if (!s || !nm_inet_parse_bin(AF_INET, s, NULL, &address_network)) {
+    if (!s || !nm_inet_parse_bin(AF_INET, s, NULL, &config->address)) {
         _LOGW("can't convert 'Address' %s to addr", s ?: "");
         goto out;
     }
 
-    address = (NMPlatformIP4Address) {
-        .ifindex     = ifindex,
-        .address     = address_network,
-        .addr_source = NM_IP_CONFIG_SOURCE_WWAN,
-    };
+    _LOGI("IP: %s", s);
 
     if (!g_variant_lookup(v_dict, "Netmask", "&s", &s)) {
         _LOGW("Settings 'Netmask' missing");
         goto out;
     }
-    if (!s || !nm_inet_parse_bin(AF_INET, s, NULL, &address_network)) {
+    if (!s || !nm_inet_parse_bin(AF_INET, s, NULL, &config->subnet_mask)) {
         _LOGW("invalid 'Netmask': %s", s ?: "");
         goto out;
     }
-    address.plen = nm_ip4_addr_netmask_to_prefix(address_network);
-
-    _LOGI("Address: %s", nm_platform_ip4_address_to_string(&address, sbuf, sizeof(sbuf)));
-    nm_l3_config_data_add_address_4(priv->l3cd_4, &address);
+    config->plen = nm_ip4_addr_netmask_to_prefix(config->subnet_mask);
 
     if (!g_variant_lookup(v_dict, "Gateway", "&s", &s) || !s) {
         /* It is normal for point-to-point connections to not have a gateway IP
@@ -1282,40 +1558,32 @@ handle_settings(NMModemOfono *self, GVariant *v_dict)
         _LOGD("Settings 'Gateway' missing. Setting it to 0.0.0.0");
         s = "0.0.0.0";
     }
-    if (!nm_inet_parse_bin(AF_INET, s, NULL, &gateway_network)) {
+    if (!nm_inet_parse_bin(AF_INET, s, NULL, &config->gateway)) {
         _LOGW("invalid 'Gateway': %s", s);
         goto out;
-    }
-    {
-        const NMPlatformIP4Route r = {
-            .rt_source     = NM_IP_CONFIG_SOURCE_WWAN,
-            .gateway       = gateway_network,
-            .table_any     = TRUE,
-            .table_coerced = 0,
-            .metric_any    = TRUE,
-            .metric        = 0,
-        };
-
-        _LOGI("Gateway: %s", s);
-        nm_l3_config_data_add_route_4(priv->l3cd_4, &r);
     }
 
     if (!g_variant_lookup(v_dict, "DomainNameServers", "^a&s", &array)) {
         _LOGW("Settings 'DomainNameServers' missing");
         goto out;
     }
+
+    _LOGI("Got DNS entries, %d", array_len);
+
     if (array) {
         gboolean any_good = FALSE;
         gsize    i;
 
-        for (i = 0; array[i]; i++) {
-            if (!nm_inet_parse_bin(AF_INET, array[i], NULL, &address_network) || !address_network) {
+        array_len = NM_PTRARRAY_LEN(array);
+
+        config->dns   = g_malloc0(sizeof(guint32) * array_len);
+        config->n_dns = array_len;
+        for (i = 0; i < array_len; i++) {
+            if (!nm_inet_parse_bin(AF_INET, array[i], NULL, &config->dns[i])) {
                 _LOGW("invalid NameServer: %s", array[i]);
                 continue;
             }
             any_good = TRUE;
-            _LOGI("DNS: %s", array[i]);
-            nm_l3_config_data_add_nameserver_addr(priv->l3cd_4, AF_INET, &address_network);
         }
         if (!any_good) {
             _LOGW("Settings: 'DomainNameServers': none specified");
@@ -1334,27 +1602,145 @@ handle_settings(NMModemOfono *self, GVariant *v_dict)
         if (colon)
             *colon = '\0';
 
-        if (nm_inet_parse_bin(AF_INET, proxy, NULL, &address_network)) {
-            const NMPlatformIP4Route mms_route = {
-                .network       = address_network,
-                .plen          = 32,
-                .gateway       = gateway_network,
-                .table_any     = TRUE,
-                .table_coerced = 0,
-                .metric_any    = TRUE,
-                .metric        = 0,
-            };
-
-            nm_l3_config_data_add_route_4(priv->l3cd_4, &mms_route);
-        } else
+        if (!nm_inet_parse_bin(AF_INET, proxy, NULL, &config->proxy))
             _LOGW("invalid (MMS) Proxy: %s", s);
     }
 
-    ret = TRUE;
+    priv->ipv4_config = config;
+    return TRUE;
 
 out:
-    if (priv->l3cd_4)
-        nm_l3_config_data_seal(priv->l3cd_4);
+    g_free(config);
+    return FALSE;
+}
+
+static bool
+handle_ipv6_settings(NMModemOfono *self, GVariant *v_dict)
+{
+    NMModemOfonoPrivate *priv = NM_MODEM_OFONO_GET_PRIVATE(self);
+    const char          *s;
+    gs_free const char **array     = NULL;
+    guint                array_len = 0;
+    IPv6ConfigData      *config    = g_new0(IPv6ConfigData, 1);
+
+    if (priv->ipv6_config) {
+        _LOGI("freeing existing IPv6 config");
+        g_free(priv->ipv6_config->dns);
+        g_free(priv->ipv6_config);
+        priv->ipv6_config = NULL;
+    }
+
+    _LOGI("IPv6 static Settings:");
+
+    if (!g_variant_lookup(v_dict, "Interface", "&s", &s)) {
+        _LOGW("Settings 'Interface' missing");
+        goto out;
+    }
+
+    /* IPv4+6 connections will use the same ifname, so only set it if we don't have one yet. */
+    if (!priv->ifname)
+        priv->ifname = g_strdup(s);
+
+    if (!g_variant_lookup(v_dict, "Address", "&s", &s) || !s) {
+        _LOGW("Settings 'Address' missing");
+        goto out;
+    }
+
+    if (!g_variant_lookup(v_dict, "PrefixLength", "y", &config->plen)) {
+        _LOGW("Settings 'PrefixLength' missing");
+        goto out;
+    }
+
+    if (!inet_pton(AF_INET6, s, &config->address)) {
+        _LOGW("can't convert 'Address' %s to addr", s);
+        goto out;
+    }
+
+    /* TODO: Add proper handling for DHCP/SLAAC */
+    if (!g_variant_lookup(v_dict, "Gateway", "&s", &s) || !s) {
+        _LOGD("Settings 'Gateway' missing. Setting it to ::");
+        s = "::";
+    }
+
+    if (!inet_pton(AF_INET6, s, &config->gateway)) {
+        _LOGW("invalid 'Gateway': %s", s);
+        goto out;
+    }
+
+    if (!g_variant_lookup(v_dict, "DomainNameServers", "^a&s", &array)) {
+        _LOGW("Settings 'DomainNameServers' missing");
+        goto out;
+    }
+
+    if (array) {
+        gint i;
+        array_len = NM_PTRARRAY_LEN(array);
+
+        config->dns   = g_new0(struct in6_addr, array_len);
+        config->n_dns = array_len;
+
+        for (i = 0; i < array_len; i++) {
+            if (!inet_pton(AF_INET6, array[i], &config->dns[i])) {
+                _LOGW("invalid NameServer: %s", array[i]);
+                continue;
+            }
+        }
+    }
+
+    priv->ipv6_config = config;
+
+    return TRUE;
+
+out:
+    g_free(config);
+    return FALSE;
+}
+
+static void
+handle_settings(NMModemOfono *self, GVariant *settings)
+{
+    NMModemOfonoPrivate       *priv       = NM_MODEM_OFONO_GET_PRIVATE(self);
+    gs_unref_variant GVariant *v_ipv4     = NULL;
+    gs_unref_variant GVariant *v_ipv6     = NULL;
+    gboolean                   ipv4_setup = FALSE;
+    gboolean                   ipv6_setup = FALSE;
+    gboolean                   ret        = FALSE;
+
+    if (nm_modem_get_state(NM_MODEM(self)) < NM_MODEM_STATE_REGISTERED)
+        /*
+         * Connection definitely isn't happening. Avoid trigering bogus
+         * failure which would put device in a wrong state.
+         */
+        return;
+
+    v_ipv4 = g_variant_lookup_value(settings, "Settings", G_VARIANT_TYPE_VARDICT);
+    if (v_ipv4)
+        ipv4_setup = handle_ipv4_settings(self, v_ipv4);
+
+    v_ipv6 = g_variant_lookup_value(settings, "IPv6.Settings", G_VARIANT_TYPE_VARDICT);
+    if (v_ipv6)
+        ipv6_setup = handle_ipv6_settings(self, v_ipv6);
+
+    if (!v_ipv4 && !v_ipv6) {
+        _LOGW("no Settings found in context");
+        nm_modem_emit_prepare_result(NM_MODEM(self), FALSE, NM_DEVICE_STATE_REASON_MODEM_BUSY);
+        return;
+    }
+
+    ret = ipv4_setup || ipv6_setup;
+
+    if (!nm_modem_set_data_port(NM_MODEM(self),
+                                NM_PLATFORM_GET,
+                                ret ? priv->ifname : NULL,
+                                ipv4_setup ? NM_MODEM_IP_METHOD_STATIC : NM_MODEM_IP_METHOD_UNKNOWN,
+                                ipv6_setup ? NM_MODEM_IP_METHOD_STATIC : NM_MODEM_IP_METHOD_UNKNOWN,
+                                0,
+                                NULL)) {
+        nm_modem_emit_prepare_result(NM_MODEM(self),
+                                     FALSE,
+                                     NM_DEVICE_STATE_REASON_IP_CONFIG_UNAVAILABLE);
+        return;
+    }
 
     if (nm_modem_get_state(NM_MODEM(self)) != NM_MODEM_STATE_CONNECTED) {
         _LOGI("emitting PREPARE_RESULT: %s", ret ? "TRUE" : "FALSE");
@@ -1371,29 +1757,120 @@ out:
 static void
 stage3_ip_config_start(NMModem *modem, int addr_family, NMModemIPMethod ip_method)
 {
-    NMModemOfono         *self  = NM_MODEM_OFONO(modem);
-    NMModemOfonoPrivate  *priv  = NM_MODEM_OFONO_GET_PRIVATE(self);
-    gs_free_error GError *error = NULL;
+    const int                               is_ipv4 = NM_IS_IPv4(addr_family);
+    NMModemOfono                           *self    = NM_MODEM_OFONO(modem);
+    NMModemOfonoPrivate                    *priv    = NM_MODEM_OFONO_GET_PRIVATE(self);
+    nm_auto_unref_l3cd_init NML3ConfigData *l3cd    = NULL;
+    gboolean                                do_auto = FALSE;
+    gs_free_error GError                   *error   = NULL;
+    NMUtilsIPv6IfaceId                      iid_data;
+    const NMUtilsIPv6IfaceId               *iid = NULL;
 
-    _LOGD("IP4 config is done; setting modem_state -> CONNECTED");
+    _LOGI("IP config is done; setting modem_state -> CONNECTED");
 
-    if (!NM_IS_IPv4(addr_family) || ip_method == NM_MODEM_IP_METHOD_AUTO) {
-        nm_modem_emit_signal_new_config_success(modem, addr_family, NULL, TRUE, NULL);
-        goto out;
+    if (is_ipv4) {
+        g_return_if_fail(priv->ipv4_config);
+
+        if (ip_method == NM_MODEM_IP_METHOD_AUTO) {
+            do_auto = TRUE;
+            goto out;
+        }
+    } else {
+        g_return_if_fail(priv->ipv6_config);
     }
 
-    if (!priv->l3cd_4) {
-        nm_utils_error_set(&error, NM_UTILS_ERROR_UNKNOWN, "IP config not received");
+    if (is_ipv4) {
+        NMPlatformIP4Address address;
+        NMPlatformIP4Route   route;
+
+        l3cd = nm_l3_config_data_new(nm_platform_get_multi_idx(NM_PLATFORM_GET),
+                                     nm_modem_get_ip_ifindex(modem),
+                                     NM_IP_CONFIG_SOURCE_WWAN);
+
+        address = (NMPlatformIP4Address) {
+            .ifindex     = nm_modem_get_ip_ifindex(modem),
+            .address     = priv->ipv4_config->address,
+            .addr_source = NM_IP_CONFIG_SOURCE_WWAN,
+            .plen        = nm_ip4_addr_netmask_to_prefix(priv->ipv4_config->subnet_mask),
+        };
+        nm_l3_config_data_add_address_4(l3cd, &address);
+
+        route = (NMPlatformIP4Route) {
+            .rt_source     = NM_IP_CONFIG_SOURCE_WWAN,
+            .gateway       = priv->ipv4_config->gateway,
+            .table_any     = TRUE,
+            .table_coerced = 0,
+            .metric_any    = TRUE,
+            .metric        = 0,
+        };
+        nm_l3_config_data_add_route_4(l3cd, &route);
+
+        if (priv->ipv4_config->proxy) {
+            const NMPlatformIP4Route mms_route = {
+                .network       = priv->ipv4_config->proxy,
+                .plen          = 32,
+                .gateway       = priv->ipv4_config->gateway,
+                .table_any     = TRUE,
+                .table_coerced = 0,
+                .metric_any    = TRUE,
+                .metric        = 0,
+            };
+            nm_l3_config_data_add_route_4(l3cd, &mms_route);
+        }
+
+        for (guint i = 0; i < priv->ipv4_config->n_dns; i++) {
+            nm_l3_config_data_add_nameserver_addr(l3cd, AF_INET, &priv->ipv4_config->dns[i]);
+        }
+    } else {
+        NMPlatformIP6Address address;
+        do_auto = TRUE;
+
+        l3cd = nm_l3_config_data_new(nm_platform_get_multi_idx(NM_PLATFORM_GET),
+                                     nm_modem_get_ip_ifindex(modem),
+                                     NM_IP_CONFIG_SOURCE_WWAN);
+
+        address = (NMPlatformIP6Address) {
+            .ifindex     = nm_modem_get_ip_ifindex(modem),
+            .address     = priv->ipv6_config->address,
+            .addr_source = NM_IP_CONFIG_SOURCE_WWAN,
+            .plen        = priv->ipv6_config->plen,
+        };
+        if (IN6_IS_ADDR_LINKLOCAL(&address.address)) {
+            nm_utils_ipv6_interface_identifier_get_from_addr(&iid_data, &address.address);
+            iid = &iid_data;
+        } else
+            do_auto = FALSE;
+
+        nm_l3_config_data_add_address_6(l3cd, &address);
+
+        {
+            const NMPlatformIP6Route route = {
+                .rt_source     = NM_IP_CONFIG_SOURCE_WWAN,
+                .gateway       = priv->ipv6_config->gateway,
+                .table_any     = TRUE,
+                .table_coerced = 0,
+                .metric_any    = TRUE,
+                .metric        = 0,
+            };
+            nm_l3_config_data_add_route_6(l3cd, &route);
+        }
+
+        for (guint i = 0; i < priv->ipv6_config->n_dns; i++) {
+            nm_l3_config_data_add_nameserver_addr(l3cd, AF_INET6, &priv->ipv6_config->dns[i]);
+        }
+    }
+
+out:
+    if (error) {
         nm_modem_emit_signal_new_config_failure(modem,
                                                 addr_family,
                                                 NM_DEVICE_STATE_REASON_IP_CONFIG_UNAVAILABLE,
                                                 error);
-        goto out;
+        return;
     }
 
-    nm_modem_emit_signal_new_config_success(modem, addr_family, priv->l3cd_4, FALSE, NULL);
+    nm_modem_emit_signal_new_config_success(modem, addr_family, l3cd, do_auto, iid);
 
-out:
     nm_modem_set_state(NM_MODEM(self),
                        NM_MODEM_STATE_CONNECTED,
                        nm_modem_state_to_string(NM_MODEM_STATE_CONNECTED));
@@ -1403,11 +1880,13 @@ static void
 context_properties_cb(GDBusProxy *proxy, GAsyncResult *result, gpointer user_data)
 {
     NMModemOfono              *self       = user_data;
+    NMModemOfonoPrivate       *priv       = NM_MODEM_OFONO_GET_PRIVATE(self);
     gs_free_error GError      *error      = NULL;
     gs_unref_variant GVariant *properties = NULL;
     gs_unref_variant GVariant *settings   = NULL;
     gs_unref_variant GVariant *v_dict     = NULL;
     gboolean                   active;
+    gchar                     *apn = NULL;
 
     properties = g_dbus_proxy_call_finish(proxy, result, &error);
 
@@ -1428,16 +1907,18 @@ context_properties_cb(GDBusProxy *proxy, GAsyncResult *result, gpointer user_dat
         goto error;
     }
 
+    if (g_variant_lookup(v_dict, "AccessPointName", "&s", &apn)) {
+        if (priv->apn)
+            g_free(priv->apn);
+
+        priv->apn = g_strdup(apn);
+        _nm_modem_set_apn(NM_MODEM(self), priv->apn);
+    }
+
     if (active) {
         _LOGD("ofono: connection is already Active");
 
-        settings = g_variant_lookup_value(v_dict, "Settings", G_VARIANT_TYPE_VARDICT);
-        if (settings == NULL) {
-            _LOGW("ofono: connection failed; can not read 'Settings' property");
-            goto error;
-        }
-
-        handle_settings(self, settings);
+        handle_settings(self, v_dict);
     } else {
         g_dbus_proxy_call(proxy,
                           "SetProperty",
@@ -1464,12 +1945,6 @@ do_context_activate(NMModemOfono *self)
     nm_clear_g_cancellable(&priv->connect_cancellable);
 
     priv->connect_cancellable = g_cancellable_new();
-
-    /* We have an old copy of the settings from a previous activation,
-     * clear it so that we can gate getting the IP config from oFono
-     * on whether or not we have already received them
-     */
-    nm_clear_l3cd(&priv->l3cd_4);
 
     /* We need to directly query ConnectionContextinteface to get the current
      * property values */
@@ -1678,6 +2153,7 @@ dispose(GObject *object)
     nm_clear_g_cancellable(&priv->connman_proxy_cancellable);
     nm_clear_g_cancellable(&priv->connect_cancellable);
     nm_clear_g_cancellable(&priv->sim_proxy_cancellable);
+    nm_clear_g_cancellable(&priv->rat_proxy_cancellable);
 
     if (priv->connect_properties) {
         g_hash_table_destroy(priv->connect_properties);
@@ -1694,7 +2170,18 @@ dispose(GObject *object)
         priv->contexts = NULL;
     }
 
-    nm_clear_l3cd(&priv->l3cd_4);
+    if (priv->ipv4_config) {
+        g_free(priv->ipv4_config->dns);
+        g_free(priv->ipv4_config);
+        priv->ipv4_config = NULL;
+    }
+    if (priv->ipv6_config) {
+        g_free(priv->ipv6_config->dns);
+        g_free(priv->ipv6_config);
+        priv->ipv6_config = NULL;
+    }
+    g_free(priv->ifname);
+    priv->ifname = NULL;
 
     if (priv->modem_proxy) {
         g_signal_handlers_disconnect_by_data(priv->modem_proxy, self);
@@ -1711,6 +2198,11 @@ dispose(GObject *object)
         g_clear_object(&priv->sim_proxy);
     }
 
+    if (priv->rat_proxy) {
+        g_signal_handlers_disconnect_by_data(priv->rat_proxy, self);
+        g_clear_object(&priv->rat_proxy);
+    }
+
     if (priv->settings) {
         g_signal_handlers_disconnect_by_data(priv->settings, self);
         g_clear_object(&priv->settings);
@@ -1718,6 +2210,22 @@ dispose(GObject *object)
 
     g_free(priv->imsi);
     priv->imsi = NULL;
+
+    g_free(priv->mcc);
+    priv->mcc = NULL;
+    g_free(priv->mnc);
+    priv->mnc = NULL;
+    g_free(priv->operator_code);
+    priv->operator_code = NULL;
+
+    g_free(priv->apn);
+    priv->apn = NULL;
+
+    g_strfreev(priv->available_technologies);
+    priv->available_technologies = NULL;
+
+    g_free(priv->preferred_technology);
+    priv->preferred_technology = NULL;
 
     nm_clear_g_source_inst(&priv->deferred_connection_timeout_source);
 
@@ -1736,6 +2244,7 @@ nm_modem_ofono_class_init(NMModemOfonoClass *klass)
     modem_class->get_capabilities                       = get_capabilities;
     modem_class->disconnect                             = disconnect;
     modem_class->deactivate_cleanup                     = deactivate_cleanup;
+    modem_class->set_enabled                            = set_ofono_enabled;
     modem_class->check_connection_compatible_with_modem = check_connection_compatible_with_modem;
 
     modem_class->modem_act_stage1_prepare = modem_act_stage1_prepare;
