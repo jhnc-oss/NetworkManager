@@ -7575,6 +7575,24 @@ nm_device_set_carrier_from_platform(NMDevice *self)
     }
 }
 
+/* Update the ignore-carrier flag for the device. If UDEV has not announced it yet,
+ * the obtained value of ignore-carrier may be wrong because some data of the device
+ * is not available yet, like the permanent MAC address, so the matching rules in
+ * the config may not match. Call it again after UDEV has announced the device. */
+static void
+_update_ignore_carrier(NMDevice *self)
+{
+    NMDevicePrivate *priv = NM_DEVICE_GET_PRIVATE(self);
+
+    nm_device_update_hw_address(self);
+    nm_device_update_initial_hw_address(self);
+    nm_device_update_permanent_hw_address(self, FALSE);
+
+    /* Note: initial hardware address must be read before calling get_ignore_carrier() */
+    priv->ignore_carrier =
+        nm_config_data_get_ignore_carrier_by_device(nm_config_get_data(nm_config_get()), self);
+}
+
 /*****************************************************************************/
 
 static void
@@ -7883,6 +7901,8 @@ device_link_changed(gpointer user_data)
                                                NM_UNMANAGED_PLATFORM_INIT,
                                                NM_UNMAN_FLAG_OP_SET_MANAGED,
                                                nm_device_get_manage_reason_external(self));
+
+        _update_ignore_carrier(self);
     }
 
     _dev_unmanaged_check_external_down(self, FALSE, FALSE);
@@ -8410,7 +8430,7 @@ config_changed(NMConfig           *config,
     NMDevicePrivate *priv = NM_DEVICE_GET_PRIVATE(self);
 
     if (priv->state <= NM_DEVICE_STATE_DISCONNECTED || priv->state >= NM_DEVICE_STATE_ACTIVATED) {
-        priv->ignore_carrier = nm_config_data_get_ignore_carrier_by_device(config_data, self);
+        _update_ignore_carrier(self);
         if (NM_FLAGS_HAS(changes, NM_CONFIG_CHANGE_VALUES)
             && !nm_device_get_applied_setting(self, NM_TYPE_SETTING_SRIOV))
             device_init_static_sriov_num_vfs(self);
@@ -8467,7 +8487,6 @@ realize_start_setup(NMDevice             *self,
     NMDeviceClass       *klass;
     NMPlatform          *platform;
     NMDeviceCapabilities capabilities = 0;
-    NMConfig            *config;
     guint                refresh_rate_ms;
     gboolean             unmanaged;
 
@@ -8555,16 +8574,10 @@ realize_start_setup(NMDevice             *self,
         _notify(self, PROP_UDI);
     }
 
-    nm_device_update_hw_address(self);
-    nm_device_update_initial_hw_address(self);
-    nm_device_update_permanent_hw_address(self, FALSE);
+    _update_ignore_carrier(self);
 
-    /* Note: initial hardware address must be read before calling get_ignore_carrier() */
-    config = nm_config_get();
-    priv->ignore_carrier =
-        nm_config_data_get_ignore_carrier_by_device(nm_config_get_data(config), self);
     if (!priv->config_changed_id) {
-        priv->config_changed_id = g_signal_connect(config,
+        priv->config_changed_id = g_signal_connect(nm_config_get(),
                                                    NM_CONFIG_SIGNAL_CONFIG_CHANGED,
                                                    G_CALLBACK(config_changed),
                                                    self);
@@ -18057,8 +18070,7 @@ _set_state_full(NMDevice *self, NMDeviceState state, NMDeviceStateReason reason,
 
         /* We cache the ignore_carrier state to not react on config-reloads while the connection
          * is active. But on deactivating, reset the ignore-carrier flag to the current state. */
-        priv->ignore_carrier =
-            nm_config_data_get_ignore_carrier_by_device(NM_CONFIG_GET_DATA, self);
+        _update_ignore_carrier(self);
 
         if (quitting) {
             nm_dispatcher_call_device_sync(NM_DISPATCHER_ACTION_PRE_DOWN, self, req);
