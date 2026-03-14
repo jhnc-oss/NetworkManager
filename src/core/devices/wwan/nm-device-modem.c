@@ -666,10 +666,22 @@ static void
 set_modem(NMDeviceModem *self, NMModem *modem)
 {
     NMDeviceModemPrivate *priv = NM_DEVICE_MODEM_GET_PRIVATE(self);
+    gboolean              udev_unmanaged;
 
     g_return_if_fail(modem != NULL);
 
     priv->modem = nm_modem_claim(modem);
+
+    /* For modem devices, check the modem's udev unmanaged property
+     * and set it immediately after the modem is associated with the device.
+     * This allows the standard managed flag infrastructure to work properly. */
+    udev_unmanaged = nm_modem_get_udev_unmanaged(modem);
+    if (udev_unmanaged) {
+        nm_device_set_unmanaged_by_flags(NM_DEVICE(self),
+                                         NM_UNMANAGED_USER_UDEV,
+                                         NM_UNMAN_FLAG_OP_SET_UNMANAGED,
+                                         NM_DEVICE_STATE_REASON_USER_REQUESTED);
+    }
 
     g_signal_connect(modem, NM_MODEM_PPP_FAILED, G_CALLBACK(ppp_failed), self);
     g_signal_connect(modem, NM_MODEM_PREPARE_RESULT, G_CALLBACK(modem_prepare_result), self);

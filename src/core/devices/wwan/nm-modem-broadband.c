@@ -10,6 +10,7 @@
 
 #include <arpa/inet.h>
 #include <libmm-glib.h>
+#include <libudev.h>
 
 #include "libnm-core-aux-intern/nm-libnm-core-utils.h"
 #include "libnm-core-intern/nm-core-internal.h"
@@ -1612,8 +1613,10 @@ nm_modem_broadband_new(GObject *object, GError **error)
     MMModem           *modem_iface;
     MMModem3gpp       *modem_3gpp_iface;
     const char *const *drivers;
-    const char        *operator_code = NULL;
-    gs_free char      *driver        = NULL;
+    const char        *operator_code  = NULL;
+    const char        *sysfs_path     = NULL;
+    gs_free char      *driver         = NULL;
+    gboolean           udev_unmanaged = FALSE;
 
     g_return_val_if_fail(MM_IS_OBJECT(object), NULL);
     modem_object = MM_OBJECT(object);
@@ -1631,6 +1634,28 @@ nm_modem_broadband_new(GObject *object, GError **error)
     modem_3gpp_iface = mm_object_peek_modem_3gpp(modem_object);
     if (modem_3gpp_iface)
         operator_code = mm_modem_3gpp_get_operator_code(modem_3gpp_iface);
+
+    /* Check udev NM_UNMANAGED property */
+    sysfs_path = mm_modem_get_device(modem_iface);
+    if (sysfs_path) {
+        struct udev        *udev;
+        struct udev_device *udev_device;
+
+        udev = udev_new();
+        if (udev) {
+            udev_device = udev_device_new_from_syspath(udev, sysfs_path);
+            if (udev_device) {
+                const char *nm_unmanaged;
+
+                nm_unmanaged = udev_device_get_property_value(udev_device, "NM_UNMANAGED");
+                if (_nm_utils_ascii_str_to_bool(nm_unmanaged, FALSE))
+                    udev_unmanaged = TRUE;
+
+                udev_device_unref(udev_device);
+            }
+            udev_unref(udev);
+        }
+    }
 
     return g_object_new(NM_TYPE_MODEM_BROADBAND,
                         NM_MODEM_PATH,
@@ -1653,6 +1678,8 @@ nm_modem_broadband_new(GObject *object, GError **error)
                         operator_code,
                         NM_MODEM_DEVICE_UID,
                         mm_modem_get_device(modem_iface),
+                        NM_MODEM_UDEV_UNMANAGED,
+                        udev_unmanaged,
                         NULL);
 }
 
