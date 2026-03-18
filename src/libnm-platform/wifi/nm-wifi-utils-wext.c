@@ -668,7 +668,9 @@ wext_get_caps(NMWifiUtilsWext *wext, const char *ifname, struct iw_range *range)
         caps |= _NM_WIFI_DEVICE_CAP_RSN;
 
     /* Check for cipher support but not WPA support */
-    if ((caps & (_NM_WIFI_DEVICE_CAP_CIPHER_TKIP | _NM_WIFI_DEVICE_CAP_CIPHER_CCMP | _NM_WIFI_DEVICE_CAP_CIPHER_GCMP_256))
+    if ((caps
+         & (_NM_WIFI_DEVICE_CAP_CIPHER_TKIP | _NM_WIFI_DEVICE_CAP_CIPHER_CCMP
+            | _NM_WIFI_DEVICE_CAP_CIPHER_GCMP_256))
         && !(caps & (_NM_WIFI_DEVICE_CAP_WPA | _NM_WIFI_DEVICE_CAP_RSN))) {
         _LOGW(LOGD_WIFI,
               "%s: device supports WPA ciphers but not WPA protocol; WPA unavailable.",
@@ -678,7 +680,9 @@ wext_get_caps(NMWifiUtilsWext *wext, const char *ifname, struct iw_range *range)
 
     /* Check for WPA support but not cipher support */
     if ((caps & (_NM_WIFI_DEVICE_CAP_WPA | _NM_WIFI_DEVICE_CAP_RSN))
-        && !(caps & (_NM_WIFI_DEVICE_CAP_CIPHER_TKIP | _NM_WIFI_DEVICE_CAP_CIPHER_CCMP | _NM_WIFI_DEVICE_CAP_CIPHER_GCMP_256))) {
+        && !(caps
+             & (_NM_WIFI_DEVICE_CAP_CIPHER_TKIP | _NM_WIFI_DEVICE_CAP_CIPHER_CCMP
+                | _NM_WIFI_DEVICE_CAP_CIPHER_GCMP_256))) {
         _LOGW(LOGD_WIFI,
               "%s: device supports WPA protocol but not WPA ciphers; WPA unavailable.",
               ifname);

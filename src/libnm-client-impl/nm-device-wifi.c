@@ -436,8 +436,8 @@ nm_device_wifi_request_scan_finish(NMDeviceWifi *device, GAsyncResult *result, G
     (NM_WIFI_DEVICE_CAP_CIPHER_TKIP | NM_WIFI_DEVICE_CAP_CIPHER_CCMP | NM_WIFI_DEVICE_CAP_WPA \
      | NM_WIFI_DEVICE_CAP_RSN | NM_WIFI_DEVICE_CAP_CIPHER_GCMP_256)
 
-#define RSN_CAPS (NM_WIFI_DEVICE_CAP_CIPHER_CCMP | NM_WIFI_DEVICE_CAP_CIPHER_GCMP_256 \
-     | NM_WIFI_DEVICE_CAP_RSN)
+#define RSN_CAPS \
+    (NM_WIFI_DEVICE_CAP_CIPHER_CCMP | NM_WIFI_DEVICE_CAP_CIPHER_GCMP_256 | NM_WIFI_DEVICE_CAP_RSN)
 
 static gboolean
 has_proto(NMSettingWirelessSecurity *s_wsec, const char *proto)

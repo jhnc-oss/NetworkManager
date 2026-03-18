@@ -466,7 +466,8 @@ add_pair_ciphers(NMWifiAP *ap, NMSettingWirelessSecurity *sec)
 
     /* If no ciphers are specified, that means "all" WPA ciphers */
     if (num == 0) {
-        flags |= NM_802_11_AP_SEC_PAIR_TKIP | NM_802_11_AP_SEC_PAIR_CCMP | NM_802_11_AP_SEC_PAIR_GCMP_256;
+        flags |= NM_802_11_AP_SEC_PAIR_TKIP | NM_802_11_AP_SEC_PAIR_CCMP
+                 | NM_802_11_AP_SEC_PAIR_GCMP_256;
     } else {
         for (i = 0; i < num; i++) {
             const char *cipher = nm_setting_wireless_security_get_pairwise(sec, i);
@@ -496,7 +497,8 @@ add_group_ciphers(NMWifiAP *ap, NMSettingWirelessSecurity *sec)
 
     /* If no ciphers are specified, that means "all" WPA ciphers */
     if (num == 0) {
-        flags |= NM_802_11_AP_SEC_GROUP_TKIP | NM_802_11_AP_SEC_GROUP_CCMP | NM_802_11_AP_SEC_GROUP_GCMP_256;
+        flags |= NM_802_11_AP_SEC_GROUP_TKIP | NM_802_11_AP_SEC_GROUP_CCMP
+                 | NM_802_11_AP_SEC_GROUP_GCMP_256;
     } else {
         for (i = 0; i < num; i++) {
             const char *cipher = nm_setting_wireless_security_get_group(sec, i);
