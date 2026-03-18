@@ -3684,6 +3684,7 @@ nm_device_create_l3_config_data_from_connection(NMDevice *self, NMConnection *co
 {
     NML3ConfigData *l3cd;
     int             ifindex;
+    gs_free char   *gw_warning = NULL;
 
     nm_assert(NM_IS_DEVICE(self));
     nm_assert(!connection || NM_IS_CONNECTION(connection));
@@ -3703,6 +3704,10 @@ nm_device_create_l3_config_data_from_connection(NMDevice *self, NMConnection *co
     nm_l3_config_data_set_dnssec(l3cd, _prop_get_connection_dnssec(self, connection));
     nm_l3_config_data_set_ip6_privacy(l3cd, _prop_get_ipv6_ip6_privacy(self, connection));
     nm_l3_config_data_set_mptcp_flags(l3cd, _prop_get_connection_mptcp_flags(self, connection));
+
+    gw_warning = nm_connection_get_unreachable_gateways_warning(connection, FALSE);
+    if (gw_warning)
+        _LOGW(LOGD_IP, "%s", gw_warning);
 
     return l3cd;
 }
@@ -13681,13 +13686,21 @@ activate_stage3_ip_config(NMDevice *self)
                   nm_device_get_ip_iface(self));
     }
 
-    /* We currently will attach ports in the state change NM_DEVICE_STATE_IP_CONFIG above.
-     * Note that kernel changes the MTU of bond ports, so we want to commit the MTU
-     * afterwards!
+    /*
+     * Let's make sure MTU matches what is configured. The reason it's done at this
+     * precise location is twofold:
      *
-     * This might reset the MTU to something different from the bond controller and
-     * it might not be a working configuration. But it's what the user asked for, so
-     * let's do it! */
+     * (1) Attaching ports above might affect the MTU.
+     *
+     * We currently will attach ports in the state change NM_DEVICE_STATE_IP_CONFIG
+     * above. This might reset the MTU to something different from the bond controller
+     * and it might not be a working configuration. But it's what the user asked for.
+     *
+     * (2) When MTU is under 1280 IPv6 can not work.
+     *
+     * Kernel will not expose sysctls, create or accept addresses that are needed for IPv6
+     * configuration when the MTU is too small (under 1280).
+     */
     _commit_mtu(self);
 
     if (!nm_device_managed_type_is_external(self)
@@ -13696,12 +13709,6 @@ activate_stage3_ip_config(NMDevice *self)
             && !NM_IN_STRSET(priv->ipv6_method,
                              NM_SETTING_IP6_CONFIG_METHOD_DISABLED,
                              NM_SETTING_IP6_CONFIG_METHOD_IGNORE)) {
-            /* Ensure the MTU makes sense. If it was below 1280 the kernel would not
-             * expose any ipv6 sysctls or allow presence of any addresses on the interface,
-             * including LL, which * would make it impossible to autoconfigure MTU to a
-             * correct value. */
-            _commit_mtu(self);
-
             /* Any method past this point requires an IPv6LL address. Use NM-controlled
              * IPv6LL if this is not an assumed connection, since assumed connections
              * will already have IPv6 set up.
@@ -14934,6 +14941,241 @@ impl_device_get_applied_connection(NMDBusObject                      *obj,
             "(@a{sa{sv}}t)",
             var_settings,
             nm_active_connection_version_id_get((NMActiveConnection *) priv->act_request.obj)));
+}
+
+/*****************************************************************************/
+
+typedef struct {
+    NMDeviceManaged      managed_state;
+    NMDeviceManagedFlags managed_flags;
+} SetManagedData;
+
+static gboolean
+get_managed_match_by_mac(NMDevice *self, NMDeviceManagedFlags flags, gboolean *out, GError **error)
+{
+    gboolean is_fake_hwaddr;
+
+    nm_assert(out);
+
+    if ((flags & NM_DEVICE_MANAGED_FLAGS_PERMANENT_BY_MAC)
+        && (flags & NM_DEVICE_MANAGED_FLAGS_PERMANENT_BY_NAME)) {
+        g_set_error_literal(error,
+                            NM_DEVICE_ERROR,
+                            NM_DEVICE_ERROR_INVALID_ARGUMENT,
+                            "cannot match both by 'mac' and by 'interface-name'");
+        return FALSE;
+    }
+
+    nm_device_get_permanent_hw_address_full(self, TRUE, &is_fake_hwaddr);
+
+    if ((flags & NM_DEVICE_MANAGED_FLAGS_PERMANENT_BY_MAC) && is_fake_hwaddr) {
+        g_set_error_literal(
+            error,
+            NM_DEVICE_ERROR,
+            NM_DEVICE_ERROR_INVALID_ARGUMENT,
+            "cannot match by 'mac': the device doesn't have a permanent MAC address");
+        return FALSE;
+    }
+
+    if (flags & NM_DEVICE_MANAGED_FLAGS_PERMANENT_BY_MAC)
+        *out = TRUE;
+    else if (flags & NM_DEVICE_MANAGED_FLAGS_PERMANENT_BY_NAME)
+        *out = FALSE;
+    else
+        *out = !is_fake_hwaddr;
+
+    return TRUE;
+}
+
+/**
+ * set_managed:
+ * @self: the device
+ * @managed: the new managed state to set.
+ * @flags: flags to select different behaviors like storing to disk.
+ * @error: return location for a #GError, or %NULL
+ *
+ * Sets the managed state of the device. It can affect the runtime managed state
+ * if the %NM_DEVICE_MANAGED_FLAGS_RUNTIME is set, and to the value stored on disk
+ * (persistent across reboots) state if the %NM_DEVICE_MANAGED_FLAGS_PERMANENT is set.
+ *
+ * Returns: %TRUE if the managed state was set successfully, %FALSE otherwise.
+ */
+static gboolean
+set_managed(NMDevice *self, NMDeviceManaged managed, NMDeviceManagedFlags flags, GError **error)
+{
+    NMDevicePrivate *priv = NM_DEVICE_GET_PRIVATE(self);
+
+    nm_assert(
+        NM_IN_SET(managed, NM_DEVICE_MANAGED_NO, NM_DEVICE_MANAGED_YES, NM_DEVICE_MANAGED_RESET));
+    nm_assert((flags & ~NM_DEVICE_MANAGED_FLAGS_ALL) == 0);
+
+    if (!NM_FLAGS_ANY(flags, NM_DEVICE_MANAGED_FLAGS_PERMANENT | NM_DEVICE_MANAGED_FLAGS_RUNTIME)) {
+        g_set_error_literal(error,
+                            NM_DEVICE_ERROR,
+                            NM_DEVICE_ERROR_INVALID_ARGUMENT,
+                            _("set managed: no permanent or runtime was selected"));
+        return FALSE;
+    }
+
+    if (flags & NM_DEVICE_MANAGED_FLAGS_PERMANENT) {
+        NMTernary managed_to_disk, old = NM_TERNARY_DEFAULT;
+        gboolean  by_mac;
+
+        managed_to_disk = managed == NM_DEVICE_MANAGED_RESET ? NM_TERNARY_DEFAULT : !!managed;
+        nm_config_get_device_managed(nm_manager_get_config(priv->manager), self, &old, NULL, error);
+        if (!get_managed_match_by_mac(self, flags, &by_mac, error))
+            return FALSE;
+
+        if (!nm_config_set_device_managed(nm_manager_get_config(priv->manager),
+                                          self,
+                                          managed_to_disk,
+                                          by_mac,
+                                          error))
+            return FALSE;
+
+        /* Update the unmanaged flags after the change on disk */
+        nm_device_set_unmanaged_by_user_conf(self);
+
+        if (managed_to_disk != NM_TERNARY_DEFAULT
+            && managed_to_disk != !nm_device_get_unmanaged_flags(self, NM_UNMANAGED_USER_CONF)) {
+            /* We failed to make the new state effective on disk. Maybe the new config
+             * collides with other config. Try to revert and return error. Otherwise,
+             * we would set the runtime state correctly, but get an unexpected state
+             * after a reboot. */
+            nm_config_set_device_managed(nm_manager_get_config(priv->manager),
+                                         self,
+                                         old,
+                                         by_mac,
+                                         NULL);
+            g_set_error(error,
+                        NM_DEVICE_ERROR,
+                        NM_DEVICE_ERROR_FAILED,
+                        _("failed to persist 'managed=%d' on disk, other configurations may be "
+                          "overriding it"),
+                        managed);
+            return FALSE;
+        }
+    }
+
+    if (flags & NM_DEVICE_MANAGED_FLAGS_RUNTIME) {
+        if (managed == NM_DEVICE_MANAGED_RESET) {
+            nm_device_set_unmanaged_by_flags(self,
+                                             NM_UNMANAGED_USER_EXPLICIT,
+                                             NM_UNMAN_FLAG_OP_FORGET,
+                                             NM_DEVICE_STATE_REASON_UNMANAGED_USER_EXPLICIT);
+        } else {
+            g_object_set(self, NM_DEVICE_MANAGED, !!managed, NULL);
+
+            /* If requested, set the administrative state of the device to UP if the
+             * new managed state is YES, and to DOWN if it's NO. */
+            if (flags & NM_DEVICE_MANAGED_FLAGS_SET_ADMIN_STATE) {
+                if (nm_device_get_ifindex(self))
+                    nm_platform_link_change_flags(nm_device_get_platform(self),
+                                                  nm_device_get_ifindex(self),
+                                                  IFF_UP,
+                                                  !!managed);
+            }
+        }
+    }
+
+    return TRUE;
+}
+
+static void
+set_managed_cb(NMDevice              *self,
+               GDBusMethodInvocation *context,
+               NMAuthSubject         *subject,
+               GError                *error,
+               gpointer               user_data)
+{
+    SetManagedData      *set_managed_data = user_data;
+    NMDeviceManaged      managed;
+    NMDeviceManagedFlags flags;
+    GError              *local = NULL;
+
+    managed = set_managed_data->managed_state;
+    flags   = set_managed_data->managed_flags;
+    nm_g_slice_free(set_managed_data);
+
+    if (!error) {
+        if (!NM_IN_SET(managed,
+                       NM_DEVICE_MANAGED_NO,
+                       NM_DEVICE_MANAGED_YES,
+                       NM_DEVICE_MANAGED_RESET))
+            g_set_error_literal(&error,
+                                NM_DEVICE_ERROR,
+                                NM_DEVICE_ERROR_INVALID_ARGUMENT,
+                                "Invalid managed value");
+        else if ((flags & ~NM_DEVICE_MANAGED_FLAGS_ALL) != 0)
+            g_set_error_literal(&error,
+                                NM_DEVICE_ERROR,
+                                NM_DEVICE_ERROR_INVALID_ARGUMENT,
+                                "Invalid flags");
+    }
+
+    if (error) {
+        nm_audit_log_device_op(NM_AUDIT_OP_DEVICE_MANAGED,
+                               self,
+                               FALSE,
+                               NULL,
+                               subject,
+                               error->message);
+        g_dbus_method_invocation_return_gerror(context, error);
+        return;
+    }
+
+    if (!set_managed(self, managed, flags, &local)) {
+        nm_audit_log_device_op(NM_AUDIT_OP_DEVICE_MANAGED,
+                               self,
+                               FALSE,
+                               NULL,
+                               subject,
+                               local->message);
+        g_dbus_method_invocation_take_error(context, g_steal_pointer(&local));
+        return;
+    }
+
+    nm_audit_log_device_op(NM_AUDIT_OP_DEVICE_MANAGED, self, TRUE, NULL, subject, NULL);
+    g_dbus_method_invocation_return_value(context, NULL);
+}
+
+static void
+impl_device_set_managed(NMDBusObject                      *obj,
+                        const NMDBusInterfaceInfoExtended *interface_info,
+                        const NMDBusMethodInfoExtended    *method_info,
+                        GDBusConnection                   *connection,
+                        const char                        *sender,
+                        GDBusMethodInvocation             *invocation,
+                        GVariant                          *parameters)
+{
+    NMDevice             *self  = NM_DEVICE(obj);
+    gs_free_error GError *error = NULL;
+    guint32               managed_u;
+    NMDeviceManaged       managed;
+    guint32               flags_u;
+    NMDeviceManagedFlags  flags;
+    SetManagedData       *set_managed_data;
+
+    g_variant_get(parameters, "(uu)", &managed_u, &flags_u);
+
+    managed = managed_u;
+    flags   = flags_u;
+    nm_assert(managed == managed_u && flags == flags_u);
+
+    set_managed_data  = g_slice_new(SetManagedData);
+    *set_managed_data = (SetManagedData) {
+        .managed_state = managed,
+        .managed_flags = flags,
+    };
+
+    nm_device_auth_request(self,
+                           invocation,
+                           nm_device_get_applied_connection(self),
+                           NM_AUTH_PERMISSION_NETWORK_CONTROL,
+                           TRUE,
+                           NULL,
+                           set_managed_cb,
+                           set_managed_data);
 }
 
 /*****************************************************************************/
@@ -19899,6 +20141,12 @@ static const NMDBusInterfaceInfoExtended interface_info_device = {
                         NM_DEFINE_GDBUS_ARG_INFO("connection", "a{sa{sv}}"),
                         NM_DEFINE_GDBUS_ARG_INFO("version_id", "t"), ), ),
                 .handle = impl_device_get_applied_connection, ),
+            NM_DEFINE_DBUS_METHOD_INFO_EXTENDED(
+                NM_DEFINE_GDBUS_METHOD_INFO_INIT("SetManaged",
+                                                 .in_args = NM_DEFINE_GDBUS_ARG_INFOS(
+                                                     NM_DEFINE_GDBUS_ARG_INFO("managed", "u"),
+                                                     NM_DEFINE_GDBUS_ARG_INFO("flags", "u"), ), ),
+                .handle = impl_device_set_managed, ),
             NM_DEFINE_DBUS_METHOD_INFO_EXTENDED(NM_DEFINE_GDBUS_METHOD_INFO_INIT("Disconnect", ),
                                                 .handle = impl_device_disconnect, ),
             NM_DEFINE_DBUS_METHOD_INFO_EXTENDED(NM_DEFINE_GDBUS_METHOD_INFO_INIT("Delete", ),

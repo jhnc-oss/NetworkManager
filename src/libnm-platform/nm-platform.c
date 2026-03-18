@@ -3223,7 +3223,6 @@ gboolean
 nm_platform_link_veth_get_properties(NMPlatform *self, int ifindex, int *out_peer_ifindex)
 {
     const NMPlatformLink *plink;
-    int                   peer_ifindex;
 
     plink = nm_platform_link_get(self, ifindex);
     if (!plink)
@@ -3232,23 +3231,10 @@ nm_platform_link_veth_get_properties(NMPlatform *self, int ifindex, int *out_pee
     if (plink->type != NM_LINK_TYPE_VETH)
         return FALSE;
 
-    if (plink->parent != 0) {
-        NM_SET_OUT(out_peer_ifindex, plink->parent);
-        return TRUE;
-    }
+    if (plink->parent == 0)
+        return FALSE;
 
-    /* Pre-4.1 kernel did not expose the peer_ifindex as IFA_LINK. Lookup via ethtool. */
-    if (out_peer_ifindex) {
-        nm_auto_pop_netns NMPNetns *netns = NULL;
-
-        if (!nm_platform_netns_push(self, &netns))
-            return FALSE;
-        peer_ifindex = nmp_ethtool_ioctl_get_peer_ifindex(plink->ifindex);
-        if (peer_ifindex <= 0)
-            return FALSE;
-
-        *out_peer_ifindex = peer_ifindex;
-    }
+    NM_SET_OUT(out_peer_ifindex, plink->parent);
     return TRUE;
 }
 
@@ -7424,13 +7410,16 @@ nm_platform_ip4_route_to_string_full(const NMPlatformIP4Route     *route,
                         "%s"         /* ifindex */
                         "%s%s"       /* gateway */
                         " weight %s" /* weight */
+                        "%s"         /* onlink */
                         "",
                         NM_PRINT_FMT_QUOTED2(nexthop->gateway != 0 || nexthop->ifindex <= 0,
                                              " via ",
                                              nm_inet4_ntop(nexthop->gateway, s_gateway),
                                              ""),
                         _to_string_dev(str_dev, nexthop->ifindex),
-                        nm_sprintf_buf(weight_str, "%u", nexthop->weight));
+                        nm_sprintf_buf(weight_str, "%u", nexthop->weight),
+                        NM_FLAGS_HAS(nexthop->rtnh_flags, (unsigned) RTNH_F_ONLINK) ? " onlink"
+                                                                                    : "");
                 }
             }
         }
@@ -9010,7 +8999,11 @@ nm_platform_ip4_rt_nexthop_hash_update(const NMPlatformIP4RtNextHop *obj,
     nm_assert(obj);
 
     w = for_id ? NM_MAX(obj->weight, 1u) : obj->weight;
-    nm_hash_update_vals(h, obj->ifindex, obj->gateway, w);
+    nm_hash_update_vals(h,
+                        obj->ifindex,
+                        obj->gateway,
+                        w,
+                        for_id ? (obj->rtnh_flags & RTNH_F_ONLINK) : obj->rtnh_flags);
 }
 
 void
@@ -9047,7 +9040,6 @@ nm_platform_ip4_route_hash_update(const NMPlatformIP4Route *obj,
                                 obj->initrwnd,
                                 obj->mtu,
                                 obj->rto_min,
-                                obj->r_rtm_flags & RTNH_F_ONLINK,
                                 NM_HASH_COMBINE_BOOLS(guint16,
                                                       obj->quickack,
                                                       obj->lock_window,
@@ -9065,7 +9057,8 @@ nm_platform_ip4_route_hash_update(const NMPlatformIP4Route *obj,
                                     obj->via.addr_family == AF_INET6 ? obj->via.addr.addr6
                                                                      : in6addr_any,
                                     obj->gateway,
-                                    _ip4_route_weight_normalize(n_nexthops, obj->weight, FALSE));
+                                    _ip4_route_weight_normalize(n_nexthops, obj->weight, FALSE),
+                                    obj->r_rtm_flags & RTNH_F_ONLINK);
             }
         }
         break;
@@ -9158,6 +9151,11 @@ nm_platform_ip4_rt_nexthop_cmp(const NMPlatformIP4RtNextHop *a,
     w_b = for_id ? NM_MAX(b->weight, 1u) : b->weight;
     NM_CMP_DIRECT(w_a, w_b);
 
+    if (for_id)
+        NM_CMP_DIRECT(a->rtnh_flags & RTNH_F_ONLINK, b->rtnh_flags & RTNH_F_ONLINK);
+    else
+        NM_CMP_FIELD(a, b, rtnh_flags);
+
     return 0;
 }
 
@@ -9198,12 +9196,6 @@ nm_platform_ip4_route_cmp(const NMPlatformIP4Route *a,
             NM_CMP_FIELD(a, b, mtu);
             NM_CMP_FIELD(a, b, rto_min);
 
-            /* Note that for NetworkManager, the onlink flag is only part of the entire route.
-             * For kernel, each next hop has it's own onlink flag (rtnh_flags). This means,
-             * we can only merge ECMP routes, if they agree with their onlink flag, and then
-             * all next hops are onlink (or not). */
-            NM_CMP_DIRECT(a->r_rtm_flags & RTNH_F_ONLINK, b->r_rtm_flags & RTNH_F_ONLINK);
-
             NM_CMP_FIELD_UNSAFE(a, b, quickack);
             NM_CMP_FIELD_UNSAFE(a, b, lock_window);
             NM_CMP_FIELD_UNSAFE(a, b, lock_cwnd);
@@ -9222,6 +9214,10 @@ nm_platform_ip4_route_cmp(const NMPlatformIP4Route *a,
                 NM_CMP_DIRECT(n_nexthops, nm_platform_ip4_route_get_n_nexthops(b));
                 NM_CMP_DIRECT(_ip4_route_weight_normalize(n_nexthops, a->weight, FALSE),
                               _ip4_route_weight_normalize(n_nexthops, b->weight, FALSE));
+                /* The onlink flag is per-nexthop. For the first nexthop it is in
+                 * r_rtm_flags. For extra nexthops, it's compared via
+                 * nm_platform_ip4_rt_nexthop_cmp(). */
+                NM_CMP_DIRECT(a->r_rtm_flags & RTNH_F_ONLINK, b->r_rtm_flags & RTNH_F_ONLINK);
             }
         }
         break;
