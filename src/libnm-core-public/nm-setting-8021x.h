@@ -71,6 +71,8 @@ typedef enum { /*< underscore_name=nm_setting_802_1x_ck_scheme >*/
  * @NM_SETTING_802_1X_AUTH_FLAGS_TLS_1_3_DISABLE: Disable TLSv1.3. Since 1.42.
  * @NM_SETTING_802_1X_AUTH_FLAGS_TLS_1_3_ENABLE: Enable TLSv1.3. Since 1.42.
  * @NM_SETTING_802_1X_AUTH_FLAGS_TLS_DISABLE_TIME_CHECKS: Disable TLS time checks. Since 1.42.
+ * @NM_SETTING_802_1X_AUTH_FLAGS_TLS_SUITE_B_DISABLE: Disable Suite B 192-bit constraints on TLS. Since 1.58.
+ * @NM_SETTING_802_1X_AUTH_FLAGS_TLS_SUITE_B_ENABLE: Enable Suite B 192-bit constraints on TLS. Since 1.58.
  * @NM_SETTING_802_1X_AUTH_FLAGS_ALL: All supported flags
  *
  * #NMSetting8021xAuthFlags values indicate which authentication settings
@@ -92,8 +94,10 @@ typedef enum /*< underscore_name=nm_setting_802_1x_auth_flags, flags >*/ {
     NM_SETTING_802_1X_AUTH_FLAGS_TLS_1_1_ENABLE          = 0x40,
     NM_SETTING_802_1X_AUTH_FLAGS_TLS_1_2_ENABLE          = 0x80,
     NM_SETTING_802_1X_AUTH_FLAGS_TLS_1_3_ENABLE          = 0x100,
+    NM_SETTING_802_1X_AUTH_FLAGS_TLS_SUITE_B_DISABLE     = 0x200,
+    NM_SETTING_802_1X_AUTH_FLAGS_TLS_SUITE_B_ENABLE      = 0x400,
 
-    NM_SETTING_802_1X_AUTH_FLAGS_ALL = 0x1FF,
+    NM_SETTING_802_1X_AUTH_FLAGS_ALL = 0x7FF,
 } NMSetting8021xAuthFlags;
 
 #define NM_TYPE_SETTING_802_1X (nm_setting_802_1x_get_type())
