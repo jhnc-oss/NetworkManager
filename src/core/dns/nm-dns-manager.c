@@ -2799,7 +2799,11 @@ _get_config_variant(NMDnsManager *self)
             else
                 g_ptr_array_set_size(array_domains, 0);
 
-            add_dns_domains(array_domains, ip_data->addr_family, ip_data->l3cd, TRUE, FALSE);
+            nm_l3_config_data_get_dns_domains(array_domains,
+                                              ip_data->addr_family,
+                                              ip_data->l3cd,
+                                              TRUE,
+                                              FALSE);
             if (array_domains->len) {
                 g_variant_builder_add(&entry_builder,
                                       "{sv}",

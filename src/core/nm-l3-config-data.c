@@ -219,6 +219,43 @@ _garray_inaddr_clone(const GArray *src, int addr_family)
     return dst;
 }
 
+void
+nm_l3_config_data_get_dns_domains(GPtrArray            *array,
+                                  int                   addr_family,
+                                  const NML3ConfigData *l3cd,
+                                  gboolean              include_routing,
+                                  gboolean              dup)
+{
+    const char *const *domains;
+    const char *const *searches;
+    guint              num_domains;
+    guint              num_searches;
+    guint              i;
+    const char        *str;
+
+    domains  = nm_l3_config_data_get_domains(l3cd, addr_family, &num_domains);
+    searches = nm_l3_config_data_get_searches(l3cd, addr_family, &num_searches);
+
+    for (i = 0; i < num_searches; i++) {
+        str = searches[i];
+        if (!include_routing && nm_domain_is_routing(str))
+            continue;
+        if (!nm_domain_is_valid(nm_utils_parse_dns_domain(str, NULL), FALSE, TRUE))
+            continue;
+        nm_utils_g_ptr_array_add_string_item(array, str, dup);
+    }
+    if (num_domains > 1 || num_searches == 0) {
+        for (i = 0; i < num_domains; i++) {
+            str = domains[i];
+            if (!include_routing && nm_domain_is_routing(str))
+                continue;
+            if (!nm_domain_is_valid(nm_utils_parse_dns_domain(str, NULL), FALSE, TRUE))
+                continue;
+            nm_utils_g_ptr_array_add_string_item(array, str, dup);
+        }
+    }
+}
+
 static void
 _garray_inaddr_merge(GArray **p_dst, const GArray *src, int addr_family)
 {
