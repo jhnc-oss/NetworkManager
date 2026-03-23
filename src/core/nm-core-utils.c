@@ -4161,6 +4161,26 @@ nm_utils_g_value_set_strv(GValue *value, GPtrArray *strings)
     g_value_take_boxed(value, strv);
 }
 
+void
+nm_utils_g_ptr_array_add_string_item(GPtrArray *array, const char *str, gboolean dup)
+{
+    int i;
+
+    g_return_if_fail(array != NULL);
+    g_return_if_fail(str != NULL);
+
+    /* Check for dupes before adding */
+    for (i = 0; i < array->len; i++) {
+        const char *candidate = g_ptr_array_index(array, i);
+
+        if (candidate && nm_streq(candidate, str))
+            return;
+    }
+
+    /* No dupes, add the new item */
+    g_ptr_array_add(array, dup ? g_strdup(str) : (gpointer) str);
+}
+
 /*****************************************************************************/
 
 const char *
