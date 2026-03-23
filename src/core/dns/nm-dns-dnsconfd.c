@@ -679,11 +679,7 @@ parse_all_interface_config(GVariantBuilder *argument_builder,
 }
 
 static gboolean
-update(NMDnsPlugin             *plugin,
-       const NMGlobalDnsConfig *global_config,
-       const CList             *ip_data_lst_head,
-       const char              *hostdomain,
-       GError                 **error)
+update(NMDnsPlugin *plugin, NMDnsUpdateData *update_data, GError **error)
 {
     NMDnsDnsconfd        *self = NM_DNS_DNSCONFD(plugin);
     NMDnsDnsconfdPrivate *priv = NM_DNS_DNSCONFD_GET_PRIVATE(self);
@@ -698,12 +694,12 @@ update(NMDnsPlugin             *plugin,
     g_variant_builder_init(&argument_builder, G_VARIANT_TYPE("(aa{sv}u)"));
     g_variant_builder_open(&argument_builder, G_VARIANT_TYPE("aa{sv}"));
 
-    if (global_config) {
+    if (update_data->global_config) {
         _LOGT("parsing global configuration");
-        parse_global_config(global_config, &argument_builder, &resolve_mode, &ca);
+        parse_global_config(update_data->global_config, &argument_builder, &resolve_mode, &ca);
     }
     _LOGT("parsing configuration of interfaces");
-    parse_all_interface_config(&argument_builder, ip_data_lst_head, ca);
+    parse_all_interface_config(&argument_builder, update_data->ip_data_lst_head, ca);
 
     g_variant_builder_close(&argument_builder);
     g_variant_builder_add(&argument_builder, "u", resolve_mode);

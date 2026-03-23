@@ -20,6 +20,15 @@
     (G_TYPE_INSTANCE_GET_CLASS((obj), NM_TYPE_DNS_PLUGIN, NMDnsPluginClass))
 
 #define NM_DNS_PLUGIN_UPDATE_PENDING_CHANGED "update-pending-changed"
+typedef struct {
+    const CList                  *ip_data_lst_head;
+    gboolean                      caching_successful;
+    gboolean                      resolved_used;
+    gboolean                      resolver_depends_on_nm;
+    NMDnsManagerResolvConfManager rc_manager;
+    const char                   *hostdomain;
+    NMGlobalDnsConfig            *global_config;
+} NMDnsUpdateData;
 
 struct _NMDnsPluginPrivate;
 

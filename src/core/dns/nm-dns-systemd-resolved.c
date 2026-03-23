@@ -801,11 +801,7 @@ start_resolve:
 }
 
 static gboolean
-update(NMDnsPlugin             *plugin,
-       const NMGlobalDnsConfig *global_config,
-       const CList             *ip_data_lst_head,
-       const char              *hostdomain,
-       GError                 **error)
+update(NMDnsPlugin *plugin, NMDnsUpdateData *update_data, GError **error)
 {
     NMDnsSystemdResolved          *self       = NM_DNS_SYSTEMD_RESOLVED(plugin);
     NMDnsSystemdResolvedPrivate   *priv       = NM_DNS_SYSTEMD_RESOLVED_GET_PRIVATE(self);
@@ -826,7 +822,7 @@ update(NMDnsPlugin             *plugin,
     interfaces =
         g_hash_table_new_full(nm_direct_hash, NULL, NULL, (GDestroyNotify) _interface_config_free);
 
-    c_list_for_each_entry (ip_data, ip_data_lst_head, ip_data_lst) {
+    c_list_for_each_entry (ip_data, update_data->ip_data_lst_head, ip_data_lst) {
         InterfaceConfig *ic      = NULL;
         int              ifindex = ip_data->data->ifindex;
 

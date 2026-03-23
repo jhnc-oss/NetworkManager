@@ -1207,11 +1207,7 @@ start_dnsmasq(NMDnsDnsmasq *self, gboolean force_start, GError **error)
 }
 
 static gboolean
-update(NMDnsPlugin             *plugin,
-       const NMGlobalDnsConfig *global_config,
-       const CList             *ip_data_lst_head,
-       const char              *hostdomain,
-       GError                 **error)
+update(NMDnsPlugin *plugin, NMDnsUpdateData *update_data, GError **error)
 {
     NMDnsDnsmasq        *self = NM_DNS_DNSMASQ(plugin);
     NMDnsDnsmasqPrivate *priv = NM_DNS_DNSMASQ_GET_PRIVATE(self);
@@ -1220,8 +1216,10 @@ update(NMDnsPlugin             *plugin,
         return FALSE;
 
     nm_clear_pointer(&priv->set_server_ex_args, g_variant_unref);
-    priv->set_server_ex_args =
-        g_variant_ref_sink(create_update_args(self, global_config, ip_data_lst_head, hostdomain));
+    priv->set_server_ex_args       = g_variant_ref_sink(create_update_args(self,
+                                                                     update_data->global_config,
+                                                                     update_data->ip_data_lst_head,
+                                                                     update_data->hostdomain));
     priv->set_server_ex_args_dirty = TRUE;
 
     send_dnsmasq_update(self);
