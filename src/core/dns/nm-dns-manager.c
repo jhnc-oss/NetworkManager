@@ -177,57 +177,6 @@ NM_DEFINE_SINGLETON_GETTER(NMDnsManager, nm_dns_manager_get, NM_TYPE_DNS_MANAGER
 
 /*****************************************************************************/
 
-static gboolean
-domain_is_valid(const char *domain,
-                gboolean    reject_public_suffix,
-                gboolean    assume_any_tld_is_public)
-{
-    if (*domain == '\0')
-        return FALSE;
-
-    if (reject_public_suffix) {
-        int is_pub;
-
-#if !WITH_LIBPSL
-        /* Without libpsl, we cannot detect that the domain is a public suffix, we assume
-         * the domain is not and valid. */
-        is_pub = FALSE;
-#elif defined(PSL_TYPE_NO_STAR_RULE)
-        /*
-         * If we use PSL_TYPE_ANY, any TLD (top-level domain, i.e., domain
-         * with no dots) is considered *public* by the PSL library even if
-         * it is *not* on the official suffix list. This is the implicit
-         * behavior of the older API function psl_is_public_suffix().
-         * To inhibit that and only deem TLDs explicitly listed in the PSL
-         * as public, we need to turn off the "prevailing star rule" with
-         * PSL_TYPE_NO_STAR_RULE.
-         * For documentation on psl_is_public_suffix2(), see:
-         * https://rockdaboot.github.io/libpsl/libpsl-Public-Suffix-List-functions.html#psl-is-public-suffix2
-         * For more on the public suffix format, including wildcards:
-         * https://github.com/publicsuffix/list/wiki/Format#format
-         */
-        is_pub =
-            psl_is_public_suffix2(psl_builtin(),
-                                  domain,
-                                  assume_any_tld_is_public ? PSL_TYPE_ANY : PSL_TYPE_NO_STAR_RULE);
-#else
-        is_pub = psl_is_public_suffix(psl_builtin(), domain);
-#endif
-
-        if (is_pub)
-            return FALSE;
-    }
-
-    return TRUE;
-}
-
-static gboolean
-domain_is_routing(const char *domain)
-{
-    return domain[0] == '~';
-}
-
-/*****************************************************************************/
 
 static NM_UTILS_LOOKUP_STR_DEFINE(
     _rc_manager_to_string,

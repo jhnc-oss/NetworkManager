@@ -26,6 +26,10 @@
 #include <netinet/ip6.h>
 #include <linux/if_packet.h>
 
+#if WITH_LIBPSL
+#include <libpsl.h>
+#endif
+
 #include "libnm-glib-aux/nm-uuid.h"
 #include "libnm-platform/nmp-base.h"
 #include "libnm-std-aux/unaligned.h"
@@ -4453,6 +4457,56 @@ nm_utils_parse_dns_domain(const char *domain, gboolean *is_routing)
         NM_SET_OUT(is_routing, FALSE);
 
     return domain;
+}
+
+inline gboolean
+nm_domain_is_routing(const char *domain)
+{
+    return domain[0] == '~';
+}
+
+gboolean
+nm_domain_is_valid(const char *domain,
+                   gboolean    reject_public_suffix,
+                   gboolean    assume_any_tld_is_public)
+{
+    if (*domain == '\0')
+        return FALSE;
+
+    if (reject_public_suffix) {
+        int is_pub;
+
+#if !WITH_LIBPSL
+        /* Without libpsl, we cannot detect that the domain is a public suffix, we assume
+         * the domain is not and valid. */
+        is_pub = FALSE;
+#elif defined(PSL_TYPE_NO_STAR_RULE)
+        /*
+         * If we use PSL_TYPE_ANY, any TLD (top-level domain, i.e., domain
+         * with no dots) is considered *public* by the PSL library even if
+         * it is *not* on the official suffix list. This is the implicit
+         * behavior of the older API function psl_is_public_suffix().
+         * To inhibit that and only deem TLDs explicitly listed in the PSL
+         * as public, we need to turn off the "prevailing star rule" with
+         * PSL_TYPE_NO_STAR_RULE.
+         * For documentation on psl_is_public_suffix2(), see:
+         * https://rockdaboot.github.io/libpsl/libpsl-Public-Suffix-List-functions.html#psl-is-public-suffix2
+         * For more on the public suffix format, including wildcards:
+         * https://github.com/publicsuffix/list/wiki/Format#format
+         */
+        is_pub =
+            psl_is_public_suffix2(psl_builtin(),
+                                  domain,
+                                  assume_any_tld_is_public ? PSL_TYPE_ANY : PSL_TYPE_NO_STAR_RULE);
+#else
+        is_pub = psl_is_public_suffix(psl_builtin(), domain);
+#endif
+
+        if (is_pub)
+            return FALSE;
+    }
+
+    return TRUE;
 }
 
 /*****************************************************************************/

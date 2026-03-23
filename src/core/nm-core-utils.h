@@ -457,6 +457,12 @@ const char *nm_activation_type_to_string(NMActivationType activation_type);
 
 const char *nm_utils_parse_dns_domain(const char *domain, gboolean *is_routing);
 
+gboolean nm_domain_is_routing(const char *domain);
+
+gboolean nm_domain_is_valid(const char *domain,
+                            gboolean    reject_public_suffix,
+                            gboolean    assume_any_tld_is_public);
+
 /*****************************************************************************/
 
 void nm_wifi_utils_parse_ies(const guint8 *bytes,
