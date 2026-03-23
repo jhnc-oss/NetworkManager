@@ -1845,43 +1845,49 @@ update_dns(NMDnsManager *self, gboolean no_caching, gboolean force_emit, GError 
     if (priv->custom_plugin || priv->sd_resolved_backup_plugin)
         _mgr_configs_data_construct(self);
 
-    if (priv->sd_resolved_backup_plugin) {
-        nm_dns_plugin_update(priv->sd_resolved_backup_plugin,
-                             global_config,
-                             _mgr_get_ip_data_lst_head(self),
-                             priv->hostdomain,
-                             NULL);
-    }
+    {
+        NMDnsUpdateData update_data = {
+            .ip_data_lst_head       = _mgr_get_ip_data_lst_head(self),
+            .caching_successful     = FALSE,
+            .resolved_used          = FALSE,
+            .rc_manager             = priv->rc_manager,
+            .hostdomain             = priv->hostdomain,
+            .global_config          = global_config,
+            .resolver_depends_on_nm = FALSE,
+        };
 
-    /* Let any plugins do their thing first */
-    if (priv->custom_plugin) {
-        NMDnsPlugin          *plugin       = priv->custom_plugin;
-        const char           *plugin_name  = nm_dns_plugin_get_name(plugin);
-        gs_free_error GError *plugin_error = NULL;
+        if (priv->sd_resolved_backup_plugin) {
+            nm_dns_plugin_update(priv->sd_resolved_backup_plugin, &update_data, NULL);
+        }
 
-        if (nm_dns_plugin_is_caching(plugin)) {
-            if (no_caching) {
-                _LOGD("update-dns: plugin %s ignored (caching disabled)", plugin_name);
-                goto plugin_skip;
+        /* Let any plugins do their thing first */
+        if (priv->custom_plugin) {
+            NMDnsPlugin          *plugin       = priv->custom_plugin;
+            const char           *plugin_name  = nm_dns_plugin_get_name(plugin);
+            gs_free_error GError *plugin_error = NULL;
+
+            if (nm_dns_plugin_is_caching(plugin)) {
+                if (no_caching) {
+                    _LOGD("update-dns: plugin %s ignored (caching disabled)", plugin_name);
+                    goto plugin_skip;
+                }
+                caching = TRUE;
             }
-            caching = TRUE;
-        }
 
-        _LOGD("update-dns: updating plugin %s", plugin_name);
-        if (!nm_dns_plugin_update(plugin,
-                                  global_config,
-                                  _mgr_get_ip_data_lst_head(self),
-                                  priv->hostdomain,
-                                  &plugin_error)) {
-            _LOGW("update-dns: plugin %s update failed: %s", plugin_name, plugin_error->message);
+            _LOGD("update-dns: updating plugin %s", plugin_name);
+            if (!nm_dns_plugin_update(plugin, &update_data, &plugin_error)) {
+                _LOGW("update-dns: plugin %s update failed: %s",
+                      plugin_name,
+                      plugin_error->message);
 
-            /* If the plugin failed to update, we shouldn't write out a local
-             * caching DNS configuration to resolv.conf.
-             */
-            caching = FALSE;
-        }
+                /* If the plugin failed to update, we shouldn't write out a local
+                 * caching DNS configuration to resolv.conf.
+                 */
+                caching = FALSE;
+            }
 
 plugin_skip:;
+        }
     }
 
     /* Clear the generated search list as it points to

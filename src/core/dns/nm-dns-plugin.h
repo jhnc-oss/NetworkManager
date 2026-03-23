@@ -20,6 +20,15 @@
     (G_TYPE_INSTANCE_GET_CLASS((obj), NM_TYPE_DNS_PLUGIN, NMDnsPluginClass))
 
 #define NM_DNS_PLUGIN_UPDATE_PENDING_CHANGED "update-pending-changed"
+typedef struct {
+    const CList                  *ip_data_lst_head;
+    gboolean                      caching_successful;
+    gboolean                      resolved_used;
+    gboolean                      resolver_depends_on_nm;
+    NMDnsManagerResolvConfManager rc_manager;
+    const char                   *hostdomain;
+    NMGlobalDnsConfig            *global_config;
+} NMDnsUpdateData;
 
 struct _NMDnsPluginPrivate;
 
@@ -36,11 +45,7 @@ typedef struct {
      * 'global_config' is the optional global DNS
      * configuration.
      */
-    gboolean (*update)(NMDnsPlugin             *self,
-                       const NMGlobalDnsConfig *global_config,
-                       const CList             *ip_config_lst_head,
-                       const char              *hostdomain,
-                       GError                 **error);
+    gboolean (*update)(NMDnsPlugin *plugin, NMDnsUpdateData *update_data, GError **error);
 
     void (*stop)(NMDnsPlugin *self);
 
@@ -62,11 +67,7 @@ gboolean nm_dns_plugin_is_caching(NMDnsPlugin *self);
 
 const char *nm_dns_plugin_get_name(NMDnsPlugin *self);
 
-gboolean nm_dns_plugin_update(NMDnsPlugin             *self,
-                              const NMGlobalDnsConfig *global_config,
-                              const CList             *ip_config_lst_head,
-                              const char              *hostname,
-                              GError                 **error);
+gboolean nm_dns_plugin_update(NMDnsPlugin *self, NMDnsUpdateData *update_data, GError **error);
 
 void nm_dns_plugin_stop(NMDnsPlugin *self);
 
