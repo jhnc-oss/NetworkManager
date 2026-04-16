@@ -62,22 +62,37 @@ G_DEFINE_ABSTRACT_TYPE(NMDnsPlugin, nm_dns_plugin, G_TYPE_OBJECT)
     }                                                                                           \
     G_STMT_END
 
+NM_UTILS_LOOKUP_STR_DEFINE(
+    _rc_manager_to_string,
+    NMDnsManagerResolvConfManager,
+    NM_UTILS_LOOKUP_DEFAULT_WARN(NULL),
+    NM_UTILS_LOOKUP_STR_ITEM(NM_DNS_MANAGER_RESOLV_CONF_MAN_AUTO, "auto"),
+    NM_UTILS_LOOKUP_STR_ITEM(NM_DNS_MANAGER_RESOLV_CONF_MAN_UNKNOWN, "unknown"),
+    NM_UTILS_LOOKUP_STR_ITEM(NM_DNS_MANAGER_RESOLV_CONF_MAN_UNMANAGED, "unmanaged"),
+    NM_UTILS_LOOKUP_STR_ITEM(NM_DNS_MANAGER_RESOLV_CONF_MAN_IMMUTABLE, "immutable"),
+    NM_UTILS_LOOKUP_STR_ITEM(NM_DNS_MANAGER_RESOLV_CONF_MAN_SYMLINK, "symlink"),
+    NM_UTILS_LOOKUP_STR_ITEM(NM_DNS_MANAGER_RESOLV_CONF_MAN_FILE, "file"),
+    NM_UTILS_LOOKUP_STR_ITEM(NM_DNS_MANAGER_RESOLV_CONF_MAN_RESOLVCONF, "resolvconf"),
+    NM_UTILS_LOOKUP_STR_ITEM(NM_DNS_MANAGER_RESOLV_CONF_MAN_NETCONFIG, "netconfig"), );
+
 /*****************************************************************************/
 
 gboolean
-nm_dns_plugin_update(NMDnsPlugin             *self,
-                     const NMGlobalDnsConfig *global_config,
-                     const CList             *ip_config_lst_head,
-                     const char              *hostdomain,
-                     GError                 **error)
+nm_dns_plugin_update(NMDnsPlugin *self, NMDnsUpdateData *update_data, GError **error)
 {
     g_return_val_if_fail(NM_DNS_PLUGIN_GET_CLASS(self)->update != NULL, FALSE);
 
-    return NM_DNS_PLUGIN_GET_CLASS(self)->update(self,
-                                                 global_config,
-                                                 ip_config_lst_head,
-                                                 hostdomain,
-                                                 error);
+    return NM_DNS_PLUGIN_GET_CLASS(self)->update(self, update_data, error);
+}
+
+void
+nm_dns_plugin_checksum(NMDnsPlugin          *self,
+                       const NML3ConfigData *l3cd,
+                       GChecksum            *sum,
+                       int                   addr_family,
+                       NMDnsIPConfigType     dns_ip_config_type)
+{
+    NM_DNS_PLUGIN_GET_CLASS(self)->checksum(l3cd, sum, addr_family, dns_ip_config_type);
 }
 
 gboolean
@@ -96,6 +111,27 @@ nm_dns_plugin_get_name(NMDnsPlugin *self)
     klass = NM_DNS_PLUGIN_GET_CLASS(self);
     nm_assert(klass->plugin_name);
     return klass->plugin_name;
+}
+
+const guint8 *
+nm_dns_plugin_get_hash(NMDnsPlugin *self)
+{
+    NMDnsPluginClass *klass;
+
+    g_return_val_if_fail(NM_IS_DNS_PLUGIN(self), NULL);
+
+    klass = NM_DNS_PLUGIN_GET_CLASS(self);
+
+    return klass->hash;
+}
+
+void
+nm_dns_plugin_set_hash(NMDnsPlugin *self, guint8 *hash)
+{
+    NMDnsPluginClass *klass;
+
+    klass = NM_DNS_PLUGIN_GET_CLASS(self);
+    memcpy(klass->hash, hash, NM_UTILS_CHECKSUM_LENGTH_SHA1);
 }
 
 void

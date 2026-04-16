@@ -134,6 +134,7 @@ libNetworkManager = static_library(
     'dhcp/nm-dhcp-listener.c',
     'dns/nm-dns-dnsmasq.c',
     'dns/nm-dns-dnsconfd.c',
+    'dns/nm-dns-resolv_conf.c',
     'dns/nm-dns-manager.c',
     'dns/nm-dns-plugin.c',
     'dns/nm-dns-systemd-resolved.c',

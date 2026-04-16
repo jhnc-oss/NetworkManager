@@ -423,6 +423,8 @@ void             _nm_utils_set_testing(NMUtilsTestFlags flags);
 
 void nm_utils_g_value_set_strv(GValue *value, GPtrArray *strings);
 
+void nm_utils_g_ptr_array_add_string_item(GPtrArray *array, const char *str, gboolean dup);
+
 /*****************************************************************************/
 
 const char *nm_utils_dnsmasq_status_to_string(int status, char *dest, gsize size);
@@ -456,6 +458,12 @@ const char *nm_activation_type_to_string(NMActivationType activation_type);
 /*****************************************************************************/
 
 const char *nm_utils_parse_dns_domain(const char *domain, gboolean *is_routing);
+
+gboolean nm_domain_is_routing(const char *domain);
+
+gboolean nm_domain_is_valid(const char *domain,
+                            gboolean    reject_public_suffix,
+                            gboolean    assume_any_tld_is_public);
 
 /*****************************************************************************/
 
