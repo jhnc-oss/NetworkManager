@@ -40,7 +40,8 @@ NM_GOBJECT_PROPERTIES_DEFINE(NMModem,
                              PROP_SIM_OPERATOR_ID,
                              PROP_OPERATOR_CODE,
                              PROP_APN,
-                             PROP_DEVICE_UID, );
+                             PROP_DEVICE_UID,
+                             PROP_UDEV_UNMANAGED, );
 
 enum {
     PPP_STATS,
@@ -92,6 +93,7 @@ typedef struct _NMModemPrivate {
     guint mm_ip_timeout;
 
     bool claimed : 1;
+    bool udev_unmanaged : 1;
 
     union {
         struct {
@@ -171,6 +173,7 @@ static const char *state_table[] = {
     [NM_MODEM_STATE_DISCONNECTING] = "disconnecting",
     [NM_MODEM_STATE_CONNECTING]    = "connecting",
     [NM_MODEM_STATE_CONNECTED]     = "connected",
+    [NM_MODEM_STATE_UNMANAGED]     = "unmanged",
 };
 
 const char *
@@ -624,6 +627,14 @@ const char *
 nm_modem_get_device_uid(NMModem *self)
 {
     return NM_MODEM_GET_PRIVATE(self)->device_uid;
+}
+
+gboolean
+nm_modem_get_udev_unmanaged(NMModem *self)
+{
+    g_return_val_if_fail(NM_IS_MODEM(self), FALSE);
+
+    return NM_MODEM_GET_PRIVATE(self)->udev_unmanaged;
 }
 
 /*****************************************************************************/
@@ -1671,6 +1682,9 @@ get_property(GObject *object, guint prop_id, GValue *value, GParamSpec *pspec)
     case PROP_DEVICE_UID:
         g_value_set_string(value, priv->device_uid);
         break;
+    case PROP_UDEV_UNMANAGED:
+        g_value_set_boolean(value, priv->udev_unmanaged);
+        break;
     default:
         G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
         break;
@@ -1729,6 +1743,10 @@ set_property(GObject *object, guint prop_id, const GValue *value, GParamSpec *ps
     case PROP_DEVICE_UID:
         /* construct-only */
         priv->device_uid = g_value_dup_string(value);
+        break;
+    case PROP_UDEV_UNMANAGED:
+        /* construct-only */
+        priv->udev_unmanaged = g_value_get_boolean(value);
         break;
     default:
         G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
@@ -1901,6 +1919,13 @@ nm_modem_class_init(NMModemClass *klass)
                             "",
                             NULL,
                             G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY | G_PARAM_STATIC_STRINGS);
+
+    obj_properties[PROP_UDEV_UNMANAGED] =
+        g_param_spec_boolean(NM_MODEM_UDEV_UNMANAGED,
+                             "",
+                             "",
+                             FALSE,
+                             G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY | G_PARAM_STATIC_STRINGS);
 
     g_object_class_install_properties(object_class, _PROPERTY_ENUMS_LAST, obj_properties);
 

@@ -31,6 +31,7 @@
 #define NM_MODEM_OPERATOR_CODE   "operator-code"
 #define NM_MODEM_APN             "apn"
 #define NM_MODEM_DEVICE_UID      "device-uid"
+#define NM_MODEM_UDEV_UNMANAGED  "udev-unmanaged"
 
 /* Signals */
 #define NM_MODEM_PPP_STATS      "ppp-stats"
@@ -156,6 +157,7 @@ const char *nm_modem_get_sim_operator_id(NMModem *modem);
 const char *nm_modem_get_operator_code(NMModem *modem);
 const char *nm_modem_get_apn(NMModem *modem);
 const char *nm_modem_get_device_uid(NMModem *modem);
+gboolean    nm_modem_get_udev_unmanaged(NMModem *modem);
 
 gboolean nm_modem_set_data_port(NMModem        *self,
                                 NMPlatform     *platform,
