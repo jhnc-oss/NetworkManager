@@ -1536,7 +1536,17 @@ _auto_activate_device(NMPolicy *self, NMDevice *device)
     if (!connections[0])
         return;
 
-    /* Find the first connection that should be auto-activated */
+    /* Find the first connection that should be auto-activated.
+     *
+     * Try to activate each candidate immediately. If activation fails
+     * (e.g. because a port's controller connection is not active),
+     * block the failed candidate and try the next one right away
+     * instead of scheduling an asynchronous recheck.
+     *
+     * This avoids a race where the asynchronous recheck arrives too
+     * late: by that time the controller device may have already
+     * transitioned to the "activated" state without any ports attached.
+     */
     best_connection = NULL;
     for (i = 0; i < len; i++) {
         NMSettingsConnection *candidate = connections[i];
@@ -1557,46 +1567,49 @@ _auto_activate_device(NMPolicy *self, NMDevice *device)
         if (permission && !nm_settings_connection_check_permission(candidate, permission))
             continue;
 
-        if (nm_device_can_auto_connect(device, candidate, &specific_object)) {
-            best_connection = candidate;
-            break;
+        if (!nm_device_can_auto_connect(device, candidate, &specific_object))
+            continue;
+
+        _LOGI(LOGD_DEVICE,
+              "auto-activating connection '%s' (%s)",
+              nm_settings_connection_get_id(candidate),
+              nm_settings_connection_get_uuid(candidate));
+
+        subject = nm_auth_subject_new_internal();
+        ac      = nm_manager_activate_connection(
+            priv->manager,
+            candidate,
+            NULL,
+            specific_object,
+            device,
+            subject,
+            NM_ACTIVATION_TYPE_MANAGED,
+            NM_ACTIVATION_REASON_AUTOCONNECT,
+            NM_ACTIVATION_STATE_FLAG_LIFETIME_BOUND_TO_PROFILE_VISIBILITY,
+            &error);
+        if (!ac) {
+            _LOGI(LOGD_DEVICE,
+                  "connection '%s' auto-activation failed: %s",
+                  nm_settings_connection_get_id(candidate),
+                  error->message);
+            nm_manager_devcon_autoconnect_blocked_reason_set(
+                priv->manager,
+                device,
+                candidate,
+                NM_SETTINGS_AUTOCONNECT_BLOCKED_REASON_FAILED,
+                TRUE);
+            g_clear_object(&subject);
+            g_clear_error(&error);
+            nm_clear_g_free(&specific_object);
+            continue;
         }
+
+        best_connection = candidate;
+        break;
     }
 
     if (!best_connection)
         return;
-
-    _LOGI(LOGD_DEVICE,
-          "auto-activating connection '%s' (%s)",
-          nm_settings_connection_get_id(best_connection),
-          nm_settings_connection_get_uuid(best_connection));
-
-    subject = nm_auth_subject_new_internal();
-    ac      = nm_manager_activate_connection(
-        priv->manager,
-        best_connection,
-        NULL,
-        specific_object,
-        device,
-        subject,
-        NM_ACTIVATION_TYPE_MANAGED,
-        NM_ACTIVATION_REASON_AUTOCONNECT,
-        NM_ACTIVATION_STATE_FLAG_LIFETIME_BOUND_TO_PROFILE_VISIBILITY,
-        &error);
-    if (!ac) {
-        _LOGI(LOGD_DEVICE,
-              "connection '%s' auto-activation failed: %s",
-              nm_settings_connection_get_id(best_connection),
-              error->message);
-        nm_manager_devcon_autoconnect_blocked_reason_set(
-            priv->manager,
-            device,
-            best_connection,
-            NM_SETTINGS_AUTOCONNECT_BLOCKED_REASON_FAILED,
-            TRUE);
-        nm_policy_device_recheck_auto_activate_schedule(self, device);
-        return;
-    }
 
     /* Subscribe to AC state-changed signal to detect when the
      * activation fails in early stages without changing device
