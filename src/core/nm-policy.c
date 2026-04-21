@@ -2267,6 +2267,64 @@ device_state_changed(NMDevice           *device,
 
             switch (nm_device_state_reason_check(reason)) {
             case NM_DEVICE_STATE_REASON_NO_SECRETS:
+            {
+                guint64                      ts = 0;
+                NMConnection                *conn;
+                gs_unref_ptrarray GPtrArray *hints = NULL;
+                const char                  *need_setting;
+                gboolean                     is_always_ask = FALSE;
+
+                conn = nm_settings_connection_get_connection(sett_conn);
+
+                /* Check if missing secrets have the always-ask (NOT_SAVED) flag.
+                 * Such profiles are intentionally created without stored secrets
+                 * and should not be deleted. */
+                need_setting = nm_connection_need_secrets(conn, &hints);
+                if (need_setting && hints) {
+                    NMSetting *s = nm_connection_get_setting_by_name(conn, need_setting);
+
+                    if (s) {
+                        for (guint i = 0; i < hints->len; i++) {
+                            NMSettingSecretFlags f = NM_SETTING_SECRET_FLAG_NONE;
+
+                            nm_setting_get_secret_flags(s, hints->pdata[i], &f, NULL);
+                            if (NM_FLAGS_HAS(f, NM_SETTING_SECRET_FLAG_NOT_SAVED)) {
+                                is_always_ask = TRUE;
+                                break;
+                            }
+                        }
+                    }
+                }
+
+                /* Mark as volatile profiles that need secrets but those were never
+                 * provided and the profile never connected successfully. These are
+                 * profiles created by accident or for networks where the user does
+                 * not have the credentials. There is no point in keeping them around
+                 * as they have no secrets and cannot connect without user intervention.
+                 * The volatile flag causes them to be deleted once they fully
+                 * disconnect.
+                 *
+                 * Preserve profiles with always-ask secrets (NOT_SAVED flag) as
+                 * those are intentionally created without stored secrets.
+                 *
+                 * Note: nm_device_state_changed() in nm-device.c calls
+                 * nm_settings_connection_update_timestamp(sett_conn, 0) before we get
+                 * here, so nm_settings_connection_get_timestamp() returns TRUE even for
+                 * never-connected profiles. We must also check that the timestamp
+                 * value itself is zero. */
+                if (!is_always_ask
+                    && (!nm_settings_connection_get_timestamp(sett_conn, &ts) || ts == 0)) {
+                    _LOGD(LOGD_DEVICE,
+                          "policy: connection[" NM_HASH_OBFUSCATE_PTR_FMT
+                          "] (%s) never connected and has no secrets, marking volatile",
+                          NM_HASH_OBFUSCATE_PTR(sett_conn),
+                          nm_settings_connection_get_id(sett_conn));
+                    nm_settings_connection_set_flags(sett_conn,
+                                                     NM_SETTINGS_CONNECTION_INT_FLAGS_VOLATILE,
+                                                     TRUE);
+                    break;
+                }
+
                 /* we want to block the connection from auto-connect if it failed due to no-secrets.
                  * However, if a secret-agent registered, since the connection made the last
                  * secret-request, we do not block it. The new secret-agent might not yet
@@ -2295,6 +2353,7 @@ device_state_changed(NMDevice           *device,
                     blocked = TRUE;
                 }
                 break;
+            }
             case NM_DEVICE_STATE_REASON_DEPENDENCY_FAILED:
                 /* A connection that fails due to dependency-failed is not able to
                  * reconnect until the connection it depends on activates again;
