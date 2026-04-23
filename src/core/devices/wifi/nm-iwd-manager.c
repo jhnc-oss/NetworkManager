@@ -356,6 +356,11 @@ static const GDBusInterfaceInfo iwd_agent_iface_info = NM_DEFINE_GDBUS_INTERFACE
             .in_args  = NM_DEFINE_GDBUS_ARG_INFOS(NM_DEFINE_GDBUS_ARG_INFO("network", "o"), ),
             .out_args = NM_DEFINE_GDBUS_ARG_INFOS(NM_DEFINE_GDBUS_ARG_INFO("passphrase", "s"), ), ),
         NM_DEFINE_GDBUS_METHOD_INFO(
+            "RequestPassphraseWithOptions",
+            .in_args  = NM_DEFINE_GDBUS_ARG_INFOS(NM_DEFINE_GDBUS_ARG_INFO("network", "o"), ),
+            .out_args = NM_DEFINE_GDBUS_ARG_INFOS(NM_DEFINE_GDBUS_ARG_INFO("passphrase", "s"),
+                                                  NM_DEFINE_GDBUS_ARG_INFO("options", "a{sv}"), ), ),
+        NM_DEFINE_GDBUS_METHOD_INFO(
             "RequestPrivateKeyPassphrase",
             .in_args  = NM_DEFINE_GDBUS_ARG_INFOS(NM_DEFINE_GDBUS_ARG_INFO("network", "o"), ),
             .out_args = NM_DEFINE_GDBUS_ARG_INFOS(NM_DEFINE_GDBUS_ARG_INFO("passphrase", "s"), ), ),

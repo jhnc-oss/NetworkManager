@@ -1314,6 +1314,8 @@ get_agent_request_network_path(GDBusMethodInvocation *invocation)
 
     if (nm_streq(method_name, "RequestPassphrase"))
         g_variant_get(params, "(&o)", &network_path);
+    else if (nm_streq(method_name, "RequestPassphraseWithOptions"))
+        g_variant_get(params, "(&o)", &network_path);
     else if (nm_streq(method_name, "RequestPrivateKeyPassphrase"))
         g_variant_get(params, "(&o)", &network_path);
     else if (nm_streq(method_name, "RequestUserNameAndPassword"))
@@ -1334,6 +1336,18 @@ get_agent_request_network_path(GDBusMethodInvocation *invocation)
  * Return TRUE in either case, return FALSE if an error is detected.
  */
 static gboolean
+psk_should_store_in_iwd(NMSettingWirelessSecurity *s_wireless_sec)
+{
+    NMSettingSecretFlags psk_flags;
+
+    psk_flags = nm_setting_wireless_security_get_psk_flags(s_wireless_sec);
+
+    return !NM_FLAGS_ANY(psk_flags,
+                         NM_SETTING_SECRET_FLAG_AGENT_OWNED
+                             | NM_SETTING_SECRET_FLAG_NOT_SAVED);
+}
+
+static gboolean
 try_reply_agent_request(NMDeviceIwd           *self,
                         NMConnection          *connection,
                         GDBusMethodInvocation *invocation,
@@ -1351,7 +1365,7 @@ try_reply_agent_request(NMDeviceIwd           *self,
 
     *replied = FALSE;
 
-    if (nm_streq(method_name, "RequestPassphrase")) {
+    if (NM_IN_STRSET(method_name, "RequestPassphrase", "RequestPassphraseWithOptions")) {
         if (!s_wireless_sec)
             return FALSE;
 
@@ -1361,7 +1375,20 @@ try_reply_agent_request(NMDeviceIwd           *self,
             if (psk) {
                 _LOGD(LOGD_DEVICE | LOGD_WIFI, "Returning the PSK to the IWD Agent");
 
-                g_dbus_method_invocation_return_value(invocation, g_variant_new("(s)", psk));
+                if (nm_streq(method_name, "RequestPassphraseWithOptions")) {
+                    GVariantBuilder builder;
+
+                    g_variant_builder_init(&builder, G_VARIANT_TYPE("a{sv}"));
+                    g_variant_builder_add(&builder,
+                                          "{sv}",
+                                          "Store",
+                                          g_variant_new_boolean(psk_should_store_in_iwd(
+                                              s_wireless_sec)));
+                    g_dbus_method_invocation_return_value(
+                        invocation,
+                        g_variant_new("(s@a{sv})", psk, g_variant_builder_end(&builder)));
+                } else
+                    g_dbus_method_invocation_return_value(invocation, g_variant_new("(s)", psk));
                 *replied = TRUE;
                 return TRUE;
             }
