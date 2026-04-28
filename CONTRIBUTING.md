@@ -221,8 +221,7 @@ you can look at [this](contrib/fedora/REQUIRED_PACKAGES)
 script and [here](contrib/debian/REQUIRED_PACKAGES)
 is a script for Debian/Ubuntu.
 
-meson is the recommended way for building NetworkManager. You can configure
-the build environment using the `meson setup` command:
+You can configure the build environment using the `meson setup` command:
 
 ```
 meson setup build/ $CONFIGURE_OPTIONS
