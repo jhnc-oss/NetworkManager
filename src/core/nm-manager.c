@@ -492,23 +492,6 @@ _version_info_get(void)
 /*****************************************************************************/
 
 static gboolean
-_connection_is_vpn(NMConnection *connection)
-{
-    const char *type;
-
-    type = nm_connection_get_connection_type(connection);
-    if (type)
-        return nm_streq(type, NM_SETTING_VPN_SETTING_NAME);
-
-    /* we have an incomplete (invalid) connection at hand. That can only
-     * happen during AddAndActivate. Determine whether it's VPN type based
-     * on the existence of a [vpn] section. */
-    return !!nm_connection_get_setting_vpn(connection);
-}
-
-/*****************************************************************************/
-
-static gboolean
 concheck_enabled(NMManager *self, gboolean *out_changed)
 {
     NMManagerPrivate *priv = NM_MANAGER_GET_PRIVATE(self);
@@ -4530,7 +4513,7 @@ _device_get_activation_prio(NMDevice *device)
     g_return_val_if_reached(DEVICE_ACTIVATION_PRIO_UNAVAILABLE);
 }
 
-static NMDevice *
+NMDevice *
 nm_manager_get_best_device_for_connection(NMManager            *self,
                                           NMSettingsConnection *sett_conn,
                                           NMConnection         *connection,
@@ -6121,7 +6104,7 @@ _new_active_connection(NMManager             *self,
     nm_assert((!incompl_conn) ^ (!sett_conn));
     nm_assert(NM_IS_AUTH_SUBJECT(subject));
     nm_assert(is_vpn
-              == _connection_is_vpn(sett_conn ? nm_settings_connection_get_connection(sett_conn)
+              == nm_connection_is_vpn(sett_conn ? nm_settings_connection_get_connection(sett_conn)
                                               : incompl_conn));
     nm_assert(is_vpn || NM_IS_DEVICE(device));
     nm_assert(!nm_streq0(specific_object, "/"));
@@ -6350,7 +6333,7 @@ nm_manager_activate_connection(NMManager             *self,
 
     g_return_val_if_fail(NM_IS_MANAGER(self), NULL);
     g_return_val_if_fail(NM_IS_SETTINGS_CONNECTION(sett_conn), NULL);
-    is_vpn = _connection_is_vpn(nm_settings_connection_get_connection(sett_conn));
+    is_vpn = nm_connection_is_vpn(nm_settings_connection_get_connection(sett_conn));
     g_return_val_if_fail(is_vpn || NM_IS_DEVICE(device), NULL);
     g_return_val_if_fail(!error || !*error, NULL);
     nm_assert(!nm_streq0(specific_object, "/"));
@@ -6502,7 +6485,7 @@ find_device_for_activation(NMManager            *self,
     if (!connection)
         connection = nm_settings_connection_get_connection(sett_conn);
 
-    is_vpn = _connection_is_vpn(connection);
+    is_vpn = nm_connection_is_vpn(connection);
 
     if (*out_device) {
         device = *out_device;
