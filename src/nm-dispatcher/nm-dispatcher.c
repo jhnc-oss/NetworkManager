@@ -34,6 +34,15 @@
 
 typedef struct Request Request;
 
+/* pre-up/pre-down requests scan only pre-up.d/ resp. pre-down.d/, so they
+ * never share script files with regular dispatcher.d/ requests and must not
+ * serialize against them. We keep two independent queues. */
+typedef enum {
+    REQ_QUEUE_NORMAL,
+    REQ_QUEUE_PRE,
+    _REQ_QUEUE_NUM,
+} RequestQueueIdx;
+
 typedef struct {
     GDBusConnection *dbus_connection;
     GCancellable    *quit_cancellable;
@@ -50,8 +59,8 @@ typedef struct {
 
     gboolean persist;
 
-    Request *current_request;
-    GQueue  *requests_waiting;
+    Request *current_request[_REQ_QUEUE_NUM];
+    GQueue  *requests_waiting[_REQ_QUEUE_NUM];
     int      num_requests_pending;
 
     bool exit_with_failure;
@@ -253,43 +262,67 @@ _idle_timeout_restart(void)
 
 /*****************************************************************************/
 
+static RequestQueueIdx
+request_queue_idx(const Request *request)
+{
+    if (NM_IN_STRSET(request->action,
+                     NMD_ACTION_PRE_UP,
+                     NMD_ACTION_VPN_PRE_UP,
+                     NMD_ACTION_PRE_DOWN,
+                     NMD_ACTION_VPN_PRE_DOWN))
+        return REQ_QUEUE_PRE;
+    return REQ_QUEUE_NORMAL;
+}
+
 /**
- * next_request:
+ * next_request_enqueue:
  *
- * @request: (nullable): the request to set as next. If %NULL, dequeue the next
- * waiting request. Otherwise, try to set the given request.
+ * Try to set @request as the currently active request in its queue. The
+ * current request is a request that has at least one "wait" script;
+ * requests with only "no-wait" scripts are handled right away and not
+ * enqueued. Pre-up/pre-down requests use a separate queue from regular
+ * requests so a slow regular script cannot stall connection activation.
  *
- * Sets the currently active request (@current_request). The current request
- * is a request that has at least on "wait" script, because requests that only
- * consist of "no-wait" scripts are handled right away and not enqueued to
- * @requests_waiting nor set as @current_request.
- *
- * Returns: %TRUE, if there was currently not request in process and it set
- * a new request as current.
+ * Returns: %TRUE if the matching queue was idle and @request was set as
+ * current; %FALSE if it was appended to @requests_waiting instead.
  */
 static gboolean
-next_request(Request *request)
+next_request_enqueue(Request *request)
 {
-    if (request) {
-        if (gl.current_request) {
-            g_queue_push_tail(gl.requests_waiting, request);
-            return FALSE;
-        }
-    } else {
-        /* when calling next_request() without explicit @request, we always
-         * forcefully clear @current_request. That one is certainly
-         * handled already. */
-        gl.current_request = NULL;
+    RequestQueueIdx qidx = request_queue_idx(request);
 
-        request = g_queue_pop_head(gl.requests_waiting);
-        if (!request)
-            return FALSE;
+    if (gl.current_request[qidx]) {
+        g_queue_push_tail(gl.requests_waiting[qidx], request);
+        return FALSE;
     }
 
     _LOG_R_D(request, "start running ordered scripts...");
+    gl.current_request[qidx] = request;
+    return TRUE;
+}
 
-    gl.current_request = request;
+/**
+ * next_request_advance:
+ *
+ * Forcefully clears the current request of the given queue (it must be
+ * fully handled at this point) and pops the next waiting request as
+ * current.
+ *
+ * Returns: %TRUE if there was a waiting request that became current.
+ */
+static gboolean
+next_request_advance(RequestQueueIdx qidx)
+{
+    Request *request;
 
+    gl.current_request[qidx] = NULL;
+
+    request = g_queue_pop_head(gl.requests_waiting[qidx]);
+    if (!request)
+        return FALSE;
+
+    _LOG_R_D(request, "start running ordered scripts...");
+    gl.current_request[qidx] = request;
     return TRUE;
 }
 
@@ -420,14 +453,21 @@ complete_request(Request *request)
 
     _LOG_R_T(request, "completed (%u scripts)", request->scripts->len);
 
-    if (gl.current_request == request)
-        gl.current_request = NULL;
+    {
+        RequestQueueIdx qidx = request_queue_idx(request);
+
+        if (gl.current_request[qidx] == request)
+            gl.current_request[qidx] = NULL;
+    }
 
     request_free(request);
 
     nm_assert(gl.num_requests_pending > 0);
     if (--gl.num_requests_pending <= 0) {
-        nm_assert(!gl.current_request && !g_queue_peek_head(gl.requests_waiting));
+        nm_assert(!gl.current_request[REQ_QUEUE_NORMAL]);
+        nm_assert(!gl.current_request[REQ_QUEUE_PRE]);
+        nm_assert(!g_queue_peek_head(gl.requests_waiting[REQ_QUEUE_NORMAL]));
+        nm_assert(!g_queue_peek_head(gl.requests_waiting[REQ_QUEUE_PRE]));
         _idle_timeout_restart();
     }
 }
@@ -435,8 +475,9 @@ complete_request(Request *request)
 static void
 complete_script(ScriptInfo *script)
 {
-    Request *request = script->request;
-    gboolean wait    = script->wait;
+    Request        *request = script->request;
+    gboolean        wait    = script->wait;
+    RequestQueueIdx qidx    = request_queue_idx(request);
 
     if (script->pid != -1 || script->stdout_fd != -1) {
         /* Wait that process has terminated and stdout is closed */
@@ -454,7 +495,7 @@ complete_script(ScriptInfo *script)
             return;
     }
 
-    nm_assert(!wait || gl.current_request == request);
+    nm_assert(!wait || gl.current_request[qidx] == request);
 
     /* Try to complete the request. @request will be possibly free'd,
      * making @script and @request a dangling pointer. */
@@ -463,32 +504,34 @@ complete_script(ScriptInfo *script)
     if (!wait) {
         /* this was a "no-wait" script. We either completed the request,
          * or there is nothing to do. Especially, there is no need to
-         * queue the next_request() -- because no-wait scripts don't block
+         * queue next_request_advance() -- because no-wait scripts don't block
          * requests. However, if this was the last "no-wait" script and
          * there are "wait" scripts ready to run, launch them.
          */
-        if (gl.current_request == request && gl.current_request->num_scripts_nowait == 0) {
-            if (dispatch_one_script(gl.current_request))
+        if (gl.current_request[qidx] == request
+            && gl.current_request[qidx]->num_scripts_nowait == 0) {
+            if (dispatch_one_script(gl.current_request[qidx]))
                 return;
 
-            complete_request(gl.current_request);
+            complete_request(gl.current_request[qidx]);
         } else
             return;
     } else {
         /* if the script is a "wait" script, we already tried above to
          * dispatch the next script. As we didn't do that, it means we
          * just completed the last script of @request and we can continue
-         * with the next request...
+         * with the next request in the same queue...
          *
          * Also, it cannot be that there is another request currently being
-         * processed because only requests with "wait" scripts can become
-         * @current_request. As there can only be one "wait" script running
-         * at any time, it means complete_request() above completed @request. */
-        nm_assert(!gl.current_request);
+         * processed in this queue because only requests with "wait" scripts
+         * can become @current_request. As there can only be one "wait" script
+         * running at any time per queue, it means complete_request() above
+         * completed @request. */
+        nm_assert(!gl.current_request[qidx]);
     }
 
-    while (next_request(NULL)) {
-        request = gl.current_request;
+    while (next_request_advance(qidx)) {
+        request = gl.current_request[qidx];
 
         if (dispatch_one_script(request))
             return;
@@ -497,7 +540,7 @@ complete_script(ScriptInfo *script)
          * now, or when all pending "no-wait" scripts return. */
         complete_request(request);
 
-        /* We can immediately start next_request(), because our current
+        /* We can immediately start next_request_advance(), because our current
          * @request has obviously no more "wait" scripts either.
          * Repeat... */
     }
@@ -1090,21 +1133,23 @@ _handle_action(GDBusMethodInvocation *invocation, GVariant *parameters, gboolean
 
     if (num_nowait < request->scripts->len) {
         /* The request has at least one wait script.
-         * Try next_request() to schedule the request for
+         * Try next_request_enqueue() to schedule the request for
          * execution. This either enqueues the request or
-         * sets it as gl.current_request. */
-        if (next_request(request)) {
-            /* @request is now @current_request. Go ahead and
+         * sets it as gl.current_request[qidx]. */
+        if (next_request_enqueue(request)) {
+            /* @request is now @current_request[qidx]. Go ahead and
              * schedule the first wait script. */
             if (!dispatch_one_script(request)) {
+                RequestQueueIdx qidx = request_queue_idx(request);
+
                 /* If that fails, we might be already finished with the
                  * request. Try complete_request(). */
                 complete_request(request);
 
-                if (next_request(NULL)) {
-                    /* As @request was successfully scheduled as next_request(), there is no
+                if (next_request_advance(qidx)) {
+                    /* As @request was successfully scheduled, there is no
                      * other request in queue that can be scheduled afterwards. Assert against
-                     * that, but call next_request() to clear current_request. */
+                     * that, but call next_request_advance() to clear current_request[qidx]. */
                     g_assert_not_reached();
                 }
             }
@@ -1114,8 +1159,8 @@ _handle_action(GDBusMethodInvocation *invocation, GVariant *parameters, gboolean
          * the request right away (we might have failed to schedule any
          * of the scripts). It will be either completed now, or later
          * when the pending scripts return.
-         * We don't enqueue it to gl.requests_waiting.
-         * There is no need to handle next_request(), because @request is
+         * We don't enqueue it to gl.requests_waiting[].
+         * There is no need to handle next_request_advance(), because @request is
          * not the current request anyway and does not interfere with requests
          * that have any "wait" scripts. */
         complete_request(request);
@@ -1237,7 +1282,7 @@ _bus_register_service(void)
     };
     gs_free_error GError            *error = NULL;
     NMDBusConnectionCallBlockingData data  = {
-         .result = NULL,
+        .result = NULL,
     };
     gs_unref_variant GVariant *ret = NULL;
     guint32                    ret_val;
@@ -1418,26 +1463,26 @@ _initial_setup(int *p_argc, char ***p_argv, GError **error)
     GOptionContext *opt_ctx;
     gboolean        arg_debug = FALSE;
     GOptionEntry    entries[] = {{
-                                  "debug",
-                                  0,
-                                  0,
-                                  G_OPTION_ARG_NONE,
-                                  &arg_debug,
-                                  "Output to console rather than syslog",
-                                  NULL,
-                              },
+                                     "debug",
+                                     0,
+                                     0,
+                                     G_OPTION_ARG_NONE,
+                                     &arg_debug,
+                                     "Output to console rather than syslog",
+                                     NULL,
+                                 },
                                  {
-                                  "persist",
-                                  0,
-                                  0,
-                                  G_OPTION_ARG_NONE,
-                                  &gl.persist,
-                                  "Don't quit after a short timeout",
-                                  NULL,
-                              },
+                                     "persist",
+                                     0,
+                                     0,
+                                     G_OPTION_ARG_NONE,
+                                     &gl.persist,
+                                     "Don't quit after a short timeout",
+                                     NULL,
+                                 },
                                  {
-                                  NULL,
-                              }};
+                                     NULL,
+                                 }};
     gboolean        success;
 
     gl.log_stdout  = FALSE;
@@ -1510,7 +1555,8 @@ main(int argc, char **argv)
 
     _LOG_X_D("dbus: unique name: %s", g_dbus_connection_get_unique_name(gl.dbus_connection));
 
-    gl.requests_waiting = g_queue_new();
+    gl.requests_waiting[REQ_QUEUE_NORMAL] = g_queue_new();
+    gl.requests_waiting[REQ_QUEUE_PRE]    = g_queue_new();
 
     _idle_timeout_restart();
 
@@ -1551,7 +1597,8 @@ done:
                                             nm_steal_int(&gl.service_regist_id));
     }
 
-    nm_clear_pointer(&gl.requests_waiting, g_queue_free);
+    nm_clear_pointer(&gl.requests_waiting[REQ_QUEUE_NORMAL], g_queue_free);
+    nm_clear_pointer(&gl.requests_waiting[REQ_QUEUE_PRE], g_queue_free);
 
     nm_clear_g_source_inst(&gl.source_idle_timeout);
 
