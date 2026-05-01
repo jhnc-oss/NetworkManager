@@ -1751,6 +1751,20 @@ _mgr_configs_data_construct(NMDnsManager *self)
             has_default_route_explicit || (priority < 0 && has_default_route_auto);
         ip_data->domains.has_default_route =
             ip_data->domains.has_default_route_exclusive || has_default_route_auto;
+        /* * Heuristic: If this is a VPN and it has no specific search or routing
+         * domains, it would normally be ignored by systemd-resolved unless it
+         * has a default route.
+         *
+         * When 'never-default' is TRUE (split-tunnel), we force 'has_default_route'
+         * here to ensure NM pushes these DNS servers to resolved. This allows
+         * resolved to perform parallel queries across both the physical and VPN
+         * links, ensuring internal hostnames can still be resolved without
+         * breaking global internet connectivity.
+         */
+        if (ip_data->ip_config_type == NM_DNS_IP_CONFIG_TYPE_VPN
+            && !nm_l3_config_data_get_searches(ip_data->l3cd, ip_data->addr_family, &num)
+            && !nm_l3_config_data_get_domains(ip_data->l3cd, ip_data->addr_family, &num))
+            ip_data->domains.has_default_route = TRUE;
 
         {
             gs_free char *str1 = NULL;
