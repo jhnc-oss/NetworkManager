@@ -4078,6 +4078,7 @@ test_connection_diff_a_only(void)
              {NM_SETTING_IP_CONFIG_IGNORE_AUTO_DNS, NM_SETTING_DIFF_RESULT_IN_A},
              {NM_SETTING_IP4_CONFIG_DHCP_CLIENT_ID, NM_SETTING_DIFF_RESULT_IN_A},
              {NM_SETTING_IP_CONFIG_DHCP_TIMEOUT, NM_SETTING_DIFF_RESULT_IN_A},
+             {NM_SETTING_IP_CONFIG_DHCP_REQUEST_OPTIONS, NM_SETTING_DIFF_RESULT_IN_A},
              {NM_SETTING_IP_CONFIG_DHCP_SEND_HOSTNAME, NM_SETTING_DIFF_RESULT_IN_A},
              {NM_SETTING_IP_CONFIG_DHCP_SEND_HOSTNAME_V2, NM_SETTING_DIFF_RESULT_IN_A},
              {NM_SETTING_IP_CONFIG_DHCP_HOSTNAME, NM_SETTING_DIFF_RESULT_IN_A},
@@ -5435,6 +5436,24 @@ test_setting_ip4_changed_signal(void)
     ASSERT_UNCHANGED(nm_setting_ip_config_remove_dns_option(s_ip4, 1));
     g_test_assert_expected_messages();
 
+    ASSERT_CHANGED(nm_setting_ip_config_add_dhcp_request_option(s_ip4, 43));
+    ASSERT_CHANGED(nm_setting_ip_config_remove_dhcp_request_option(s_ip4, 0));
+
+    ASSERT_CHANGED(nm_setting_ip_config_add_dhcp_request_option(s_ip4, 43));
+    ASSERT_UNCHANGED(nm_setting_ip_config_remove_dhcp_request_option_by_value(s_ip4, 44));
+    ASSERT_CHANGED(nm_setting_ip_config_remove_dhcp_request_option_by_value(s_ip4, 43));
+
+    NMTST_EXPECT_LIBNM_CRITICAL(
+        NMTST_G_RETURN_MSG(idx < nm_g_array_len(priv->dhcp_request_options)));
+    ASSERT_UNCHANGED(nm_setting_ip_config_remove_dhcp_request_option(s_ip4, 1));
+    g_test_assert_expected_messages();
+
+    ASSERT_CHANGED(nm_setting_ip_config_clear_dhcp_request_options(s_ip4));
+
+    nm_setting_ip_config_add_dhcp_request_option(s_ip4, 69);
+    ASSERT_CHANGED(nm_setting_ip_config_clear_dhcp_request_options(s_ip4));
+    ASSERT_UNCHANGED(nm_setting_ip_config_clear_dhcp_request_options(s_ip4));
+
     nm_ip_address_unref(addr);
     nm_ip_route_unref(route);
     g_object_unref(connection);
@@ -5531,6 +5550,24 @@ test_setting_ip6_changed_signal(void)
 
     nm_setting_ip_config_add_route(s_ip6, route);
     ASSERT_CHANGED(nm_setting_ip_config_clear_routes(s_ip6));
+
+    ASSERT_CHANGED(nm_setting_ip_config_add_dhcp_request_option(s_ip6, 17));
+    ASSERT_CHANGED(nm_setting_ip_config_remove_dhcp_request_option(s_ip6, 0));
+
+    ASSERT_CHANGED(nm_setting_ip_config_add_dhcp_request_option(s_ip6, 17));
+    ASSERT_UNCHANGED(nm_setting_ip_config_remove_dhcp_request_option_by_value(s_ip6, 18));
+    ASSERT_CHANGED(nm_setting_ip_config_remove_dhcp_request_option_by_value(s_ip6, 17));
+
+    NMTST_EXPECT_LIBNM_CRITICAL(
+        NMTST_G_RETURN_MSG(idx < nm_g_array_len(priv->dhcp_request_options)));
+    ASSERT_UNCHANGED(nm_setting_ip_config_remove_dhcp_request_option(s_ip6, 1));
+    g_test_assert_expected_messages();
+
+    ASSERT_CHANGED(nm_setting_ip_config_clear_dhcp_request_options(s_ip6));
+
+    nm_setting_ip_config_add_dhcp_request_option(s_ip6, 65535);
+    ASSERT_CHANGED(nm_setting_ip_config_clear_dhcp_request_options(s_ip6));
+    ASSERT_UNCHANGED(nm_setting_ip_config_clear_dhcp_request_options(s_ip6));
 
     nm_ip_address_unref(addr);
     nm_ip_route_unref(route);
