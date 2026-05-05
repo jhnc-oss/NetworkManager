@@ -67,6 +67,9 @@ USE AT YOUR OWN RISK.  NOT RECOMMENDED FOR PRODUCTION USE!
 * IPv6 interfaces that receive PD via DHCPv6 are considered healthy without a
   non-temporary address. The delegated prefix can be used via an interface
   configured with "ipv6.method: shared"
+* Add new ipv4.dhcp-request-options,
+  which allows you to request additional DHCP options (e.g. vendor options)
+  to be used by custom dispatcher scripts.
 
 =============================================
 NetworkManager-1.56
