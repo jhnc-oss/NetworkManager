@@ -466,7 +466,8 @@ add_pair_ciphers(NMWifiAP *ap, NMSettingWirelessSecurity *sec)
 
     /* If no ciphers are specified, that means "all" WPA ciphers */
     if (num == 0) {
-        flags |= NM_802_11_AP_SEC_PAIR_TKIP | NM_802_11_AP_SEC_PAIR_CCMP;
+        flags |= NM_802_11_AP_SEC_PAIR_TKIP | NM_802_11_AP_SEC_PAIR_CCMP
+                 | NM_802_11_AP_SEC_PAIR_GCMP_256;
     } else {
         for (i = 0; i < num; i++) {
             const char *cipher = nm_setting_wireless_security_get_pairwise(sec, i);
@@ -475,6 +476,8 @@ add_pair_ciphers(NMWifiAP *ap, NMSettingWirelessSecurity *sec)
                 flags |= NM_802_11_AP_SEC_PAIR_TKIP;
             else if (!strcmp(cipher, "ccmp"))
                 flags |= NM_802_11_AP_SEC_PAIR_CCMP;
+            else if (!strcmp(cipher, "gcmp-256"))
+                flags |= NM_802_11_AP_SEC_PAIR_GCMP_256;
         }
     }
 
@@ -494,7 +497,8 @@ add_group_ciphers(NMWifiAP *ap, NMSettingWirelessSecurity *sec)
 
     /* If no ciphers are specified, that means "all" WPA ciphers */
     if (num == 0) {
-        flags |= NM_802_11_AP_SEC_GROUP_TKIP | NM_802_11_AP_SEC_GROUP_CCMP;
+        flags |= NM_802_11_AP_SEC_GROUP_TKIP | NM_802_11_AP_SEC_GROUP_CCMP
+                 | NM_802_11_AP_SEC_GROUP_GCMP_256;
     } else {
         for (i = 0; i < num; i++) {
             const char *cipher = nm_setting_wireless_security_get_group(sec, i);
@@ -507,6 +511,8 @@ add_group_ciphers(NMWifiAP *ap, NMSettingWirelessSecurity *sec)
                 flags |= NM_802_11_AP_SEC_GROUP_TKIP;
             else if (!strcmp(cipher, "ccmp"))
                 flags |= NM_802_11_AP_SEC_GROUP_CCMP;
+            else if (!strcmp(cipher, "gcmp-256"))
+                flags |= NM_802_11_AP_SEC_GROUP_GCMP_256;
         }
     }
 
@@ -912,7 +918,8 @@ nm_wifi_ap_class_init(NMWifiAPClass *ap_class)
      | NM_802_11_AP_SEC_GROUP_WEP104 | NM_802_11_AP_SEC_GROUP_TKIP | NM_802_11_AP_SEC_GROUP_CCMP \
      | NM_802_11_AP_SEC_KEY_MGMT_PSK | NM_802_11_AP_SEC_KEY_MGMT_802_1X                          \
      | NM_802_11_AP_SEC_KEY_MGMT_SAE | NM_802_11_AP_SEC_KEY_MGMT_OWE                             \
-     | NM_802_11_AP_SEC_KEY_MGMT_OWE_TM | NM_802_11_AP_SEC_KEY_MGMT_EAP_SUITE_B_192)
+     | NM_802_11_AP_SEC_KEY_MGMT_OWE_TM | NM_802_11_AP_SEC_KEY_MGMT_EAP_SUITE_B_192              \
+     | NM_802_11_AP_SEC_PAIR_GCMP_256 | NM_802_11_AP_SEC_GROUP_GCMP_256)
 
     GObjectClass      *object_class      = G_OBJECT_CLASS(ap_class);
     NMDBusObjectClass *dbus_object_class = NM_DBUS_OBJECT_CLASS(ap_class);

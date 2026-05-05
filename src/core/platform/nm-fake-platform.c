@@ -890,7 +890,7 @@ wifi_get_capabilities(NMPlatform *platform, int ifindex, _NMDeviceWifiCapabiliti
         *caps = (_NM_WIFI_DEVICE_CAP_CIPHER_WEP40 | _NM_WIFI_DEVICE_CAP_CIPHER_WEP104
                  | _NM_WIFI_DEVICE_CAP_CIPHER_TKIP | _NM_WIFI_DEVICE_CAP_CIPHER_CCMP
                  | _NM_WIFI_DEVICE_CAP_WPA | _NM_WIFI_DEVICE_CAP_RSN | _NM_WIFI_DEVICE_CAP_AP
-                 | _NM_WIFI_DEVICE_CAP_ADHOC);
+                 | _NM_WIFI_DEVICE_CAP_ADHOC | _NM_WIFI_DEVICE_CAP_CIPHER_GCMP_256);
     }
     return TRUE;
 }

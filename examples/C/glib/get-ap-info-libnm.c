@@ -33,6 +33,8 @@ ap_wpa_rsn_flags_to_string(guint32 flags)
         flags_str[i++] = g_strdup("pair_tkip");
     if (flags & NM_802_11_AP_SEC_PAIR_CCMP)
         flags_str[i++] = g_strdup("pair_ccmp");
+    if (flags & NM_802_11_AP_SEC_PAIR_GCMP_256)
+        flags_str[i++] = g_strdup("pair_gcmp_256");
     if (flags & NM_802_11_AP_SEC_GROUP_WEP40)
         flags_str[i++] = g_strdup("group_wpe40");
     if (flags & NM_802_11_AP_SEC_GROUP_WEP104)
@@ -41,6 +43,8 @@ ap_wpa_rsn_flags_to_string(guint32 flags)
         flags_str[i++] = g_strdup("group_tkip");
     if (flags & NM_802_11_AP_SEC_GROUP_CCMP)
         flags_str[i++] = g_strdup("group_ccmp");
+    if (flags & NM_802_11_AP_SEC_GROUP_GCMP_256)
+        flags_str[i++] = g_strdup("group_gcmp_256");
     if (flags & NM_802_11_AP_SEC_KEY_MGMT_PSK)
         flags_str[i++] = g_strdup("psk");
     if (flags & NM_802_11_AP_SEC_KEY_MGMT_802_1X)

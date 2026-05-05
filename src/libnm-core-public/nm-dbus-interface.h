@@ -330,25 +330,27 @@ typedef enum /*< flags >*/ {
  * @NM_WIFI_DEVICE_CAP_FREQ_6GHZ: device supports 6GHz frequencies. Since: 1.46.
  * @NM_WIFI_DEVICE_CAP_MESH: device supports acting as a mesh point. Since: 1.20.
  * @NM_WIFI_DEVICE_CAP_IBSS_RSN: device supports WPA2/RSN in an IBSS network. Since: 1.22.
+ * @NM_WIFI_DEVICE_CAP_CIPHER_GCMP_256: device supports AES/GCMP-256 encryption. Since: 1.58.
  *
  * 802.11 specific device encryption and authentication capabilities.
  **/
 typedef enum /*< flags >*/ {
-    NM_WIFI_DEVICE_CAP_NONE          = 0x00000000,
-    NM_WIFI_DEVICE_CAP_CIPHER_WEP40  = 0x00000001,
-    NM_WIFI_DEVICE_CAP_CIPHER_WEP104 = 0x00000002,
-    NM_WIFI_DEVICE_CAP_CIPHER_TKIP   = 0x00000004,
-    NM_WIFI_DEVICE_CAP_CIPHER_CCMP   = 0x00000008,
-    NM_WIFI_DEVICE_CAP_WPA           = 0x00000010,
-    NM_WIFI_DEVICE_CAP_RSN           = 0x00000020,
-    NM_WIFI_DEVICE_CAP_AP            = 0x00000040,
-    NM_WIFI_DEVICE_CAP_ADHOC         = 0x00000080,
-    NM_WIFI_DEVICE_CAP_FREQ_VALID    = 0x00000100,
-    NM_WIFI_DEVICE_CAP_FREQ_2GHZ     = 0x00000200,
-    NM_WIFI_DEVICE_CAP_FREQ_5GHZ     = 0x00000400,
-    NM_WIFI_DEVICE_CAP_FREQ_6GHZ     = 0x00000800,
-    NM_WIFI_DEVICE_CAP_MESH          = 0x00001000,
-    NM_WIFI_DEVICE_CAP_IBSS_RSN      = 0x00002000,
+    NM_WIFI_DEVICE_CAP_NONE            = 0x00000000,
+    NM_WIFI_DEVICE_CAP_CIPHER_WEP40    = 0x00000001,
+    NM_WIFI_DEVICE_CAP_CIPHER_WEP104   = 0x00000002,
+    NM_WIFI_DEVICE_CAP_CIPHER_TKIP     = 0x00000004,
+    NM_WIFI_DEVICE_CAP_CIPHER_CCMP     = 0x00000008,
+    NM_WIFI_DEVICE_CAP_WPA             = 0x00000010,
+    NM_WIFI_DEVICE_CAP_RSN             = 0x00000020,
+    NM_WIFI_DEVICE_CAP_AP              = 0x00000040,
+    NM_WIFI_DEVICE_CAP_ADHOC           = 0x00000080,
+    NM_WIFI_DEVICE_CAP_FREQ_VALID      = 0x00000100,
+    NM_WIFI_DEVICE_CAP_FREQ_2GHZ       = 0x00000200,
+    NM_WIFI_DEVICE_CAP_FREQ_5GHZ       = 0x00000400,
+    NM_WIFI_DEVICE_CAP_FREQ_6GHZ       = 0x00000800,
+    NM_WIFI_DEVICE_CAP_MESH            = 0x00001000,
+    NM_WIFI_DEVICE_CAP_IBSS_RSN        = 0x00002000,
+    NM_WIFI_DEVICE_CAP_CIPHER_GCMP_256 = 0x00004000,
 } NMDeviceWifiCapabilities;
 
 /**
@@ -398,6 +400,10 @@ typedef enum /*< underscore_name=nm_802_11_ap_flags, flags >*/ {
  * transition mode is supported. Since: 1.26.
  * @NM_802_11_AP_SEC_KEY_MGMT_EAP_SUITE_B_192: WPA3 Enterprise Suite-B 192 bit mode
  * is supported. Since: 1.30.
+ * @NM_802_11_AP_SEC_PAIR_GCMP_256: AES/GCMP-256 is supported for pairwise/unicast
+ * encryption. Since: 1.58.
+ * @NM_802_11_AP_SEC_GROUP_GCMP_256: AES/GCMP-256 is supported for group/broadcast
+ * encryption. Since: 1.58.
  *
  * 802.11 access point security and authentication flags.  These flags describe
  * the current security requirements of an access point as determined from the
@@ -419,6 +425,8 @@ typedef enum /*< underscore_name=nm_802_11_ap_security_flags, flags >*/ {
     NM_802_11_AP_SEC_KEY_MGMT_OWE             = 0x00000800,
     NM_802_11_AP_SEC_KEY_MGMT_OWE_TM          = 0x00001000,
     NM_802_11_AP_SEC_KEY_MGMT_EAP_SUITE_B_192 = 0x00002000,
+    NM_802_11_AP_SEC_PAIR_GCMP_256            = 0x00004000,
+    NM_802_11_AP_SEC_GROUP_GCMP_256           = 0x00008000,
 } NM80211ApSecurityFlags;
 
 /**

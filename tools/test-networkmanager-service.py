@@ -1301,6 +1301,8 @@ class WifiAp(ExportedObj):
             rsnf = rsnf | NM_AP_FLAGS.GROUP_TKIP
             rsnf = rsnf | NM_AP_FLAGS.GROUP_CCMP
             rsnf = rsnf | NM_AP_FLAGS.KEY_MGMT_PSK
+            rsnf = rsnf | NM_AP_FLAGS.PAIR_GCMP_256
+            rsnf = rsnf | NM_AP_FLAGS.GROUP_GCMP_256
         if freq is None:
             freq = 2412
         if bssid is None:

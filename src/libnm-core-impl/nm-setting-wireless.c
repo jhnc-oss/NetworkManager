@@ -277,6 +277,12 @@ nm_setting_wireless_ap_security_compatible(NMSettingWireless         *s_wireless
                 break;
             if ((found = match_cipher(cipher, "ccmp", ap_wpa, ap_rsn, NM_802_11_AP_SEC_PAIR_CCMP)))
                 break;
+            if ((found = match_cipher(cipher,
+                                      "gcmp-256",
+                                      ap_wpa,
+                                      ap_rsn,
+                                      NM_802_11_AP_SEC_PAIR_GCMP_256)))
+                break;
         }
         if (!found && num)
             return FALSE;
@@ -297,6 +303,12 @@ nm_setting_wireless_ap_security_compatible(NMSettingWireless         *s_wireless
             if ((found = match_cipher(cipher, "tkip", ap_wpa, ap_rsn, NM_802_11_AP_SEC_GROUP_TKIP)))
                 break;
             if ((found = match_cipher(cipher, "ccmp", ap_wpa, ap_rsn, NM_802_11_AP_SEC_GROUP_CCMP)))
+                break;
+            if ((found = match_cipher(cipher,
+                                      "gcmp-256",
+                                      ap_wpa,
+                                      ap_rsn,
+                                      NM_802_11_AP_SEC_GROUP_GCMP_256)))
                 break;
         }
         if (!found && num)

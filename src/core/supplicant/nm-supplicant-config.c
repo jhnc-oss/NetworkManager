@@ -1562,6 +1562,10 @@ nm_supplicant_config_add_setting_8021x(NMSupplicantConfig *self,
         g_string_append_printf(phase1, "%stls_disable_tlsv1_3=0", (phase1->len ? " " : ""));
     else if (NM_FLAGS_HAS(phase1_auth_flags, NM_SETTING_802_1X_AUTH_FLAGS_TLS_1_3_DISABLE))
         g_string_append_printf(phase1, "%stls_disable_tlsv1_3=1", (phase1->len ? " " : ""));
+    if (NM_FLAGS_HAS(phase1_auth_flags, NM_SETTING_802_1X_AUTH_FLAGS_TLS_SUITE_B_DISABLE))
+        g_string_append_printf(phase1, "%stls_suiteb=0", (phase1->len ? " " : ""));
+    else if (NM_FLAGS_HAS(phase1_auth_flags, NM_SETTING_802_1X_AUTH_FLAGS_TLS_SUITE_B_ENABLE))
+        g_string_append_printf(phase1, "%stls_suiteb=1", (phase1->len ? " " : ""));
     if (NM_FLAGS_HAS(phase1_auth_flags, NM_SETTING_802_1X_AUTH_FLAGS_TLS_DISABLE_TIME_CHECKS))
         g_string_append_printf(phase1, "%stls_disable_time_checks=1", (phase1->len ? " " : ""));
 
