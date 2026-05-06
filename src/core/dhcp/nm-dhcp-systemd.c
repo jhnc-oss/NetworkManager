@@ -92,6 +92,7 @@ lease_to_ip6_config(NMDhcpSystemd *self, sd_dhcp6_lease *lease, gint32 ts, GErro
     const char                             *s;
     nm_auto_free_gstring GString           *str = NULL;
     int                                     num, i;
+    gboolean                                has_any_addresses = FALSE;
 
     nm_assert(lease);
 
@@ -107,8 +108,29 @@ lease_to_ip6_config(NMDhcpSystemd *self, sd_dhcp6_lease *lease, gint32 ts, GErro
                               NM_DHCP_OPTION_DHCP6_NM_IAID,
                               nm_dhcp_iaid_to_hexstr(config->v6.iaid, iaid_buf));
 
+    {
+        struct in6_addr prefix;
+        uint8_t         prefix_len;
+
+        nm_gstring_prepare(&str);
+        sd_dhcp6_lease_pd_iterator_reset(lease);
+        while (!sd_dhcp6_lease_get_pd_prefix(lease, &prefix, &prefix_len)) {
+            nm_gstring_add_space_delimiter(str);
+            nm_inet6_ntop(&prefix, addr_str);
+            g_string_append_printf(str, "%s/%u", addr_str, prefix_len);
+            sd_dhcp6_lease_pd_iterator_next(lease);
+        }
+        if (str->len > 0) {
+            nm_dhcp_option_add_option(options,
+                                      TRUE,
+                                      AF_INET6,
+                                      NM_DHCP_OPTION_DHCP6_IA_PD,
+                                      str->str);
+            has_any_addresses = TRUE;
+        }
+    }
+
     if (!config->v6.info_only) {
-        gboolean has_any_addresses = FALSE;
         uint64_t lft_pref;
         uint64_t lft_valid;
 
@@ -164,27 +186,6 @@ lease_to_ip6_config(NMDhcpSystemd *self, sd_dhcp6_lease *lease, gint32 ts, GErro
                                   AF_INET6,
                                   NM_DHCP_OPTION_DHCP6_DNS_SERVERS,
                                   str->str);
-    }
-
-    {
-        struct in6_addr prefix;
-        uint8_t         prefix_len;
-
-        nm_gstring_prepare(&str);
-        sd_dhcp6_lease_pd_iterator_reset(lease);
-        while (!sd_dhcp6_lease_get_pd_prefix(lease, &prefix, &prefix_len)) {
-            nm_gstring_add_space_delimiter(str);
-            nm_inet6_ntop(&prefix, addr_str);
-            g_string_append_printf(str, "%s/%u", addr_str, prefix_len);
-            sd_dhcp6_lease_pd_iterator_next(lease);
-        }
-        if (str->len > 0) {
-            nm_dhcp_option_add_option(options,
-                                      TRUE,
-                                      AF_INET6,
-                                      NM_DHCP_OPTION_DHCP6_IA_PD,
-                                      str->str);
-        }
     }
 
     num = sd_dhcp6_lease_get_domains(lease, &domains);
