@@ -752,10 +752,66 @@ nm_supplicant_config_add_setting_wireless(NMSupplicantConfig *self,
     return TRUE;
 }
 
+/* Maximum number of seen BSSIDs we treat as evidence of a single Wi-Fi 7
+ * MLO AP. 802.11be defines tri-link (2.4 + 5 + 6 GHz) as the maximum;
+ * beyond 3 the heuristic does not apply and the multi-AP path runs.
+ */
+#define _BGSCAN_MLO_HEURISTIC_MAX_BSSIDS 3u
+
+/* _seen_bssids_look_like_mlo_per_link:
+ *
+ * Heuristic returning TRUE when @seen_bssids appears to be the per-link
+ * BSSIDs of one Wi-Fi 7 MLO-capable AP rather than several physical APs.
+ *
+ * In MLO, one physical AP advertises one BSSID per link (2 for 5+6 GHz,
+ * 3 for tri-link). Vendors observed in the wild derive the per-link
+ * BSSIDs as locally-administered virtual MAC addresses sharing octets
+ * 1-4 with each other. The MLD address itself may or may not be in the
+ * seen-bssids list.
+ *
+ * Real multi-AP ESSes (mesh, enterprise) typically use vendor-assigned
+ * MACs (LAA bit unset) and unrelated address blocks per AP, so the
+ * heuristic should not false-positive on them.
+ */
+static gboolean
+_seen_bssids_look_like_mlo_per_link(const char *const *seen_bssids, guint num_seen_bssids)
+{
+    guint8 common_octets_1_to_4[4];
+    guint  i;
+
+    if (num_seen_bssids < 2u || num_seen_bssids > _BGSCAN_MLO_HEURISTIC_MAX_BSSIDS)
+        return FALSE;
+    if (!seen_bssids)
+        return FALSE;
+
+    for (i = 0; i < num_seen_bssids; i++) {
+        const char *bssid = seen_bssids[i];
+        guint8      addr[6];
+
+        if (!bssid || !nm_utils_hwaddr_aton(bssid, addr, sizeof(addr)))
+            return FALSE;
+
+        /* Locally-administered bit is bit 1 (value 0x02) of the first octet. */
+        if (!(addr[0] & 0x02u))
+            return FALSE;
+
+        /* Octets 1-4 must be identical across all seen BSSIDs (only octets
+         * 0 and 5 vary across per-link MAC addresses for the same MLD).
+         */
+        if (i == 0)
+            memcpy(common_octets_1_to_4, &addr[1], 4);
+        else if (memcmp(common_octets_1_to_4, &addr[1], 4) != 0)
+            return FALSE;
+    }
+
+    return TRUE;
+}
+
 gboolean
 nm_supplicant_config_add_bgscan(NMSupplicantConfig *self,
                                 NMConnection       *connection,
                                 guint               num_seen_bssids,
+                                const char *const  *seen_bssids,
                                 GError            **error)
 {
     NMSettingWireless         *s_wifi;
@@ -792,8 +848,12 @@ nm_supplicant_config_add_bgscan(NMSupplicantConfig *self,
      * in which we want more reliable roaming between APs. Thus trigger scans
      * when the signal is still somewhat OK so we have an up-to-date roam
      * candidate list when the signal gets bad.
+     *
+     * Exception: when @seen_bssids look like the per-link addresses of a
+     * single WiFi-7 MLO AP (locally-administered bit set + shared octets
+     * 1-4), keep the long interval. See _seen_bssids_look_like_mlo_per_link().
      */
-    if (num_seen_bssids > 1u
+    if ((num_seen_bssids > 1u && !_seen_bssids_look_like_mlo_per_link(seen_bssids, num_seen_bssids))
         || ((s_wsec = nm_connection_get_setting_wireless_security(connection))
             && NM_IN_STRSET(nm_setting_wireless_security_get_key_mgmt(s_wsec),
                             "ieee8021x",
