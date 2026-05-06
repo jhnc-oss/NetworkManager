@@ -129,7 +129,7 @@ build_supplicant_config(NMConnection  *connection,
     g_assert_no_error(error);
     g_assert(success);
 
-    success = nm_supplicant_config_add_bgscan(config, connection, 0, &error);
+    success = nm_supplicant_config_add_bgscan(config, connection, 0, NULL, &error);
     g_assert_no_error(error);
     g_assert(success);
 
@@ -914,6 +914,124 @@ test_suppl_cap_mask(void)
 
 /*****************************************************************************/
 
+static void
+test_wifi_bgscan_mlo_dedup(void)
+{
+    /* The bgscan multi-AP heuristic should treat per-link BSSIDs of one
+     * Wi-Fi 7 MLO AP as a single AP (long-interval bgscan) and treat
+     * vendor-assigned multi-AP BSSIDs as multi-AP (short-interval bgscan).
+     */
+    gs_unref_object NMConnection *connection  = NULL;
+    const unsigned char           ssid_data[] = {'M', 'L', 'O', '-', 't', 'e', 's', 't'};
+    gs_unref_bytes GBytes        *ssid        = g_bytes_new(ssid_data, sizeof(ssid_data));
+
+    /* Per-link addresses for one MLO AP: LAA bit set on first octet,
+     * octets 1-4 shared, only octet 0 and 5 vary across links.
+     * Captured from a TP-Link Deco BE63 mesh.
+     */
+    const char *mlo_seen[] = {
+        "f6:75:0c:74:4b:75",
+        "ca:75:0c:74:4b:70",
+        NULL,
+    };
+
+    /* Real multi-AP setup: vendor-assigned MACs (UAA bit unset) with
+     * unrelated address blocks per AP.
+     */
+    const char *multi_ap_seen[] = {
+        "00:11:22:33:44:55",
+        "aa:bb:cc:dd:ee:ff",
+        NULL,
+    };
+
+    /* All-LAA but octets 1-4 do not match: must NOT be treated as MLO. */
+    const char *laa_unrelated_seen[] = {
+        "f6:75:0c:74:4b:75",
+        "f2:99:88:77:66:55",
+        NULL,
+    };
+
+    /* Tri-link MLO: 3 BSSIDs all matching the per-link MAC pattern.
+     * 802.11be defines tri-link (2.4 + 5 + 6 GHz) as the maximum;
+     * the heuristic's upper bound is 3.
+     */
+    const char *mlo_seen_3link[] = {
+        "f6:75:0c:74:4b:75",
+        "ca:75:0c:74:4b:70",
+        "e2:75:0c:74:4b:80",
+        NULL,
+    };
+
+    connection = new_basic_connection("MLO Wi-Fi", ssid, NULL);
+    g_object_set(nm_connection_get_setting_wireless(connection),
+                 NM_SETTING_WIRELESS_BAND,
+                 "a",
+                 NULL);
+
+    {
+        gs_unref_object NMSupplicantConfig *config = NULL;
+        GError                             *error  = NULL;
+        gboolean                            success;
+
+        config =
+            nm_supplicant_config_new(NM_SUPPL_CAP_MASK_NONE,
+                                     nm_utils_get_connection_first_permissions_user(connection));
+        NMTST_EXPECT_NM_INFO("Config: added 'bgscan' value 'simple:30:-70:86400'*");
+        success = nm_supplicant_config_add_bgscan(config, connection, 2, mlo_seen, &error);
+        g_assert_no_error(error);
+        g_assert(success);
+        g_test_assert_expected_messages();
+    }
+
+    {
+        gs_unref_object NMSupplicantConfig *config = NULL;
+        GError                             *error  = NULL;
+        gboolean                            success;
+
+        config =
+            nm_supplicant_config_new(NM_SUPPL_CAP_MASK_NONE,
+                                     nm_utils_get_connection_first_permissions_user(connection));
+        NMTST_EXPECT_NM_INFO("Config: added 'bgscan' value 'simple:30:-65:300'*");
+        success = nm_supplicant_config_add_bgscan(config, connection, 2, multi_ap_seen, &error);
+        g_assert_no_error(error);
+        g_assert(success);
+        g_test_assert_expected_messages();
+    }
+
+    {
+        gs_unref_object NMSupplicantConfig *config = NULL;
+        GError                             *error  = NULL;
+        gboolean                            success;
+
+        config =
+            nm_supplicant_config_new(NM_SUPPL_CAP_MASK_NONE,
+                                     nm_utils_get_connection_first_permissions_user(connection));
+        NMTST_EXPECT_NM_INFO("Config: added 'bgscan' value 'simple:30:-65:300'*");
+        success =
+            nm_supplicant_config_add_bgscan(config, connection, 2, laa_unrelated_seen, &error);
+        g_assert_no_error(error);
+        g_assert(success);
+        g_test_assert_expected_messages();
+    }
+
+    {
+        gs_unref_object NMSupplicantConfig *config = NULL;
+        GError                             *error  = NULL;
+        gboolean                            success;
+
+        config =
+            nm_supplicant_config_new(NM_SUPPL_CAP_MASK_NONE,
+                                     nm_utils_get_connection_first_permissions_user(connection));
+        NMTST_EXPECT_NM_INFO("Config: added 'bgscan' value 'simple:30:-70:86400'*");
+        success = nm_supplicant_config_add_bgscan(config, connection, 3, mlo_seen_3link, &error);
+        g_assert_no_error(error);
+        g_assert(success);
+        g_test_assert_expected_messages();
+    }
+}
+
+/*****************************************************************************/
+
 NMTST_DEFINE();
 
 int
@@ -930,6 +1048,7 @@ main(int argc, char **argv)
     g_test_add_func("/supplicant-config/wifi-sae", test_wifi_sae);
     g_test_add_func("/supplicant-config/test_suppl_cap_mask", test_suppl_cap_mask);
     g_test_add_func("/supplicant-config/wifi-eap-suite-b-192", test_wifi_eap_suite_b_generation);
+    g_test_add_func("/supplicant-config/wifi-bgscan-mlo-dedup", test_wifi_bgscan_mlo_dedup);
 
     return g_test_run();
 }
