@@ -1256,7 +1256,7 @@ typedef enum /*< flags >*/ {
  *
  * Values for the SetManaged() D-Bus call of a device and nm_device_set_managed_async().
  *
- * Since: 1.58
+ * Since: 1.58, 1.56.2
  */
 typedef enum {
     NM_DEVICE_MANAGED_NO    = 0,

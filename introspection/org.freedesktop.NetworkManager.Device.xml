@@ -176,7 +176,7 @@
         the keyfile.unmanaged-devices setting in NetworkManager.conf. Changes to
         this value are not persistent and lost after NetworkManager restart.
 
-        DEPRECATED: 1.58: Use the SetManaged method instead, which supports
+        DEPRECATED: 1.58, 1.56.2: Use the SetManaged method instead, which supports
         additional features like persisting the state to disk
     -->
     <property name="Managed" type="b" access="readwrite"/>
