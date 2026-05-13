@@ -62,6 +62,19 @@ G_DEFINE_ABSTRACT_TYPE(NMDnsPlugin, nm_dns_plugin, G_TYPE_OBJECT)
     }                                                                                           \
     G_STMT_END
 
+NM_UTILS_LOOKUP_STR_DEFINE(
+    _rc_manager_to_string,
+    NMDnsManagerResolvConfManager,
+    NM_UTILS_LOOKUP_DEFAULT_WARN(NULL),
+    NM_UTILS_LOOKUP_STR_ITEM(NM_DNS_MANAGER_RESOLV_CONF_MAN_AUTO, "auto"),
+    NM_UTILS_LOOKUP_STR_ITEM(NM_DNS_MANAGER_RESOLV_CONF_MAN_UNKNOWN, "unknown"),
+    NM_UTILS_LOOKUP_STR_ITEM(NM_DNS_MANAGER_RESOLV_CONF_MAN_UNMANAGED, "unmanaged"),
+    NM_UTILS_LOOKUP_STR_ITEM(NM_DNS_MANAGER_RESOLV_CONF_MAN_IMMUTABLE, "immutable"),
+    NM_UTILS_LOOKUP_STR_ITEM(NM_DNS_MANAGER_RESOLV_CONF_MAN_SYMLINK, "symlink"),
+    NM_UTILS_LOOKUP_STR_ITEM(NM_DNS_MANAGER_RESOLV_CONF_MAN_FILE, "file"),
+    NM_UTILS_LOOKUP_STR_ITEM(NM_DNS_MANAGER_RESOLV_CONF_MAN_RESOLVCONF, "resolvconf"),
+    NM_UTILS_LOOKUP_STR_ITEM(NM_DNS_MANAGER_RESOLV_CONF_MAN_NETCONFIG, "netconfig"), );
+
 /*****************************************************************************/
 
 gboolean
