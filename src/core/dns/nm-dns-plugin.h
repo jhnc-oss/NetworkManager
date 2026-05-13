@@ -100,6 +100,12 @@ typedef struct {
      */
     bool is_caching : 1;
 
+    guint8 hash[NM_UTILS_CHECKSUM_LENGTH_SHA1];
+
+    void (*checksum)(const NML3ConfigData *l3cd,
+                     GChecksum            *sum,
+                     int                   addr_family,
+                     NMDnsIPConfigType     dns_ip_config_type);
 } NMDnsPluginClass;
 
 GType nm_dns_plugin_get_type(void);
@@ -108,7 +114,17 @@ gboolean nm_dns_plugin_is_caching(NMDnsPlugin *self);
 
 const char *nm_dns_plugin_get_name(NMDnsPlugin *self);
 
+const guint8 *nm_dns_plugin_get_hash(NMDnsPlugin *self);
+
+void nm_dns_plugin_set_hash(NMDnsPlugin *self, guint8 *hash);
+
 gboolean nm_dns_plugin_update(NMDnsPlugin *self, NMDnsUpdateData *update_data, GError **error);
+
+void nm_dns_plugin_checksum(NMDnsPlugin          *self,
+                            const NML3ConfigData *l3cd,
+                            GChecksum            *sum,
+                            int                   addr_family,
+                            NMDnsIPConfigType     dns_ip_config_type);
 
 void nm_dns_plugin_stop(NMDnsPlugin *self);
 

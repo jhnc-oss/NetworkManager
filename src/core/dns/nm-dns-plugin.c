@@ -103,6 +103,37 @@ nm_dns_plugin_get_name(NMDnsPlugin *self)
     return klass->plugin_name;
 }
 
+const guint8 *
+nm_dns_plugin_get_hash(NMDnsPlugin *self)
+{
+    NMDnsPluginClass *klass;
+
+    g_return_val_if_fail(NM_IS_DNS_PLUGIN(self), NULL);
+
+    klass = NM_DNS_PLUGIN_GET_CLASS(self);
+
+    return klass->hash;
+}
+
+void
+nm_dns_plugin_set_hash(NMDnsPlugin *self, guint8 *hash)
+{
+    NMDnsPluginClass *klass;
+
+    klass = NM_DNS_PLUGIN_GET_CLASS(self);
+    memcpy(klass->hash, hash, NM_UTILS_CHECKSUM_LENGTH_SHA1);
+}
+
+void
+nm_dns_plugin_checksum(NMDnsPlugin          *self,
+                       const NML3ConfigData *l3cd,
+                       GChecksum            *sum,
+                       int                   addr_family,
+                       NMDnsIPConfigType     dns_ip_config_type)
+{
+    NM_DNS_PLUGIN_GET_CLASS(self)->checksum(l3cd, sum, addr_family, dns_ip_config_type);
+}
+
 void
 nm_dns_plugin_stop(NMDnsPlugin *self)
 {
