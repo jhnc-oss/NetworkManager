@@ -119,8 +119,8 @@ typedef struct {
 
     NMDnsManagerResolvConfManager rc_manager;
     char                         *mode;
-    NMDnsPlugin                  *sd_resolve_plugin;
-    NMDnsPlugin                  *plugin;
+    NMDnsPlugin                  *sd_resolved_backup_plugin;
+    NMDnsPlugin                  *custom_plugin;
 
     gulong update_changed_signal_id_sd;
     gulong update_changed_signal_id;
@@ -258,9 +258,9 @@ _update_pending_detect(NMDnsManager *self)
 {
     NMDnsManagerPrivate *priv = NM_DNS_MANAGER_GET_PRIVATE(self);
 
-    if (priv->plugin && nm_dns_plugin_get_update_pending(priv->plugin))
+    if (priv->custom_plugin && nm_dns_plugin_get_update_pending(priv->custom_plugin))
         return TRUE;
-    if (priv->sd_resolve_plugin && nm_dns_plugin_get_update_pending(priv->sd_resolve_plugin))
+    if (priv->sd_resolved_backup_plugin && nm_dns_plugin_get_update_pending(priv->sd_resolved_backup_plugin))
         return TRUE;
     return FALSE;
 }
@@ -508,11 +508,11 @@ nm_dns_manager_get_systemd_resolved(NMDnsManager *self)
 
     priv = NM_DNS_MANAGER_GET_PRIVATE(self);
 
-    if (priv->sd_resolve_plugin) {
-        nm_assert(!NM_IS_DNS_SYSTEMD_RESOLVED(priv->plugin));
-        plugin = priv->sd_resolve_plugin;
-    } else if (NM_IS_DNS_SYSTEMD_RESOLVED(priv->plugin))
-        plugin = priv->plugin;
+    if (priv->sd_resolved_backup_plugin) {
+        nm_assert(!NM_IS_DNS_SYSTEMD_RESOLVED(priv->custom_plugin));
+        plugin = priv->sd_resolved_backup_plugin;
+    } else if (NM_IS_DNS_SYSTEMD_RESOLVED(priv->custom_plugin))
+        plugin = priv->custom_plugin;
 
     if (plugin && nm_dns_systemd_resolved_is_running(NM_DNS_SYSTEMD_RESOLVED(plugin)))
         return plugin;
@@ -1842,11 +1842,11 @@ update_dns(NMDnsManager *self, gboolean no_caching, gboolean force_emit, GError 
                               &nis_servers,
                               &nis_domain);
 
-    if (priv->plugin || priv->sd_resolve_plugin)
+    if (priv->custom_plugin || priv->sd_resolved_backup_plugin)
         _mgr_configs_data_construct(self);
 
-    if (priv->sd_resolve_plugin) {
-        nm_dns_plugin_update(priv->sd_resolve_plugin,
+    if (priv->sd_resolved_backup_plugin) {
+        nm_dns_plugin_update(priv->sd_resolved_backup_plugin,
                              global_config,
                              _mgr_get_ip_data_lst_head(self),
                              priv->hostdomain,
@@ -1854,8 +1854,8 @@ update_dns(NMDnsManager *self, gboolean no_caching, gboolean force_emit, GError 
     }
 
     /* Let any plugins do their thing first */
-    if (priv->plugin) {
-        NMDnsPlugin          *plugin       = priv->plugin;
+    if (priv->custom_plugin) {
+        NMDnsPlugin          *plugin       = priv->custom_plugin;
         const char           *plugin_name  = nm_dns_plugin_get_name(plugin);
         gs_free_error GError *plugin_error = NULL;
 
@@ -1903,7 +1903,7 @@ plugin_skip:;
         gboolean    need_edns0;
         gboolean    need_trust;
 
-        if (NM_IS_DNS_SYSTEMD_RESOLVED(priv->plugin)) {
+        if (NM_IS_DNS_SYSTEMD_RESOLVED(priv->custom_plugin)) {
             /* systemd-resolved uses a different link-local address */
             lladdr = "127.0.0.53";
         }
@@ -2330,7 +2330,7 @@ nm_dns_manager_stop(NMDnsManager *self)
      * done any DNS updates yet, there's no reason to touch resolv.conf
      * on shutdown.
      */
-    if (priv->dns_touched && priv->plugin && NM_IS_DNS_DNSMASQ(priv->plugin)) {
+    if (priv->dns_touched && priv->custom_plugin && NM_IS_DNS_DNSMASQ(priv->custom_plugin)) {
         gs_free_error GError *error = NULL;
 
         if (!update_dns(self, TRUE, FALSE, &error))
@@ -2352,10 +2352,10 @@ _clear_plugin(NMDnsManager *self)
     priv->plugin_ratelimit.ts = 0;
     nm_clear_g_source(&priv->plugin_ratelimit.timer);
 
-    if (priv->plugin) {
-        nm_clear_g_signal_handler(priv->plugin, &priv->update_changed_signal_id);
-        nm_dns_plugin_stop(priv->plugin);
-        g_clear_object(&priv->plugin);
+    if (priv->custom_plugin) {
+        nm_clear_g_signal_handler(priv->custom_plugin, &priv->update_changed_signal_id);
+        nm_dns_plugin_stop(priv->custom_plugin);
+        g_clear_object(&priv->custom_plugin);
         return TRUE;
     }
     return FALSE;
@@ -2366,10 +2366,10 @@ _clear_sd_resolved_plugin(NMDnsManager *self)
 {
     NMDnsManagerPrivate *priv = NM_DNS_MANAGER_GET_PRIVATE(self);
 
-    if (priv->sd_resolve_plugin) {
-        nm_clear_g_signal_handler(priv->sd_resolve_plugin, &priv->update_changed_signal_id_sd);
-        nm_dns_plugin_stop(priv->sd_resolve_plugin);
-        g_clear_object(&priv->sd_resolve_plugin);
+    if (priv->sd_resolved_backup_plugin) {
+        nm_clear_g_signal_handler(priv->sd_resolved_backup_plugin, &priv->update_changed_signal_id_sd);
+        nm_dns_plugin_stop(priv->sd_resolved_backup_plugin);
+        g_clear_object(&priv->sd_resolved_backup_plugin);
         return TRUE;
     }
     return FALSE;
@@ -2548,23 +2548,23 @@ again:
     rc_manager = _check_resconf_immutable(rc_manager);
 
     if ((!mode && _resolvconf_resolved_managed()) || nm_streq0(mode, "systemd-resolved")) {
-        if (force_reload_plugin || !NM_IS_DNS_SYSTEMD_RESOLVED(priv->plugin)) {
+        if (force_reload_plugin || !NM_IS_DNS_SYSTEMD_RESOLVED(priv->custom_plugin)) {
             _clear_plugin(self);
-            priv->plugin   = nm_dns_systemd_resolved_new();
+            priv->custom_plugin   = nm_dns_systemd_resolved_new();
             plugin_changed = TRUE;
         }
         mode             = "systemd-resolved";
         systemd_resolved = FALSE;
     } else if (nm_streq0(mode, "dnsmasq")) {
-        if (force_reload_plugin || !NM_IS_DNS_DNSMASQ(priv->plugin)) {
+        if (force_reload_plugin || !NM_IS_DNS_DNSMASQ(priv->custom_plugin)) {
             _clear_plugin(self);
-            priv->plugin   = nm_dns_dnsmasq_new();
+            priv->custom_plugin   = nm_dns_dnsmasq_new();
             plugin_changed = TRUE;
         }
     } else if (nm_streq0(mode, "dnsconfd")) {
-        if (force_reload_plugin || !NM_IS_DNS_DNSCONFD(priv->plugin)) {
+        if (force_reload_plugin || !NM_IS_DNS_DNSCONFD(priv->custom_plugin)) {
             _clear_plugin(self);
-            priv->plugin   = nm_dns_dnsconfd_new();
+            priv->custom_plugin   = nm_dns_dnsconfd_new();
             plugin_changed = TRUE;
         }
     } else {
@@ -2607,8 +2607,8 @@ again:
     /* The systemd-resolved plugin is special. We typically always want to keep
      * systemd-resolved up to date even if the configured plugin is different. */
     if (systemd_resolved) {
-        if (!priv->sd_resolve_plugin) {
-            priv->sd_resolve_plugin  = nm_dns_systemd_resolved_new();
+        if (!priv->sd_resolved_backup_plugin) {
+            priv->sd_resolved_backup_plugin  = nm_dns_systemd_resolved_new();
             systemd_resolved_changed = TRUE;
         }
     } else if (_clear_sd_resolved_plugin(self))
@@ -2635,29 +2635,29 @@ again:
               (systemd_resolved ? ",systemd-resolved" : ""),
               _rc_manager_to_string(rc_manager),
               rc_manager_was_auto ? " (auto)" : "",
-              NM_PRINT_FMT_QUOTED(priv->plugin,
+              NM_PRINT_FMT_QUOTED(priv->custom_plugin,
                                   ", plugin=",
-                                  nm_dns_plugin_get_name(priv->plugin),
+                                  nm_dns_plugin_get_name(priv->custom_plugin),
                                   "",
                                   ""));
     }
 
-    if (plugin_changed && priv->plugin && priv->update_changed_signal_id == 0) {
-        priv->update_changed_signal_id = g_signal_connect(priv->plugin,
+    if (plugin_changed && priv->custom_plugin && priv->update_changed_signal_id == 0) {
+        priv->update_changed_signal_id = g_signal_connect(priv->custom_plugin,
                                                           NM_DNS_PLUGIN_UPDATE_PENDING_CHANGED,
                                                           G_CALLBACK(_update_pending_changed_cb),
                                                           self);
     }
 
-    if (systemd_resolved_changed && priv->sd_resolve_plugin
+    if (systemd_resolved_changed && priv->sd_resolved_backup_plugin
         && priv->update_changed_signal_id_sd == 0) {
-        priv->update_changed_signal_id_sd = g_signal_connect(priv->sd_resolve_plugin,
+        priv->update_changed_signal_id_sd = g_signal_connect(priv->sd_resolved_backup_plugin,
                                                              NM_DNS_PLUGIN_UPDATE_PENDING_CHANGED,
                                                              G_CALLBACK(_update_pending_changed_cb),
                                                              self);
     }
 
-    if (!NM_IS_DNS_DNSMASQ(priv->plugin))
+    if (!NM_IS_DNS_DNSMASQ(priv->custom_plugin))
         nm_dnsmasq_kill_external();
 
     _update_pending_maybe_changed(self);
