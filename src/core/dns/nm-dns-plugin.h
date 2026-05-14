@@ -132,4 +132,20 @@ gboolean nm_dns_plugin_get_update_pending(NMDnsPlugin *self);
 
 void _nm_dns_plugin_update_pending_maybe_changed(NMDnsPlugin *self);
 
+/*****************************************************************************/
+
+gboolean nm_dns_domain_is_routing(const char *domain);
+
+gboolean nm_dns_domain_is_valid(const char *domain,
+                                gboolean    reject_public_suffix,
+                                gboolean    assume_any_tld_is_public);
+
+void nm_dns_add_string_item(GPtrArray *array, const char *str, gboolean dup);
+
+void nm_dns_add_domains(GPtrArray            *array,
+                        int                   addr_family,
+                        const NML3ConfigData *l3cd,
+                        gboolean              include_routing,
+                        gboolean              dup);
+
 #endif /* __NM_DNS_PLUGIN_H__ */
