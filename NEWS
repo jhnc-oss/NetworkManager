@@ -64,6 +64,7 @@ USE AT YOUR OWN RISK.  NOT RECOMMENDED FOR PRODUCTION USE!
 * Allow configuring all bond options in nmtui by introducing a
   "other options" field, which covers options not already covered by a
   dedicated input field.
+* Respect the NM_UNMANAGED udev flag for cellular modems managed by ModemManager.
 
 =============================================
 NetworkManager-1.56
