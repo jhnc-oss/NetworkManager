@@ -110,6 +110,10 @@ typedef struct {
     NMIPAddr gw_internal;
     NMIPAddr gw_external;
 
+    /* Whether to skip adding the parent-device route to the VPN external
+     * gateway. Set when the PTP address equals the external gateway. */
+    bool skip_extern_gw_route : 1;
+
     /* Whether VPN auto-configuration is enabled in the connection profile for
      * this address family. */
     bool method_auto : 1;
@@ -1315,6 +1319,13 @@ _l3cfg_l3cd_gw_extern_update(NMVpnConnection *self)
         const int          addr_family = IS_IPv4 ? AF_INET : AF_INET6;
         NMSettingIPConfig *s_ip;
 
+        if (priv->ip_data_x[IS_IPv4].skip_extern_gw_route) {
+            _LOGD("IPv%c route to the external gateway skipped because peer address equals the "
+                  "external gateway",
+                  nm_utils_addr_family_to_char(addr_family));
+            continue;
+        }
+
         s_ip = nm_connection_get_setting_ip_config(_get_applied_connection(self), addr_family);
         if (s_ip && nm_setting_ip_config_get_auto_route_ext_gw(s_ip) == NM_TERNARY_FALSE) {
             _LOGD("IPv%c route to the external gateway have been deactivated via auto-route-ext-gw "
@@ -2078,6 +2089,11 @@ _dbus_signal_ip_config_cb(NMVpnConnection *self, int addr_family, GVariant *dict
         if (IS_IPv4)
             address.a4.peer_address = address.a4.address;
     }
+
+    priv->ip_data_x[IS_IPv4].skip_extern_gw_route =
+        nm_ip_addr_equal(addr_family,
+                         nm_platform_ip_address_get_peer_address(addr_family, &address.ax),
+                         &priv->ip_data_x[IS_IPv4].gw_external);
 
     if (g_variant_lookup(dict,
                          IS_IPv4 ? NM_VPN_PLUGIN_IP4_CONFIG_PREFIX
