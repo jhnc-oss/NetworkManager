@@ -809,8 +809,20 @@ nms_keyfile_plugin_add_connection(NMSKeyfilePlugin   *self,
     if (!reread || reread_same)
         nm_g_object_ref_set(&reread, connection);
 
-    nm_assert(_nm_connection_verify(reread, NULL) == NM_SETTING_VERIFY_SUCCESS);
-    nm_assert(nm_streq0(nm_connection_get_uuid(connection), nm_connection_get_uuid(reread)));
+    if (_nm_connection_verify(reread, NULL) != NM_SETTING_VERIFY_SUCCESS) {
+        _LOGW("commit: %s (%s) failed verification after write, removing",
+              nm_connection_get_uuid(connection),
+              nm_connection_get_id(connection));
+        if (storage_type == NMS_KEYFILE_STORAGE_TYPE_ETC && full_filename) {
+            if (unlink(full_filename) != 0)
+                _LOGW("commit: failed to unlink %s: %d", full_filename, errno);
+        }
+        g_set_error_literal(error,
+                            NM_SETTINGS_ERROR,
+                            NM_SETTINGS_ERROR_INVALID_CONNECTION,
+                            "connection is invalid");
+        return FALSE;
+    }
 
     nm_assert(full_filename && full_filename[0] == '/');
     nm_assert(!nm_sett_util_storages_lookup_by_filename(&priv->storages, full_filename));
