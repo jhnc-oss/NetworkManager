@@ -203,7 +203,7 @@ test_dhcp_with_hostname(void)
 
     s_ip6 = nm_connection_get_setting_ip6_config(connection);
     g_assert(s_ip6);
-    g_assert_cmpstr(nm_setting_ip_config_get_method(s_ip6), ==, NM_SETTING_IP6_CONFIG_METHOD_AUTO);
+    g_assert_cmpstr(nm_setting_ip_config_get_method(s_ip6), ==, NM_SETTING_IP6_CONFIG_METHOD_DHCP);
 }
 
 static void
@@ -253,9 +253,12 @@ test_dhcp_with_mtu(void)
 
         s_ip6 = nm_connection_get_setting_ip6_config(connection);
         g_assert(s_ip6);
+        /* ARGV0 ("dhcp6,dhcp") maps to dhcp4+dhcp6, so ipv6.method=dhcp.
+         * ARGV1 ("dhcp") maps to dhcp (IPv4 only), so ipv6.method=auto. */
         g_assert_cmpstr(nm_setting_ip_config_get_method(s_ip6),
                         ==,
-                        NM_SETTING_IP6_CONFIG_METHOD_AUTO);
+                        (i == 0) ? NM_SETTING_IP6_CONFIG_METHOD_DHCP
+                                 : NM_SETTING_IP6_CONFIG_METHOD_AUTO);
     }
 }
 
@@ -354,7 +357,7 @@ test_if_auto_with_mtu(void)
 
     s_ip6 = nm_connection_get_setting_ip6_config(connection);
     g_assert(s_ip6);
-    g_assert_cmpstr(nm_setting_ip_config_get_method(s_ip6), ==, NM_SETTING_IP6_CONFIG_METHOD_AUTO);
+    g_assert_cmpstr(nm_setting_ip_config_get_method(s_ip6), ==, NM_SETTING_IP6_CONFIG_METHOD_DHCP);
     g_assert(!nm_setting_ip_config_get_ignore_auto_dns(s_ip6));
     g_assert_cmpint(nm_setting_ip_config_get_required_timeout(s_ip6),
                     ==,
@@ -382,7 +385,7 @@ test_if_dhcp6(void)
 
     s_ip6 = nm_connection_get_setting_ip6_config(connection);
     g_assert(s_ip6);
-    g_assert_cmpstr(nm_setting_ip_config_get_method(s_ip6), ==, NM_SETTING_IP6_CONFIG_METHOD_AUTO);
+    g_assert_cmpstr(nm_setting_ip_config_get_method(s_ip6), ==, NM_SETTING_IP6_CONFIG_METHOD_DHCP);
     g_assert(!nm_setting_ip_config_get_ignore_auto_dns(s_ip6));
 }
 
@@ -1596,7 +1599,7 @@ test_team(void)
 
     s_ip6 = nm_connection_get_setting_ip6_config(connection);
     g_assert(s_ip6);
-    g_assert_cmpstr(nm_setting_ip_config_get_method(s_ip6), ==, NM_SETTING_IP6_CONFIG_METHOD_AUTO);
+    g_assert_cmpstr(nm_setting_ip_config_get_method(s_ip6), ==, NM_SETTING_IP6_CONFIG_METHOD_DHCP);
     g_assert(!nm_setting_ip_config_get_ignore_auto_dns(s_ip6));
     g_assert_cmpint(nm_setting_ip_config_get_num_dns(s_ip6), ==, 0);
     g_assert(!nm_setting_ip_config_get_gateway(s_ip6));
