@@ -174,7 +174,7 @@ verify_no_wpa(NMSettingWirelessSecurity *s_wsec, const char *tag, GError **error
         const char *pw;
 
         pw = nm_setting_wireless_security_get_pairwise(s_wsec, i);
-        if (!strcmp(pw, "tkip") || !strcmp(pw, "ccmp")) {
+        if (!strcmp(pw, "tkip") || !strcmp(pw, "ccmp") || !strcmp(pw, "gcmp-256")) {
             g_set_error(error,
                         NM_CONNECTION_ERROR,
                         NM_CONNECTION_ERROR_INVALID_PROPERTY,

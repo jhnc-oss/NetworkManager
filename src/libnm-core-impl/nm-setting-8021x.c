@@ -2945,7 +2945,10 @@ verify(NMSetting *setting, NMConnection *connection, GError **error)
                             | NM_SETTING_802_1X_AUTH_FLAGS_TLS_1_2_DISABLE)
         || NM_FLAGS_ALL(priv->phase1_auth_flags,
                         NM_SETTING_802_1X_AUTH_FLAGS_TLS_1_3_ENABLE
-                            | NM_SETTING_802_1X_AUTH_FLAGS_TLS_1_3_DISABLE)) {
+                            | NM_SETTING_802_1X_AUTH_FLAGS_TLS_1_3_DISABLE)
+        || NM_FLAGS_ALL(priv->phase1_auth_flags,
+                        NM_SETTING_802_1X_AUTH_FLAGS_TLS_SUITE_B_ENABLE
+                            | NM_SETTING_802_1X_AUTH_FLAGS_TLS_SUITE_B_DISABLE)) {
         g_set_error_literal(
             error,
             NM_CONNECTION_ERROR,

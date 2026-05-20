@@ -303,7 +303,7 @@ nm_setting_wireless_security_get_pairwise(NMSettingWirelessSecurity *setting, gu
 /**
  * nm_setting_wireless_security_add_pairwise:
  * @setting: the #NMSettingWirelessSecurity
- * @pairwise: the encryption algorithm to add, one of "tkip" or "ccmp"
+ * @pairwise: the encryption algorithm to add, one of "tkip", "ccmp" or "gcmp-256"
  *
  * Adds an encryption algorithm to the list of allowed pairwise encryption
  * algorithms.  If the list is not empty, then only access points that support
@@ -361,7 +361,7 @@ nm_setting_wireless_security_remove_pairwise(NMSettingWirelessSecurity *setting,
 /**
  * nm_setting_wireless_security_remove_pairwise_by_value:
  * @setting: the #NMSettingWirelessSecurity
- * @pairwise: the encryption algorithm to remove, one of "tkip" or "ccmp"
+ * @pairwise: the encryption algorithm to remove, one of "tkip", "ccmp" or "gcmp-256"
  *
  * Removes an encryption algorithm from the allowed pairwise encryption
  * algorithm list.
@@ -450,7 +450,7 @@ nm_setting_wireless_security_get_group(NMSettingWirelessSecurity *setting, guint
  * nm_setting_wireless_security_add_group:
  * @setting: the #NMSettingWirelessSecurity
  * @group: the encryption algorithm to add, one of "wep40", "wep104",
- * "tkip", or "ccmp"
+ * "tkip", "ccmp", or "gcmp-256"
  *
  * Adds an encryption algorithm to the list of allowed groupwise encryption
  * algorithms.  If the list is not empty, then only access points that support
@@ -509,7 +509,7 @@ nm_setting_wireless_security_remove_group(NMSettingWirelessSecurity *setting, gu
  * nm_setting_wireless_security_remove_group_by_value:
  * @setting: the #NMSettingWirelessSecurity
  * @group: the encryption algorithm to remove, one of "wep40", "wep104",
- * "tkip", or "ccmp"
+ * "tkip", "ccmp", or "gcmp-256"
  *
  * Removes an encryption algorithm from the allowed groupwise encryption
  * algorithm list.
@@ -897,8 +897,8 @@ verify(NMSetting *setting, NMConnection *connection, GError **error)
         {"none", "ieee8021x", "wpa-psk", "wpa-eap", "wpa-eap-suite-b-192", "sae", "owe", NULL};
     const char        *valid_auth_algs[] = {"open", "shared", "leap", NULL};
     const char        *valid_protos[]    = {"wpa", "rsn", NULL};
-    const char        *valid_pairwise[]  = {"tkip", "ccmp", NULL};
-    const char        *valid_groups[]    = {"wep40", "wep104", "tkip", "ccmp", NULL};
+    const char        *valid_pairwise[]  = {"tkip", "ccmp", "gcmp-256", NULL};
+    const char        *valid_groups[]    = {"wep40", "wep104", "tkip", "ccmp", "gcmp-256", NULL};
     NMSettingWireless *s_wifi;
     const char        *wifi_mode;
 
@@ -1504,12 +1504,12 @@ nm_setting_wireless_security_class_init(NMSettingWirelessSecurityClass *klass)
      * A list of pairwise encryption algorithms which prevents connections to
      * Wi-Fi networks that do not utilize one of the algorithms in the list.
      * For maximum compatibility leave this property empty.  Each list element
-     * may be one of "tkip" or "ccmp".
+     * may be one of "tkip", "ccmp" or "gcmp-256".
      **/
     /* ---ifcfg-rh---
      * property: pairwise
      * variable: CIPHER_PAIRWISE(+)
-     * values: CCMP, TKIP
+     * values: CCMP, TKIP, GCMP-256
      * description: Restrict pairwise encryption algorithms, specified as a space
      *   separated list.
      * ---end---
@@ -1526,12 +1526,12 @@ nm_setting_wireless_security_class_init(NMSettingWirelessSecurityClass *klass)
      * A list of group/broadcast encryption algorithms which prevents
      * connections to Wi-Fi networks that do not utilize one of the algorithms
      * in the list.  For maximum compatibility leave this property empty.  Each
-     * list element may be one of "wep40", "wep104", "tkip", or "ccmp".
+     * list element may be one of "wep40", "wep104", "tkip", "ccmp" or "gcmp-256".
      **/
     /* ---ifcfg-rh---
      * property: group
      * variable: CIPHER_GROUP(+)
-     * values: CCMP, TKIP, WEP40, WEP104
+     * values: CCMP, TKIP, WEP40, WEP104, GCMP-256
      * description: Restrict group/broadcast encryption algorithms, specified as a space
      *   separated list.
      * ---end---

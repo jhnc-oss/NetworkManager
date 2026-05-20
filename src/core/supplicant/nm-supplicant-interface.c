@@ -310,6 +310,8 @@ security_from_vardict(GVariant *security)
                 flags |= NM_802_11_AP_SEC_PAIR_TKIP;
             else if (NM_IN_STRSET(v, "ccmp"))
                 flags |= NM_802_11_AP_SEC_PAIR_CCMP;
+            else if (NM_IN_STRSET(v, "gcmp-256"))
+                flags |= NM_802_11_AP_SEC_PAIR_GCMP_256;
         }
         g_free(array);
     }
@@ -323,6 +325,8 @@ security_from_vardict(GVariant *security)
             flags |= NM_802_11_AP_SEC_GROUP_TKIP;
         else if (nm_streq(tmp, "ccmp"))
             flags |= NM_802_11_AP_SEC_GROUP_CCMP;
+        else if (nm_streq(tmp, "gcmp-256"))
+            flags |= NM_802_11_AP_SEC_GROUP_GCMP_256;
     }
 
     return flags;
