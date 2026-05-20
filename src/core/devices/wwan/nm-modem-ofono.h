@@ -25,6 +25,7 @@
 #define OFONO_DBUS_INTERFACE_CONNECTION_MANAGER "org.ofono.ConnectionManager"
 #define OFONO_DBUS_INTERFACE_CONNECTION_CONTEXT "org.ofono.ConnectionContext"
 #define OFONO_DBUS_INTERFACE_SIM_MANAGER        "org.ofono.SimManager"
+#define OFONO_DBUS_INTERFACE_RADIO_SETTINGS     "org.ofono.RadioSettings"
 
 #define OFONO_ERROR_IN_PROGRESS "org.ofono.Error.InProgress"
 
