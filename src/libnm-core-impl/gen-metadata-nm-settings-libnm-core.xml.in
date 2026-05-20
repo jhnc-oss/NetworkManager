@@ -1720,6 +1720,10 @@
                   dbus-type="as"
                   gprop-type="GStrv"
                   />
+        <property name="dhcp-request-options"
+                  dbus-type="au"
+                  gprop-type="GArray"
+                  />
         <property name="dhcp-send-hostname"
                   dbus-type="b"
                   gprop-type="gboolean"
@@ -1882,6 +1886,10 @@
         <property name="dhcp-reject-servers"
                   dbus-type="as"
                   gprop-type="GStrv"
+                  />
+        <property name="dhcp-request-options"
+                  dbus-type="au"
+                  gprop-type="GArray"
                   />
         <property name="dhcp-send-hostname"
                   dbus-type="b"
