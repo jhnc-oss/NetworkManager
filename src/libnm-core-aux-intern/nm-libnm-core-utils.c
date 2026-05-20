@@ -786,6 +786,15 @@ nm_dns_uri_parse(int addr_family, const char *str, NMDnsServer *dns, GError **er
                         str);
             return FALSE;
         }
+        /*check addr is zero*/
+        if (nm_ip_addr_is_null(dns->addr_family, &dns->addr)) {
+            g_set_error(error,
+                        NM_CONNECTION_ERROR,
+                        NM_CONNECTION_ERROR_INVALID_PROPERTY,
+                        _("\"%s\" is not a valid IP address"),
+                        str);
+            return FALSE;
+        }
 
         dns->servername = name;
         dns->scheme     = NM_DNS_URI_SCHEME_NONE;
@@ -882,6 +891,15 @@ nm_dns_uri_parse(int addr_family, const char *str, NMDnsServer *dns, GError **er
     }
 
     if (!nm_inet_parse_bin(addr_family, addr, &dns->addr_family, &dns->addr)) {
+        g_set_error(error,
+                    NM_CONNECTION_ERROR,
+                    NM_CONNECTION_ERROR_INVALID_PROPERTY,
+                    _("\"%s\" is not a valid IP address"),
+                    addr);
+        return FALSE;
+    }
+    /*check addr is zero*/
+    if (nm_ip_addr_is_null(dns->addr_family, &dns->addr)) {
         g_set_error(error,
                     NM_CONNECTION_ERROR,
                     NM_CONNECTION_ERROR_INVALID_PROPERTY,
