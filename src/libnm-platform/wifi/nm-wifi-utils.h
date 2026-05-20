@@ -10,6 +10,24 @@
 #include "libnm-platform/nm-netlink.h"
 #include "libnm-base/nm-base.h"
 
+#include <linux/nl80211.h>
+
+typedef enum {
+    NM_WIFI_IFACE_TYPE_UNSPEC     = 0, /* NL80211_IFTYPE_UNSPEC */
+    NM_WIFI_IFACE_TYPE_ADHOC      = NL80211_IFTYPE_ADHOC,
+    NM_WIFI_IFACE_TYPE_STATION    = NL80211_IFTYPE_STATION,
+    NM_WIFI_IFACE_TYPE_AP         = NL80211_IFTYPE_AP,
+    NM_WIFI_IFACE_TYPE_AP_VLAN    = NL80211_IFTYPE_AP_VLAN,
+    NM_WIFI_IFACE_TYPE_WDS        = NL80211_IFTYPE_WDS,
+    NM_WIFI_IFACE_TYPE_MONITOR    = NL80211_IFTYPE_MONITOR,
+    NM_WIFI_IFACE_TYPE_MESH_POINT = NL80211_IFTYPE_MESH_POINT,
+    NM_WIFI_IFACE_TYPE_P2P_CLIENT = NL80211_IFTYPE_P2P_CLIENT,
+    NM_WIFI_IFACE_TYPE_P2P_GO     = NL80211_IFTYPE_P2P_GO,
+    NM_WIFI_IFACE_TYPE_P2P_DEVICE = NL80211_IFTYPE_P2P_DEVICE,
+    NM_WIFI_IFACE_TYPE_OCB        = NL80211_IFTYPE_OCB,
+    NM_WIFI_IFACE_TYPE_NAN        = NL80211_IFTYPE_NAN,
+} NMWifiIfaceType;
+
 typedef struct NMWifiUtils NMWifiUtils;
 
 #define NM_TYPE_WIFI_UTILS (nm_wifi_utils_get_type())
@@ -68,5 +86,22 @@ guint32 nm_wifi_utils_get_mesh_channel(NMWifiUtils *data);
 gboolean nm_wifi_utils_set_mesh_channel(NMWifiUtils *data, guint32 channel);
 
 gboolean nm_wifi_utils_set_mesh_ssid(NMWifiUtils *data, const guint8 *ssid, gsize len);
+
+/**
+ * nm_wifi_utils_can_concurrent:
+ * @data: The NMWifiUtils instance
+ * @iftype1: First interface type (NL80211_IFTYPE_*)
+ * @iftype2: Second interface type (NL80211_IFTYPE_*)
+ * @out_num_channels: (out) (optional): Number of different channels allowed
+ *
+ * Check if two interface types can operate concurrently based on
+ * the hardware's interface combination capabilities.
+ *
+ * Returns: %TRUE if the combination is allowed, %FALSE otherwise.
+ */
+gboolean nm_wifi_utils_can_concurrent(NMWifiUtils    *data,
+                                      NMWifiIfaceType iftype1,
+                                      NMWifiIfaceType iftype2,
+                                      guint8         *out_num_channels);
 
 #endif /* __WIFI_UTILS_H__ */
