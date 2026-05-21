@@ -3079,6 +3079,8 @@ build_supplicant_config(NMDeviceWifi         *self,
     NMSettingWirelessSecurityPmf  pmf;
     NMSettingWirelessSecurityFils fils;
     NMTernary                     ap_isolation;
+    const char                   *seen_bssids[NM_SETTINGS_CONNECTION_SEEN_BSSIDS_MAX + 1];
+    guint                         num_seen_bssids;
 
     g_return_val_if_fail(priv->sup_iface, NULL);
 
@@ -3100,10 +3102,8 @@ build_supplicant_config(NMDeviceWifi         *self,
         goto error;
     }
 
-    if (!nm_supplicant_config_add_bgscan(config,
-                                         connection,
-                                         nm_settings_connection_get_num_seen_bssids(sett_conn),
-                                         error)) {
+    num_seen_bssids = nm_settings_connection_get_seen_bssids(sett_conn, seen_bssids);
+    if (!nm_supplicant_config_add_bgscan(config, connection, num_seen_bssids, seen_bssids, error)) {
         g_prefix_error(error, "bgscan: ");
         goto error;
     }
