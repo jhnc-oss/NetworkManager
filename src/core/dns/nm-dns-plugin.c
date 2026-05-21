@@ -12,8 +12,13 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 
+#if WITH_LIBPSL
+#include <libpsl.h>
+#endif
+
 #include "libnm-core-intern/nm-core-internal.h"
 #include "NetworkManagerUtils.h"
+#include "nm-l3-config-data.h"
 
 /*****************************************************************************/
 
@@ -62,22 +67,27 @@ G_DEFINE_ABSTRACT_TYPE(NMDnsPlugin, nm_dns_plugin, G_TYPE_OBJECT)
     }                                                                                           \
     G_STMT_END
 
+NM_UTILS_LOOKUP_STR_DEFINE(
+    _rc_manager_to_string,
+    NMDnsManagerResolvConfManager,
+    NM_UTILS_LOOKUP_DEFAULT_WARN(NULL),
+    NM_UTILS_LOOKUP_STR_ITEM(NM_DNS_MANAGER_RESOLV_CONF_MAN_AUTO, "auto"),
+    NM_UTILS_LOOKUP_STR_ITEM(NM_DNS_MANAGER_RESOLV_CONF_MAN_UNKNOWN, "unknown"),
+    NM_UTILS_LOOKUP_STR_ITEM(NM_DNS_MANAGER_RESOLV_CONF_MAN_UNMANAGED, "unmanaged"),
+    NM_UTILS_LOOKUP_STR_ITEM(NM_DNS_MANAGER_RESOLV_CONF_MAN_IMMUTABLE, "immutable"),
+    NM_UTILS_LOOKUP_STR_ITEM(NM_DNS_MANAGER_RESOLV_CONF_MAN_SYMLINK, "symlink"),
+    NM_UTILS_LOOKUP_STR_ITEM(NM_DNS_MANAGER_RESOLV_CONF_MAN_FILE, "file"),
+    NM_UTILS_LOOKUP_STR_ITEM(NM_DNS_MANAGER_RESOLV_CONF_MAN_RESOLVCONF, "resolvconf"),
+    NM_UTILS_LOOKUP_STR_ITEM(NM_DNS_MANAGER_RESOLV_CONF_MAN_NETCONFIG, "netconfig"), );
+
 /*****************************************************************************/
 
 gboolean
-nm_dns_plugin_update(NMDnsPlugin             *self,
-                     const NMGlobalDnsConfig *global_config,
-                     const CList             *ip_config_lst_head,
-                     const char              *hostdomain,
-                     GError                 **error)
+nm_dns_plugin_update(NMDnsPlugin *self, NMDnsUpdateData *update_data, GError **error)
 {
     g_return_val_if_fail(NM_DNS_PLUGIN_GET_CLASS(self)->update != NULL, FALSE);
 
-    return NM_DNS_PLUGIN_GET_CLASS(self)->update(self,
-                                                 global_config,
-                                                 ip_config_lst_head,
-                                                 hostdomain,
-                                                 error);
+    return NM_DNS_PLUGIN_GET_CLASS(self)->update(self, update_data, error);
 }
 
 gboolean
@@ -96,6 +106,37 @@ nm_dns_plugin_get_name(NMDnsPlugin *self)
     klass = NM_DNS_PLUGIN_GET_CLASS(self);
     nm_assert(klass->plugin_name);
     return klass->plugin_name;
+}
+
+const guint8 *
+nm_dns_plugin_get_hash(NMDnsPlugin *self)
+{
+    NMDnsPluginClass *klass;
+
+    g_return_val_if_fail(NM_IS_DNS_PLUGIN(self), NULL);
+
+    klass = NM_DNS_PLUGIN_GET_CLASS(self);
+
+    return klass->hash;
+}
+
+void
+nm_dns_plugin_set_hash(NMDnsPlugin *self, guint8 *hash)
+{
+    NMDnsPluginClass *klass;
+
+    klass = NM_DNS_PLUGIN_GET_CLASS(self);
+    memcpy(klass->hash, hash, NM_UTILS_CHECKSUM_LENGTH_SHA1);
+}
+
+void
+nm_dns_plugin_checksum(NMDnsPlugin          *self,
+                       const NML3ConfigData *l3cd,
+                       GChecksum            *sum,
+                       int                   addr_family,
+                       NMDnsIPConfigType     dns_ip_config_type)
+{
+    NM_DNS_PLUGIN_GET_CLASS(self)->checksum(l3cd, sum, addr_family, dns_ip_config_type);
 }
 
 void
@@ -181,6 +222,98 @@ _nm_dns_plugin_update_pending_maybe_changed(NMDnsPlugin *self)
           priv->update_pending ? "" : "not ");
 
     g_signal_emit(self, signals[UPDATE_PENDING_CHANGED], 0, (gboolean) priv->update_pending);
+}
+
+/*****************************************************************************/
+
+gboolean
+nm_dns_domain_is_routing(const char *domain)
+{
+    return domain[0] == '~';
+}
+
+gboolean
+nm_dns_domain_is_valid(const char *domain,
+                       gboolean    reject_public_suffix,
+                       gboolean    assume_any_tld_is_public)
+{
+    if (*domain == '\0')
+        return FALSE;
+
+    if (reject_public_suffix) {
+        int is_pub;
+
+#if !WITH_LIBPSL
+        is_pub = FALSE;
+#elif defined(PSL_TYPE_NO_STAR_RULE)
+        is_pub =
+            psl_is_public_suffix2(psl_builtin(),
+                                  domain,
+                                  assume_any_tld_is_public ? PSL_TYPE_ANY : PSL_TYPE_NO_STAR_RULE);
+#else
+        is_pub = psl_is_public_suffix(psl_builtin(), domain);
+#endif
+
+        if (is_pub)
+            return FALSE;
+    }
+
+    return TRUE;
+}
+
+void
+nm_dns_add_string_item(GPtrArray *array, const char *str, gboolean dup)
+{
+    int i;
+
+    g_return_if_fail(array != NULL);
+    g_return_if_fail(str != NULL);
+
+    for (i = 0; i < array->len; i++) {
+        const char *candidate = g_ptr_array_index(array, i);
+
+        if (candidate && nm_streq(candidate, str))
+            return;
+    }
+
+    g_ptr_array_add(array, dup ? g_strdup(str) : (gpointer) str);
+}
+
+void
+nm_dns_add_domains(GPtrArray            *array,
+                   int                   addr_family,
+                   const NML3ConfigData *l3cd,
+                   gboolean              include_routing,
+                   gboolean              dup)
+{
+    const char *const *domains;
+    const char *const *searches;
+    guint              num_domains;
+    guint              num_searches;
+    guint              i;
+    const char        *str;
+
+    domains  = nm_l3_config_data_get_domains(l3cd, addr_family, &num_domains);
+    searches = nm_l3_config_data_get_searches(l3cd, addr_family, &num_searches);
+
+    for (i = 0; i < num_searches; i++) {
+        str = searches[i];
+        if (!include_routing && nm_dns_domain_is_routing(str))
+            continue;
+        if (!nm_dns_domain_is_valid(nm_utils_parse_dns_domain(str, NULL), FALSE, TRUE))
+            continue;
+        nm_dns_add_string_item(array, str, dup);
+    }
+    if (num_domains > 1 || num_searches == 0) {
+        for (i = 0; i < num_domains; i++) {
+            str = domains[i];
+            if (!include_routing && nm_dns_domain_is_routing(str))
+                continue;
+            if (!nm_dns_domain_is_valid(nm_utils_parse_dns_domain(str, NULL), FALSE, TRUE))
+                continue;
+            nm_dns_add_string_item(array, str, dup);
+        }
+    }
 }
 
 /*****************************************************************************/
