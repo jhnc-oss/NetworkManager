@@ -1698,7 +1698,7 @@ nm_modem_broadband_class_init(NMModemBroadbandClass *klass)
     modem_class->stage3_ip_config_start                 = stage3_ip_config_start;
     modem_class->disconnect                             = disconnect;
     modem_class->deactivate_cleanup                     = deactivate_cleanup;
-    modem_class->set_mm_enabled                         = set_mm_enabled;
+    modem_class->set_enabled                            = set_mm_enabled;
     modem_class->get_user_pass                          = get_user_pass;
     modem_class->check_connection_compatible_with_modem = check_connection_compatible_with_modem;
     modem_class->complete_connection                    = complete_connection;
