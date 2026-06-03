@@ -1508,6 +1508,9 @@
                   format="integer"
                   values="0 - 2147483647"
                   special-values="default (0), infinity (2147483647)" />
+        <property name="dhcp-request-options"
+                  nmcli-description="Array of additional DHCP option numbers to request. This is intended to request additional DHCP options, which are handled by external components like dispatcher scripts. This property expects the options as numbers in base 10."
+                  format="list of ipv4.dhcp-request-options objects" />
     </setting>
     <setting name="ipv6" >
         <property name="method"
@@ -1645,6 +1648,9 @@
         <property name="token"
                   nmcli-description="Configure the token for draft-chown-6man-tokenised-ipv6-identifiers-02 IPv6 tokenized interface identifiers. Useful with eui64 addr-gen-mode. When set, the token is used as IPv6 interface identifier instead of the hardware address. This only applies to addresses from stateless autoconfiguration, not to IPv6 link local addresses."
                   format="string" />
+        <property name="dhcp-request-options"
+                  nmcli-description="Array of additional DHCP option numbers to request. This is intended to request additional DHCP options, which are handled by external components like dispatcher scripts. This property expects the options as numbers in base 10."
+                  format="list of ipv6.dhcp-request-options objects" />
     </setting>
     <setting name="ipvlan" >
         <property name="parent"
