@@ -3065,6 +3065,65 @@ supplicant_connection_timeout_cb(gpointer user_data)
     return FALSE;
 }
 
+/* _seen_bssids_are_single_ap_mld:
+ *
+ * Returns TRUE when every seen BSSID belongs to a single Wi-Fi 7 AP-MLD,
+ * i.e. they are the per-link addresses of one physical AP rather than
+ * several distinct APs. In that case background scanning for roam
+ * candidates is unnecessary, so the caller keeps the long bgscan interval.
+ *
+ * Each seen BSSID is resolved to its scanned AP, and the MLD MAC address
+ * parsed from that AP's Basic Multi-Link element (802.11be) is read. If all
+ * resolve to the same valid MLD address it is one AP-MLD. If any BSSID is
+ * not currently known, or maps to an AP without (or with a different) MLD
+ * address, the set is treated as multiple APs.
+ */
+static gboolean
+_seen_bssids_are_single_ap_mld(NMDeviceWifi      *self,
+                               const char *const *seen_bssids,
+                               guint              num_seen_bssids)
+{
+    NMDeviceWifiPrivate *priv = NM_DEVICE_WIFI_GET_PRIVATE(self);
+    NMEtherAddr          ref_mld;
+    gboolean             have_ref = FALSE;
+    guint                i;
+
+    if (num_seen_bssids < 2)
+        return FALSE;
+
+    for (i = 0; i < num_seen_bssids; i++) {
+        NMEtherAddr seen_addr;
+        NMEtherAddr mld_addr;
+        NMWifiAP   *ap;
+        NMWifiAP   *found = NULL;
+
+        if (!nm_utils_hwaddr_aton(seen_bssids[i], &seen_addr, sizeof(seen_addr)))
+            return FALSE;
+
+        c_list_for_each_entry (ap, &priv->aps_lst_head, aps_lst) {
+            const char *ap_addr_str = nm_wifi_ap_get_address(ap);
+            NMEtherAddr ap_addr;
+
+            if (ap_addr_str && nm_utils_hwaddr_aton(ap_addr_str, &ap_addr, sizeof(ap_addr))
+                && nm_ether_addr_equal(&ap_addr, &seen_addr)) {
+                found = ap;
+                break;
+            }
+        }
+
+        if (!found || !nm_wifi_ap_get_mld_address(found, &mld_addr))
+            return FALSE;
+
+        if (!have_ref) {
+            ref_mld  = mld_addr;
+            have_ref = TRUE;
+        } else if (!nm_ether_addr_equal(&mld_addr, &ref_mld))
+            return FALSE;
+    }
+
+    return have_ref;
+}
+
 static NMSupplicantConfig *
 build_supplicant_config(NMDeviceWifi         *self,
                         NMSettingsConnection *sett_conn,
@@ -3079,6 +3138,9 @@ build_supplicant_config(NMDeviceWifi         *self,
     NMSettingWirelessSecurityPmf  pmf;
     NMSettingWirelessSecurityFils fils;
     NMTernary                     ap_isolation;
+    const char                   *seen_bssids[NM_SETTINGS_CONNECTION_SEEN_BSSIDS_MAX + 1];
+    guint                         num_seen_bssids;
+    gboolean                      multiple_aps;
 
     g_return_val_if_fail(priv->sup_iface, NULL);
 
@@ -3100,10 +3162,10 @@ build_supplicant_config(NMDeviceWifi         *self,
         goto error;
     }
 
-    if (!nm_supplicant_config_add_bgscan(config,
-                                         connection,
-                                         nm_settings_connection_get_num_seen_bssids(sett_conn),
-                                         error)) {
+    num_seen_bssids = nm_settings_connection_get_seen_bssids(sett_conn, seen_bssids);
+    multiple_aps =
+        num_seen_bssids > 1 && !_seen_bssids_are_single_ap_mld(self, seen_bssids, num_seen_bssids);
+    if (!nm_supplicant_config_add_bgscan(config, connection, multiple_aps, error)) {
         g_prefix_error(error, "bgscan: ");
         goto error;
     }
