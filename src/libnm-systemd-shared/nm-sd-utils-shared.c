@@ -52,6 +52,11 @@ nm_sd_dns_name_normalize(const char *s)
 }
 
 /*****************************************************************************/
+static gboolean
+_http_url_is_invalid_char(char ch)
+{
+    return (guchar) ch >= 128u || (guchar) ch < 0x20 || NM_IN_SET(ch, '"', '\\');
+}
 
 static gboolean
 _http_url_is_valid(const char *url, gboolean only_https)
@@ -69,7 +74,7 @@ _http_url_is_valid(const char *url, gboolean only_https)
     if (!url[0])
         return FALSE;
 
-    return !NM_STRCHAR_ANY(url, ch, (guchar) ch >= 128u);
+    return !NM_STRCHAR_ANY(url, ch, _http_url_is_invalid_char(ch));
 }
 
 gboolean
@@ -82,12 +87,13 @@ nm_sd_http_url_is_valid_https(const char *url)
      * assert with http_url_is_valid() that the argument is valid. We thus must make
      * sure to only pass URLs that are valid according to http_url_is_valid().
      *
-     * This is given, because our nm_sd_http_url_is_valid_https() is more strict
-     * than http_url_is_valid().
+     * This is given, because our nm_sd_http_url_is_valid_https() is more restrictive
+     * than http_url_is_valid(). The assertion below checks that anything we accept,
+     * systemd must also accept.
      *
      * We only must make sure that this is also correct in the future, when we
      * re-import systemd code. */
-    nm_assert(_http_url_is_valid(url, FALSE) == http_url_is_valid(url));
+    nm_assert(!_http_url_is_valid(url, FALSE) || http_url_is_valid(url));
     return _http_url_is_valid(url, TRUE);
 }
 
