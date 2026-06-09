@@ -71,6 +71,8 @@ USE AT YOUR OWN RISK.  NOT RECOMMENDED FOR PRODUCTION USE!
   secrets when activating a connection, matching the connection editor.
 * Fix an out-of-bounds read in the internal DHCPv4 client that an on-link
   attacker could trigger with a malformed UDP packet, crashing NetworkManager.
+* Drop support for dhclient as a DHCP backend, which has been deprecated
+  since NetworkManager-1.50.
 
 =============================================
 NetworkManager-1.56
