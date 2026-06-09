@@ -39,6 +39,21 @@
 #define MUDURLv6_DEF "option dhcp6.mudurl code 112 = text;\n"
 #define MUDURLv6_FMT "send dhcp6.mudurl \"%s\";\n"
 
+static gboolean
+_dhclient_hostname_is_valid(const char *s)
+{
+    for (const char *p = s; *p; p++) {
+        if (*p == '"' || *p == '\\' || *p < 0x20) {
+            nm_log_warn(
+                LOGD_DHCP,
+                "hostname '%s' contains unsafe characters for dhclient config, will be ignored",
+                s);
+            return FALSE;
+        }
+    }
+    return TRUE;
+}
+
 static void
 add_request(GPtrArray *array, const char *item)
 {
@@ -140,7 +155,7 @@ add_ip4_config(GString            *str,
         g_string_append(str, "; # added by NetworkManager\n");
     }
 
-    if (hostname) {
+    if (hostname && _dhclient_hostname_is_valid(hostname)) {
         if (use_fqdn) {
             g_string_append_printf(str, FQDN_FORMAT "\n", hostname);
 
@@ -179,7 +194,7 @@ add_ip4_config(GString            *str,
 static void
 add_hostname6(GString *str, const char *hostname, NMDhcpHostnameFlags hostname_flags)
 {
-    if (hostname) {
+    if (hostname && _dhclient_hostname_is_valid(hostname)) {
         g_string_append_printf(str, FQDN_FORMAT "\n", hostname);
         if (hostname_flags & NM_DHCP_HOSTNAME_FLAG_FQDN_SERV_UPDATE)
             g_string_append(str, FQDN_TAG_PREFIX "server-update on;\n");
