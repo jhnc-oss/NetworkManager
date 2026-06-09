@@ -224,6 +224,20 @@
     </method>
 
     <!--
+        SetPersistentLogging:
+        @level: One of [TRACE, DEBUG, INFO, WARN, ERR, OFF] or empty string to disable persistence. See SetLogging() for details.
+        @domains: Logging domains (e.g., "ALL", "WIFI,DHCP4") or empty for ALL. See SetLogging() for available domains.
+
+        Set logging level and domains with persistence across NetworkManager restarts.
+        The settings are stored in NetworkManager-intern.conf and override configuration file settings.
+        Empty level disables persistence and reverts to configuration file settings.
+    -->
+    <method name="SetPersistentLogging">
+      <arg name="level" type="s" direction="in"/>
+      <arg name="domains" type="s" direction="in"/>
+    </method>
+
+    <!--
         CheckConnectivity:
         @connectivity: (<link linkend="NMConnectivityState">NMConnectivityState</link>) The current connectivity state.
 

@@ -2071,6 +2071,42 @@ nm_config_set_connectivity_check_enabled(NMConfig *self, gboolean enabled)
 
 /*****************************************************************************/
 
+gboolean
+nm_config_set_logging(NMConfig *self, const char *level, const char *domains)
+{
+    NMConfigPrivate *priv;
+    GKeyFile        *keyfile;
+
+    g_return_val_if_fail(NM_IS_CONFIG(self), FALSE);
+
+    priv = NM_CONFIG_GET_PRIVATE(self);
+    g_return_val_if_fail(priv->config_data, FALSE);
+
+    keyfile = nm_config_data_clone_keyfile_intern(priv->config_data);
+
+    if (!level || !*level) {
+        /* Empty level means remove persistent logging */
+        g_key_file_remove_group(keyfile, NM_CONFIG_KEYFILE_GROUP_INTERN_LOGGING, NULL);
+    } else {
+        /* Set persistent logging */
+        g_key_file_set_string(keyfile,
+                              NM_CONFIG_KEYFILE_GROUP_INTERN_LOGGING,
+                              NM_CONFIG_KEYFILE_KEY_LOGGING_LEVEL,
+                              level);
+        g_key_file_set_string(keyfile,
+                              NM_CONFIG_KEYFILE_GROUP_INTERN_LOGGING,
+                              NM_CONFIG_KEYFILE_KEY_LOGGING_DOMAINS,
+                              domains ?: "ALL");
+    }
+
+    nm_config_set_values(self, keyfile, TRUE, FALSE);
+    g_key_file_unref(keyfile);
+
+    return TRUE;
+}
+
+/*****************************************************************************/
+
 static gboolean
 normalize_hwaddr_for_group_name(const char *hwaddr, char *out, GError **error)
 {
@@ -3316,14 +3352,6 @@ init_sync(GInitable *initable, GCancellable *cancellable, GError **error)
     else
         priv->no_auto_default_file = g_strdup(DEFAULT_NO_AUTO_DEFAULT_FILE);
 
-    priv->log_level   = nm_strstrip(g_key_file_get_string(keyfile,
-                                                        NM_CONFIG_KEYFILE_GROUP_LOGGING,
-                                                        NM_CONFIG_KEYFILE_KEY_LOGGING_LEVEL,
-                                                        NULL));
-    priv->log_domains = nm_strstrip(g_key_file_get_string(keyfile,
-                                                          NM_CONFIG_KEYFILE_GROUP_LOGGING,
-                                                          NM_CONFIG_KEYFILE_KEY_LOGGING_DOMAINS,
-                                                          NULL));
     configure_and_quit =
         nm_strstrip(g_key_file_get_string(keyfile,
                                           NM_CONFIG_KEYFILE_GROUP_MAIN,
@@ -3339,6 +3367,33 @@ init_sync(GInitable *initable, GCancellable *cancellable, GError **error)
                                         keyfile,
                                         (const char *const *) priv->atomic_section_prefixes,
                                         &intern_config_needs_rewrite);
+
+    /* Check for persistent logging configuration in intern config first */
+    if (keyfile_intern) {
+        priv->log_level = nm_strstrip(g_key_file_get_string(keyfile_intern,
+                                                            NM_CONFIG_KEYFILE_GROUP_INTERN_LOGGING,
+                                                            NM_CONFIG_KEYFILE_KEY_LOGGING_LEVEL,
+                                                            NULL));
+        priv->log_domains =
+            nm_strstrip(g_key_file_get_string(keyfile_intern,
+                                              NM_CONFIG_KEYFILE_GROUP_INTERN_LOGGING,
+                                              NM_CONFIG_KEYFILE_KEY_LOGGING_DOMAINS,
+                                              NULL));
+    }
+
+    /* Fall back to regular logging configuration if intern config is not set */
+    if (!priv->log_level) {
+        priv->log_level = nm_strstrip(g_key_file_get_string(keyfile,
+                                                            NM_CONFIG_KEYFILE_GROUP_LOGGING,
+                                                            NM_CONFIG_KEYFILE_KEY_LOGGING_LEVEL,
+                                                            NULL));
+    }
+    if (!priv->log_domains) {
+        priv->log_domains = nm_strstrip(g_key_file_get_string(keyfile,
+                                                              NM_CONFIG_KEYFILE_GROUP_LOGGING,
+                                                              NM_CONFIG_KEYFILE_KEY_LOGGING_DOMAINS,
+                                                              NULL));
+    }
     if (intern_config_needs_rewrite
         && priv->configure_and_quit == NM_CONFIG_CONFIGURE_AND_QUIT_DISABLED) {
         intern_config_write(priv->intern_config_file,

@@ -7839,6 +7839,70 @@ impl_manager_get_logging(NMDBusObject                      *obj,
         g_variant_new("(ss)", nm_logging_level_to_string(), nm_logging_domains_to_string()));
 }
 
+static void
+impl_manager_set_persistent_logging(NMDBusObject                      *obj,
+                                    const NMDBusInterfaceInfoExtended *interface_info,
+                                    const NMDBusMethodInfoExtended    *method_info,
+                                    GDBusConnection                   *connection,
+                                    const char                        *sender,
+                                    GDBusMethodInvocation             *invocation,
+                                    GVariant                          *parameters)
+{
+    NMManager        *self  = NM_MANAGER(obj);
+    NMManagerPrivate *priv  = NM_MANAGER_GET_PRIVATE(self);
+    GError           *error = NULL;
+    const char       *level;
+    const char       *domains;
+
+    /* Check permissions */
+    if (!nm_dbus_manager_ensure_uid(nm_dbus_object_get_manager(NM_DBUS_OBJECT(self)),
+                                    invocation,
+                                    G_MAXULONG,
+                                    NM_MANAGER_ERROR,
+                                    NM_MANAGER_ERROR_PERMISSION_DENIED))
+        return;
+
+    g_variant_get(parameters, "(&s&s)", &level, &domains);
+
+    /* Apply logging immediately */
+    if (level && *level) {
+        if (!nm_logging_setup(level, domains, NULL, &error)) {
+            g_dbus_method_invocation_take_error(invocation, error);
+            return;
+        }
+        _LOGI(LOGD_CORE,
+              "persistent logging: level '%s' domains '%s'",
+              nm_logging_level_to_string(),
+              nm_logging_domains_to_string());
+    } else {
+        /* Empty level means disable persistence - reload from config */
+        const char *config_level =
+            nm_config_data_get_value(nm_config_get_data(priv->config),
+                                     NM_CONFIG_KEYFILE_GROUP_LOGGING,
+                                     NM_CONFIG_KEYFILE_KEY_LOGGING_LEVEL,
+                                     NM_CONFIG_GET_VALUE_STRIP | NM_CONFIG_GET_VALUE_NO_EMPTY);
+        const char *config_domains =
+            nm_config_data_get_value(nm_config_get_data(priv->config),
+                                     NM_CONFIG_KEYFILE_GROUP_LOGGING,
+                                     NM_CONFIG_KEYFILE_KEY_LOGGING_DOMAINS,
+                                     NM_CONFIG_GET_VALUE_STRIP | NM_CONFIG_GET_VALUE_NO_EMPTY);
+
+        nm_logging_setup(config_level, config_domains, NULL, NULL);
+        _LOGI(LOGD_CORE, "persistent logging disabled, reverted to config settings");
+    }
+
+    /* Persist to NetworkManager-intern.conf */
+    if (!nm_config_set_logging(priv->config, level, domains)) {
+        g_dbus_method_invocation_return_error_literal(invocation,
+                                                      NM_MANAGER_ERROR,
+                                                      NM_MANAGER_ERROR_FAILED,
+                                                      "Failed to persist logging configuration");
+        return;
+    }
+
+    g_dbus_method_invocation_return_value(invocation, NULL);
+}
+
 typedef struct {
     NMManager             *self;
     GDBusMethodInvocation *context;
@@ -9527,6 +9591,12 @@ static const NMDBusInterfaceInfoExtended interface_info_manager = {
                                                      NM_DEFINE_GDBUS_ARG_INFO("level", "s"),
                                                      NM_DEFINE_GDBUS_ARG_INFO("domains", "s"), ), ),
                 .handle = impl_manager_get_logging, ),
+            NM_DEFINE_DBUS_METHOD_INFO_EXTENDED(
+                NM_DEFINE_GDBUS_METHOD_INFO_INIT("SetPersistentLogging",
+                                                 .in_args = NM_DEFINE_GDBUS_ARG_INFOS(
+                                                     NM_DEFINE_GDBUS_ARG_INFO("level", "s"),
+                                                     NM_DEFINE_GDBUS_ARG_INFO("domains", "s"), ), ),
+                .handle = impl_manager_set_persistent_logging, ),
             NM_DEFINE_DBUS_METHOD_INFO_EXTENDED(
                 NM_DEFINE_GDBUS_METHOD_INFO_INIT(
                     "CheckConnectivity",
