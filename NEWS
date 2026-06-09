@@ -69,6 +69,8 @@ USE AT YOUR OWN RISK.  NOT RECOMMENDED FOR PRODUCTION USE!
   configured with "ipv6.method: shared"
 * nmtui now offers a "Show password" checkbox in the dialog that prompts for
   secrets when activating a connection, matching the connection editor.
+* Drop support for dhclient as a DHCP backend, which has been deprecated
+  since NetworkManager-1.50.
 
 =============================================
 NetworkManager-1.56

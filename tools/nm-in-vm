@@ -287,7 +287,6 @@ do_build() {
         --delete "/etc/NetworkManager/system-connections/*" \
         --append-line "/etc/bashrc:. /etc/bashrc.my" \
         --run-command "updatedb" \
-        --append-line "/etc/dhcp/dhclient.conf:send host-name = gethostname();" \
         --firstboot-command "systemctl enable --now dhcp-host"
 
     virt-install \
