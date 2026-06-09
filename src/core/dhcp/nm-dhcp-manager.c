@@ -91,11 +91,6 @@ static const NMDhcpClientFactory *
 _client_factory_available(const NMDhcpClientFactory *client_factory)
 {
     if (client_factory) {
-        if (nm_streq(client_factory->name, "dhclient")) {
-            _LOGW(AF_UNSPEC,
-                  "attempting to used a deprecated DHCP client '%s' ",
-                  client_factory->name);
-        }
         if (!client_factory->get_path || client_factory->get_path())
             return client_factory;
     }
@@ -110,25 +105,8 @@ _client_factory_get_gtype(const NMDhcpClientFactory *client_factory, int addr_fa
 
     nm_assert(client_factory);
 
-    /* currently, the chosen DHCP plugin for IPv4 and IPv6 is configured in NetworkManager.conf
-     * and cannot be reloaded. It would be nice to configure the plugin per address family
-     * or to be able to reload it.
-     *
-     * Note that certain options in NetworkManager.conf depend on the chosen DHCP plugin.
-     * See "dhcp-plugin:" in "Device List Format" (`man NetworkManager.conf`).
-     * Supporting reloading the plugin would also require to re-evalate the decisions from
-     * the "Device List Format". Likewise, having per-address family plugins would make the
-     * "main.dhcp" setting and "dhcp-plugin:" match non-sensical because these configurations
-     * currently are address family independent.
-     *
-     * So actually, we don't want that complexity. We want to phase out all plugins in favor
-     * of the internal plugin.
-     * However, certain existing plugins are well known to not support an address family.
-     * In those cases, we should just silently fallback to the internal plugin.
-     *
-     * This could be a problem with forward compatibility if we ever intended to add IPv6 support
-     * to those plugins. But we don't intend to do so. The internal plugin is the way forward and
-     * not extending other plugins. */
+    /* If the factory does not support an address family, silently fall back
+     * to the internal plugin. */
 
     if (NM_IS_IPv4(addr_family))
         get_type_fcn = client_factory->get_type_4;
@@ -205,30 +183,10 @@ nm_dhcp_manager_start_client(NMDhcpManager *self, NMDhcpClientConfig *config, GE
 
     client = g_object_new(gtype, NM_DHCP_CLIENT_CONFIG, config, NULL);
 
-    /* unfortunately, our implementations work differently per address-family regarding client-id/DUID.
+    /* - for IPv4, the calling code may determine a client-id (from NM's connection profile).
+     *   If present, it is taken. If not present, the default is just "mac".
      *
-     * - for IPv4, the calling code may determine a client-id (from NM's connection profile).
-     *   If present, it is taken. If not present, the DHCP plugin uses a plugin specific default.
-     *     - for "internal" plugin, the default is just "mac".
-     *     - for "dhclient", we try to get the configuration from dhclient's /etc/dhcp or fallback
-     *       to whatever dhclient uses by default.
-     *   We do it this way, because for dhclient the user may configure a default
-     *   outside of NM, and we want to honor that. Worse, dhclient could be a wapper
-     *   script where the wrapper script overwrites the client-id. We need to distinguish
-     *   between: force a particular client-id and leave it unspecified to whatever dhclient
-     *   wants.
-     *
-     * - for IPv6, the calling code always determines a client-id. It also specifies @enforce_duid,
-     *   to determine whether the given client-id must be used.
-     *     - for "internal" plugin @enforce_duid doesn't matter and the given client-id is
-     *       always used.
-     *     - for "dhclient", @enforce_duid FALSE means to first try to load the DUID from the
-     *       lease file, and only otherwise fallback to the given client-id.
-     *     - other plugins don't support DHCPv6.
-     *   It's done this way, so that existing dhclient setups don't change behavior on upgrade.
-     *
-     * This difference is cumbersome and only exists because of "dhclient" which supports hacking the
-     * default outside of NetworkManager API.
+     * - for IPv6, the calling code always determines a client-id.
      */
 
     if (!nm_dhcp_client_start(client, error))
