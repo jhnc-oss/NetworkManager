@@ -200,6 +200,25 @@ get_device_from_network(NMIwdManager *self, GDBusProxy *network)
     return NM_DEVICE_IWD(device);
 }
 
+static NMDeviceIwd *
+get_device_from_bss(NMIwdManager *self, GDBusProxy *bss)
+{
+    NMIwdManagerPrivate            *priv         = NM_IWD_MANAGER_GET_PRIVATE(self);
+    const char                     *bss_path     = g_dbus_proxy_get_object_path(bss);
+    gs_free char                   *network_path = g_path_get_dirname(bss_path);
+    gs_unref_object GDBusInterface *network_iface =
+        g_dbus_object_manager_get_interface(priv->object_manager,
+                                            network_path,
+                                            NM_IWD_NETWORK_INTERFACE);
+
+    if (!network_iface) {
+        _LOGD("BasicServiceSet %s has no parent Network interface at %s", bss_path, network_path);
+        return NULL;
+    }
+
+    return get_device_from_network(self, G_DBUS_PROXY(network_iface));
+}
+
 static void
 agent_dbus_method_cb(GDBusConnection       *connection,
                      const char            *sender,
@@ -1232,6 +1251,15 @@ interface_added(GDBusObjectManager *object_manager,
 
         if (device)
             nm_device_iwd_network_add_remove(device, proxy, TRUE);
+
+        return;
+    }
+
+    if (nm_streq(iface_name, NM_IWD_BSS_INTERFACE)) {
+        NMDeviceIwd *device = get_device_from_bss(self, proxy);
+
+        if (device)
+            nm_device_iwd_bss_added(device);
 
         return;
     }
