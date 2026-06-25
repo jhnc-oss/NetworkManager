@@ -1,8 +1,10 @@
 NetworkManager
 ==============
 
+
 Networking that Just Works
 --------------------------
+
 
 NetworkManager attempts to keep an active network connection available at all
 times.  The point of NetworkManager is to make networking configuration and
