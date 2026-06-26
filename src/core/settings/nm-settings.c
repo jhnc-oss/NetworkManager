@@ -1685,7 +1685,11 @@ _add_connection_to_first_plugin(NMSettings                  *self,
         }
 
         if (!nm_streq0(nm_settings_storage_get_uuid(storage), uuid)) {
-            nm_assert_not_reached();
+            _LOGT("add-connection: storage UUID mismatch for %s/%s: expected %s, got %s",
+                  nm_connection_get_uuid(new_connection),
+                  nm_connection_get_id(new_connection),
+                  uuid,
+                  nm_settings_storage_get_uuid(storage));
             continue;
         }
 
@@ -1697,7 +1701,10 @@ _add_connection_to_first_plugin(NMSettings                  *self,
                                                      agent_owned_secrets,
                                                      &connection_to_add_cloned);
         if (!connection_to_add_real) {
-            nm_assert_not_reached();
+            _LOGT("add-connection: failed to normalize connection %s/'%s': plugin provided an "
+                  "invalid connection",
+                  nm_connection_get_uuid(new_connection),
+                  nm_connection_get_id(new_connection));
             continue;
         }
 
@@ -2199,7 +2206,7 @@ nm_settings_update_connection(NMSettings                      *self,
                  * Actually, this line is probably unreached, because we should not use
                  * NM_SETTINGS_CONNECTION_PERSIST_MODE_NO_PERSIST to toggle the nm-generated
                  * flag. */
-                nm_assert_not_reached();
+                _LOGT("update-connection: unexpected NO_PERSIST mode, forcing TO_DISK");
                 persist_mode = NM_SETTINGS_CONNECTION_PERSIST_MODE_TO_DISK;
             }
         }
@@ -2413,7 +2420,10 @@ nm_settings_update_connection(NMSettings                      *self,
                                                                            agent_owned_secrets,
                                                                            &new_connection_cloned);
             if (!new_connection_real) {
-                nm_assert_not_reached();
+                _LOGT("update-connection: failed to normalize connection %s/'%s': using "
+                      "un-normalized connection",
+                      nm_connection_get_uuid(new_connection),
+                      nm_connection_get_id(new_connection));
                 new_connection_real = new_connection;
             }
 
