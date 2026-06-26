@@ -450,6 +450,7 @@ _parse_ip_method(const char *kind)
         "none",
         "dhcp",
         "dhcp6",
+        "auto6",
         "link6",
         "auto",
         "ibft",
@@ -480,7 +481,7 @@ _parse_ip_method(const char *kind)
     if (nm_streq(kind, "off"))
         return "none";
     if (nm_streq(kind, "auto6"))
-        return "dhcp6";
+        return "auto6";
     if (NM_IN_STRSET(kind, "on", "any"))
         return "auto";
 
@@ -508,12 +509,13 @@ _parse_ip_method(const char *kind)
     nm_strv_cleanup_const(strv, TRUE, TRUE);
 
     if (nm_strv_contains(strv, -1, "auto")) {
-        /* if "auto" is present, then "dhcp4", "dhcp6", and "local6" is implied. */
+        /* if "auto" is present, then "dhcp4", "dhcp6", "auto6", and "local6" is implied. */
         _strv_remove(strv, "dhcp4");
         _strv_remove(strv, "dhcp6");
+        _strv_remove(strv, "auto6");
         _strv_remove(strv, "local6");
-    } else if (nm_strv_contains(strv, -1, "dhcp6")) {
-        /* if "dhcp6" is present, then "local6" is implied. */
+    } else if (nm_strv_contains(strv, -1, "dhcp6") || nm_strv_contains(strv, -1, "auto6")) {
+        /* if "dhcp6" or "auto6" is present, then "local6" is implied. */
         _strv_remove(strv, "local6");
     }
 
@@ -526,6 +528,8 @@ _parse_ip_method(const char *kind)
      * and mapped to a canonical value.
      */
     if (_strv_is_same_unordered(strv, "dhcp", "dhcp6"))
+        return "dhcp4+dhcp6";
+    if (_strv_is_same_unordered(strv, "dhcp", "auto6"))
         return "dhcp4+auto6";
     /* For the moment, this maps to "auto". This might be revisited
      * in the future to add new kinds like "dhcp+local6"
@@ -769,6 +773,19 @@ reader_parse_ip(Reader *reader, const char *sysfs_dir, char *argument)
     } else if (nm_streq(kind, "dhcp6")) {
         g_object_set(s_ip6,
                      NM_SETTING_IP_CONFIG_METHOD,
+                     NM_SETTING_IP6_CONFIG_METHOD_DHCP,
+                     NM_SETTING_IP_CONFIG_MAY_FAIL,
+                     FALSE,
+                     NULL);
+        if (nm_setting_ip_config_get_num_addresses(s_ip4) == 0) {
+            g_object_set(s_ip4,
+                         NM_SETTING_IP_CONFIG_METHOD,
+                         NM_SETTING_IP4_CONFIG_METHOD_DISABLED,
+                         NULL);
+        }
+    } else if (nm_streq(kind, "auto6")) {
+        g_object_set(s_ip6,
+                     NM_SETTING_IP_CONFIG_METHOD,
                      NM_SETTING_IP6_CONFIG_METHOD_AUTO,
                      NM_SETTING_IP_CONFIG_MAY_FAIL,
                      FALSE,
@@ -779,6 +796,18 @@ reader_parse_ip(Reader *reader, const char *sysfs_dir, char *argument)
                          NM_SETTING_IP4_CONFIG_METHOD_DISABLED,
                          NULL);
         }
+    } else if (nm_streq(kind, "dhcp4+dhcp6")) {
+        /* Both DHCPv4 and stateful DHCPv6 are enabled, and
+         * each of them is tried for at least IP_REQUIRED_TIMEOUT_MSEC,
+         * even if the other one completes before.
+         */
+        clear_ip4_required_timeout = FALSE;
+        g_object_set(s_ip6,
+                     NM_SETTING_IP_CONFIG_METHOD,
+                     NM_SETTING_IP6_CONFIG_METHOD_DHCP,
+                     NM_SETTING_IP_CONFIG_REQUIRED_TIMEOUT,
+                     NMI_IP_REQUIRED_TIMEOUT_MSEC,
+                     NULL);
     } else if (nm_streq(kind, "dhcp4+auto6")) {
         /* Both DHCPv4 and IPv6 autoconf are enabled, and
          * each of them is tried for at least IP_REQUIRED_TIMEOUT_MSEC,
