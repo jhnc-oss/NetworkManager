@@ -63,6 +63,10 @@ ap_wpa_rsn_flags_to_string(NM80211ApSecurityFlags flags, NMMetaAccessorGetType g
         flags_str[i++] = "wpa-eap-suite-b-192";
     if (NM_FLAGS_ANY(flags, NM_802_11_AP_SEC_KEY_MGMT_OWE | NM_802_11_AP_SEC_KEY_MGMT_OWE_TM))
         flags_str[i++] = "owe";
+    if (flags & NM_802_11_AP_SEC_PAIR_GCMP_256)
+        flags_str[i++] = "pair_gcmp_256";
+    if (flags & NM_802_11_AP_SEC_GROUP_GCMP_256)
+        flags_str[i++] = "group_gcmp_256";
 
     /* Make sure you grow flags_str when adding items here. */
     nm_assert(i < G_N_ELEMENTS(flags_str));
@@ -135,8 +139,8 @@ _metagen_device_status_get_fcn(NMC_META_GENERIC_INFO_GET_FCN_ARGS)
     g_return_val_if_reached(NULL);
 }
 
-const NmcMetaGenericInfo
-    *const metagen_device_status[_NMC_GENERIC_INFO_TYPE_DEVICE_STATUS_NUM + 1] = {
+const NmcMetaGenericInfo *const
+    metagen_device_status[_NMC_GENERIC_INFO_TYPE_DEVICE_STATUS_NUM + 1] = {
 #define _METAGEN_DEVICE_STATUS(type, name) \
     [type] = NMC_META_GENERIC(name, .info_type = type, .get_fcn = _metagen_device_status_get_fcn)
         _METAGEN_DEVICE_STATUS(NMC_GENERIC_INFO_TYPE_DEVICE_STATUS_DEVICE, "DEVICE"),
@@ -254,8 +258,8 @@ _metagen_device_detail_general_get_fcn(NMC_META_GENERIC_INFO_GET_FCN_ARGS)
     g_return_val_if_reached(NULL);
 }
 
-const NmcMetaGenericInfo
-    *const metagen_device_detail_general[_NMC_GENERIC_INFO_TYPE_DEVICE_DETAIL_GENERAL_NUM + 1] = {
+const NmcMetaGenericInfo *const
+    metagen_device_detail_general[_NMC_GENERIC_INFO_TYPE_DEVICE_DETAIL_GENERAL_NUM + 1] = {
 #define _METAGEN_DEVICE_DETAIL_GENERAL(type, name) \
     [type] = NMC_META_GENERIC(name,                \
                               .info_type = type,   \
@@ -494,9 +498,9 @@ _metagen_device_detail_capabilities_get_fcn(NMC_META_GENERIC_INFO_GET_FCN_ARGS)
     g_return_val_if_reached(NULL);
 }
 
-const NmcMetaGenericInfo
-    *const metagen_device_detail_capabilities[_NMC_GENERIC_INFO_TYPE_DEVICE_DETAIL_CAPABILITIES_NUM
-                                              + 1] = {
+const NmcMetaGenericInfo *const
+    metagen_device_detail_capabilities[_NMC_GENERIC_INFO_TYPE_DEVICE_DETAIL_CAPABILITIES_NUM
+                                       + 1] = {
 #define _METAGEN_DEVICE_DETAIL_CAPABILITIES(type, name) \
     [type] = NMC_META_GENERIC(name,                     \
                               .info_type = type,        \
@@ -581,6 +585,9 @@ _metagen_device_detail_wifi_properties_get_fcn(NMC_META_GENERIC_INFO_GET_FCN_ARG
     case NMC_GENERIC_INFO_TYPE_DEVICE_DETAIL_WIFI_PROPERTIES_CCMP:
         return nmc_meta_generic_get_bool(NM_FLAGS_HAS(wcaps, NM_WIFI_DEVICE_CAP_CIPHER_CCMP),
                                          get_type);
+    case NMC_GENERIC_INFO_TYPE_DEVICE_DETAIL_WIFI_PROPERTIES_GCMP_256:
+        return nmc_meta_generic_get_bool(NM_FLAGS_HAS(wcaps, NM_WIFI_DEVICE_CAP_CIPHER_GCMP_256),
+                                         get_type);
     case NMC_GENERIC_INFO_TYPE_DEVICE_DETAIL_WIFI_PROPERTIES_AP:
         return nmc_meta_generic_get_bool(NM_FLAGS_HAS(wcaps, NM_WIFI_DEVICE_CAP_AP), get_type);
     case NMC_GENERIC_INFO_TYPE_DEVICE_DETAIL_WIFI_PROPERTIES_ADHOC:
@@ -637,6 +644,9 @@ const NmcMetaGenericInfo *const
         _METAGEN_DEVICE_DETAIL_WIFI_PROPERTIES(
             NMC_GENERIC_INFO_TYPE_DEVICE_DETAIL_WIFI_PROPERTIES_CCMP,
             "CCMP"),
+        _METAGEN_DEVICE_DETAIL_WIFI_PROPERTIES(
+            NMC_GENERIC_INFO_TYPE_DEVICE_DETAIL_WIFI_PROPERTIES_GCMP_256,
+            "GCMP-256"),
         _METAGEN_DEVICE_DETAIL_WIFI_PROPERTIES(
             NMC_GENERIC_INFO_TYPE_DEVICE_DETAIL_WIFI_PROPERTIES_AP,
             "AP"),

@@ -3513,6 +3513,11 @@ fill_wpa_ciphers(shvarFile *ifcfg, NMSettingWirelessSecurity *wsec, gboolean gro
                 nm_setting_wireless_security_add_group(wsec, "ccmp");
             else
                 nm_setting_wireless_security_add_pairwise(wsec, "ccmp");
+        } else if (!strcmp(*iter, "GCMP-256")) {
+            if (group)
+                nm_setting_wireless_security_add_group(wsec, "gcmp-256");
+            else
+                nm_setting_wireless_security_add_pairwise(wsec, "gcmp-256");
         } else if (!strcmp(*iter, "TKIP")) {
             if (group)
                 nm_setting_wireless_security_add_group(wsec, "tkip");
