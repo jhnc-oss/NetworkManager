@@ -2366,6 +2366,10 @@
     <setting name="prefix-delegation"
              gtype="NMSettingPrefixDelegation"
              >
+        <property name="evict-oldest"
+                  dbus-type="b"
+                  gprop-type="gboolean"
+                  />
         <property name="subnet-id"
                   dbus-type="x"
                   gprop-type="gint64"

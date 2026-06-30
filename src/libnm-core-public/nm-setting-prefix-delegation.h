@@ -25,7 +25,8 @@ G_BEGIN_DECLS
 
 #define NM_SETTING_PREFIX_DELEGATION_SETTING_NAME "prefix-delegation"
 
-#define NM_SETTING_PREFIX_DELEGATION_SUBNET_ID "subnet-id"
+#define NM_SETTING_PREFIX_DELEGATION_SUBNET_ID    "subnet-id"
+#define NM_SETTING_PREFIX_DELEGATION_EVICT_OLDEST "evict-oldest"
 
 typedef struct _NMSettingPrefixDelegationClass NMSettingPrefixDelegationClass;
 
@@ -35,6 +36,8 @@ NM_AVAILABLE_IN_1_54
 NMSetting *nm_setting_prefix_delegation_new(void);
 NM_AVAILABLE_IN_1_54
 gint64 nm_setting_prefix_delegation_get_subnet_id(NMSettingPrefixDelegation *setting);
+NM_AVAILABLE_IN_1_58
+gboolean nm_setting_prefix_delegation_get_evict_oldest(NMSettingPrefixDelegation *setting);
 
 G_END_DECLS
 

@@ -18,7 +18,7 @@
 
 /*****************************************************************************/
 
-NM_GOBJECT_PROPERTIES_DEFINE_BASE(PROP_SUBNET_ID, );
+NM_GOBJECT_PROPERTIES_DEFINE_BASE(PROP_SUBNET_ID, PROP_EVICT_OLDEST, );
 
 /**
  * NMSettingPrefixDelegation:
@@ -30,6 +30,7 @@ NM_GOBJECT_PROPERTIES_DEFINE_BASE(PROP_SUBNET_ID, );
 struct _NMSettingPrefixDelegation {
     NMSetting parent;
     gint64    subnet_id;
+    bool      evict_oldest;
 };
 
 struct _NMSettingPrefixDelegationClass {
@@ -54,6 +55,22 @@ nm_setting_prefix_delegation_get_subnet_id(NMSettingPrefixDelegation *setting)
     g_return_val_if_fail(NM_IS_SETTING_PREFIX_DELEGATION(setting), 0);
 
     return setting->subnet_id;
+}
+
+/**
+ * nm_setting_prefix_delegation_get_evict_oldest:
+ * @setting: the #NMSettingPrefixDelegation
+ *
+ * Returns: whether to evict oldest addresses when adding new ones
+ *
+ * Since: 1.58
+ **/
+gboolean
+nm_setting_prefix_delegation_get_evict_oldest(NMSettingPrefixDelegation *setting)
+{
+    g_return_val_if_fail(NM_IS_SETTING_PREFIX_DELEGATION(setting), FALSE);
+
+    return setting->evict_oldest;
 }
 
 /*****************************************************************************/
@@ -107,6 +124,26 @@ nm_setting_prefix_delegation_class_init(NMSettingPrefixDelegationClass *klass)
                                              NM_SETTING_PARAM_NONE,
                                              NMSettingPrefixDelegation,
                                              subnet_id);
+
+    /**
+     * NMSettingPrefixDelegation:evict-oldest:
+     *
+     * If %TRUE, when the maximum number of addresses is reached and a new
+     * prefix is delegated, the address with the shortest remaining lifetime
+     * will be evicted to make room for the new prefix. This is useful for
+     * scenarios where upstream prefixes change frequently (e.g., unstable
+     * connections), ensuring the newest working prefix is always advertised.
+     *
+     * Since: 1.58
+     **/
+    _nm_setting_property_define_direct_boolean(properties_override,
+                                               obj_properties,
+                                               NM_SETTING_PREFIX_DELEGATION_EVICT_OLDEST,
+                                               PROP_EVICT_OLDEST,
+                                               FALSE,
+                                               NM_SETTING_PARAM_NONE,
+                                               NMSettingPrefixDelegation,
+                                               evict_oldest);
 
     g_object_class_install_properties(object_class, _PROPERTY_ENUMS_LAST, obj_properties);
 
