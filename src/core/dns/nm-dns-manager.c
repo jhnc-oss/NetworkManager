@@ -1900,17 +1900,23 @@ plugin_skip:;
      */
     if (caching) {
         const char *lladdr = "127.0.0.1";
+        const char *additional_lladdr = NULL;
         gboolean    need_edns0;
         gboolean    need_trust;
 
         if (NM_IS_DNS_SYSTEMD_RESOLVED(priv->plugin)) {
             /* systemd-resolved uses a different link-local address */
             lladdr = "127.0.0.53";
+        } else if (NM_IS_DNS_DNSMASQ(priv->plugin)) {
+            /* dnsmasq listens on both IPv4 and IPv6 link-local addresses */
+            additional_lladdr = "::1";
         }
 
         g_strfreev(nameservers);
-        nameservers    = g_new0(char *, 2);
+        nameservers    = g_new0(char *, 2 + (additional_lladdr ? 1 : 0));
         nameservers[0] = g_strdup(lladdr);
+        if (additional_lladdr)
+            nameservers[1] = g_strdup(additional_lladdr);
 
         need_edns0 = !nm_strv_contains(options, -1, NM_SETTING_DNS_OPTION_EDNS0)
                      && !nm_strv_contains(options, -1, NM_SETTING_DNS_OPTION_INTERNAL_NO_ADD_EDNS0);
