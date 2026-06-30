@@ -1466,6 +1466,22 @@ static void wifi_secrets_get_one(NMDeviceIwd                 *self,
                                  const char                  *setting_key,
                                  GDBusMethodInvocation       *invocation);
 
+static gboolean
+psk_uses_saved_agent_secret(NMConnection *connection)
+{
+    NMSettingWirelessSecurity *s_wireless_sec;
+    NMSettingSecretFlags       psk_flags;
+
+    s_wireless_sec = nm_connection_get_setting_wireless_security(connection);
+    if (!s_wireless_sec)
+        return FALSE;
+
+    psk_flags = nm_setting_wireless_security_get_psk_flags(s_wireless_sec);
+
+    return NM_FLAGS_HAS(psk_flags, NM_SETTING_SECRET_FLAG_AGENT_OWNED)
+           && !NM_FLAGS_HAS(psk_flags, NM_SETTING_SECRET_FLAG_NOT_SAVED);
+}
+
 static void
 wifi_secrets_cb(NMActRequest                 *req,
                 NMActRequestGetSecretsCallId *call_id,
@@ -1520,7 +1536,8 @@ wifi_secrets_cb(NMActRequest                 *req,
 
     if (nm_wifi_connection_get_iwd_ssid_and_security(connection, NULL, &security)
         && security == NM_IWD_NETWORK_SECURITY_PSK) {
-        if (nm_settings_connection_get_timestamp(nm_device_get_settings_connection(device), NULL))
+        if (nm_settings_connection_get_timestamp(nm_device_get_settings_connection(device), NULL)
+            && !psk_uses_saved_agent_secret(connection))
             get_secret_flags |= NM_SECRET_AGENT_GET_SECRETS_FLAG_REQUEST_NEW;
     }
 
@@ -3395,8 +3412,10 @@ nm_device_iwd_agent_query(NMDeviceIwd *self, GDBusMethodInvocation *invocation)
      * fresh value.  It doesn't know about agent-owned secrets so whenever
      * possible, the PSK is saved and not asked from NM.  However if this
      * is a new connection it may include all of the needed settings already
-     * so allow using these, too.  Connection timestamp is set after
-     * activation or after first activation failure (to 0).
+     * so allow using these, too.  Also allow using stored agent-owned secrets:
+     * they are intentionally not mirrored to IWD, and requesting a new secret
+     * would bypass the agent's persistent storage.  Connection timestamp is set
+     * after activation or after first activation failure (to 0).
      *
      * For 802.1x, since IWD assumes the network is pre-provisioned by an
      * admin and tested, there's no reason for IWD to save secrets in
@@ -3410,7 +3429,8 @@ nm_device_iwd_agent_query(NMDeviceIwd *self, GDBusMethodInvocation *invocation)
 
     if (nm_wifi_connection_get_iwd_ssid_and_security(connection, NULL, &security)
         && security == NM_IWD_NETWORK_SECURITY_PSK) {
-        if (nm_settings_connection_get_timestamp(nm_device_get_settings_connection(device), NULL))
+        if (nm_settings_connection_get_timestamp(nm_device_get_settings_connection(device), NULL)
+            && !psk_uses_saved_agent_secret(connection))
             get_secret_flags |= NM_SECRET_AGENT_GET_SECRETS_FLAG_REQUEST_NEW;
         else
             allow_existing = TRUE;
