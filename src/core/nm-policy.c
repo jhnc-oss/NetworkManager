@@ -98,6 +98,7 @@ typedef struct {
 
     GArray *ip6_prefix_delegations; /* pool of ip6 prefixes delegated to all devices */
 
+    GSource *pd_cleanup_idle_source;
 } NMPolicyPrivate;
 
 struct _NMPolicy {
@@ -158,6 +159,7 @@ typedef struct {
     NMDevice            *device;                   /* The requesting ("uplink") device */
     GHashTable          *map_subnet_id_to_ifindex; /* (guint64 *) subnet_id -> int ifindex */
     GHashTable          *map_ifindex_to_subnet; /* int ifindex -> (NMPlatformIP6Address *) prefix */
+    bool                 touched;
 } IP6PrefixDelegation;
 
 static void
@@ -371,6 +373,41 @@ ip6_subnet_from_device(NMPolicy *self, NMDevice *from_device, NMDevice *device)
     }
 }
 
+static gboolean
+_pd_cleanup_idle_cb(gpointer user_data)
+{
+    NMPolicy                      *self = user_data;
+    NMPolicyPrivate               *priv = NM_POLICY_GET_PRIVATE(self);
+    IP6PrefixDelegation           *delegation;
+    gs_unref_hashtable GHashTable *touched_devices = NULL;
+    guint                          i;
+
+    nm_clear_g_source_inst(&priv->pd_cleanup_idle_source);
+
+    /* First, collect a list of devices that have at least one touched delegation */
+    touched_devices = g_hash_table_new(NULL, NULL);
+    for (i = 0; i < priv->ip6_prefix_delegations->len; i++) {
+        delegation = &nm_g_array_index(priv->ip6_prefix_delegations, IP6PrefixDelegation, i);
+        if (delegation->touched)
+            g_hash_table_add(touched_devices, delegation->device);
+    }
+
+    /* Then, delete all untouched delegations belonging to touched devices
+     * and clear the touched bit. Requiring a touched device ensures that
+     * valid prefixes of devices that haven't had an update are deprecated. */
+    i = priv->ip6_prefix_delegations->len;
+    while (i-- > 0) {
+        delegation = &nm_g_array_index(priv->ip6_prefix_delegations, IP6PrefixDelegation, i);
+        if (!delegation->touched && g_hash_table_contains(touched_devices, delegation->device)) {
+            g_array_remove_index_fast(priv->ip6_prefix_delegations, i);
+        } else {
+            delegation->touched = FALSE;
+        }
+    }
+
+    return G_SOURCE_REMOVE;
+}
+
 static void
 ip6_remove_device_prefix_delegations(NMPolicy *self, NMDevice *device)
 {
@@ -421,8 +458,12 @@ device_ip6_prefix_delegated(NMDevice                   *device,
         delegation->map_ifindex_to_subnet = g_hash_table_new(nm_direct_hash, NULL);
     }
 
-    delegation->device = device;
-    delegation->prefix = *prefix;
+    delegation->device  = device;
+    delegation->prefix  = *prefix;
+    delegation->touched = TRUE;
+
+    if (!priv->pd_cleanup_idle_source)
+        priv->pd_cleanup_idle_source = nm_g_idle_add_source(_pd_cleanup_idle_cb, self);
 
     /* The newly activated connections are added to the end of the list,
      * so traversing it from the end makes it likely for newly
@@ -3219,6 +3260,7 @@ dispose(GObject *object)
     nm_clear_g_source_inst(&priv->reset_connections_retries_idle_source);
     nm_clear_g_source_inst(&priv->device_recheck_auto_activate_all_idle_source);
     nm_clear_g_source_inst(&priv->hostname_retry.source);
+    nm_clear_g_source_inst(&priv->pd_cleanup_idle_source);
 
     nm_clear_g_free(&priv->orig_hostname);
     nm_clear_g_free(&priv->cur_hostname);
