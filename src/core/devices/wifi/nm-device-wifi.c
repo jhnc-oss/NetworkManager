@@ -1393,6 +1393,17 @@ can_auto_connect(NMDevice *device, NMSettingsConnection *sett_conn, char **speci
     else if (!auto4 && !auto6 && nm_streq0(mode, NM_SETTING_WIRELESS_MODE_MESH))
         return TRUE;
 
+    /* Hidden networks: for auto-connection, skip the full AP compatibility
+     * check (especially security flags). Hidden APs get their SSID filled
+     * via probe scanning / seen-bssids matching, and their reported flags
+     * may not accurately reflect the actual security requirements, leading
+     * to spurious mismatches (e.g., an open profile rejected because the
+     * AP broadcasts WPA/RSN capabilities). This is consistent with
+     * check_connection_available() which also bypasses the AP check for
+     * hidden networks. */
+    if (nm_setting_wireless_get_hidden(s_wifi))
+        return TRUE;
+
     ap = nm_wifi_aps_find_first_compatible(&priv->aps_lst_head, connection);
     if (ap) {
         /* All good; connection is usable */
