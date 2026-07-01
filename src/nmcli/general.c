@@ -382,15 +382,24 @@ usage_general_reload(void)
 static void
 usage_general_logging(void)
 {
-    nmc_printerr(
-        _("Usage: nmcli general logging { ARGUMENTS | help }\n"
-          "\n"
-          "ARGUMENTS := [level <log level>] [domains <log domains>]\n"
-          "\n"
-          "Get or change NetworkManager logging level and domains.\n"
-          "Without any argument current logging level and domains are shown. In order to\n"
-          "change logging state, provide level and/or domain. Please refer to the man page\n"
-          "for the list of possible logging domains.\n\n"));
+    nmc_printerr(_(
+        "Usage: nmcli general logging { ARGUMENTS | help }\n"
+        "\n"
+        "ARGUMENTS := [level [--persistent] <log level>] [domains <log domains>]\n"
+        "\n"
+        "Get or change NetworkManager logging level and domains.\n"
+        "Use --persistent to make logging changes persist across NetworkManager restarts.\n"
+        "Use '--persistent reset' to clear persistent override and revert to config file.\n"
+        "\n"
+        "Examples:\n"
+        "  nmcli general logging level DEBUG                         # runtime only\n"
+        "  nmcli general logging level --persistent DEBUG            # persist across reboots\n"
+        "  nmcli general logging level --persistent DEBUG domains WIFI,DNS\n"
+        "  nmcli general logging level --persistent reset            # clear persistent override\n"
+        "\n"
+        "Without any argument current logging level and domains are shown. In order to\n"
+        "change logging state, provide level and/or domain. Please refer to the man page\n"
+        "for the list of possible logging domains.\n\n"));
 }
 
 static void
@@ -780,6 +789,24 @@ _set_logging_cb(GObject *object, GAsyncResult *result, gpointer user_data)
 }
 
 static void
+_set_persistent_logging_cb(GObject *object, GAsyncResult *result, gpointer user_data)
+{
+    NmCli                     *nmc   = user_data;
+    gs_unref_variant GVariant *res   = NULL;
+    gs_free_error GError      *error = NULL;
+
+    res = nm_client_dbus_call_finish(NM_CLIENT(object), result, &error);
+    if (!res) {
+        g_dbus_error_strip_remote_error(error);
+        g_string_printf(nmc->return_text,
+                        _("Error: failed to set persistent logging: %s"),
+                        nmc_error_get_simple_message(error));
+        nmc->return_value = NMC_RESULT_ERROR_UNKNOWN;
+    }
+    quit();
+}
+
+static void
 do_general_logging(const NMCCommand *cmd, NmCli *nmc, int argc, const char *const *argv)
 {
     next_arg(nmc, &argc, &argv, NULL);
@@ -790,8 +817,9 @@ do_general_logging(const NMCCommand *cmd, NmCli *nmc, int argc, const char *cons
         show_general_logging(nmc);
     } else {
         /* arguments provided -> set logging level and domains */
-        const char *level   = NULL;
-        const char *domains = NULL;
+        const char *level      = NULL;
+        const char *domains    = NULL;
+        gboolean    persistent = FALSE;
 
         do {
             if (argc == 1 && nmc->complete)
@@ -807,16 +835,45 @@ do_general_logging(const NMCCommand *cmd, NmCli *nmc, int argc, const char *cons
                     nmc->return_value = NMC_RESULT_ERROR_USER_INPUT;
                     return;
                 }
+
+                /* Check for --persistent flag */
+                if (matches(*argv, "--persistent")) {
+                    persistent = TRUE;
+                    argc--;
+                    argv++;
+                    if (!argc) {
+                        g_string_printf(nmc->return_text,
+                                        _("Error: level value is missing after --persistent."));
+                        nmc->return_value = NMC_RESULT_ERROR_USER_INPUT;
+                        return;
+                    }
+                }
+
                 if (argc == 1 && nmc->complete) {
-                    nmc_complete_strings_nocase(*argv,
-                                                "TRACE",
-                                                "DEBUG",
-                                                "INFO",
-                                                "WARN",
-                                                "ERR",
-                                                "OFF",
-                                                "KEEP",
-                                                NULL);
+                    if (!persistent) {
+                        /* Complete with --persistent or log levels */
+                        nmc_complete_strings(*argv, "--persistent");
+                        nmc_complete_strings_nocase(*argv,
+                                                    "TRACE",
+                                                    "DEBUG",
+                                                    "INFO",
+                                                    "WARN",
+                                                    "ERR",
+                                                    "OFF",
+                                                    "KEEP",
+                                                    NULL);
+                    } else {
+                        /* Complete with reset or log levels */
+                        nmc_complete_strings_nocase(*argv,
+                                                    "reset",
+                                                    "TRACE",
+                                                    "DEBUG",
+                                                    "INFO",
+                                                    "WARN",
+                                                    "ERR",
+                                                    "OFF",
+                                                    NULL);
+                    }
                 }
                 level = *argv;
             } else if (matches(*argv, "domains")) {
@@ -883,17 +940,44 @@ do_general_logging(const NMCCommand *cmd, NmCli *nmc, int argc, const char *cons
         if (nmc->complete)
             return;
 
-        nmc->should_wait++;
-        nm_client_dbus_call(nmc->client,
-                            NM_DBUS_PATH,
-                            NM_DBUS_INTERFACE,
-                            "SetLogging",
-                            g_variant_new("(ss)", level ?: "", domains ?: ""),
-                            G_VARIANT_TYPE("()"),
-                            -1,
-                            NULL,
-                            _set_logging_cb,
-                            nmc);
+        if (persistent) {
+            /* Use SetPersistentLogging for persistent changes */
+            const char *persist_level;
+
+            nmc_start_polkit_agent_start_try(nmc);
+
+            /* Handle 'reset' to clear persistent override */
+            if (level && g_ascii_strcasecmp(level, "reset") == 0) {
+                persist_level = "";
+            } else {
+                persist_level = level ?: "";
+            }
+
+            nmc->should_wait++;
+            nm_client_dbus_call(nmc->client,
+                                NM_DBUS_PATH,
+                                NM_DBUS_INTERFACE,
+                                "SetPersistentLogging",
+                                g_variant_new("(ss)", persist_level, domains ?: ""),
+                                G_VARIANT_TYPE("()"),
+                                -1,
+                                NULL,
+                                _set_persistent_logging_cb,
+                                nmc);
+        } else {
+            /* Use SetLogging for runtime-only changes */
+            nmc->should_wait++;
+            nm_client_dbus_call(nmc->client,
+                                NM_DBUS_PATH,
+                                NM_DBUS_INTERFACE,
+                                "SetLogging",
+                                g_variant_new("(ss)", level ?: "", domains ?: ""),
+                                G_VARIANT_TYPE("()"),
+                                -1,
+                                NULL,
+                                _set_logging_cb,
+                                nmc);
+        }
     }
 }
 

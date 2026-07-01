@@ -417,6 +417,7 @@
         <term>
           <command>logging</command>
           <arg><option>level</option> <replaceable>level</replaceable></arg>
+          <arg><option>--persistent</option></arg>
           <arg rep='repeat'><option>domains</option> <replaceable>domains</replaceable></arg>
         </term>
 
@@ -424,7 +425,10 @@
           <para>Get and change NetworkManager logging level and
           domains. Without any argument current logging level and domains are shown. In
           order to change logging state, provide <option>level</option> and, or,
-          <option>domain</option> parameters. See
+          <option>domain</option> parameters. Use <option>--persistent</option> flag to
+          persist the logging configuration across daemon restarts via NetworkManager-intern.conf.
+          Without this flag, changes are runtime-only and lost when NetworkManager restarts.
+          See
           <link linkend='NetworkManager.conf'><link linkend='NetworkManager.conf'><citerefentry><refentrytitle>NetworkManager.conf</refentrytitle><manvolnum>5</manvolnum></citerefentry></link></link>
           for available level and domain values.</para>
         </listitem>
