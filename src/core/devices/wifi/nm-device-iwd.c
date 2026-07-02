@@ -74,7 +74,6 @@ typedef struct {
     bool                          networks_changed : 1;
     bool                          assuming : 1;
     gint64                        last_scan;
-    uint32_t                      ap_id;
     guint32                       rate;
     NMEtherAddr                   current_ap_bssid;
     GDBusMethodInvocation        *pending_agent_request;
@@ -240,12 +239,14 @@ ap_from_network(NMDeviceIwd *self,
     NMDeviceIwdPrivate        *priv       = NM_DEVICE_IWD_GET_PRIVATE(self);
     gs_unref_variant GVariant *name_value = NULL;
     gs_unref_variant GVariant *type_value = NULL;
+    gs_unref_variant GVariant *ess_value  = NULL;
     const char                *name;
     const char                *type;
-    uint32_t                   ap_id;
     gs_unref_bytes GBytes     *ssid = NULL;
     NMWifiAP                  *ap;
     NMSupplicantBssInfo        bss_info;
+    NMEtherAddr                bssid       = {};
+    gboolean                   bssid_valid = FALSE;
 
     g_return_val_if_fail(network, NULL);
 
@@ -263,29 +264,40 @@ ap_from_network(NMDeviceIwd *self,
         return NULL;
     }
 
-    /* What we get from IWD are networks, or ESSs, that may contain
-     * multiple APs, or BSSs, each.  We don't get information about any
-     * specific BSSs within an ESS but we can safely present each ESS
-     * as an individual BSS to NM, which will be seen as ESSs comprising
-     * a single BSS each.  NM won't be able to handle roaming but IWD
-     * already does that.  We fake the BSSIDs as they don't play any
-     * role either.
+    /* IWD presents networks as ESSs. Read the BSSID of the first BSS from
+     * ExtendedServiceSet so UIs can show a real MAC address.
      */
-    ap_id = priv->ap_id++;
+    ess_value = g_dbus_proxy_get_cached_property(network, "ExtendedServiceSet");
+    if (ess_value && g_variant_is_of_type(ess_value, G_VARIANT_TYPE("ao"))
+        && g_variant_n_children(ess_value) > 0) {
+        const char                 *bss_obj_path;
+        gs_unref_object GDBusProxy *bss_proxy  = NULL;
+        gs_unref_variant GVariant  *addr_value = NULL;
+
+        g_variant_get_child(ess_value, 0, "&o", &bss_obj_path);
+        bss_proxy =
+            nm_iwd_manager_get_dbus_interface(priv->manager, bss_obj_path, NM_IWD_BSS_INTERFACE);
+        if (bss_proxy) {
+            addr_value = g_dbus_proxy_get_cached_property(bss_proxy, "Address");
+            if (addr_value && g_variant_is_of_type(addr_value, G_VARIANT_TYPE_STRING))
+                bssid_valid =
+                    !!nm_ether_addr_from_string(&bssid, g_variant_get_string(addr_value, NULL));
+        }
+    }
 
     ssid = g_bytes_new(name, NM_MIN(32u, strlen(name)));
 
     bss_info = (NMSupplicantBssInfo) {
         .bss_path       = bss_path,
         .last_seen_msec = last_seen_msec,
-        .bssid_valid    = TRUE,
+        .bssid_valid    = bssid_valid,
+        .bssid          = bssid,
         .mode           = _NM_802_11_MODE_INFRA,
         .rsn_flags      = ap_security_flags_from_network_type(type),
         .ssid           = ssid,
         .signal_percent = nm_wifi_utils_level_to_quality(signal / 100),
         .frequency      = 2417,
         .max_rate       = 65000,
-        .bssid          = NM_ETHER_ADDR_INIT(0x00, 0x01, 0x02, ap_id >> 16, ap_id >> 8, ap_id),
     };
 
     ap = nm_wifi_ap_new_from_properties(&bss_info);
@@ -373,6 +385,11 @@ get_ordered_networks_cb(GObject *source, GAsyncResult *res, gpointer user_data)
         new_ap = g_hash_table_lookup(new_aps, nm_wifi_ap_get_supplicant_path(ap));
         if (new_ap) {
             if (nm_wifi_ap_set_strength(ap, nm_wifi_ap_get_strength(new_ap))) {
+                _ap_dump(self, LOGL_TRACE, ap, "updated");
+                changed = TRUE;
+            }
+            if (nm_wifi_ap_get_address(new_ap)
+                && nm_wifi_ap_set_address(ap, nm_wifi_ap_get_address(new_ap))) {
                 _ap_dump(self, LOGL_TRACE, ap, "updated");
                 changed = TRUE;
             }
@@ -3481,6 +3498,17 @@ nm_device_iwd_network_add_remove(NMDeviceIwd *self, GDBusProxy *network, bool ad
         priv->networks_changed |= !recheck;
         return;
     }
+}
+
+void
+nm_device_iwd_bss_added(NMDeviceIwd *self)
+{
+    NMDeviceIwdPrivate *priv = NM_DEVICE_IWD_GET_PRIVATE(self);
+
+    if (!priv->dbus_station_proxy || priv->networks_requested)
+        return;
+
+    update_aps(self);
 }
 
 static const NML3ConfigData *

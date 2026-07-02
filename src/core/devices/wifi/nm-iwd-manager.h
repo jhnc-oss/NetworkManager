@@ -29,6 +29,7 @@
 #define NM_IWD_P2P_PEER_INTERFACE            "net.connman.iwd.p2p.Peer"
 #define NM_IWD_P2P_SERVICE_MANAGER_INTERFACE "net.connman.iwd.p2p.ServiceManager"
 #define NM_IWD_P2P_WFD_INTERFACE             "net.connman.iwd.p2p.Display"
+#define NM_IWD_BSS_INTERFACE                 "net.connman.iwd.BasicServiceSet"
 
 #define NM_IWD_AGENT_PATH NM_DBUS_PATH "/iwd/agent"
 

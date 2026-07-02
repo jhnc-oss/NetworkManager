@@ -46,6 +46,13 @@ void _nm_device_iwd_request_scan(NMDeviceIwd           *self,
 
 void nm_device_iwd_network_add_remove(NMDeviceIwd *device, GDBusProxy *network, bool add);
 
+/* Called by NMIwdManager when a new BasicServiceSet object appears for one
+ * of this device's networks (e.g. on fresh boot, when IWD registers BSS
+ * objects after the Network was first observed). Refreshing the AP list
+ * picks up the BSS's Address property so the BSSID can be reported.
+ */
+void nm_device_iwd_bss_added(NMDeviceIwd *device);
+
 bool nm_device_iwd_set_netconfig(NMDeviceIwd *device, int addr_family, GVariantIter *config_iter);
 
 #endif /* __NETWORKMANAGER_DEVICE_IWD_H__ */
